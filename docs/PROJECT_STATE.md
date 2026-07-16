@@ -95,6 +95,7 @@ provenance audit rows: 56
 - Local Git repository initialized on branch `main`.
 - Gitee remote configured as `origin = https://gitee.com/zhang-xiaohuily/xm.git`.
 - Initial local commit: `7a037f3 chore: initialize UAV research project`.
+- Latest local commit after 3DOF writing update: `e569d5e docs: draft 3d experiment narrative`.
 - Heavy model checkpoints (`*.pt`, `*.pth`, `*.ckpt`, `*.onnx`) are ignored by `.gitignore`; the local Git object store is about 3.15 MiB after the initial commit.
 - Push from the Codex environment failed because `gitee.com:443` was unreachable. Push from the user's local machine should be retried when network and Gitee authentication are available.
 
