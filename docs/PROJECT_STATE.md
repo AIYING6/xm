@@ -90,6 +90,14 @@ schema audit rows: 32
 provenance audit rows: 56
 ```
 
+## Repository State
+
+- Local Git repository initialized on branch `main`.
+- Gitee remote configured as `origin = https://gitee.com/zhang-xiaohuily/xm.git`.
+- Initial local commit: `7a037f3 chore: initialize UAV research project`.
+- Heavy model checkpoints (`*.pt`, `*.pth`, `*.ckpt`, `*.onnx`) are ignored by `.gitignore`; the local Git object store is about 3.15 MiB after the initial commit.
+- Push from the Codex environment failed because `gitee.com:443` was unreachable. Push from the user's local machine should be retried when network and Gitee authentication are available.
+
 ## Latest Integration Check
 
 - `train_ri_gmappo.py` now supports `--env-name 2d_pursuit` (default) and `--env-name 3d_intercept`.
