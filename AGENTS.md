@@ -50,6 +50,17 @@ python scripts/check_reproducibility_artifacts.py
 
 If a change only touches documentation, run the smallest relevant generator/check instead of full training.
 
+## Git Push
+
+- GitHub remote: `https://github.com/AIYING6/xm.git`.
+- From this Codex environment, push through the local proxy:
+
+```bash
+HTTPS_PROXY=http://127.0.0.1:7897 git push -u origin main
+```
+
+- Prefer committing a clean, reviewable task before pushing.
+
 ## Completion Standard
 
 A task is complete only when:

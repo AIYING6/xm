@@ -95,9 +95,9 @@ provenance audit rows: 56
 - Local Git repository initialized on branch `main`.
 - GitHub remote configured as `origin = https://github.com/AIYING6/xm.git`.
 - Initial local commit: `7a037f3 chore: initialize UAV research project`.
-- Latest local commit after 3DOF writing update: `e569d5e docs: draft 3d experiment narrative`.
+- Latest manuscript skeleton commit before proxy-push workflow update: `4aab7a8 docs: draft 3d manuscript skeleton`.
 - Heavy model checkpoints (`*.pt`, `*.pth`, `*.ckpt`, `*.onnx`) are ignored by `.gitignore`; the local Git object store is about 3.15 MiB after the initial commit.
-- Push from the Codex environment failed because external Git hosting port 443 was unreachable. Push from the user's local machine should be retried when network and GitHub authentication are available.
+- Push from this Codex environment should use the local proxy: `HTTPS_PROXY=http://127.0.0.1:7897 git push -u origin main`.
 
 ## Latest Integration Check
 
