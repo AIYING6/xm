@@ -16,6 +16,7 @@
 | 双语稿件完整性审计 | `docs/bilingual_manuscript_completeness_audit.md` |
 | 投稿行动项清单 | `docs/submission_action_register.md` |
 | 实验扩展决策计划 | `docs/experiment_extension_decision_plan.md` |
+| 3DOF 实验写作说明 | `docs/3d_experiment_writing_notes_cn.md` |
 | 稳定 artifact checksum 清单 | `docs/reproducibility_checksum_manifest.md` |
 | 稳定 artifact checksum 验证 | `docs/reproducibility_checksum_verification.md` |
 | 复现清单 | `docs/reproducibility_manifest.md` |
@@ -53,6 +54,7 @@
 | 英文 Related Work 初稿 | `docs/english_related_work_draft.md` |
 | 英文 Problem/Method 初稿 | `docs/english_problem_method_draft.md` |
 | 英文 Experiments 初稿 | `docs/english_experiments_draft.md` |
+| 英文 3DOF Experiments 初稿 | `docs/english_3d_experiments_draft.md` |
 | 英文 Discussion/Conclusion 初稿 | `docs/english_discussion_conclusion_draft.md` |
 | 完整英文 manuscript 初稿 | `docs/english_manuscript_draft.md` |
 | LaTeX 论文工程 | `paper_latex/main.tex` |
