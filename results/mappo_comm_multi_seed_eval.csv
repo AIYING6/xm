@@ -1,0 +1,13 @@
+run_dir,checkpoint,radius,success_rate,collision_rate,timeout_rate,avg_steps,avg_mean_distance
+results\mappo_curriculum_slow_150,latest,4.0,0.39,0.43,0.19,124.5,4.516163604458173
+results\mappo_curriculum_slow_150,latest,6.0,0.56,0.41,0.04,107.44,3.925599335034688
+results\mappo_curriculum_slow_150,latest,8.0,0.57,0.39,0.05,92.96,3.9855895072221754
+results\mappo_curriculum_slow_150,latest,10.0,0.79,0.19,0.02,79.38,3.2236124587059023
+results\mappo_curriculum_slow_seed1_150,latest,4.0,0.84,0.16,0.0,50.74,2.7312849080562587
+results\mappo_curriculum_slow_seed1_150,latest,6.0,0.93,0.08,0.0,36.83,2.7807758315404256
+results\mappo_curriculum_slow_seed1_150,latest,8.0,0.96,0.04,0.0,32.77,2.7601376104354864
+results\mappo_curriculum_slow_seed1_150,latest,10.0,0.92,0.08,0.0,36.56,2.7198144698143008
+results\mappo_curriculum_slow_seed2_150,latest,4.0,0.84,0.13,0.03,80.95,3.2814615313212077
+results\mappo_curriculum_slow_seed2_150,latest,6.0,0.84,0.16,0.0,61.8,3.049354847470919
+results\mappo_curriculum_slow_seed2_150,latest,8.0,0.87,0.11,0.02,60.91,3.058743394414584
+results\mappo_curriculum_slow_seed2_150,latest,10.0,0.84,0.16,0.0,60.76,3.3445663358767828

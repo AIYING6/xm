@@ -1,0 +1,51 @@
+\documentclass[UTF8,a4paper,11pt]{ctexart}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{xcolor}
+
+\geometry{left=2.4cm,right=2.4cm,top=2.4cm,bottom=2.4cm}
+\graphicspath{{../results/figures/}}
+
+\title{面向有限通信无人机协同追逃的边特征增强角色图多智能体强化学习方法}
+\author{待补充}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+无人机集群协同追逃任务要求多个异构平台在有限通信条件下完成目标拦截，同时避免平台间碰撞。现有多智能体强化学习方法通常依赖局部观测或普通图注意力表示，难以显式建模无人机之间的相对空间关系和通信可达性，导致策略在通信半径变化时稳定性不足。为此，本文提出一种边特征增强角色图多智能体强化学习方法 EA-RG-MAPPO-S。该方法将追击无人机和目标统一建模为带角色标记的动态图节点，并在图注意力得分中引入相对位置、距离、方位、相对速度和通信可达性等边特征，使策略能够根据物理关系和通信拓扑进行信息聚合。进一步地，本文设计分阶段随机通信半径微调机制，先在固定通信半径下学习基础协同策略，再在随机通信半径区间内进行低学习率微调，以提升跨通信半径鲁棒性。二维异构无人机协同追逃实验表明，在 mixed 目标机动和多种通信半径下，所提方法相比 MAPPO 和 GAT-MAPPO 具有更低碰撞率和更稳定的跨半径性能。300 回合每种子复评结果显示，EA-RG-MAPPO-S 在通信半径 4、6、8、10 下分别取得 0.926、0.919、0.890、0.879 的成功率，并将碰撞率控制在 0.054 到 0.086 之间。可视化结果进一步表明，所提方法能够根据通信半径变化调整节点注意力分布。
+\end{abstract}
+
+\noindent\textbf{关键词：} 无人机集群；多智能体强化学习；有限通信；图注意力网络；协同追逃；MAPPO
+
+\vspace{0.8em}
+\begin{center}
+\textbf{Edge-Aware Role Graph Multi-Agent Reinforcement Learning for UAV Cooperative Pursuit under Limited Communication}
+\end{center}
+
+\noindent\textbf{Abstract:}
+Cooperative UAV pursuit requires multiple heterogeneous platforms to intercept a maneuvering target under limited communication while avoiding inter-UAV collisions. Existing multi-agent reinforcement learning methods usually rely on local observations or standard graph attention, and may fail to explicitly encode relative spatial relations and communication reachability when the communication radius changes. To address this issue, this paper proposes EA-RG-MAPPO-S, an edge-aware role graph multi-agent reinforcement learning method with staged random-radius fine-tuning. The method represents pursuers and targets as dynamic graph nodes with role semantics, and injects relative position, distance, bearing, relative velocity, and communication reachability into the graph attention score. A staged training strategy is further adopted: the policy first learns basic coordination under a fixed communication radius and is then fine-tuned with randomly sampled communication radii to improve cross-radius robustness. Experiments in a two-dimensional heterogeneous UAV pursuit environment show that EA-RG-MAPPO-S achieves lower collision rates and more stable performance than MAPPO and GAT-MAPPO under mixed target maneuvers. In the final 300-episode-per-seed evaluation, EA-RG-MAPPO-S obtains success rates of 0.926, 0.919, 0.890, and 0.879 at communication radii 4, 6, 8, and 10, respectively, while keeping collision rates between 0.054 and 0.086. Visualization results further indicate that the proposed graph policy adjusts its attention distribution according to communication constraints.
+
+\noindent\textbf{Keywords:} UAV swarm; multi-agent reinforcement learning; limited communication; graph attention network; cooperative pursuit; MAPPO
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_problem}
+\input{sections/04_method}
+\input{sections/05_experiments}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+\input{sections/08_appendix_experiments}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

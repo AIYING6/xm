@@ -1,0 +1,35 @@
+\begin{table*}[t]
+\centering
+\caption{Performance under different communication radii on the mixed-target pursuit task. Results are reported as mean$\pm$std over three seeds.}
+\label{tab:comm_radius_results}
+\begin{tabular}{lccccc}
+\toprule
+Method & Radius & Success $\uparrow$ & Collision $\downarrow$ & Timeout $\downarrow$ & Avg. steps $\downarrow$ \\
+\midrule
+MAPPO & 4 & 0.690$\pm$0.212 & 0.240$\pm$0.135 & 0.073$\pm$0.083 & 85.400$\pm$30.280 \\
+MAPPO & 6 & 0.777$\pm$0.158 & 0.217$\pm$0.141 & 0.013$\pm$0.019 & 68.690$\pm$29.240 \\
+MAPPO & 8 & 0.800$\pm$0.167 & 0.180$\pm$0.151 & 0.023$\pm$0.021 & 62.210$\pm$24.590 \\
+MAPPO & 10 & 0.850$\pm$0.054 & 0.143$\pm$0.046 & 0.007$\pm$0.009 & 58.900$\pm$17.530 \\
+\midrule
+GAT-MAPPO & 4 & 0.840$\pm$0.037 & 0.127$\pm$0.012 & 0.040$\pm$0.042 & 70.210$\pm$14.320 \\
+GAT-MAPPO & 6 & 0.873$\pm$0.045 & 0.097$\pm$0.031 & 0.030$\pm$0.022 & 64.530$\pm$17.870 \\
+GAT-MAPPO & 8 & 0.777$\pm$0.052 & 0.183$\pm$0.040 & 0.043$\pm$0.048 & 67.520$\pm$15.510 \\
+GAT-MAPPO & 10 & 0.797$\pm$0.029 & 0.170$\pm$0.033 & 0.033$\pm$0.029 & 69.510$\pm$11.500 \\
+\midrule
+RG-MAPPO & 4 & 0.907$\pm$0.042 & 0.080$\pm$0.044 & 0.017$\pm$0.006 & 73.200$\pm$7.600 \\
+RG-MAPPO & 6 & 0.917$\pm$0.076 & 0.063$\pm$0.059 & 0.023$\pm$0.023 & 72.770$\pm$11.410 \\
+RG-MAPPO & 8 & 0.887$\pm$0.146 & 0.097$\pm$0.125 & 0.017$\pm$0.021 & 72.000$\pm$13.450 \\
+RG-MAPPO & 10 & 0.907$\pm$0.071 & 0.073$\pm$0.059 & 0.020$\pm$0.017 & 72.040$\pm$10.180 \\
+\midrule
+EA-RG-MAPPO & 4 & 0.927$\pm$0.021 & 0.037$\pm$0.015 & 0.037$\pm$0.006 & 65.850$\pm$2.780 \\
+EA-RG-MAPPO & 6 & 0.887$\pm$0.015 & 0.073$\pm$0.032 & 0.040$\pm$0.036 & 63.410$\pm$2.200 \\
+EA-RG-MAPPO & 8 & 0.900$\pm$0.036 & 0.083$\pm$0.012 & 0.020$\pm$0.026 & 63.780$\pm$4.580 \\
+EA-RG-MAPPO & 10 & 0.837$\pm$0.032 & 0.113$\pm$0.015 & 0.050$\pm$0.017 & 73.360$\pm$4.120 \\
+\midrule
+EA-RG-MAPPO-S & 4 & 0.907$\pm$0.012 & 0.067$\pm$0.012 & 0.027$\pm$0.012 & 69.470$\pm$2.300 \\
+EA-RG-MAPPO-S & 6 & 0.907$\pm$0.015 & 0.073$\pm$0.021 & 0.020$\pm$0.010 & 62.680$\pm$6.510 \\
+EA-RG-MAPPO-S & 8 & 0.883$\pm$0.051 & 0.083$\pm$0.031 & 0.033$\pm$0.032 & 65.210$\pm$7.700 \\
+EA-RG-MAPPO-S & 10 & 0.880$\pm$0.020 & 0.090$\pm$0.026 & 0.033$\pm$0.021 & 70.350$\pm$3.540 \\
+\bottomrule
+\end{tabular}
+\end{table*}

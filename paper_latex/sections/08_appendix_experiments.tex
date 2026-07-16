@@ -1,0 +1,115 @@
+\appendix
+\section{附录实验}
+
+\subsection{最终主结果的 seed 配对置信区间}
+
+为补充表~\ref{tab:final_comm_300_results} 的均值和标准差，本文对最终 300 回合主实验进行按 seed 配对的描述性置信区间分析。对同一通信半径和同一 seed，计算 EA-RG-MAPPO-S 相对 MAPPO 或 GAT-MAPPO 的成功率增益，以及碰撞率降低幅度。由于只有 3 个 seed，该分析用于补充说明证据强度，不作为独立的强显著性检验。结果见表~\ref{tab:final_300_paired_ci}。
+
+\input{../results/latex_final_300_paired_ci_table}
+
+结果表明，EA-RG-MAPPO-S 相对两个基线在所有通信半径下的平均成功率增益和平均碰撞率降低均为正。相对 GAT-MAPPO，在 radius=4 下碰撞率降低的 95\% 描述性区间为 $[0.039,0.123]$，在 radius=8 下成功率增益和碰撞率降低区间分别为 $[0.005,0.206]$ 和 $[0.005,0.186]$。相对 MAPPO 时，由于 MAPPO 不同 seed 方差较大，区间更宽，因此论文正文应以均值趋势和低碰撞稳定性为主要表述，不应夸大为所有半径上的强统计显著性结论。
+
+\subsection{通信链路随机丢失诊断}
+
+为进一步检查有限通信退化下的策略稳定性，本文进行评估时通信 dropout 诊断。该实验保持训练参数不变，仅在评估时对 pursuer-pursuer 通信边进行随机丢弃，并同步屏蔽对应的 teammate local-observation 槽、图邻接和 edge reachability。目标节点仍作为任务观测节点保留，因此该诊断只模拟无人机之间的通信链路退化。结果见表~\ref{tab:comm_dropout_robustness}、表~\ref{tab:comm_dropout_paired_ci} 和图~\ref{fig:comm_dropout_success}--图~\ref{fig:comm_dropout_collision}。
+
+\input{../results/latex_comm_dropout_robustness_table}
+
+在 50 回合每种子的轻量诊断中，EA-RG-MAPPO-S 在 radius=4 和 radius=8 下均保持较低碰撞率。当 dropout probability 为 0.50 时，EA-RG-MAPPO-S 在 radius=4 和 radius=8 下的碰撞率分别为 $0.047$ 和 $0.053$，低于 MAPPO 的 $0.300$ 和 $0.293$，也低于 GAT-MAPPO 的 $0.167$ 和 $0.173$。配对描述性置信区间见表~\ref{tab:comm_dropout_paired_ci}。由于该实验预算小于最终主表，因此只作为附录级鲁棒性诊断，不与 300-episode 主结果合并。
+
+\input{../results/latex_comm_dropout_paired_ci_table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{comm_dropout_success_rate.png}
+    \caption{通信 dropout 诊断中的成功率变化。}
+    \label{fig:comm_dropout_success}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{comm_dropout_collision_rate.png}
+    \caption{通信 dropout 诊断中的碰撞率变化。}
+    \label{fig:comm_dropout_collision}
+\end{figure}
+
+\subsection{跨条件综合鲁棒性诊断}
+
+为便于审稿时快速查看有限通信稳定性，本文进一步汇总最终跨半径评估和通信 dropout 诊断中的平均成功率、最差成功率、平均碰撞率和最差碰撞率。该表不引入新的训练或加权优化目标，只作为对主表和附录表的紧凑描述性摘要。结果见表~\ref{tab:aggregate_robustness}。
+
+\input{../results/latex_aggregate_robustness_table}
+
+在最终跨半径评估中，EA-RG-MAPPO-S 的平均成功率为 $0.903$，平均碰撞率为 $0.072$，保守 margin 为 $0.793$。在通信 dropout 诊断中，EA-RG-MAPPO-S 的平均成功率为 $0.892$，平均碰撞率为 $0.070$，保守 margin 为 $0.747$，最差碰撞率为 $0.107$，低于 MAPPO 的 $0.320$ 和 GAT-MAPPO 的 $0.187$。这些汇总结果用于压缩展示跨条件趋势，具体数值解释仍以主结果表和各诊断表为准。
+
+\subsection{通信半径插值诊断}
+
+为检查结果是否只依赖主表中选定的通信半径，本文进一步在未见半径 $5,7,9$ 下进行评估。该实验不重新训练策略，仅使用最终 checkpoint 进行 50 回合每种子的轻量诊断，因此只作为附录级插值证据。结果见表~\ref{tab:radius_interpolation} 和图~\ref{fig:radius_interp_success}--图~\ref{fig:radius_interp_collision}。
+
+\input{../results/latex_radius_interpolation_table}
+
+在三个未见半径下，EA-RG-MAPPO-S 的碰撞率分别为 $0.067$、$0.100$ 和 $0.067$，均低于 MAPPO 的 $0.227$、$0.200$ 和 $0.153$，也低于 GAT-MAPPO 的 $0.113$、$0.140$ 和 $0.173$。该结果支持跨半径稳定性趋势，但不替代 300-episode 主表。
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{radius_interpolation_success_rate.png}
+    \caption{未见通信半径下的成功率插值诊断。}
+    \label{fig:radius_interp_success}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{radius_interpolation_collision_rate.png}
+    \caption{未见通信半径下的碰撞率插值诊断。}
+    \label{fig:radius_interp_collision}
+\end{figure}
+
+\subsection{目标速度泛化}
+
+为验证有限通信稳定性不是单一目标速度设置下的偶然结果，本文在不重新训练模型的条件下，将 mixed 目标速度设置为 $0.60,0.75,0.90$，并在通信半径 $4$ 和 $8$ 下进行 100 回合每种子的附录级评估。结果见表~\ref{tab:speed_robustness}，对应曲线见图~\ref{fig:speed_success_r4}--图~\ref{fig:speed_collision_r8}。
+
+\input{../results/latex_speed_robustness_table}
+
+结果表明，随着目标速度升高，三种方法的成功率均下降、碰撞率总体上升。但 EA-RG-MAPPO-S 在两个通信半径下均保持最低碰撞率。例如，当目标速度为 $0.90$ 时，EA-RG-MAPPO-S 在 radius=4 下碰撞率为 $0.097\pm0.021$，低于 MAPPO 的 $0.240\pm0.029$ 和 GAT-MAPPO 的 $0.237\pm0.056$；在 radius=8 下碰撞率为 $0.130\pm0.033$，低于 MAPPO 的 $0.300\pm0.073$ 和 GAT-MAPPO 的 $0.203\pm0.012$。这说明所提方法的低碰撞优势不只来自单一目标速度设置。
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speed_robustness_success_r4.png}
+    \caption{通信半径 4 下不同目标速度的成功率。}
+    \label{fig:speed_success_r4}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speed_robustness_collision_r4.png}
+    \caption{通信半径 4 下不同目标速度的碰撞率。}
+    \label{fig:speed_collision_r4}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speed_robustness_success_r8.png}
+    \caption{通信半径 8 下不同目标速度的成功率。}
+    \label{fig:speed_success_r8}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speed_robustness_collision_r8.png}
+    \caption{通信半径 8 下不同目标速度的碰撞率。}
+    \label{fig:speed_collision_r8}
+\end{figure}
+
+\subsection{边特征评估时屏蔽诊断}
+
+为分析策略对不同边特征分量的依赖，本文进一步进行评估时屏蔽诊断：保持训练好的 EA-RG-MAPPO-S 参数不变，仅在评估时将某一组 edge feature 置零。该实验不等同于重新训练的结构消融，因此只作为机制分析证据。结果见表~\ref{tab:edge_feature_masking} 和图~\ref{fig:edge_feature_delta}。
+
+\input{../results/latex_edge_feature_ablation_table}
+
+结果显示，单独屏蔽位置、距离、方位或相对速度时，30 回合诊断均值变化较小；屏蔽通信可达性和目标节点标记时，在 radius=4 和 radius=8 下均出现小幅成功率下降和碰撞率上升。这说明边特征并非策略唯一信息来源，节点特征、邻接 mask 和局部观测中存在冗余信息；但通信/目标语义分量仍是评估时最一致的敏感项。
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{edge_feature_ablation_delta.png}
+    \caption{评估时屏蔽不同 edge feature 分组后的成功率和碰撞率变化。}
+    \label{fig:edge_feature_delta}
+\end{figure}

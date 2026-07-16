@@ -1,0 +1,30 @@
+# Python cache and local runtime noise
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments and local editor files
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+
+# Training checkpoints and heavy model artifacts
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Runtime logs and temporary outputs
+*.log
+*.tmp
+*.bak
+*.err
+*.out
+
+# OS files
+.DS_Store
+Thumbs.db

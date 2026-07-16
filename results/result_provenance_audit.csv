@@ -1,0 +1,57 @@
+artifact,artifact_type,source_data,source_rows,generator_script,status,notes
+results/latex_final_comm_300_table.tex,table,results/final_comm_300_summary.csv,12,scripts/make_latex_tables.py,OK,Final 300-episode cross-radius main table.
+results/latex_final_300_paired_ci_table.tex,table,results/final_300_paired_statistics.csv,16,scripts/analyze_final_300_statistics.py,OK,Seed-paired descriptive confidence interval table.
+results/latex_comm_dropout_robustness_table.tex,table,results/comm_dropout_robustness_summary.csv,18,scripts/evaluate_comm_dropout_robustness.py,OK,Generated during communication-dropout diagnostic evaluation.
+results/latex_comm_dropout_paired_ci_table.tex,table,results/comm_dropout_paired_statistics.csv,24,scripts/analyze_comm_dropout_statistics.py,OK,Communication-dropout seed-paired descriptive statistics.
+results/latex_aggregate_robustness_table.tex,table,results/aggregate_robustness_summary.csv,6,scripts/analyze_aggregate_robustness.py,OK,Aggregate cross-condition robustness table.
+results/latex_radius_interpolation_table.tex,table,results/radius_interpolation_summary.csv,9,scripts/evaluate_radius_interpolation.py,OK,Communication-radius interpolation diagnostic table.
+results/latex_ablation_comm_table.tex,table,results/paper_comm_results.csv,20,scripts/make_latex_tables.py,OK,Legacy 100-episode communication ablation table.
+results/latex_main_comm_table.tex,table,results/paper_comm_results.csv,20,scripts/make_latex_tables.py,OK,Legacy main communication table retained for appendix/backward compatibility.
+results/latex_speed_robustness_table.tex,table,results/speed_robustness_summary.csv,18,scripts/make_latex_tables.py,OK,Target-speed robustness table.
+results/latex_edge_feature_ablation_table.tex,table,results/edge_feature_ablation_summary.csv,14,scripts/make_latex_tables.py,OK,Evaluation-time edge feature masking table.
+results/latex_training_settings_table.tex,table,script_static,,scripts/make_latex_tables.py,OK,Training and evaluation settings are encoded in the table generator.
+results/figures/final_300_success_rate.png,figure,results/final_comm_300_summary.csv,12,scripts/plot_final_300_results.py,OK,Final 300-episode success-rate figure.
+results/figures/final_300_collision_rate.png,figure,results/final_comm_300_summary.csv,12,scripts/plot_final_300_results.py,OK,Final 300-episode collision-rate figure.
+results/figures/comm_success_rate.png,figure,results/paper_comm_results.csv,20,scripts/plot_comm_results.py,OK,Legacy communication-radius success-rate figure.
+results/figures/comm_collision_rate.png,figure,results/paper_comm_results.csv,20,scripts/plot_comm_results.py,OK,Legacy communication-radius collision-rate figure.
+results/figures/per_seed_success_scatter.png,figure,results/per_seed_comm_appendix.csv,36,scripts/build_paper_appendix.py,OK,Per-seed success-rate appendix scatter.
+results/figures/per_seed_collision_scatter.png,figure,results/per_seed_comm_appendix.csv,36,scripts/build_paper_appendix.py,OK,Per-seed collision-rate appendix scatter.
+results/figures/edge_feature_ablation_delta.png,figure,results/edge_feature_ablation_summary.csv,14,scripts/plot_edge_feature_ablation.py,OK,Edge feature masking delta figure.
+results/figures/speed_robustness_success_r4.png,figure,results/speed_robustness_summary.csv,18,scripts/plot_speed_robustness.py,OK,Target-speed success-rate robustness at radius 4.
+results/figures/speed_robustness_collision_r4.png,figure,results/speed_robustness_summary.csv,18,scripts/plot_speed_robustness.py,OK,Target-speed collision-rate robustness at radius 4.
+results/figures/speed_robustness_success_r8.png,figure,results/speed_robustness_summary.csv,18,scripts/plot_speed_robustness.py,OK,Target-speed success-rate robustness at radius 8.
+results/figures/speed_robustness_collision_r8.png,figure,results/speed_robustness_summary.csv,18,scripts/plot_speed_robustness.py,OK,Target-speed collision-rate robustness at radius 8.
+results/figures/comm_dropout_success_rate.png,figure,results/comm_dropout_robustness_summary.csv,18,scripts/plot_comm_dropout_robustness.py,OK,Communication-dropout success-rate figure.
+results/figures/comm_dropout_collision_rate.png,figure,results/comm_dropout_robustness_summary.csv,18,scripts/plot_comm_dropout_robustness.py,OK,Communication-dropout collision-rate figure.
+results/figures/radius_interpolation_success_rate.png,figure,results/radius_interpolation_summary.csv,9,scripts/plot_radius_interpolation.py,OK,Communication-radius interpolation success-rate figure.
+results/figures/radius_interpolation_collision_rate.png,figure,results/radius_interpolation_summary.csv,9,scripts/plot_radius_interpolation.py,OK,Communication-radius interpolation collision-rate figure.
+results/figures/method_overview_ea_rg_mappo_s.png,figure,script_static,,scripts/plot_method_overview.py,OK,Method overview diagram generated from scripted layout.
+results/figures/trajectory_ri_advantage_r4.png,figure,results/final_comm_300_eval.csv,36,scripts/plot_trajectory_cases.py,OK,Qualitative trajectory case at radius 4.
+results/figures/trajectory_ri_advantage_r10.png,figure,results/final_comm_300_eval.csv,36,scripts/plot_trajectory_cases.py,OK,Qualitative trajectory case at radius 10.
+results/figures/ri_attention_heatmap_r4.png,figure,results/final_comm_300_eval.csv,36,scripts/plot_ri_attention_heatmap.py,OK,Attention heatmap case at radius 4.
+results/figures/ri_attention_heatmap_r10.png,figure,results/final_comm_300_eval.csv,36,scripts/plot_ri_attention_heatmap.py,OK,Attention heatmap case at radius 10.
+results/figures/intent_confusion_ri_staged_r8.png,figure,results/intent_confusion_ri_staged_r8.csv,25,scripts/plot_intent_confusion.py,OK,Exploratory intent diagnostic figure; not a main contribution.
+results/figures/intent_confusion_ri_balanced_seed1_r8.png,figure,results/intent_confusion_ri_balanced_seed1_r8.csv,25,scripts/plot_intent_confusion.py,OK,Exploratory balanced-intent diagnostic figure; not a main contribution.
+docs/figure_asset_audit.md,audit,results/figure_asset_audit.csv,23,scripts/audit_figure_assets.py,OK,Figure readability/nonblank audit report.
+docs/evaluation_budget_audit.md,audit,results/evaluation_budget_audit.csv,6,scripts/audit_evaluation_budget_consistency.py,OK,Evaluation episode-budget consistency audit report.
+docs/method_naming_audit.md,audit,results/method_naming_audit.csv,28,scripts/audit_method_naming_consistency.py,OK,Method naming consistency audit report.
+docs/supplemental_csv_schema_audit.md,audit,results/supplemental_csv_schema_audit.csv,32,scripts/audit_supplemental_csv_schema.py,OK,Supplemental CSV schema audit report.
+docs/lag_jsbsim_migration_probe.md,report,results/lag_jsbsim_migration_probe.csv,29,scripts/probe_lag_jsbsim_migration.py,OK,Future LAG/JSBSim migration readiness report.
+docs/lag_role_graph_adapter_test.md,report,results/lag_role_graph_adapter_test.csv,26,scripts/test_lag_role_graph_adapter.py,OK,LAG-like state-to-role-graph adapter test report.
+docs/lag_role_graph_wrapper_test.md,report,results/lag_role_graph_wrapper_test.csv,11,scripts/test_lag_role_graph_wrapper.py,OK,LAG-like reset/step graph wrapper test report.
+docs/intercept_3d_smoke_test.md,report,results/intercept_3d_smoke_test.csv,15,scripts/smoke_test_intercept_3d_env.py,OK,3DOF heterogeneous interception environment smoke-test report.
+results/intercept_3d_policy_eval.csv,data,results/ri_gmappo_3d_smoke/actor_critic_latest.pt,,scripts/evaluate_ri_gmappo_3d.py,OK,3DOF checkpoint evaluation smoke diagnostic; not a paper learning result.
+docs/intercept_3d_policy_eval.md,report,results/intercept_3d_policy_eval.csv,3,scripts/evaluate_ri_gmappo_3d.py,OK,3DOF checkpoint evaluation metric summary.
+docs/claim_evidence_matrix.md,report,results/claim_evidence_matrix.csv,9,scripts/write_claim_evidence_matrix.py,OK,Paper claim-to-evidence matrix.
+docs/manuscript_evidence_reference_audit.md,audit,results/manuscript_evidence_reference_audit.csv,51,scripts/audit_manuscript_evidence_references.py,OK,Manuscript evidence-reference audit report.
+docs/bilingual_numeric_consistency_audit.md,audit,results/bilingual_numeric_consistency_audit.csv,47,scripts/audit_bilingual_numeric_consistency.py,OK,Bilingual manuscript numeric consistency audit report.
+docs/latex_reference_integrity_audit.md,audit,results/latex_reference_integrity_audit.csv,86,scripts/audit_latex_reference_integrity.py,OK,Bilingual LaTeX label/reference integrity audit report.
+docs/bilingual_manuscript_completeness_audit.md,audit,results/bilingual_manuscript_completeness_audit.csv,36,scripts/audit_bilingual_manuscript_completeness.py,OK,Bilingual manuscript completeness audit report.
+docs/submission_action_register.md,report,results/submission_action_register.csv,10,scripts/write_submission_action_register.py,OK,Submission-facing action item register.
+docs/experiment_extension_decision_plan.md,report,results/experiment_extension_decision_plan.csv,7,scripts/write_experiment_extension_decision_plan.py,OK,Optional next-experiment decision plan.
+docs/reproducibility_checksum_manifest.md,report,results/reproducibility_checksum_manifest.csv,184,scripts/write_reproducibility_checksum_manifest.py,OK,Stable artifact SHA256/size checksum manifest.
+docs/reproducibility_checksum_verification.md,audit,results/reproducibility_checksum_verification.csv,184,scripts/verify_reproducibility_checksum_manifest.py,OK,Checksum manifest verification audit report.
+docs/submission_readiness_report.md,report,script_static,,scripts/write_submission_readiness_report.py,OK,Submission readiness checklist generated from expected project assets.
+docs/submission_package_manifest.md,report,script_static,,scripts/write_submission_package_manifest.py,OK,Submission package manifest generated from curated package lists.
+docs/supplemental_data_readme.md,report,script_static,,scripts/write_supplemental_data_readme.py,OK,Supplemental CSV inventory and interpretation-boundary README.
+docs/english_manuscript_readiness_audit.md,audit,script_static,,scripts/audit_english_manuscript_readiness.py,OK,English manuscript readiness audit generated from manuscript and LaTeX files.

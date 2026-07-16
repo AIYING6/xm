@@ -1,0 +1,2 @@
+epoch,loss,action_accuracy,samples,demo_success_rate,balanced_loss
+1,3.3471481800079346,0.040293040293040296,91,1.0,0

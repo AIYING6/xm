@@ -1,0 +1,34 @@
+\begin{table*}[t]
+\centering
+\caption{Training and evaluation settings used in the reported experiments.}
+\label{tab:training_settings}
+\begin{tabularx}{\textwidth}{lcl}
+\toprule
+Item & Value & Scope \\
+\midrule
+Parallel environments & 8 & All training runs \\
+Rollout length & 128 steps & All training runs \\
+PPO epochs & 4 & All training runs \\
+Discount factor $\gamma$ & 0.99 & All training runs \\
+GAE $\lambda$ & 0.95 & All training runs \\
+Clip coefficient & 0.2 & All training runs \\
+Entropy coefficient & 0.01 & All training runs \\
+Value loss coefficient & 0.5 & All training runs \\
+Max gradient norm & 0.5 & All training runs \\
+Learning rate & $3\times10^{-4}$ & Default training; staged fine-tuning may use a lower value \\
+Hidden dimension & 128 & Actor, critic, and graph encoders \\
+Role embedding dimension & 8 & GAT-MAPPO and EA-RG-MAPPO-S \\
+Graph minibatch size & 256 graphs & GAT-MAPPO and EA-RG-MAPPO-S \\
+MAPPO minibatch size & 512 samples & MAPPO baseline \\
+Target policy & mixed & Final evaluation and robustness tests \\
+Target speed & 0.75 & Final main evaluation \\
+Training communication radius & 8 & Fixed-radius stage \\
+Staged fine-tuning radius & $U(4,10)$ & EA-RG-MAPPO-S random-radius stage \\
+Final evaluation episodes & 300 per seed & Main table \\
+Evaluation seeds & 3 & All reported mean$\pm$std tables \\
+Python environment & cac / Python 3.8.20 & Reported runtime \\
+PyTorch & 2.4.1+cu124 & Reported runtime \\
+GPU & NVIDIA GTX 1650 Ti & Reported runtime \\
+\bottomrule
+\end{tabularx}
+\end{table*}

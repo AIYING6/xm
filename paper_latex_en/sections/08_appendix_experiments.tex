@@ -1,0 +1,115 @@
+\appendix
+\section{Appendix Experiments}
+
+\subsection{Seed-Paired Confidence Intervals for the Final Main Results}
+
+To complement the mean and standard-deviation results in Table~\ref{tab:final_comm_300_results}, a seed-paired descriptive confidence-interval analysis is performed for the final 300-episode evaluation. For each communication radius and seed, the success-rate gain and collision-rate reduction of EA-RG-MAPPO-S over MAPPO or GAT-MAPPO are computed. Since only three seeds are available, this analysis is used as supplementary evidence rather than as a definitive statistical-significance test. The results are shown in Table~\ref{tab:final_300_paired_ci}.
+
+\input{../results/latex_final_300_paired_ci_table}
+
+EA-RG-MAPPO-S has positive mean success gains and positive mean collision reductions over both baselines at all evaluated communication radii. Compared with GAT-MAPPO, the 95\% descriptive interval for collision reduction at radius 4 is $[0.039,0.123]$. At radius 8, the intervals for success gain and collision reduction are $[0.005,0.206]$ and $[0.005,0.186]$, respectively. Compared with MAPPO, the intervals are wider because the MAPPO seeds have higher variance; therefore, the paper should describe this result as supplementary support for robustness, not as a blanket strong-significance claim across all radii.
+
+\subsection{Communication-Link Dropout Diagnostic}
+
+To further evaluate stability under degraded communication, an evaluation-time communication-dropout diagnostic is conducted. The trained policies are kept fixed, and pursuer-pursuer communication edges are randomly dropped during evaluation. The corresponding teammate local-observation slots, graph adjacency entries, and edge reachability indicators are masked consistently. The target node is retained as a task observation node, so the perturbation only degrades communication links among pursuer UAVs. The results are shown in Table~\ref{tab:comm_dropout_robustness}, Table~\ref{tab:comm_dropout_paired_ci}, and Fig.~\ref{fig:comm_dropout_success_en}--Fig.~\ref{fig:comm_dropout_collision_en}.
+
+\input{../results/latex_comm_dropout_robustness_table}
+
+In this lightweight 50-episode-per-seed diagnostic, EA-RG-MAPPO-S maintains low collision rates at both radii 4 and 8. When the dropout probability is 0.50, EA-RG-MAPPO-S obtains collision rates of 0.047 and 0.053 at radii 4 and 8, respectively. These values are lower than MAPPO's 0.300 and 0.293, and also lower than GAT-MAPPO's 0.167 and 0.173. Seed-paired descriptive confidence intervals are reported in Table~\ref{tab:comm_dropout_paired_ci}. Since this diagnostic uses a smaller budget than the final main table, it is used as appendix-level robustness evidence rather than as a replacement for the 300-episode evaluation.
+
+\input{../results/latex_comm_dropout_paired_ci_table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{comm_dropout_success_rate.png}
+    \caption{Success-rate changes in the communication-dropout diagnostic.}
+    \label{fig:comm_dropout_success_en}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{comm_dropout_collision_rate.png}
+    \caption{Collision-rate changes in the communication-dropout diagnostic.}
+    \label{fig:comm_dropout_collision_en}
+\end{figure}
+
+\subsection{Aggregate Robustness Diagnostic}
+
+To provide a compact view of limited-communication stability, the final cross-radius evaluation and the communication-dropout diagnostic are further summarized by mean success, worst success, mean collision, and worst collision. This table does not introduce a new training run or a weighted optimization objective; it is only a descriptive summary of the main and appendix tables. The results are reported in Table~\ref{tab:aggregate_robustness}.
+
+\input{../results/latex_aggregate_robustness_table}
+
+In the final cross-radius evaluation, EA-RG-MAPPO-S has a mean success rate of 0.903, a mean collision rate of 0.072, and a conservative margin of 0.793. In the communication-dropout diagnostic, EA-RG-MAPPO-S has a mean success rate of 0.892, a mean collision rate of 0.070, a conservative margin of 0.747, and a worst collision rate of 0.107, lower than MAPPO's 0.320 and GAT-MAPPO's 0.187. This aggregate summary is used only to compactly report the cross-condition trend; detailed interpretation should still rely on the main result table and the diagnostic tables.
+
+\subsection{Communication-Radius Interpolation Diagnostic}
+
+To check whether the results depend only on the communication radii selected in the main table, an additional evaluation is conducted at unseen radii 5, 7, and 9. The policies are not retrained; the final checkpoints are evaluated with 50 episodes per seed. Therefore, this diagnostic is used only as appendix-level interpolation evidence. The results are shown in Table~\ref{tab:radius_interpolation} and Fig.~\ref{fig:radius_interp_success_en}--Fig.~\ref{fig:radius_interp_collision_en}.
+
+\input{../results/latex_radius_interpolation_table}
+
+At the three unseen radii, EA-RG-MAPPO-S obtains collision rates of 0.067, 0.100, and 0.067, respectively. These values are lower than MAPPO's 0.227, 0.200, and 0.153, and also lower than GAT-MAPPO's 0.113, 0.140, and 0.173. This result supports the cross-radius stability trend but does not replace the 300-episode main table.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{radius_interpolation_success_rate.png}
+    \caption{Success-rate interpolation diagnostic at unseen communication radii.}
+    \label{fig:radius_interp_success_en}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{radius_interpolation_collision_rate.png}
+    \caption{Collision-rate interpolation diagnostic at unseen communication radii.}
+    \label{fig:radius_interp_collision_en}
+\end{figure}
+
+\subsection{Target-Speed Robustness}
+
+To check whether the limited-communication stability is tied to a single target-speed setting, an appendix-level robustness evaluation is conducted without retraining. The mixed target speed is set to 0.60, 0.75, and 0.90, and policies are evaluated at communication radii 4 and 8 with 100 episodes per seed. The results are shown in Table~\ref{tab:speed_robustness}, with curves in Fig.~\ref{fig:speed_success_r4_en}--Fig.~\ref{fig:speed_collision_r8_en}.
+
+\input{../results/latex_speed_robustness_table}
+
+At target speed 0.90, EA-RG-MAPPO-S obtains a success rate of 0.867 and a collision rate of 0.097 at radius 4, while MAPPO and GAT-MAPPO have collision rates of 0.240 and 0.237, respectively. At radius 8, EA-RG-MAPPO-S has a collision rate of 0.130, lower than MAPPO's 0.300 and GAT-MAPPO's 0.203. This result supports the claim that the low-collision behavior is not caused only by the default target-speed setting.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speed_robustness_success_r4.png}
+    \caption{Success rates under target-speed changes at communication radius 4.}
+    \label{fig:speed_success_r4_en}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speed_robustness_collision_r4.png}
+    \caption{Collision rates under target-speed changes at communication radius 4.}
+    \label{fig:speed_collision_r4_en}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speed_robustness_success_r8.png}
+    \caption{Success rates under target-speed changes at communication radius 8.}
+    \label{fig:speed_success_r8_en}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speed_robustness_collision_r8.png}
+    \caption{Collision rates under target-speed changes at communication radius 8.}
+    \label{fig:speed_collision_r8_en}
+\end{figure}
+
+\subsection{Evaluation-Time Edge-Feature Masking Diagnostic}
+
+To analyze the dependence on different edge-feature groups, an evaluation-time masking diagnostic is performed. The trained EA-RG-MAPPO-S parameters are kept fixed, and one group of edge-feature dimensions is set to zero during evaluation. This is not a retrained structural ablation, so it is used only as mechanism-level diagnostic evidence. The results are shown in Table~\ref{tab:edge_feature_masking} and Fig.~\ref{fig:edge_feature_delta_en}.
+
+\input{../results/latex_edge_feature_ablation_table}
+
+Masking relative position, distance, bearing, or relative velocity individually leads to small changes in the 30-episode diagnostic mean. Masking communication reachability and target-node flags produces a small but consistent success drop and collision increase at radii 4 and 8. Masking all edge features does not cause catastrophic degradation, suggesting that node features, adjacency masks, and local observations contain redundant information.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{edge_feature_ablation_delta.png}
+    \caption{Changes in success and collision rates after masking different edge-feature groups at evaluation time.}
+    \label{fig:edge_feature_delta_en}
+\end{figure}

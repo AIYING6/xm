@@ -1,0 +1,20 @@
+\begin{table*}[t]
+\centering
+\caption{Seed-paired descriptive confidence intervals for the final 300-episode evaluation. Positive success gain means higher success than the baseline, and positive collision reduction means lower collision than the baseline.}
+\label{tab:final_300_paired_ci}
+\begin{tabular}{lccc}
+\toprule
+Baseline & Radius & Success gain $\uparrow$ & Collision reduction $\uparrow$ \\
+\midrule
+MAPPO & 4 & 0.219 [-0.279, 0.716] & 0.173 [-0.107, 0.454] \\
+MAPPO & 6 & 0.149 [-0.287, 0.585] & 0.153 [-0.247, 0.554] \\
+MAPPO & 8 & 0.080 [-0.293, 0.453] & 0.093 [-0.253, 0.440] \\
+MAPPO & 10 & 0.043 [-0.172, 0.259] & 0.067 [-0.154, 0.287] \\
+\midrule
+GAT-MAPPO & 4 & 0.114 [0.036, 0.193] & 0.081 [0.039, 0.123] \\
+GAT-MAPPO & 6 & 0.081 [-0.048, 0.210] & 0.061 [-0.044, 0.166] \\
+GAT-MAPPO & 8 & 0.106 [0.005, 0.206] & 0.096 [0.005, 0.186] \\
+GAT-MAPPO & 10 & 0.077 [-0.068, 0.222] & 0.070 [-0.028, 0.168] \\
+\bottomrule
+\end{tabular}
+\end{table*}

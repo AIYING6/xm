@@ -1,0 +1,12 @@
+check,status,detail
+reset_passthrough,ok,{'reset_count': 2}
+reset_node_shape,ok,"(4, 15)"
+reset_edge_shape,ok,"(4, 4, 13)"
+reset_adj_shape,ok,"(4, 4)"
+reset_role,ok,"[0, 0, 1, 1]"
+step_passthrough,ok,step_count=1
+last_graph_updated,ok,step graph cached
+step_state_refresh,ok,altitude feature changed after step
+no_nan,ok,no NaN
+no_inf,ok,no Inf
+close_passthrough,ok,env closed

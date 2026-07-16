@@ -1,0 +1,31 @@
+\begin{table*}[t]
+\centering
+\caption{Target-speed robustness evaluation. Results are reported as mean$\pm$std over three seeds with 100 episodes per seed.}
+\label{tab:speed_robustness}
+\begin{tabular}{lccccc}
+\toprule
+Method & Radius & Speed & Success $\uparrow$ & Collision $\downarrow$ & Timeout $\downarrow$ \\
+\midrule
+MAPPO & 4 & 0.60 & 0.750$\pm$0.249 & 0.170$\pm$0.144 & 0.080$\pm$0.106 \\
+MAPPO & 4 & 0.75 & 0.690$\pm$0.212 & 0.240$\pm$0.135 & 0.073$\pm$0.083 \\
+MAPPO & 4 & 0.90 & 0.663$\pm$0.102 & 0.240$\pm$0.029 & 0.100$\pm$0.078 \\
+MAPPO & 8 & 0.60 & 0.880$\pm$0.122 & 0.110$\pm$0.108 & 0.010$\pm$0.014 \\
+MAPPO & 8 & 0.75 & 0.800$\pm$0.167 & 0.180$\pm$0.151 & 0.023$\pm$0.021 \\
+MAPPO & 8 & 0.90 & 0.650$\pm$0.085 & 0.300$\pm$0.073 & 0.060$\pm$0.029 \\
+\midrule
+GAT-MAPPO & 4 & 0.60 & 0.937$\pm$0.012 & 0.047$\pm$0.012 & 0.020$\pm$0.008 \\
+GAT-MAPPO & 4 & 0.75 & 0.840$\pm$0.037 & 0.127$\pm$0.012 & 0.040$\pm$0.042 \\
+GAT-MAPPO & 4 & 0.90 & 0.670$\pm$0.037 & 0.237$\pm$0.056 & 0.093$\pm$0.053 \\
+GAT-MAPPO & 8 & 0.60 & 0.897$\pm$0.053 & 0.057$\pm$0.017 & 0.047$\pm$0.037 \\
+GAT-MAPPO & 8 & 0.75 & 0.777$\pm$0.052 & 0.183$\pm$0.040 & 0.043$\pm$0.048 \\
+GAT-MAPPO & 8 & 0.90 & 0.730$\pm$0.051 & 0.203$\pm$0.012 & 0.073$\pm$0.053 \\
+\midrule
+EA-RG-MAPPO-S & 4 & 0.60 & 0.940$\pm$0.024 & 0.027$\pm$0.012 & 0.033$\pm$0.024 \\
+EA-RG-MAPPO-S & 4 & 0.75 & 0.907$\pm$0.009 & 0.067$\pm$0.009 & 0.027$\pm$0.009 \\
+EA-RG-MAPPO-S & 4 & 0.90 & 0.867$\pm$0.026 & 0.097$\pm$0.021 & 0.037$\pm$0.012 \\
+EA-RG-MAPPO-S & 8 & 0.60 & 0.933$\pm$0.005 & 0.047$\pm$0.019 & 0.020$\pm$0.022 \\
+EA-RG-MAPPO-S & 8 & 0.75 & 0.883$\pm$0.042 & 0.083$\pm$0.025 & 0.033$\pm$0.026 \\
+EA-RG-MAPPO-S & 8 & 0.90 & 0.837$\pm$0.040 & 0.130$\pm$0.033 & 0.037$\pm$0.019 \\
+\bottomrule
+\end{tabular}
+\end{table*}

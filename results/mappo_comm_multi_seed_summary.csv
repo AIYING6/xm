@@ -1,0 +1,5 @@
+method,result_type,radius,success_mean,success_std,collision_mean,collision_std,timeout_mean,timeout_std,avg_steps_mean,avg_steps_std,n
+MAPPO,mean_std,4,0.690,0.212,0.240,0.135,0.073,0.083,85.40,30.28,3
+MAPPO,mean_std,6,0.777,0.158,0.217,0.141,0.013,0.019,68.69,29.24,3
+MAPPO,mean_std,8,0.800,0.167,0.180,0.151,0.023,0.021,62.21,24.59,3
+MAPPO,mean_std,10,0.850,0.054,0.143,0.046,0.007,0.009,58.90,17.53,3

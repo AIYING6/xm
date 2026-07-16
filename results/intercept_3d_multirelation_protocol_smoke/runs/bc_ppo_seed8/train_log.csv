@@ -1,0 +1,2 @@
+update,loss,policy_loss,value_loss,entropy,intent_loss,intent_acc,train_avg_reward,eval_success_rate,eval_collision_rate,eval_timeout_rate,eval_avg_steps,eval_avg_distance,eval_intent_acc
+1,0.07296906039118767,-0.004005432672178344,0.16052552312612534,3.2882681488990784,0.0,0.0,0.13132981956005096,0.0,0.0,1.0,260.0,68165.28125,nan

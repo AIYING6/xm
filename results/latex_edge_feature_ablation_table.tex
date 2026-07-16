@@ -1,0 +1,31 @@
+\begin{table*}[t]
+\centering
+\caption{Evaluation-time edge-feature masking diagnostic. Results are reported as mean$\pm$std over three seeds with 30 episodes per seed.}
+\label{tab:edge_feature_masking}
+\begin{tabular}{lccccc}
+\toprule
+Masked group & Radius & Success $\uparrow$ & $\Delta$Success & Collision $\downarrow$ & $\Delta$Collision \\
+\midrule
+None & 4 & 0.878$\pm$0.042 & +0.000 & 0.078$\pm$0.042 & +0.000 \\
+None & 8 & 0.867$\pm$0.027 & +0.000 & 0.089$\pm$0.031 & +0.000 \\
+\midrule
+Position & 4 & 0.878$\pm$0.042 & +0.000 & 0.078$\pm$0.042 & +0.000 \\
+Position & 8 & 0.867$\pm$0.027 & +0.000 & 0.089$\pm$0.031 & +0.000 \\
+\midrule
+Distance & 4 & 0.878$\pm$0.042 & +0.000 & 0.078$\pm$0.042 & +0.000 \\
+Distance & 8 & 0.867$\pm$0.027 & +0.000 & 0.089$\pm$0.031 & +0.000 \\
+\midrule
+Bearing & 4 & 0.878$\pm$0.042 & +0.000 & 0.078$\pm$0.042 & +0.000 \\
+Bearing & 8 & 0.878$\pm$0.042 & +0.011 & 0.089$\pm$0.042 & +0.000 \\
+\midrule
+Rel. velocity & 4 & 0.878$\pm$0.042 & +0.000 & 0.078$\pm$0.042 & +0.000 \\
+Rel. velocity & 8 & 0.878$\pm$0.031 & +0.011 & 0.089$\pm$0.016 & +0.000 \\
+\midrule
+Comm./target flags & 4 & 0.867$\pm$0.047 & -0.011 & 0.089$\pm$0.057 & +0.011 \\
+Comm./target flags & 8 & 0.856$\pm$0.057 & -0.011 & 0.100$\pm$0.072 & +0.011 \\
+\midrule
+All edge features & 4 & 0.878$\pm$0.063 & +0.000 & 0.089$\pm$0.057 & +0.011 \\
+All edge features & 8 & 0.867$\pm$0.072 & +0.000 & 0.089$\pm$0.068 & +0.000 \\
+\bottomrule
+\end{tabular}
+\end{table*}

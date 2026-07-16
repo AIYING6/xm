@@ -1,0 +1,22 @@
+\section{Problem Formulation}
+
+We consider a cooperative pursuit task with $N$ pursuer UAVs and $M$ maneuvering targets. In the current experimental setting, $N=3$ and $M=1$. At time step $t$, the motion state of pursuer $i$ is denoted as $x_i^t=(p_i^t,\psi_i^t,v_i^t,\eta_i^t)$, where $p_i^t$ is the two-dimensional position, $\psi_i^t$ is the heading angle, $v_i^t$ is the speed, and $\eta_i^t$ denotes the remaining energy or platform-specific state variable. The target state is denoted as $x_{\mathrm{tar}}^t=(p_{\mathrm{tar}}^t,\psi_{\mathrm{tar}}^t,v_{\mathrm{tar}}^t)$. Each pursuer selects a discrete action $a_i^t$ according to its local observation $o_i^t$ and graph information $G^t$.
+
+\subsection{Centralized Training and Decentralized Execution}
+
+The policy is trained under the centralized training and decentralized execution paradigm. During training, a centralized critic $V_\phi(s^t)$ uses the global state $s^t$, which contains all pursuer and target states. During execution, each agent only uses its local observation and graph-encoded representation. The learning objective is to maximize the expected discounted team return:
+\begin{equation}
+\max_\theta \mathbb{E}\left[\sum_{t=0}^{T}\gamma^t r^t\right].
+\end{equation}
+
+\subsection{Limited-Communication Graph}
+
+Limited communication is modeled by a communication radius $R_c$. The communication reachability between pursuers $i$ and $j$ is defined as:
+\begin{equation}
+\mathbb{I}_{ij}^{\mathrm{comm}}=\mathbb{I}\left(\|p_i^t-p_j^t\|_2\leq R_c\right).
+\end{equation}
+If the distance between two pursuers is larger than $R_c$, their direct teammate edge is unavailable, and the corresponding teammate-observation slot is masked to zero. The dynamic graph used by the policy is denoted as $G^t=(V^t,E^t)$, where nodes include pursuers and the target. Edges among pursuers are constrained by the communication radius. The target node is retained as a task-relevant observation node, while the edge feature records communication reachability. The main evaluation uses $R_c\in\{4,6,8,10\}$.
+
+\subsection{Reward and Evaluation Metrics}
+
+The reward consists of target-approaching reward, individual distance reward, heading reward, successful interception reward, collision penalty, and timeout-related penalty. The evaluation metrics include success rate, collision rate, timeout rate, and average episode length. Collision rate is emphasized as the main safety metric. An episode is counted as successful if any pursuer reaches the target capture radius within the time limit. A collision is counted if the distance between pursuers is below the safety threshold. An episode is counted as timeout if the maximum number of steps is reached without successful capture.

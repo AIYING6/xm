@@ -1,0 +1,37 @@
+project,check,value,status,notes
+english,main_file,present,ok,main.tex exists and is nonempty
+english,section_files,8/8,ok,all expected section files present
+english,title,13,ok,title present
+english,author,To be completed,action_item,replace author placeholder before submission
+english,abstract,200,ok,abstract present with reasonable length
+english,keywords,present,ok,keyword line present
+english,main_body_size,3376,ok,main text lexical count target >= 2500
+english,total_size,4547,ok,total lexical count including appendix
+english,result_table_inputs,10,ok,result table inputs present
+english,figures,12,ok,figure environments present
+english,citations,13,ok,citation commands present
+english,bibliography_style,plain,action_item,replace generic bibliography style after target journal is selected
+english,data_availability,missing,action_item,add data/code availability statement after journal target is selected
+english,funding_conflict_statement,missing,action_item,add funding/conflict/author contribution declarations if required
+english,required_marker,EA-RG-MAPPO-S,ok,required manuscript marker present
+english,required_marker,300 evaluation episodes per seed,ok,required manuscript marker present
+english,required_marker,not used as a main contribution,ok,required manuscript marker present
+english,required_marker,not be treated as a full air-combat system,ok,required manuscript marker present
+chinese,main_file,present,ok,main.tex exists and is nonempty
+chinese,section_files,8/8,ok,all expected section files present
+chinese,title,32,ok,title present
+chinese,author,待补充,action_item,replace author placeholder before submission
+chinese,abstract,417,ok,abstract present with reasonable length
+chinese,keywords,present,ok,keyword line present
+chinese,main_body_size,5606,ok,main text lexical count target >= 1800
+chinese,total_size,7772,ok,total lexical count including appendix
+chinese,result_table_inputs,10,ok,result table inputs present
+chinese,figures,12,ok,figure environments present
+chinese,citations,13,ok,citation commands present
+chinese,bibliography_style,plain,action_item,replace generic bibliography style after target journal is selected
+chinese,data_availability,missing,action_item,add data/code availability statement after journal target is selected
+chinese,funding_conflict_statement,missing,action_item,add funding/conflict/author contribution declarations if required
+chinese,required_marker,EA-RG-MAPPO-S,ok,required manuscript marker present
+chinese,required_marker,每种子 300 回合,ok,required manuscript marker present
+chinese,required_marker,不作为本文主贡献,ok,required manuscript marker present
+chinese,required_marker,不能被写成完整 6DOF 空战验证,ok,required manuscript marker present

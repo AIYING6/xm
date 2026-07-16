@@ -1,0 +1,52 @@
+claim_id,language,manuscript_path,evidence_type,marker,status,notes
+C1,en,paper_latex_en/sections/05_experiments.tex,table_input,\input{../results/latex_final_comm_300_table},ok,Final 300-episode main table is included.
+C1,en,paper_latex_en/sections/05_experiments.tex,figure,final_300_success_rate.png,ok,Final success-rate figure is included.
+C1,en,paper_latex_en/sections/05_experiments.tex,figure,final_300_collision_rate.png,ok,Final collision-rate figure is included.
+C1,en,paper_latex_en/sections/05_experiments.tex,budget_marker,300 evaluation episodes per seed,ok,Main evaluation budget is explicitly stated.
+C1,en,paper_latex_en/sections/05_experiments.tex,value_marker,0.054,ok,Key low-collision value is stated.
+C1,zh,paper_latex/sections/05_experiments.tex,table_input,\input{../results/latex_final_comm_300_table},ok,Final 300-episode main table is included.
+C1,zh,paper_latex/sections/05_experiments.tex,figure,final_300_success_rate.png,ok,Final success-rate figure is included.
+C1,zh,paper_latex/sections/05_experiments.tex,figure,final_300_collision_rate.png,ok,Final collision-rate figure is included.
+C1,zh,paper_latex/sections/05_experiments.tex,budget_marker,300,ok,Main evaluation budget is stated in Chinese manuscript.
+C2,en,paper_latex_en/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_final_300_paired_ci_table},ok,Seed-paired descriptive interval table is included.
+C2,en,paper_latex_en/sections/08_appendix_experiments.tex,boundary_marker,supplementary evidence rather than as a definitive statistical-significance test,ok,Seed-paired interval boundary is stated.
+C2,zh,paper_latex/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_final_300_paired_ci_table},ok,Seed-paired descriptive interval table is included.
+C2,zh,paper_latex/sections/08_appendix_experiments.tex,boundary_marker,不作为独立的强显著性检验,ok,Seed-paired interval boundary is stated.
+C3,en,paper_latex_en/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_comm_dropout_robustness_table},ok,Communication-dropout table is included.
+C3,en,paper_latex_en/sections/08_appendix_experiments.tex,figure,comm_dropout_collision_rate.png,ok,Communication-dropout collision figure is included.
+C3,en,paper_latex_en/sections/08_appendix_experiments.tex,budget_marker,50-episode-per-seed diagnostic,ok,Dropout diagnostic budget is stated.
+C3,zh,paper_latex/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_comm_dropout_robustness_table},ok,Communication-dropout table is included.
+C3,zh,paper_latex/sections/08_appendix_experiments.tex,figure,comm_dropout_collision_rate.png,ok,Communication-dropout collision figure is included.
+C3,zh,paper_latex/sections/08_appendix_experiments.tex,budget_marker,50 回合每种子的轻量诊断,ok,Dropout diagnostic budget is stated.
+C4,en,paper_latex_en/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_aggregate_robustness_table},ok,Aggregate robustness table is included.
+C4,en,paper_latex_en/sections/08_appendix_experiments.tex,boundary_marker,not introduce a new training run or a weighted optimization objective,ok,Aggregate summary boundary is stated.
+C4,zh,paper_latex/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_aggregate_robustness_table},ok,Aggregate robustness table is included.
+C4,zh,paper_latex/sections/08_appendix_experiments.tex,boundary_marker,不引入新的训练或加权优化目标,ok,Aggregate summary boundary is stated.
+C5,en,paper_latex_en/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_radius_interpolation_table},ok,Radius interpolation table is included.
+C5,en,paper_latex_en/sections/08_appendix_experiments.tex,figure,radius_interpolation_collision_rate.png,ok,Radius interpolation collision figure is included.
+C5,en,paper_latex_en/sections/08_appendix_experiments.tex,boundary_marker,does not replace the 300-episode main table,ok,Interpolation boundary is stated.
+C5,zh,paper_latex/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_radius_interpolation_table},ok,Radius interpolation table is included.
+C5,zh,paper_latex/sections/08_appendix_experiments.tex,figure,radius_interpolation_collision_rate.png,ok,Radius interpolation collision figure is included.
+C5,zh,paper_latex/sections/08_appendix_experiments.tex,boundary_marker,不替代 300-episode 主表,ok,Interpolation boundary is stated.
+C6,en,paper_latex_en/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_speed_robustness_table},ok,Target-speed robustness table is included.
+C6,en,paper_latex_en/sections/08_appendix_experiments.tex,figure,speed_robustness_collision_r8.png,ok,Target-speed collision figure is included.
+C6,en,paper_latex_en/sections/08_appendix_experiments.tex,budget_marker,100 episodes per seed,ok,Target-speed robustness budget is stated.
+C6,zh,paper_latex/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_speed_robustness_table},ok,Target-speed robustness table is included.
+C6,zh,paper_latex/sections/08_appendix_experiments.tex,figure,speed_robustness_collision_r8.png,ok,Target-speed collision figure is included.
+C6,zh,paper_latex/sections/08_appendix_experiments.tex,budget_marker,100 回合每种子的附录级评估,ok,Target-speed robustness budget is stated.
+C7,en,paper_latex_en/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_edge_feature_ablation_table},ok,Edge-feature masking table is included.
+C7,en,paper_latex_en/sections/08_appendix_experiments.tex,figure,edge_feature_ablation_delta.png,ok,Edge-feature masking delta figure is included.
+C7,en,paper_latex_en/sections/08_appendix_experiments.tex,boundary_marker,not a retrained structural ablation,ok,Edge masking boundary is stated.
+C7,zh,paper_latex/sections/08_appendix_experiments.tex,table_input,\input{../results/latex_edge_feature_ablation_table},ok,Edge-feature masking table is included.
+C7,zh,paper_latex/sections/08_appendix_experiments.tex,figure,edge_feature_ablation_delta.png,ok,Edge-feature masking delta figure is included.
+C7,zh,paper_latex/sections/08_appendix_experiments.tex,boundary_marker,不等同于重新训练的结构消融,ok,Edge masking boundary is stated.
+C8,en,paper_latex_en/sections/06_discussion.tex,boundary_marker,not be treated as a full air-combat system,ok,LAG/JSBSim extension boundary is stated in discussion.
+C8,en,paper_latex_en/sections/06_discussion.tex,extension_marker,LAG/JSBSim,ok,LAG/JSBSim future-extension context is stated.
+C8,zh,paper_latex/sections/06_discussion.tex,boundary_marker,不能被写成完整 6DOF 空战验证,ok,LAG/JSBSim extension boundary is stated in Chinese discussion.
+C8,zh,paper_latex/sections/06_discussion.tex,extension_marker,LAG/JSBSim,ok,LAG/JSBSim future-extension context is stated.
+C9,en,paper_latex_en/sections/05_experiments.tex,boundary_marker,cannot support a high-accuracy intent-recognition claim,ok,Intent diagnostic boundary is stated in experiments.
+C9,en,paper_latex_en/sections/05_experiments.tex,value_marker,balanced accuracy of 0.200,ok,Intent balanced-accuracy diagnostic value is stated.
+C9,zh,paper_latex/sections/05_experiments.tex,boundary_marker,不能作为强主张,ok,Intent diagnostic boundary is stated in Chinese experiments.
+C9,zh,paper_latex/sections/05_experiments.tex,value_marker,balanced accuracy = 0.200,ok,Intent balanced-accuracy diagnostic value is stated.
+C9,en,paper_latex_en/sections/06_discussion.tex,boundary_marker,not used as a main contribution,ok,Intent branch is excluded as a main contribution in discussion.
+C9,zh,paper_latex/sections/06_discussion.tex,boundary_marker,不作为本文主贡献,ok,Intent branch is excluded as a main contribution in Chinese discussion.
