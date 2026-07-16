@@ -35,7 +35,7 @@ Completion standard:
 
 ```text
 Task:
-Draft the 3DOF experiment section around the finalized evidence stack.
+Prepare manuscript-quality 3DOF figures and LaTeX migration.
 
 Relevant files:
 - algorithms/ri_gmappo/simple_ri_gmappo.py
@@ -48,6 +48,9 @@ Relevant files:
 - envs/uav_intercept_3d_env.py
 - docs/intercept_3d_paper_main_table.md
 - docs/intercept_3d_strict_sensing_curriculum_seed0_pilot_formal_eval_summary.md
+- docs/english_3d_manuscript_draft.md
+- docs/english_3d_experiments_draft.md
+- docs/3d_experiment_writing_notes_cn.md
 - results/intercept_3d_strict_sensing_curriculum_seed0_pilot/formal_eval/episode_metrics.csv
 
 Constraints:
@@ -64,11 +67,14 @@ Constraints:
 - Do not rewrite the claim as a general strict-sensing superiority claim across all node failures.
 - Use three layers of evidence: main relay-failure recovery, mechanism ablations (`no_task_support`, `no_role_pair_gate`), and strict-sensing scenario depth.
 - Clearly label the strict-sensing result as a 10-update fine-tuning pilot if used in manuscript text.
+- Do not overwrite the old 2D manuscript until the 3DOF LaTeX migration is explicitly chosen.
+- Prioritize figures that make the 3DOF contribution readable: task scene, multi-relation graph, relay-failure recovery timeline, strict-sensing result.
 
 Completion standard:
 - 3DOF environment smoke test passes.
 - `scripts/smoke_test_strict_target_sensing.py` passes.
-- Draft/update the experiment narrative without overstating scout failure or strict-sensing generality.
+- Add or update figure-generation scripts and manuscript-ready figure assets.
+- If migrating to LaTeX, create a separate 3DOF LaTeX path or clearly mark the old 2D manuscript as superseded.
 - Run the lightweight paper asset gate after any table integration.
 - `docs/PROJECT_STATE.md` is updated with the result and any remaining failure mode.
 ```

@@ -57,6 +57,7 @@
 | 英文 3DOF Experiments 初稿 | `docs/english_3d_experiments_draft.md` |
 | 英文 Discussion/Conclusion 初稿 | `docs/english_discussion_conclusion_draft.md` |
 | 完整英文 manuscript 初稿 | `docs/english_manuscript_draft.md` |
+| 完整英文 3DOF manuscript 初稿 | `docs/english_3d_manuscript_draft.md` |
 | LaTeX 论文工程 | `paper_latex/main.tex` |
 | LaTeX 工程说明 | `paper_latex/README.md` |
 | 英文 LaTeX 论文工程 | `paper_latex_en/main.tex` |
