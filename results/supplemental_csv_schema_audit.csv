@@ -23,7 +23,7 @@ speed_robustness_raw,results/speed_robustness_eval.csv,54,54,14,14,"method=EA-RG
 speed_robustness_summary,results/speed_robustness_summary.csv,18,18,13,13,"method=EA-RG-MAPPO-S,GAT-MAPPO,MAPPO; episodes=100; radius=4,8; target_speed=0.6,0.75,0.9; n=3",ok,Aggregated target-speed robustness rows.
 edge_feature_ablation_raw,results/edge_feature_ablation_eval.csv,42,42,16,16,"method=EA-RG-MAPPO-S; seed=0,1,2; episodes=30; target_policy=mixed; target_speed=0.75; radius=4,8",ok,Raw evaluation-time edge-feature masking rows.
 edge_feature_ablation_summary,results/edge_feature_ablation_summary.csv,14,14,14,14,"radius=4,8; episodes=30; n=3",ok,Aggregated evaluation-time edge-feature masking rows.
-figure_asset_audit,results/figure_asset_audit.csv,23,23,8,8,status=ok,ok,Generated figure technical audit.
+figure_asset_audit,results/figure_asset_audit.csv,27,27,8,8,status=ok,ok,Generated figure technical audit.
 evaluation_budget_audit,results/evaluation_budget_audit.csv,6,6,10,10,status=ok,ok,Generated evaluation-budget audit.
 method_naming_audit,results/method_naming_audit.csv,28,28,6,6,status=ok,ok,Generated method-name consistency audit.
 lag_jsbsim_migration_probe,results/lag_jsbsim_migration_probe.csv,29,29,4,4,,ok,LAG/JSBSim migration-readiness probe.

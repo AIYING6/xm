@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-base-seed", type=int, default=40_000)
     parser.add_argument("--target-policy", type=str, default="straight")
     parser.add_argument("--strict-target-sensing", action="store_true")
-    parser.add_argument("--graph-encoder", choices=("single", "multi_relation"), default="single")
+    parser.add_argument("--graph-encoder", choices=("no_graph", "single", "multi_relation"), default="single")
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")

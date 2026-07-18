@@ -1,0 +1,40 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{xcolor}
+
+\geometry{left=2.35cm,right=2.35cm,top=2.35cm,bottom=2.35cm}
+\graphicspath{{../results/figures/}}
+
+\title{Multi-Relation Role Graph Reinforcement Learning for Heterogeneous UAV Kill-Chain Recovery under Limited Communication and Intermittent Sensing}
+\author{To be completed}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Heterogeneous unmanned aerial vehicle (UAV) teams must close cooperative kill chains under incomplete sensing, limited communication, and temporary link or platform degradation. A key challenge is that the platforms contributing to the kill chain play different roles: a scout may detect the target, a relay may maintain information flow, and an attacker may form the final engagement window. Treating all interactions as a single homogeneous graph can obscure whether an edge corresponds to perception, communication, or task support. This paper proposes EA-RG-MAPPO-S, a multi-relation edge-aware role graph multi-agent reinforcement learning method for 3DOF heterogeneous UAV cooperative interception. The method constructs separate perception, communication, and dynamic task-support relations, and performs role-pair-conditioned message propagation under centralized training and decentralized execution. A staged topology curriculum exposes the policy to communication range variation, dropout, message delay, radar dropout, and temporary communication-node failure. Experiments in a constrained 3DOF cooperative interception environment show that the proposed method improves relay-failure kill-chain recovery compared with a matched single-graph MAPPO variant. Formal ablations indicate that dynamic task-support relations and role-pair message gates contribute to the recovery behavior. A strict-sensing pilot further shows that the relay-failure recovery advantage remains when true target-state fallback is removed from observations.
+\end{abstract}
+
+\noindent\textbf{Keywords:} heterogeneous UAVs; multi-agent reinforcement learning; multi-relation graph; limited communication; intermittent sensing; cooperative interception; kill-chain recovery
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_problem}
+\input{sections/04_method}
+\input{sections/05_experiments}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

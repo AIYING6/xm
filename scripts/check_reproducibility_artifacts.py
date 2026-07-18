@@ -252,7 +252,7 @@ def check_csv_shapes() -> list[str]:
         "results/reproducibility_checksum_verification.csv": 184,
         "results/radius_interpolation_eval.csv": 27,
         "results/radius_interpolation_summary.csv": 9,
-        "results/figure_asset_audit.csv": 23,
+        "results/figure_asset_audit.csv": 27,
         "results/evaluation_budget_audit.csv": 6,
         "results/method_naming_audit.csv": 28,
         "results/supplemental_csv_schema_audit.csv": 32,

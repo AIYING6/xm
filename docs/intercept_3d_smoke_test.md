@@ -1,6 +1,6 @@
 # 3DOF Interception Environment Smoke Test
 
-Generated: 2026-07-16T21:04:54
+Generated: 2026-07-18T22:13:19
 
 Purpose:
 
@@ -14,7 +14,7 @@ This is an interface and dynamics smoke test, not a learning result.
 | Policy | Episodes | Success | Collision | Constraint Violation | Mean Steps | Mean Tracking | Mean Attack Window | Mean Connectivity | Mean Message Age |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | geometric | 5 | 0.800 | 0.200 | 0.000 | 146.4 | 0.667 | 0.266 | 1.000 | 0.267 |
-| geometric_dropout | 5 | 0.800 | 0.200 | 0.000 | 146.4 | 0.600 | 0.266 | 0.933 | 2.367 |
+| geometric_dropout | 5 | 0.800 | 0.200 | 0.000 | 146.4 | 0.600 | 0.266 | 1.000 | 0.300 |
 | random | 5 | 0.000 | 0.000 | 0.000 | 260.0 | 0.000 | 0.000 | 0.133 | 156.667 |
 
 ## Interface Checked

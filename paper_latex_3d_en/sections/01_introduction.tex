@@ -1,0 +1,17 @@
+\section{Introduction}
+
+Cooperative UAV decision making is moving from platform-centric pursuit toward networked sensing, communication, and engagement. In such missions, success is not determined only by whether a single aircraft approaches a target. A team must detect the target, transfer or relay target information, keep usable communication paths, position an appropriate shooter, and form an engagement window before the target escapes or the team loses situational awareness. This sequence is treated in this paper as a cooperative kill chain.
+
+Heterogeneous UAV teams make this problem more difficult. A scout UAV may have a wider radar field of view but weaker attack capability. A relay UAV may have a larger communication range but weaker maneuverability. An attacker may have better engagement geometry but may depend on target information discovered by another platform. Therefore, the relation between two UAVs is not simply a generic graph edge. A scout-to-attacker edge can represent target-information support, a relay-to-attacker edge can represent communication reconstruction, and an attacker-to-relay edge can represent the need to preserve a useful information path.
+
+This paper studies an implementable intermediate step toward high-fidelity air-combat decision making. Instead of directly training all baselines in a full 6DOF JSBSim environment, we build a lightweight constrained 3DOF tactical interception environment. It preserves the key decision constraints needed for the present claim: three-dimensional position, speed, heading, flight-path angle, altitude limits, turn and climb constraints, radar detection, limited communication, message age, and attack-window metrics.
+
+The proposed method is EA-RG-MAPPO-S, a multi-relation edge-aware role graph MAPPO method with staged topology curriculum. It represents the UAV team and target as a role graph, separates perception, communication, and task-support relations, and applies role-pair-conditioned message propagation. The strongest result appears under relay-node communication failure: the multi-relation policy restores the kill chain more reliably and more quickly than a matched single-graph variant.
+
+The contributions are:
+\begin{enumerate}
+    \item A 3DOF heterogeneous UAV cooperative interception task is constructed around kill-chain closure rather than simple pursuit success.
+    \item A multi-relation role graph policy is proposed, separating perception, communication, and dynamic task-support relations with role-pair-conditioned message propagation.
+    \item A staged topology curriculum is used to expose the policy to communication range variation, dropout, message delay, radar dropout, and temporary communication-node failure.
+    \item A focused evidence chain is provided: relay-failure recovery is the main claim, task-support and role-pair-gate ablations support the mechanism, and strict sensing is reported as a budget-labeled scenario-depth pilot.
+\end{enumerate}

@@ -1,0 +1,24 @@
+\section{Method}
+
+\subsection{Overview}
+
+EA-RG-MAPPO-S combines a MAPPO-style training objective with a multi-relation role graph actor. The critic uses centralized training information, while the actor receives local observations and graph observations. The policy is executed in a decentralized manner.
+
+The graph representation contains UAV and target nodes. Node roles distinguish scout, relay, attacker, and target entities. Edge features encode relative distance, relative velocity, altitude difference, relative bearing, communication reachability, message age, information confidence, sensing source, and current kill-chain stage.
+
+\subsection{Multi-Relation Role Graph}
+
+The method constructs separate perception, communication, and task-support adjacency matrices. Perception relations indicate which platform can directly detect or track the target. Communication relations indicate which platforms can exchange information. Task-support relations indicate which platform is currently supporting another platform's kill-chain function, such as scout-to-attacker target-information support or relay-to-attacker communication reconstruction.
+
+Role-pair-conditioned message propagation is used so that messages can depend on sender role, receiver role, and relation type. This is the key distinction from a single homogeneous graph encoder.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.98\linewidth]{intercept_3d_multi_relation_graph.png}
+    \caption{Multi-relation role graph. Perception, communication, task-support, and attack-window relations have different semantics, while role-pair-conditioned messages control information flow between heterogeneous platforms.}
+    \label{fig:multi_relation_graph}
+\end{figure}
+
+\subsection{Staged Topology Curriculum}
+
+The training procedure first learns the basic straight-target interception task, then performs topology-curriculum fine-tuning under randomized communication range, dropout, message delay, radar dropout, and temporary blue-node communication failure. Demonstration pretraining and reward shaping are used only as training aids, not as claimed innovations.

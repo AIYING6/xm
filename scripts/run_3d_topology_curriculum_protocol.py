@@ -14,12 +14,18 @@ def parse_args() -> argparse.Namespace:
         description="Fine-tune matched 3DOF checkpoints with topology-domain randomization and evaluate robustness."
     )
     parser.add_argument("--seeds", nargs="+", type=int, default=(0, 1, 2))
-    parser.add_argument("--graph-encoders", nargs="+", choices=("single", "multi_relation"), default=("single", "multi_relation"))
+    parser.add_argument(
+        "--graph-encoders",
+        nargs="+",
+        choices=("no_graph", "single", "multi_relation"),
+        default=("single", "multi_relation"),
+    )
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
     parser.add_argument("--source-single-root", type=Path, default=ROOT / "results" / "intercept_3d_single_matched_protocol" / "runs")
     parser.add_argument("--source-multi-root", type=Path, default=ROOT / "results" / "intercept_3d_multirelation_matched_protocol" / "runs")
+    parser.add_argument("--source-no-graph-root", type=Path, default=ROOT / "results" / "intercept_3d_no_graph_matched_protocol" / "runs")
     parser.add_argument("--source-checkpoint-kind", choices=("actor_critic_best.pt", "actor_critic_latest.pt"), default="actor_critic_best.pt")
     parser.add_argument("--target-policy", type=str, default="straight")
     parser.add_argument("--strict-target-sensing", action="store_true")
@@ -62,7 +68,14 @@ def run_command(command: list[str]) -> None:
 
 
 def source_checkpoint(args: argparse.Namespace, graph_encoder: str, seed: int) -> Path:
-    root = args.source_single_root if graph_encoder == "single" else args.source_multi_root
+    if graph_encoder == "no_graph":
+        root = args.source_no_graph_root
+    elif graph_encoder == "single":
+        root = args.source_single_root
+    elif graph_encoder == "multi_relation":
+        root = args.source_multi_root
+    else:
+        raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
     return root / f"bc_ppo_seed{seed}" / args.source_checkpoint_kind
 
 

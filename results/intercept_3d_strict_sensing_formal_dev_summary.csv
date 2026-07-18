@@ -1,0 +1,13 @@
+row_type,graph_encoder,train_seed,selected_update,selected_checkpoint,n_seeds,success_mean_mean,success_mean_std,post_failure_chain_recovered_mean_mean,post_failure_chain_recovered_mean_std,post_failure_chain_recovery_steps_mean_mean,post_failure_chain_recovery_steps_mean_std,tracking_during_failure_rate_mean_mean,tracking_during_failure_rate_mean_std,connectivity_during_failure_mean_mean,connectivity_during_failure_mean_std,chain_closed_during_failure_rate_mean_mean,chain_closed_during_failure_rate_mean_std,steps_mean_mean,steps_mean_std,timeout_mean_mean,timeout_mean_std
+seed_result,multi_relation,0,30,results/intercept_3d_strict_sensing_formal_seed0_dev/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0030.pt,1,1,0,1,0,5.52,0,1,0,0.439487,0,0.15923,0,45.52,0,0,0
+seed_result,single,0,70,results/intercept_3d_strict_sensing_formal_seed0_dev/runs/single/bc_ppo_seed0/actor_critic_update_0070.pt,1,0.9,0,0.9,0,5.47778,0,0.914056,0,0.427771,0,0.144032,0,66.93,0,0.1,0
+seed_result,multi_relation,1,110,results/intercept_3d_strict_sensing_formal_seed1_dev/runs/multi_relation/bc_ppo_seed1/actor_critic_update_0110.pt,1,1,0,1,0,5.26,0,1,0,0.442217,0,0.163325,0,45.26,0,0,0
+seed_result,single,1,10,results/intercept_3d_strict_sensing_formal_seed1_dev/runs/single/bc_ppo_seed1/actor_critic_update_0010.pt,1,0.88,0,0.88,0,5.42045,0,0.898005,0,0.424919,0,0.141754,0,71.17,0,0.12,0
+seed_result,multi_relation,2,30,results/intercept_3d_strict_sensing_formal_seed2_dev/runs/multi_relation/bc_ppo_seed2/actor_critic_update_0030.pt,1,1,0,1,0,5.52,0,1,0,0.439124,0,0.158687,0,45.52,0,0,0
+seed_result,single,2,70,results/intercept_3d_strict_sensing_formal_seed2_dev/runs/single/bc_ppo_seed2/actor_critic_update_0070.pt,1,1,0,1,0,5.26,0,0.999444,0,0.44213,0,0.163194,0,45.26,0,0,0
+graph_summary,single,all,,,3,0.926667,0.064291,0.926667,0.064291,5.38608,0.112886,0.937168,0.0545262,0.431607,0.00922436,0.14966,0.011776,61.12,13.8978,0.0733333,0.064291
+graph_summary,multi_relation,all,,,3,1,0,1,0,5.43333,0.150111,1,0,0.440276,0.00169073,0.160414,0.00253558,45.4333,0.150111,0,0
+paired_seed_delta_multi_minus_single,multi_minus_single,0,,,1,0.1,0,0.1,0,0.04222,0,0.085944,0,0.011716,0,0.015198,0,-21.41,0,-0.1,0
+paired_seed_delta_multi_minus_single,multi_minus_single,1,,,1,0.12,0,0.12,0,-0.16045,0,0.101995,0,0.017298,0,0.021571,0,-25.91,0,-0.12,0
+paired_seed_delta_multi_minus_single,multi_minus_single,2,,,1,0,0,0,0,0.26,0,0.000556,0,-0.003006,0,-0.004507,0,0.26,0,0,0
+paired_delta_summary_multi_minus_single,multi_minus_single,all,,,3,0.0733333,0.064291,0.0733333,0.064291,0.0472567,0.21027,0.0628317,0.0545262,0.00866933,0.0104893,0.010754,0.0135951,-15.6867,13.9923,-0.0733333,0.064291

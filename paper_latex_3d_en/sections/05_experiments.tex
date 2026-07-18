@@ -1,0 +1,47 @@
+\section{Experiments}
+
+\subsection{Experimental Protocol}
+
+The current formal comparison uses matched single-graph and multi-relation checkpoints under relay and scout communication-node failure. Each formal node-failure scenario uses three training seeds and 30 independent evaluation episodes per checkpoint-scenario pair. The strongest claim is intentionally narrow: relay-failure kill-chain recovery.
+
+\subsection{Main 3DOF Evidence}
+
+Table~\ref{tab:paper_main_3d} summarizes the current paper-facing evidence. Relay failure is the only row currently promoted as the main statistical claim. Scout failure, dropout, delay, and radar dropout are positive trends. Communication range 0.75 is kept as a mixed stress case.
+
+\begin{table*}[t]
+    \centering
+    \caption{Paper-facing 3DOF evidence table. Success and recovery deltas are percentage-point differences favoring EA-RG-MAPPO-S over the matched single-graph variant.}
+    \label{tab:paper_main_3d}
+    \resizebox{\textwidth}{!}{\input{../docs/intercept_3d_paper_main_table.tex}}
+\end{table*}
+
+Figure~\ref{fig:recovery_summary} shows the main recovery evidence and the relay-failure mechanism ablations. Under relay failure, EA-RG-MAPPO-S improves post-failure recovery from 92.2\% to 100.0\% and reduces recovery time from 21.8 to 5.6 steps. Removing dynamic task-support relations or role-pair message gates degrades relay-failure recovery.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.98\textwidth]{intercept_3d_recovery_evidence_summary.png}
+    \caption{Main relay-failure recovery evidence and mechanism ablations. The relay-failure row supports the primary claim; scout failure is retained as supporting trend evidence.}
+    \label{fig:recovery_summary}
+\end{figure*}
+
+\subsection{Strict Intermittent Sensing Pilot}
+
+The strict-sensing setting removes true target-state fallback from local observations, shared observations, and graph target nodes before valid detection. Existing node-failure curriculum checkpoints are fine-tuned for 10 PPO updates under strict sensing, then evaluated with 30 episodes per seed and scenario. This is reported as a budget-labeled scenario-depth pilot.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.98\linewidth]{intercept_3d_strict_sensing_summary.png}
+    \caption{Strict intermittent-sensing pilot. The relay-failure result is separated and paper-useful; the scout-failure result is a positive trend whose confidence interval crosses zero.}
+    \label{fig:strict_sensing}
+\end{figure}
+
+\subsection{Qualitative Relay-Failure Replay}
+
+Figure~\ref{fig:relay_replay} shows a matched qualitative relay-failure case. The single-graph policy times out without chain closure, while the multi-relation policy closes the chain after the failure interval. This figure is used for interpretation only; aggregate statistics remain the main evidence.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.98\textwidth]{intercept_3d_relay_failure_case_replay.png}
+    \caption{Matched relay-failure replay case. The figure supports interpretation of the aggregate recovery table and should not be used as a replacement for statistical evaluation.}
+    \label{fig:relay_replay}
+\end{figure*}

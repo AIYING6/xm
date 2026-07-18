@@ -1,0 +1,7 @@
+split,scenario,graph_encoder,n_training_seeds,checkpoint_updates,success_mean_mean,success_mean_std,post_failure_chain_recovered_mean_mean,post_failure_chain_recovered_mean_std,post_failure_chain_recovery_steps_mean_mean,post_failure_chain_recovery_steps_mean_std,tracking_during_failure_rate_mean_mean,tracking_during_failure_rate_mean_std,connectivity_during_failure_mean_mean,connectivity_during_failure_mean_std,steps_mean_mean,steps_mean_std,timeout_mean_mean,timeout_mean_std
+validation,relay_failure,multi_relation,1,"2,4,6,8,10",1,0,1,0,6.9,0,1,0,0.424103,0,46.9,0,0,0
+validation,relay_failure,no_graph,1,"2,4,6,8,10",0.48,0.0447214,0.48,0.0447214,4.79,0.0223607,0.34125,0.0249233,0.253024,0.0167083,156.7,9.61509,0.52,0.0447214
+validation,relay_failure,single,1,"2,4,6,8,10",0.74,0.0547723,0.74,0.0547723,5.55714,0.176054,0.779102,0.0470561,0.412723,0.00490347,101.32,11.6117,0.26,0.0547723
+test,relay_failure,multi_relation,1,10,1,0,1,0,6.3,0,1,0,0.430503,0,46.3,0,0,0
+test,relay_failure,no_graph,1,10,0.3,0,0.3,0,5.66667,0,0.257917,0,0.179325,0,195.7,0,0.7,0
+test,relay_failure,single,1,10,1,0,1,0,5.8,0,1,0,0.435714,0,45.8,0,0,0

@@ -1,6 +1,6 @@
 # 3DOF Formal Role-Pair Gate Ablation
 
-Generated: 2026-07-16T21:05:11
+Generated: 2026-07-16T22:22:49
 
 This table compares the full multi-relation role graph against `no_role_pair_gate` on matched node-failure evaluation seeds.
 

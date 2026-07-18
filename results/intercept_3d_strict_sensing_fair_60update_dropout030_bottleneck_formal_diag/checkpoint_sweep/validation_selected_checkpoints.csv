@@ -1,0 +1,10 @@
+split,scenario,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,selection_score,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,success_mean,episodes
+validation,dropout030_relay_failure,multi_relation,0,30,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0030.pt,1092.85,1,7.15,1,20
+validation,dropout030_relay_failure,multi_relation,1,10,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/multi_relation/bc_ppo_seed1/actor_critic_update_0010.pt,818.6,0.75,6.4,0.75,20
+validation,dropout030_relay_failure,multi_relation,2,20,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/multi_relation/bc_ppo_seed2/actor_critic_update_0020.pt,1093.8,1,6.2,1,20
+validation,dropout030_relay_failure,no_graph,0,20,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/no_graph/bc_ppo_seed0/actor_critic_update_0020.pt,50,0.05,5,0.05,20
+validation,dropout030_relay_failure,no_graph,1,40,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/no_graph/bc_ppo_seed1/actor_critic_update_0040.pt,929.235,0.85,5.76471,0.85,20
+validation,dropout030_relay_failure,no_graph,2,20,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/no_graph/bc_ppo_seed2/actor_critic_update_0020.pt,49,0.05,6,0.05,20
+validation,dropout030_relay_failure,single,0,10,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/single/bc_ppo_seed0/actor_critic_update_0010.pt,599.545,0.55,5.45455,0.55,20
+validation,dropout030_relay_failure,single,1,30,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/single/bc_ppo_seed1/actor_critic_update_0030.pt,544.4,0.5,5.6,0.5,20
+validation,dropout030_relay_failure,single,2,50,results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/single/bc_ppo_seed2/actor_critic_update_0050.pt,1094.1,1,5.9,1,20

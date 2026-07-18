@@ -1,6 +1,6 @@
 # 3DOF Formal Task-Support Ablation
 
-Generated: 2026-07-16T21:05:11
+Generated: 2026-07-16T22:22:48
 
 This table compares the full multi-relation role graph against the `no_task_support` ablation on matched node-failure evaluation seeds. Positive deltas favor the full model, except for steps and recovery steps where negative deltas favor the full model.
 

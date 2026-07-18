@@ -40,6 +40,13 @@ SCENARIOS = {
     "radar_010": RobustnessScenario("radar_010", radar_dropout_prob=0.10),
     "radar_025": RobustnessScenario("radar_025", radar_dropout_prob=0.25),
     "relay_failure": RobustnessScenario("relay_failure", failed_blue_agent=1, node_failure_start_step=40, node_failure_duration_steps=80),
+    "dropout030_relay_failure": RobustnessScenario(
+        "dropout030_relay_failure",
+        communication_dropout_prob=0.30,
+        failed_blue_agent=1,
+        node_failure_start_step=40,
+        node_failure_duration_steps=80,
+    ),
     "scout_failure": RobustnessScenario("scout_failure", failed_blue_agent=0, node_failure_start_step=40, node_failure_duration_steps=80),
 }
 
@@ -68,13 +75,19 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--seeds", nargs="+", type=int, default=(0, 1, 2))
     parser.add_argument("--train-methods", nargs="+", choices=("bc_only", "bc_ppo"), default=("bc_ppo",))
-    parser.add_argument("--graph-encoders", nargs="+", choices=("single", "multi_relation"), default=("single", "multi_relation"))
+    parser.add_argument(
+        "--graph-encoders",
+        nargs="+",
+        choices=("no_graph", "single", "multi_relation"),
+        default=("single", "multi_relation"),
+    )
     parser.add_argument("--scenarios", nargs="+", choices=tuple(SCENARIOS), default=tuple(SCENARIOS))
     parser.add_argument("--episodes", type=int, default=30)
     parser.add_argument("--eval-base-seed", type=int, default=80_000)
     parser.add_argument("--target-policy", type=str, default="straight")
     parser.add_argument("--strict-target-sensing", action="store_true")
     parser.add_argument("--checkpoint-kind", choices=("actor_critic_best.pt", "actor_critic_latest.pt"), default="actor_critic_best.pt")
+    parser.add_argument("--no-graph-root", type=Path, default=ROOT / "results" / "intercept_3d_no_graph_matched_protocol" / "runs")
     parser.add_argument("--single-root", type=Path, default=ROOT / "results" / "intercept_3d_single_matched_protocol" / "runs")
     parser.add_argument("--multi-root", type=Path, default=ROOT / "results" / "intercept_3d_multirelation_matched_protocol" / "runs")
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
@@ -87,7 +100,14 @@ def parse_args() -> argparse.Namespace:
 
 
 def checkpoint_path(args: argparse.Namespace, graph_encoder: str, train_method: str, seed: int) -> Path:
-    root = args.single_root if graph_encoder == "single" else args.multi_root
+    if graph_encoder == "no_graph":
+        root = args.no_graph_root
+    elif graph_encoder == "single":
+        root = args.single_root
+    elif graph_encoder == "multi_relation":
+        root = args.multi_root
+    else:
+        raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
     return root / f"{train_method}_seed{seed}" / args.checkpoint_kind
 
 

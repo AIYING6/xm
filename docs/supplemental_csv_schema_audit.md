@@ -1,6 +1,6 @@
 # Supplemental CSV Schema Audit
 
-Generated: 2026-07-16T21:05:12
+Generated: 2026-07-16T22:22:50
 
 Purpose:
 
@@ -44,7 +44,7 @@ failures = 0
 | `speed_robustness_summary` | 18 / 18 | 13 / 13 | ok | Aggregated target-speed robustness rows. |
 | `edge_feature_ablation_raw` | 42 / 42 | 16 / 16 | ok | Raw evaluation-time edge-feature masking rows. |
 | `edge_feature_ablation_summary` | 14 / 14 | 14 / 14 | ok | Aggregated evaluation-time edge-feature masking rows. |
-| `figure_asset_audit` | 23 / 23 | 8 / 8 | ok | Generated figure technical audit. |
+| `figure_asset_audit` | 27 / 27 | 8 / 8 | ok | Generated figure technical audit. |
 | `evaluation_budget_audit` | 6 / 6 | 10 / 10 | ok | Generated evaluation-budget audit. |
 | `method_naming_audit` | 28 / 28 | 6 / 6 | ok | Generated method-name consistency audit. |
 | `lag_jsbsim_migration_probe` | 29 / 29 | 4 / 4 | ok | LAG/JSBSim migration-readiness probe. |

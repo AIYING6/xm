@@ -20,7 +20,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--hidden-dim", type=int, default=128)
     parser.add_argument("--role-dim", type=int, default=8)
     parser.add_argument("--intent-dim", type=int, default=8)
-    parser.add_argument("--graph-encoder", choices=("single", "multi_relation"), default="single")
+    parser.add_argument("--graph-encoder", choices=("no_graph", "single", "multi_relation"), default="single")
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
@@ -50,6 +50,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--radar-dropout-random-min", type=float, default=None)
     parser.add_argument("--radar-dropout-random-max", type=float, default=None)
     parser.add_argument("--strict-target-sensing", action="store_true")
+    parser.add_argument("--agent-target-info-bottleneck", action="store_true")
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
     parser.add_argument("--node-failure-random-prob", type=float, default=0.0)
     parser.add_argument("--node-failure-start-step", type=int, default=0)
@@ -61,6 +62,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--out-dir", type=str, default=str(ROOT / "results" / "ri_gmappo"))
     parser.add_argument("--save-interval", type=int, default=10)
+    parser.add_argument("--save-snapshots", action="store_true")
     parser.add_argument("--resume", type=str, default=None)
     args = parser.parse_args()
     return RIGMAPPOConfig(
@@ -102,6 +104,7 @@ def parse_args() -> RIGMAPPOConfig:
         radar_dropout_random_min=args.radar_dropout_random_min,
         radar_dropout_random_max=args.radar_dropout_random_max,
         strict_target_sensing=args.strict_target_sensing,
+        agent_target_info_bottleneck=args.agent_target_info_bottleneck,
         failed_blue_agent=args.failed_blue_agent,
         node_failure_random_prob=args.node_failure_random_prob,
         node_failure_start_step=args.node_failure_start_step,
@@ -113,6 +116,7 @@ def parse_args() -> RIGMAPPOConfig:
         device=args.device,
         out_dir=args.out_dir,
         save_interval=args.save_interval,
+        save_snapshots=args.save_snapshots,
         resume=args.resume,
     )
 

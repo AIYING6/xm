@@ -1,0 +1,16 @@
+\section{Problem Formulation}
+
+We consider a 3DOF cooperative interception task with three blue UAVs and one red high-value target. The blue team contains a scout, a relay, and an attacker. At each step, each blue UAV has a state including three-dimensional position, speed, heading, flight-path angle, remaining energy, radar capability, communication range, and role type. The red target has three-dimensional position, speed, heading, and flight-path angle.
+
+Each blue agent selects a high-level command from turn, climb, and speed-command combinations. The environment updates the 3DOF dynamics under turn-rate, climb, speed, altitude, and boundary constraints. The policy therefore controls tactical maneuvering rather than low-level flight stabilization.
+
+The episode objective is to close the cooperative kill chain. A chain is considered closed when the target is detected, target information is available to an attack-capable platform through sensing or communication, and a valid attack window is held for the required duration. Temporary communication-node failure disables the communication contribution of a specified blue UAV for a fixed interval, forcing the team to recover the information path or form the attack window through other relations.
+
+The main metrics are task success rate, post-failure kill-chain recovery rate, post-failure recovery steps, chain-closed rate during failure, tracking rate during failure, communication connectivity, mean message age, timeout rate, episode length, collision rate, and flight-constraint violation rate.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.92\linewidth]{intercept_3d_task_scene.png}
+    \caption{3DOF heterogeneous UAV kill-chain recovery task with scout, relay, attacker, and target roles.}
+    \label{fig:task_scene}
+\end{figure}

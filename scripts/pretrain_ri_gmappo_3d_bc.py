@@ -83,6 +83,7 @@ def build_agent(cfg: RIGMAPPOConfig, args: argparse.Namespace) -> RIGMAPPOAgent:
         graph_encoder=args.graph_encoder,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        use_intent_context=False,
     )
 
 
@@ -202,7 +203,7 @@ def main() -> None:
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--role-dim", type=int, default=8)
     parser.add_argument("--intent-dim", type=int, default=8)
-    parser.add_argument("--graph-encoder", choices=("single", "multi_relation"), default="single")
+    parser.add_argument("--graph-encoder", choices=("no_graph", "single", "multi_relation"), default="single")
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")

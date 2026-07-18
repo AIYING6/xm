@@ -1,6 +1,6 @@
 # Relay-Failure Case Candidates
 
-Generated: 2026-07-16T21:05:02
+Generated: 2026-07-16T22:22:38
 
 These matched episodes are candidates for later trajectory and timeline plots. They are not new experiments; they are selected from the formal relay-failure evaluation CSV.
 

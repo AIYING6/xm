@@ -1,6 +1,6 @@
 # Relay-Failure Case Replay
 
-Generated: 2026-07-16T21:05:09
+Generated: 2026-07-16T22:22:46
 
 This is a matched qualitative case replay selected from the formal relay-failure evaluation candidates. It is meant to support interpretation of the quantitative table, not replace aggregate statistics.
 

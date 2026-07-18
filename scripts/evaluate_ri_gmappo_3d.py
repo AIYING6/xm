@@ -29,6 +29,8 @@ CSV_COLUMNS = (
     "episode",
     "episodes",
     "target_policy",
+    "strict_target_sensing",
+    "agent_target_info_bottleneck",
     "communication_range_scale",
     "communication_dropout_prob",
     "message_delay_steps",
@@ -87,6 +89,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         message_delay_steps=args.message_delay_steps,
         radar_dropout_prob=args.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
+        agent_target_info_bottleneck=args.agent_target_info_bottleneck,
         failed_blue_agent=args.failed_blue_agent,
         node_failure_start_step=args.node_failure_start_step,
         node_failure_duration_steps=args.node_failure_duration_steps,
@@ -129,6 +132,7 @@ def build_agent(args: argparse.Namespace, cfg: RIGMAPPOConfig) -> tuple[RIGMAPPO
         graph_encoder=args.graph_encoder,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        use_intent_context=False,
     )
     if checkpoint is not None:
         load_matching_state_dict(agent, str(args.checkpoint), torch.device(args.device))
@@ -229,6 +233,8 @@ def evaluate(args: argparse.Namespace) -> list[dict[str, float | int | str | boo
                             "episode": ep,
                             "episodes": args.episodes,
                             "target_policy": args.target_policy,
+                            "strict_target_sensing": args.strict_target_sensing,
+                            "agent_target_info_bottleneck": args.agent_target_info_bottleneck,
                             "communication_range_scale": args.communication_range_scale,
                             "communication_dropout_prob": args.communication_dropout_prob,
                             "message_delay_steps": args.message_delay_steps,
@@ -360,6 +366,7 @@ def main() -> None:
     parser.add_argument("--message-delay-steps", type=int, default=0)
     parser.add_argument("--radar-dropout-prob", type=float, default=0.0)
     parser.add_argument("--strict-target-sensing", action="store_true")
+    parser.add_argument("--agent-target-info-bottleneck", action="store_true")
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
     parser.add_argument("--node-failure-start-step", type=int, default=0)
     parser.add_argument("--node-failure-duration-steps", type=int, default=0)
@@ -368,7 +375,7 @@ def main() -> None:
     parser.add_argument("--hidden-dim", type=int, default=128)
     parser.add_argument("--role-dim", type=int, default=8)
     parser.add_argument("--intent-dim", type=int, default=8)
-    parser.add_argument("--graph-encoder", choices=("single", "multi_relation"), default="single")
+    parser.add_argument("--graph-encoder", choices=("no_graph", "single", "multi_relation"), default="single")
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")

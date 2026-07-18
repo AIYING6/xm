@@ -1,0 +1,17 @@
+\section{Related Work}
+
+\subsection{Multi-Agent Reinforcement Learning}
+
+Proximal policy optimization is a widely used policy-gradient method for stable on-policy optimization \cite{schulman2017ppo}. In cooperative multi-agent tasks, MAPPO has been shown to be a strong baseline when implementation details and hyperparameters are handled carefully \cite{yu2022mappo}. Centralized training with decentralized execution is especially relevant for UAV teams, because the critic can use global training information while deployed agents operate from local observations and available communication.
+
+Actor-critic methods for mixed cooperative-competitive tasks also motivate centralized critics and decentralized policies \cite{lowe2017maddpg}. In the present work, MAPPO is used as the learning backbone, while the main contribution is the role-aware multi-relation graph representation used by the actor.
+
+\subsection{Graph Neural Networks for Multi-Agent Systems}
+
+Graph neural networks are natural tools for representing multi-agent interaction topology. Graph attention networks aggregate neighbor information with attention weights and have been widely adopted as a generic relation encoder \cite{velickovic2018gat}. Recent surveys also summarize the growing connection between graph neural networks and multi-agent reinforcement learning \cite{liu2024gnn_marl}.
+
+For heterogeneous UAV kill-chain recovery, however, a single adjacency matrix is not sufficient. The same pair of nodes can be related by sensing, communication, or task-support semantics. The present work therefore uses a multi-relation graph and preserves a single-graph variant as a controlled baseline.
+
+\subsection{Limited Communication and Intermittent Sensing}
+
+Real UAV teams cannot assume globally available information. Communication links can disappear because of distance, dropout, delay, interference, or node failure. Sensing can also be intermittent due to radar field of view, range, and dropout. Existing communication-aware MARL methods often focus on when to communicate or how to compress messages. This paper focuses on a complementary question: how to structure role-aware relational reasoning so that a heterogeneous team can recover a kill chain when communication support is disrupted.

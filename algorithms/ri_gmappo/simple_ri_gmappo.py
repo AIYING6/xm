@@ -71,6 +71,7 @@ class RIGMAPPOConfig:
     radar_dropout_random_min: float | None = None
     radar_dropout_random_max: float | None = None
     strict_target_sensing: bool = False
+    agent_target_info_bottleneck: bool = False
     failed_blue_agent: int = -1
     node_failure_random_prob: float = 0.0
     node_failure_start_step: int = 0
@@ -82,6 +83,7 @@ class RIGMAPPOConfig:
     device: str = "cpu"
     out_dir: str = "results/ri_gmappo"
     save_interval: int = 10
+    save_snapshots: bool = False
     resume: str | None = None
 
 
@@ -273,9 +275,10 @@ class RIActor(nn.Module):
         graph_message_ablation: str = "none",
         graph_input_ablation: str = "none",
         num_intents: int = NUM_INTENTS,
+        use_intent_context: bool = True,
     ):
         super().__init__()
-        if graph_encoder not in {"single", "multi_relation"}:
+        if graph_encoder not in {"no_graph", "single", "multi_relation"}:
             raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
         if graph_message_ablation not in {"none", "no_role_pair_gate"}:
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
@@ -285,11 +288,18 @@ class RIActor(nn.Module):
         self.graph_message_ablation = graph_message_ablation
         self.graph_input_ablation = graph_input_ablation
         self.num_intents = num_intents
+        self.use_intent_context = use_intent_context
         self.role_emb = nn.Embedding(num_roles, role_dim)
         self.intent_emb = nn.Embedding(num_intents, intent_dim)
         self.obs_encoder = nn.Sequential(nn.Linear(obs_dim, hidden_dim), nn.Tanh())
         self.input = nn.Sequential(nn.Linear(node_feat_dim + role_dim, hidden_dim), nn.Tanh())
-        if graph_encoder == "single":
+        if graph_encoder == "no_graph":
+            self.no_graph_intent_head = nn.Sequential(
+                nn.Linear(hidden_dim, hidden_dim),
+                nn.Tanh(),
+                nn.Linear(hidden_dim, num_intents),
+            )
+        elif graph_encoder == "single":
             self.gat1 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
             self.gat2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
         else:
@@ -329,6 +339,39 @@ class RIActor(nn.Module):
             role = torch.zeros_like(role)
         role_feat = self.role_emb(role.long())
         x = self.input(torch.cat([node_feat, role_feat], dim=-1))
+        if self.graph_encoder == "no_graph":
+            graph_feat = torch.zeros(
+                obs.shape[0],
+                num_agents,
+                x.shape[-1],
+                dtype=x.dtype,
+                device=x.device,
+            )
+            target_summary = torch.zeros(
+                obs.shape[0],
+                1,
+                x.shape[-1],
+                dtype=x.dtype,
+                device=x.device,
+            )
+            intent_logits = self.no_graph_intent_head(target_summary)
+            intent_context = torch.zeros(
+                obs.shape[0],
+                num_agents,
+                self.intent_emb.embedding_dim,
+                dtype=x.dtype,
+                device=x.device,
+            )
+            attn = torch.zeros(
+                obs.shape[0],
+                x.shape[1],
+                x.shape[1],
+                dtype=x.dtype,
+                device=x.device,
+            )
+            obs_feat = self.obs_encoder(obs)
+            logits = self.policy_head(torch.cat([obs_feat, graph_feat, intent_context], dim=-1))
+            return logits, attn, intent_logits
         if self.graph_encoder == "single":
             x, _ = self.gat1(x, adj, edge_feat)
             x, attn = self.gat2(x, adj, edge_feat)
@@ -341,7 +384,15 @@ class RIActor(nn.Module):
         target_feat = x[:, num_agents:]
         intent_logits = self.intent_head(target_feat)
 
-        if oracle_intent:
+        if not self.use_intent_context:
+            intent_context = torch.zeros(
+                obs.shape[0],
+                num_agents,
+                self.intent_emb.embedding_dim,
+                dtype=x.dtype,
+                device=x.device,
+            )
+        elif oracle_intent:
             if intent_label is None:
                 raise ValueError("intent_label is required when oracle_intent=True")
             intent_context = self.intent_emb(intent_label.long())
@@ -373,6 +424,7 @@ class RIGMAPPOAgent(nn.Module):
         graph_encoder: str = "single",
         graph_message_ablation: str = "none",
         graph_input_ablation: str = "none",
+        use_intent_context: bool = True,
     ):
         super().__init__()
         self.num_agents = num_agents
@@ -388,6 +440,7 @@ class RIGMAPPOAgent(nn.Module):
             graph_encoder=graph_encoder,
             graph_message_ablation=graph_message_ablation,
             graph_input_ablation=graph_input_ablation,
+            use_intent_context=use_intent_context,
         )
         self.critic = MLP(share_obs_dim, 1, hidden_dim)
 
@@ -472,6 +525,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 if training
                 else cfg.radar_dropout_prob,
                 strict_target_sensing=cfg.strict_target_sensing,
+                agent_target_info_bottleneck=cfg.agent_target_info_bottleneck,
                 failed_blue_agent=sample_failed_blue_agent(cfg) if training else cfg.failed_blue_agent,
                 node_failure_start_step=sample_int_curriculum(
                     cfg.node_failure_start_step,
@@ -671,6 +725,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         graph_encoder=cfg.graph_encoder,
         graph_message_ablation=cfg.graph_message_ablation,
         graph_input_ablation=cfg.graph_input_ablation,
+        use_intent_context=cfg.env_name != "3d_intercept",
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     if cfg.resume:
@@ -733,6 +788,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             f.flush()
             if update % cfg.save_interval == 0 or update == cfg.updates:
                 torch.save(agent.state_dict(), out_dir / "actor_critic_latest.pt")
+                if cfg.save_snapshots:
+                    torch.save(agent.state_dict(), out_dir / f"actor_critic_update_{update:04d}.pt")
     return log_path
 
 

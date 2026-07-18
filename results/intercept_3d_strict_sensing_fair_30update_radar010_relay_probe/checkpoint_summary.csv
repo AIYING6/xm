@@ -1,0 +1,10 @@
+split,scenario,graph_encoder,train_seed,checkpoint_update,episodes,success_mean,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,tracking_during_failure_rate_mean,connectivity_during_failure_mean,steps_mean,timeout_mean,collision_mean,constraint_violation_mean
+probe,radar010_relay_failure,multi_relation,0,30,20,1,1,5.5,0.9020707127722828,0.4421717254840063,45.5,0,0,0
+probe,radar010_relay_failure,multi_relation,1,15,20,0.8,0.8,5.6875,0.7454298990509576,0.4128869132404881,88.55,0.2,0,0
+probe,radar010_relay_failure,multi_relation,2,15,20,1,1,6.4,0.8878415161929221,0.4289959200045354,46.4,0,0,0
+probe,radar010_relay_failure,no_graph,0,20,20,0.25,0.25,18.8,0.1894407951194597,0.14643640653083204,209.7,0.75,0,0
+probe,radar010_relay_failure,no_graph,1,30,20,0.9,0.9,6.166666666666667,0.5443154924123416,0.39551588079404254,67.55,0.1,0,0
+probe,radar010_relay_failure,no_graph,2,30,20,0.05,0.05,6,0.027916667498648167,0.08476190672123006,249.3,0.95,0,0
+probe,radar010_relay_failure,single,0,10,20,1,1,5.35,0.8837500057824783,0.4426719659767926,45.35,0,0,0
+probe,radar010_relay_failure,single,1,30,20,0.95,0.95,5.421052631578948,0.8422982862866706,0.43681879146083713,56.15,0.05,0,0
+probe,radar010_relay_failure,single,2,5,20,0.9,0.9,5.722222222222222,0.824950401516306,0.424586648646269,67.15,0.1,0,0

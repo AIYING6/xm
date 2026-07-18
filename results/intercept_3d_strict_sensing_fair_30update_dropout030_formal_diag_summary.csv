@@ -1,0 +1,7 @@
+split,scenario,graph_encoder,n_training_seeds,checkpoint_updates,success_mean_mean,success_mean_std,post_failure_chain_recovered_mean_mean,post_failure_chain_recovered_mean_std,post_failure_chain_recovery_steps_mean_mean,post_failure_chain_recovery_steps_mean_std,tracking_during_failure_rate_mean_mean,tracking_during_failure_rate_mean_std,connectivity_during_failure_mean_mean,connectivity_during_failure_mean_std,steps_mean_mean,steps_mean_std,timeout_mean_mean,timeout_mean_std
+validation,dropout030_relay_failure,multi_relation,3,"5,10,15,20,25,30",0.925,0.0878669,0.925,0.0878669,5.85254,0.410581,0.934162,0.0764474,0.319032,0.0128049,61.9361,18.5972,0.075,0.0878669
+validation,dropout030_relay_failure,no_graph,3,"5,10,15,20,25,30",0.3,0.405114,0.3,0.405114,4.99679,0.507971,0.200958,0.250727,0.141416,0.122726,195.564,86.9871,0.7,0.405114
+validation,dropout030_relay_failure,single,3,"5,10,15,20,25,30",0.797222,0.118163,0.797222,0.118163,5.04354,0.130253,0.830336,0.100419,0.318042,0.0179663,88.075,25.4409,0.2,0.118818
+test,dropout030_relay_failure,multi_relation,3,"15,30",0.933333,0.11547,0.933333,0.11547,5.9125,0.457404,0.943819,0.0973078,0.310873,0.0033661,60.2167,24.365,0.0666667,0.11547
+test,dropout030_relay_failure,no_graph,3,"5,30",0.316667,0.464579,0.316667,0.464579,4.92647,0.60312,0.201676,0.29164,0.136614,0.127686,192,99.7006,0.683333,0.464579
+test,dropout030_relay_failure,single,3,"5,30",0.866667,0.189297,0.866667,0.189297,5.42712,0.104266,0.886404,0.159889,0.316421,0.0184524,74.05,40.5382,0.133333,0.189297

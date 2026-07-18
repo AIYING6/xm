@@ -1,0 +1,10 @@
+split,scenario,graph_encoder,train_seed,checkpoint_update,checkpoint,episodes,success_mean,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,chain_closed_during_failure_rate_mean,tracking_during_failure_rate_mean,connectivity_during_failure_mean,steps_mean,timeout_mean,collision_mean,constraint_violation_mean,selection_score
+test,relay_failure,multi_relation,0,10,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0010.pt,10,1,1,5.6,0.15996,1,0.439974,45.6,0,0,0,1094.4
+test,relay_failure,multi_relation,1,10,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/multi_relation/bc_ppo_seed1/actor_critic_update_0010.pt,10,1,1,5.7,0.158175,1,0.438783,45.7,0,0,0,1094.3
+test,relay_failure,multi_relation,2,10,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/multi_relation/bc_ppo_seed2/actor_critic_update_0010.pt,10,1,1,5.5,0.161746,1,0.441164,45.5,0,0,0,1094.5
+test,relay_failure,no_graph,0,10,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/no_graph/bc_ppo_seed0/actor_critic_update_0010.pt,10,0.3,0.3,5,0.0509524,0.25125,0.183135,195.5,0.7,0,0,325
+test,relay_failure,no_graph,1,10,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/no_graph/bc_ppo_seed1/actor_critic_update_0010.pt,10,0.9,0.9,5.33333,0.146905,0.567917,0.404603,66.8,0.1,0,0,984.667
+test,relay_failure,no_graph,2,10,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/no_graph/bc_ppo_seed2/actor_critic_update_0010.pt,10,0,0,inf,0,0.00541667,0.0666667,260,1,0,0,-1000
+test,relay_failure,single,0,10,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/single/bc_ppo_seed0/actor_critic_update_0010.pt,10,1,1,5.2,0.166905,1,0.444603,45.2,0,0,0,1094.8
+test,relay_failure,single,1,2,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/single/bc_ppo_seed1/actor_critic_update_0002.pt,10,0.8,0.8,4.75,0.141905,0.832917,0.424603,87.8,0.2,0,0,875.25
+test,relay_failure,single,2,10,results/intercept_3d_strict_sensing_fair_3seed_diag/runs/single/bc_ppo_seed2/actor_critic_update_0010.pt,10,1,1,5.2,0.166905,1,0.444603,45.2,0,0,0,1094.8

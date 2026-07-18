@@ -1,0 +1,7 @@
+split,scenario,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,strict_target_sensing,agent_target_info_bottleneck,selection_score,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,success_mean,episodes
+test,dropout030_relay_failure,multi_relation,0,5,results/intercept_3d_gate1_post_change_retrain_20update_diag/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0005.pt,True,True,929.059,0.85,5.94118,0.85,20
+test,dropout030_relay_failure,multi_relation,1,10,results/intercept_3d_gate1_post_change_retrain_20update_diag/runs/multi_relation/bc_ppo_seed1/actor_critic_update_0010.pt,True,True,1039.11,0.95,5.89474,0.95,20
+test,dropout030_relay_failure,multi_relation,2,15,results/intercept_3d_gate1_post_change_retrain_20update_diag/runs/multi_relation/bc_ppo_seed2/actor_critic_update_0015.pt,True,True,1094.3,1,5.7,1,20
+test,dropout030_relay_failure,single,0,20,results/intercept_3d_gate1_post_change_retrain_20update_diag/runs/single/bc_ppo_seed0/actor_critic_update_0020.pt,True,True,764.071,0.7,5.92857,0.7,20
+test,dropout030_relay_failure,single,1,5,results/intercept_3d_gate1_post_change_retrain_20update_diag/runs/single/bc_ppo_seed1/actor_critic_update_0005.pt,True,True,213.5,0.2,6.5,0.2,20
+test,dropout030_relay_failure,single,2,5,results/intercept_3d_gate1_post_change_retrain_20update_diag/runs/single/bc_ppo_seed2/actor_critic_update_0005.pt,True,True,104,0.1,6,0.1,20

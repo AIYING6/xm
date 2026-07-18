@@ -1,6 +1,6 @@
 # 3DOF Task-Support Ablation Pilot
 
-Generated: 2026-07-16T21:05:10
+Generated: 2026-07-16T22:22:48
 
 This is a one-seed diagnostic comparison. It is useful for deciding whether the task-support relation deserves formal ablation budget, but it is not a paper-level statistical result.
 

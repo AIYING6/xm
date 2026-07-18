@@ -83,10 +83,11 @@ def assert_multirelation_semantics() -> None:
     assert perception[0, target] == 1.0
     assert np.count_nonzero(perception[:, :target]) == 0
     assert np.count_nonzero(communication[:, target:]) == 0
-    assert support[0, 2] == 1.0  # scout supplies target information to attacker
-    assert support[1, 0] == 1.0 and support[1, 2] == 1.0  # relay distributes fresh information
-    assert support[2, 1] == 1.0  # attacker feeds back an active attack-window state
-    assert support[2, 0] == 0.0
+    # Graph convention: A[receiver, sender] = 1.
+    assert support[2, 0] == 1.0  # attacker receives target-support information from scout
+    assert support[0, 1] == 1.0 and support[2, 1] == 1.0  # scout/attacker receive relay support
+    assert support[1, 2] == 1.0  # relay receives attacker attack-window feedback
+    assert support[0, 2] == 0.0
 
     env.detected_by[:] = 0.0
     env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
@@ -101,7 +102,7 @@ def assert_multirelation_semantics() -> None:
     ablated.attack_window[:] = np.asarray([0.0, 0.0, 1.0], dtype=np.float32)
     ablated_graph = ablated._get_graph_obs()
     assert np.count_nonzero(ablated_graph["relation_adj"][2]) == 0
-    assert ablated_graph["edge_feat"][0, 2, 13] == 0.0
+    assert ablated_graph["edge_feat"][2, 0, 13] == 0.0
 
 
 def assert_topology_disruption_semantics() -> None:

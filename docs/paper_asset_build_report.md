@@ -1,6 +1,6 @@
 # Paper Asset Build Report
 
-Generated: 2026-07-16T21:05:14
+Generated: 2026-07-16T22:22:52
 
 Purpose:
 
@@ -47,6 +47,7 @@ This script does not retrain policies or rerun long evaluation jobs.
 | 3DOF interception environment smoke | OK |
 | 3DOF RI-GMAPPO checkpoint evaluation | OK |
 | 3DOF paper-facing main table | OK |
+| 3DOF manuscript figure assets | OK |
 | 3DOF relay-failure case candidates | OK |
 | 3DOF relay-failure case replay | OK |
 | 3DOF task-support ablation pilot summary | OK |
@@ -512,7 +513,7 @@ stdout:
 ```text
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\figure_asset_audit.csv
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\docs\figure_asset_audit.md
-figures checked: 23
+figures checked: 27
 warnings: 0
 ```
 
@@ -675,6 +676,26 @@ stdout:
 Wrote C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\intercept_3d_paper_main_table.csv
 Wrote C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\docs\intercept_3d_paper_main_table.md
 Wrote C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\docs\intercept_3d_paper_main_table.tex
+```
+
+### 3DOF manuscript figure assets
+
+Status: `OK`
+
+Command:
+
+```text
+D:\Anaconda\envs\.conda\envs\cac\python.exe scripts/plot_3d_manuscript_figures.py
+```
+
+stdout:
+
+```text
+results/figures/intercept_3d_task_scene.png
+results/figures/intercept_3d_multi_relation_graph.png
+results/figures/intercept_3d_recovery_evidence_summary.png
+results/figures/intercept_3d_strict_sensing_summary.png
+docs/intercept_3d_manuscript_figures.md
 ```
 
 ### 3DOF relay-failure case candidates
@@ -884,8 +905,8 @@ D:\Anaconda\envs\.conda\envs\cac\python.exe scripts/check_latex_project.py
 stdout:
 
 ```text
-checked tex files: 38
-bib keys: 14, 14
+checked tex files: 47
+bib keys: 14, 14, 5
 OK
 ```
 

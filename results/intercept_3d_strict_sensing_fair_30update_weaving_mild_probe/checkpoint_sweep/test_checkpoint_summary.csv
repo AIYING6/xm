@@ -1,0 +1,10 @@
+split,scenario,graph_encoder,train_seed,checkpoint_update,checkpoint,episodes,success_mean,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,chain_closed_during_failure_rate_mean,tracking_during_failure_rate_mean,connectivity_during_failure_mean,steps_mean,timeout_mean,collision_mean,constraint_violation_mean,selection_score
+test,relay_failure,multi_relation,0,30,results/intercept_3d_strict_sensing_fair_30update_diag/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0030.pt,20,0.15,0.15,89,0,0.377292,0.133333,240.35,0.85,0,0,76
+test,relay_failure,multi_relation,1,15,results/intercept_3d_strict_sensing_fair_30update_diag/runs/multi_relation/bc_ppo_seed1/actor_critic_update_0015.pt,20,0,0,inf,0,0.254375,0.129375,260,1,0,0,-1000
+test,relay_failure,multi_relation,2,15,results/intercept_3d_strict_sensing_fair_30update_diag/runs/multi_relation/bc_ppo_seed2/actor_critic_update_0015.pt,20,0.05,0.05,155,0,0.314583,0.134375,256.75,0.95,0,0,-100
+test,relay_failure,no_graph,0,20,results/intercept_3d_strict_sensing_fair_30update_diag/runs/no_graph/bc_ppo_seed0/actor_critic_update_0020.pt,20,0,0,inf,0,0.0347917,0.0770833,260,1,0,0,-1000
+test,relay_failure,no_graph,1,30,results/intercept_3d_strict_sensing_fair_30update_diag/runs/no_graph/bc_ppo_seed1/actor_critic_update_0030.pt,20,0,0,inf,0,0.070625,0.07125,260,1,0,0,-1000
+test,relay_failure,no_graph,2,30,results/intercept_3d_strict_sensing_fair_30update_diag/runs/no_graph/bc_ppo_seed2/actor_critic_update_0030.pt,20,0,0,inf,0,0.049375,0.0670833,260,1,0,0,-1000
+test,relay_failure,single,0,10,results/intercept_3d_strict_sensing_fair_30update_diag/runs/single/bc_ppo_seed0/actor_critic_update_0010.pt,20,0,0,inf,0,0.342083,0.123958,260,1,0,0,-1000
+test,relay_failure,single,1,30,results/intercept_3d_strict_sensing_fair_30update_diag/runs/single/bc_ppo_seed1/actor_critic_update_0030.pt,20,0,0,inf,0,0.28625,0.191667,260,1,0,0,-1000
+test,relay_failure,single,2,5,results/intercept_3d_strict_sensing_fair_30update_diag/runs/single/bc_ppo_seed2/actor_critic_update_0005.pt,20,0,0,inf,0,0.217917,0.147708,260,1,0,0,-1000

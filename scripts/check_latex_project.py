@@ -10,6 +10,7 @@ MAIN = PAPER / "main.tex"
 PROJECTS = [
     (ROOT / "paper_latex", ROOT / "paper_latex" / "references.bib"),
     (ROOT / "paper_latex_en", ROOT / "paper_latex" / "references.bib"),
+    (ROOT / "paper_latex_3d_en", ROOT / "paper_latex_3d_en" / "references.bib"),
 ]
 
 

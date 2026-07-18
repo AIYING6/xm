@@ -66,6 +66,7 @@ class UAVIntercept3DConfig:
     message_delay_steps: int = 0
     radar_dropout_prob: float = 0.0
     strict_target_sensing: bool = False
+    agent_target_info_bottleneck: bool = False
     target_prior_position: Tuple[float, float, float] = (10_000.0, 0.0, 5_000.0)
     failed_blue_agent: int = -1
     node_failure_start_step: int = 0
@@ -128,6 +129,8 @@ class UAVIntercept3DEnv:
         self.last_detected_target_pos: np.ndarray | None = None
         self.last_detected_target_vel: np.ndarray | None = None
         self.last_detection_step = -1
+        self.pending_messages: list[tuple[int, int, int]] = []
+        self.pending_target_messages: list[dict[str, object]] = []
 
         self.blue_pos = np.asarray(
             [
@@ -151,6 +154,15 @@ class UAVIntercept3DEnv:
         self.message_age = np.full((cfg.num_blue, cfg.num_blue), cfg.max_steps, dtype=np.float32)
         self.message_age[np.eye(cfg.num_blue, dtype=bool)] = 0.0
         self.comm_adj = np.eye(cfg.num_blue, dtype=np.float32)
+        self.target_cache_valid = np.zeros(cfg.num_blue, dtype=np.float32)
+        self.target_cache_pos = np.tile(np.asarray(cfg.target_prior_position, dtype=np.float32), (cfg.num_blue, 1))
+        self.target_cache_vel = np.zeros((cfg.num_blue, 3), dtype=np.float32)
+        self.target_cache_source = np.full(cfg.num_blue, -1, dtype=np.int64)
+        self.target_cache_generation_step = np.full(cfg.num_blue, -1, dtype=np.int64)
+        self.target_cache_delivery_step = np.full(cfg.num_blue, -1, dtype=np.int64)
+        self.target_cache_hop_count = np.full(cfg.num_blue, -1, dtype=np.int64)
+        self.target_cache_confidence = np.zeros(cfg.num_blue, dtype=np.float32)
+        self.target_cache_path: list[list[int]] = [[] for _ in range(cfg.num_blue)]
         self.detected_by = np.zeros(cfg.num_blue, dtype=np.float32)
         self.attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
         self._update_sensing_and_comm()
@@ -291,8 +303,62 @@ class UAVIntercept3DEnv:
             self.last_detected_target_pos = self.red_pos[0].copy()
             self.last_detected_target_vel = velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0]).copy()
             self.last_detection_step = self.step_count
+            for detector in np.flatnonzero(self.detected_by > 0.5):
+                self._write_target_cache(
+                    int(detector),
+                    pos=self.last_detected_target_pos,
+                    vel=self.last_detected_target_vel,
+                    source=int(detector),
+                    generation_step=self.step_count,
+                    delivery_step=self.step_count,
+                    hop_count=0,
+                    confidence=1.0,
+                    path=[int(detector)],
+                )
+
+        eligible_valid = self.target_cache_valid.copy()
+        eligible_pos = self.target_cache_pos.copy()
+        eligible_vel = self.target_cache_vel.copy()
+        eligible_source = self.target_cache_source.copy()
+        eligible_generation_step = self.target_cache_generation_step.copy()
+        eligible_hop_count = self.target_cache_hop_count.copy()
+        eligible_confidence = self.target_cache_confidence.copy()
+        eligible_path = [list(path) for path in self.target_cache_path]
 
         self.comm_adj = np.eye(cfg.num_blue, dtype=np.float32)
+        delivered_comm = np.eye(cfg.num_blue, dtype=np.float32)
+        retained_messages: list[tuple[int, int, int]] = []
+        for deliver_step, receiver, sender in self.pending_messages:
+            if deliver_step <= self.step_count:
+                if not self._is_comm_failed(receiver) and not self._is_comm_failed(sender):
+                    delivered_comm[receiver, sender] = 1.0
+                    self.message_age[receiver, sender] = 0.0
+            else:
+                retained_messages.append((deliver_step, receiver, sender))
+        self.pending_messages = retained_messages
+
+        retained_target_messages: list[dict[str, object]] = []
+        for message in self.pending_target_messages:
+            deliver_step = int(message["deliver_step"])
+            receiver = int(message["receiver"])
+            sender = int(message["sender"])
+            if deliver_step <= self.step_count:
+                if not self._is_comm_failed(receiver) and not self._is_comm_failed(sender):
+                    self._write_target_cache(
+                        receiver,
+                        pos=np.asarray(message["pos"], dtype=np.float32),
+                        vel=np.asarray(message["vel"], dtype=np.float32),
+                        source=int(message["source"]),
+                        generation_step=int(message["generation_step"]),
+                        delivery_step=deliver_step,
+                        hop_count=int(message["hop_count"]),
+                        confidence=float(message["confidence"]),
+                        path=list(message["path"]),
+                    )
+            else:
+                retained_target_messages.append(message)
+        self.pending_target_messages = retained_target_messages
+
         for i in range(cfg.num_blue):
             for j in range(cfg.num_blue):
                 if i == j:
@@ -306,10 +372,42 @@ class UAVIntercept3DEnv:
                 reachable = dist <= effective_range
                 reachable = reachable and self.dropout_rng.random() >= cfg.communication_dropout_prob
                 if reachable:
-                    self.comm_adj[i, j] = 1.0
-                    self.message_age[i, j] = float(cfg.message_delay_steps)
+                    if cfg.message_delay_steps <= 0:
+                        delivered_comm[i, j] = 1.0
+                        self.message_age[i, j] = 0.0
+                        if eligible_valid[j] > 0.5:
+                            self._write_target_cache(
+                                i,
+                                pos=eligible_pos[j],
+                                vel=eligible_vel[j],
+                                source=int(eligible_source[j]),
+                                generation_step=int(eligible_generation_step[j]),
+                                delivery_step=self.step_count,
+                                hop_count=int(eligible_hop_count[j] + 1),
+                                confidence=float(eligible_confidence[j] * 0.95),
+                                path=[*eligible_path[j], i],
+                            )
+                    else:
+                        deliver_step = self.step_count + cfg.message_delay_steps
+                        self.pending_messages.append((deliver_step, i, j))
+                        if eligible_valid[j] > 0.5:
+                            self.pending_target_messages.append(
+                                {
+                                    "deliver_step": deliver_step,
+                                    "receiver": i,
+                                    "sender": j,
+                                    "pos": eligible_pos[j].copy(),
+                                    "vel": eligible_vel[j].copy(),
+                                    "source": int(eligible_source[j]),
+                                    "generation_step": int(eligible_generation_step[j]),
+                                    "hop_count": int(eligible_hop_count[j] + 1),
+                                    "confidence": float(eligible_confidence[j] * 0.95),
+                                    "path": [*eligible_path[j], i],
+                                }
+                            )
                 else:
                     self.message_age[i, j] = min(float(cfg.max_steps), self.message_age[i, j] + 1.0)
+        self.comm_adj = delivered_comm
 
         for i, typ in enumerate(cfg.blue_types):
             self.attack_window[i] = float(self._in_attack_window(i, typ))
@@ -348,11 +446,9 @@ class UAVIntercept3DEnv:
 
     def _comm_has_chain_to_attacker(self) -> bool:
         attacker_ids = [i for i, typ in enumerate(self.config.blue_types) if typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}]
-        sensing_ids = [i for i, value in enumerate(self.detected_by) if value > 0.5]
-        if not attacker_ids or not sensing_ids:
+        if not attacker_ids:
             return False
-        reach = self._transitive_comm()
-        return any(reach[src, dst] > 0.5 for src in sensing_ids for dst in attacker_ids)
+        return any(self._has_target_information(dst) for dst in attacker_ids)
 
     def _transitive_comm(self) -> np.ndarray:
         reach = self.comm_adj.copy()
@@ -429,6 +525,7 @@ class UAVIntercept3DEnv:
             "mean_message_age": self._mean_message_age(),
             "communication_range_scale": float(self.config.communication_range_scale),
             "strict_target_sensing": float(self.config.strict_target_sensing),
+            "agent_target_info_bottleneck": float(self.config.agent_target_info_bottleneck),
             "target_estimate_age": float(self.step_count - self.last_detection_step) if self.last_detection_step >= 0 else float(self.config.max_steps),
             "target_estimate_is_prior": float(self.config.strict_target_sensing and self.last_detected_target_pos is None),
             "node_failure_active": float(any(self._is_comm_failed(i) for i in range(self.config.num_blue))),
@@ -440,6 +537,33 @@ class UAVIntercept3DEnv:
         if not self.config.strict_target_sensing:
             vel = velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0])
             return self.red_pos[0], float(self.red_speed[0]), float(self.red_heading[0]), float(self.red_gamma[0]), vel
+        return self._estimated_target_state()
+
+    def _target_state_for_agent_observation(self, agent_id: int) -> tuple[np.ndarray, float, float, float, np.ndarray]:
+        if (
+            self.config.strict_target_sensing
+            and self.config.agent_target_info_bottleneck
+            and self.target_cache_valid[agent_id] > 0.5
+        ):
+            pos = self.target_cache_pos[agent_id]
+            vel = self.target_cache_vel[agent_id]
+            speed = float(np.linalg.norm(vel))
+            if speed <= 1e-6:
+                return pos, 0.0, 0.0, 0.0, vel.astype(np.float32)
+            heading = math.atan2(float(vel[1]), float(vel[0]))
+            gamma = math.atan2(float(vel[2]), float(np.linalg.norm(vel[:2]) + 1e-6))
+            return pos, speed, heading, gamma, vel.astype(np.float32)
+        if (
+            not self.config.strict_target_sensing
+            or not self.config.agent_target_info_bottleneck
+            or self._has_target_information(agent_id)
+        ):
+            return self._target_state_for_observation()
+        pos = np.asarray(self.config.target_prior_position, dtype=np.float32)
+        vel = np.zeros(3, dtype=np.float32)
+        return pos, 0.0, 0.0, 0.0, vel
+
+    def _estimated_target_state(self) -> tuple[np.ndarray, float, float, float, np.ndarray]:
         if self.last_detected_target_pos is None:
             pos = np.asarray(self.config.target_prior_position, dtype=np.float32)
             vel = np.zeros(3, dtype=np.float32)
@@ -454,8 +578,8 @@ class UAVIntercept3DEnv:
 
     def _get_obs(self) -> np.ndarray:
         obs = np.zeros((self.config.num_blue, self.obs_dim), dtype=np.float32)
-        target_est, _, _, _, red_vel = self._target_state_for_observation()
         for i, typ in enumerate(self.config.blue_types):
+            target_est, _, _, _, red_vel = self._target_state_for_agent_observation(i)
             rel = target_est - self.blue_pos[i]
             vel = velocity_from_state(self.blue_speed[i], self.blue_heading[i], self.blue_gamma[i])
             obs[i] = np.asarray(
@@ -602,8 +726,11 @@ class UAVIntercept3DEnv:
                 same_team = float((i < n_blue and j < n_blue) or (i >= n_blue and j >= n_blue))
                 sensing = float(i < n_blue and j >= n_blue and self.detected_by[i] > 0.5)
                 comm = float(i < n_blue and j < n_blue and self.comm_adj[i, j] > 0.5)
-                support = float(i < n_blue and j < n_blue and self._support_edge(i, j))
-                active_support = float(i < n_blue and j < n_blue and self._active_support_edge(i, j))
+                # Graph convention: A[receiver, sender] = 1. Task-support
+                # edges gate delivered communication messages; they are not an
+                # independent information channel.
+                support = float(i < n_blue and j < n_blue and self._support_edge(j, i))
+                active_support = float(i < n_blue and j < n_blue and self._active_support_edge(j, i))
                 if self.config.graph_relation_ablation == "no_task_support":
                     support = 0.0
                     active_support = 0.0
@@ -612,7 +739,7 @@ class UAVIntercept3DEnv:
                 if i < n_blue and j < n_blue:
                     age = self.message_age[i, j] / self.config.max_steps
                 confidence = max(sensing, max(0.0, 1.0 - age))
-                adj[i, j] = max(adj[i, j], sensing, comm, support, attack)
+                adj[i, j] = max(adj[i, j], sensing, comm, active_support, attack)
                 relation_adj[RELATION_PERCEPTION, i, j] = sensing
                 relation_adj[RELATION_COMMUNICATION, i, j] = comm
                 relation_adj[RELATION_TASK_SUPPORT, i, j] = active_support
@@ -663,16 +790,20 @@ class UAVIntercept3DEnv:
     def _has_target_information(self, agent_id: int) -> bool:
         if self.detected_by[agent_id] > 0.5:
             return True
+        if self.target_cache_valid[agent_id] > 0.5:
+            return True
         for source in range(self.config.num_blue):
             if self.detected_by[source] <= 0.5:
                 continue
-            if self.comm_adj[source, agent_id] > 0.5:
+            if self.comm_adj[agent_id, source] > 0.5:
                 return True
         return False
 
     def _active_support_edge(self, src: int, dst: int) -> bool:
         """Return whether a role-compatible edge currently serves the kill chain."""
         if not self._support_edge(src, dst):
+            return False
+        if self.comm_adj[dst, src] <= 0.5:
             return False
         src_role = self.config.blue_types[src].role
         if src_role == ROLE_SCOUT:
@@ -686,6 +817,43 @@ class UAVIntercept3DEnv:
         if src_role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
             return bool(self.attack_window[src] > 0.5)
         return False
+
+    def _write_target_cache(
+        self,
+        agent_id: int,
+        *,
+        pos: np.ndarray,
+        vel: np.ndarray,
+        source: int,
+        generation_step: int,
+        delivery_step: int,
+        hop_count: int,
+        confidence: float,
+        path: list[int],
+    ) -> None:
+        current_generation = int(self.target_cache_generation_step[agent_id])
+        current_hops = int(self.target_cache_hop_count[agent_id])
+        if (
+            self.target_cache_valid[agent_id] > 0.5
+            and generation_step < current_generation
+        ):
+            return
+        if (
+            self.target_cache_valid[agent_id] > 0.5
+            and generation_step == current_generation
+            and current_hops >= 0
+            and hop_count > current_hops
+        ):
+            return
+        self.target_cache_valid[agent_id] = 1.0
+        self.target_cache_pos[agent_id] = np.asarray(pos, dtype=np.float32)
+        self.target_cache_vel[agent_id] = np.asarray(vel, dtype=np.float32)
+        self.target_cache_source[agent_id] = int(source)
+        self.target_cache_generation_step[agent_id] = int(generation_step)
+        self.target_cache_delivery_step[agent_id] = int(delivery_step)
+        self.target_cache_hop_count[agent_id] = int(hop_count)
+        self.target_cache_confidence[agent_id] = float(confidence)
+        self.target_cache_path[agent_id] = list(path)
 
 
 def velocity_from_state(speed: float, heading: float, gamma: float) -> np.ndarray:

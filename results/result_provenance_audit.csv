@@ -32,7 +32,7 @@ results/figures/ri_attention_heatmap_r4.png,figure,results/final_comm_300_eval.c
 results/figures/ri_attention_heatmap_r10.png,figure,results/final_comm_300_eval.csv,36,scripts/plot_ri_attention_heatmap.py,OK,Attention heatmap case at radius 10.
 results/figures/intent_confusion_ri_staged_r8.png,figure,results/intent_confusion_ri_staged_r8.csv,25,scripts/plot_intent_confusion.py,OK,Exploratory intent diagnostic figure; not a main contribution.
 results/figures/intent_confusion_ri_balanced_seed1_r8.png,figure,results/intent_confusion_ri_balanced_seed1_r8.csv,25,scripts/plot_intent_confusion.py,OK,Exploratory balanced-intent diagnostic figure; not a main contribution.
-docs/figure_asset_audit.md,audit,results/figure_asset_audit.csv,23,scripts/audit_figure_assets.py,OK,Figure readability/nonblank audit report.
+docs/figure_asset_audit.md,audit,results/figure_asset_audit.csv,27,scripts/audit_figure_assets.py,OK,Figure readability/nonblank audit report.
 docs/evaluation_budget_audit.md,audit,results/evaluation_budget_audit.csv,6,scripts/audit_evaluation_budget_consistency.py,OK,Evaluation episode-budget consistency audit report.
 docs/method_naming_audit.md,audit,results/method_naming_audit.csv,28,scripts/audit_method_naming_consistency.py,OK,Method naming consistency audit report.
 docs/supplemental_csv_schema_audit.md,audit,results/supplemental_csv_schema_audit.csv,32,scripts/audit_supplemental_csv_schema.py,OK,Supplemental CSV schema audit report.

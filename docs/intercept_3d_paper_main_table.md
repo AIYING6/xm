@@ -1,6 +1,6 @@
 # 3DOF Paper-Facing Main Table
 
-Generated: 2026-07-16T21:05:02
+Generated: 2026-07-16T22:22:35
 
 This table is an evidence triage table for manuscript drafting. It should not be treated as the final paper table until the remaining baselines and ablations are complete.
 

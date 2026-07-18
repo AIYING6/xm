@@ -57,6 +57,7 @@ GENERATION_STEPS = [
     ("3DOF interception environment smoke", ["scripts/smoke_test_intercept_3d_env.py"]),
     ("3DOF RI-GMAPPO checkpoint evaluation", ["scripts/evaluate_ri_gmappo_3d.py"]),
     ("3DOF paper-facing main table", ["scripts/build_3d_paper_tables.py"]),
+    ("3DOF manuscript figure assets", ["scripts/plot_3d_manuscript_figures.py"]),
     ("3DOF relay-failure case candidates", ["scripts/find_3d_relay_failure_case_candidates.py"]),
     ("3DOF relay-failure case replay", ["scripts/replay_3d_relay_failure_case.py"]),
     ("3DOF task-support ablation pilot summary", ["scripts/analyze_3d_task_support_ablation_pilot.py"]),

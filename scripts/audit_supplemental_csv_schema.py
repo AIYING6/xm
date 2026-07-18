@@ -284,7 +284,7 @@ SPECS = [
     CsvSchemaSpec(
         "figure_asset_audit",
         "results/figure_asset_audit.csv",
-        23,
+        27,
         ("figure", "width", "height", "file_size_kb", "gray_std", "sampled_unique_colors", "status", "notes"),
         {"status": ("ok",)},
         note="Generated figure technical audit.",
