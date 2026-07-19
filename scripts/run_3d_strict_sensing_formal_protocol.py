@@ -39,6 +39,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--strict-target-sensing", action="store_true", default=True)
     parser.add_argument("--no-strict-target-sensing", dest="strict_target_sensing", action="store_false")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
+    parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
+    parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
+    parser.add_argument("--max-target-message-age-steps", type=int, default=80)
+    parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--communication-range-random-min", type=float, default=0.65)
     parser.add_argument("--communication-range-random-max", type=float, default=1.00)
     parser.add_argument("--communication-dropout-random-min", type=float, default=0.00)
@@ -52,6 +57,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--node-failure-start-random-max", type=int, default=60)
     parser.add_argument("--node-failure-duration-random-min", type=int, default=60)
     parser.add_argument("--node-failure-duration-random-max", type=int, default=100)
+    parser.add_argument("--safety-proximity-distance", type=float, default=0.0)
+    parser.add_argument("--safety-proximity-penalty-weight", type=float, default=0.0)
     parser.add_argument("--validation-episodes", type=int, default=50)
     parser.add_argument("--test-episodes", type=int, default=100)
     parser.add_argument("--validation-base-seed", type=int, default=120_000)
@@ -118,8 +125,22 @@ def train_one(args: argparse.Namespace, graph_encoder: str, seed: int) -> None:
             args.target_policy,
             *(["--strict-target-sensing"] if args.strict_target_sensing else ["--no-strict-target-sensing"]),
             *(["--agent-target-info-bottleneck"] if args.agent_target_info_bottleneck else []),
+            "--max-target-message-age-steps",
+            str(args.max_target_message_age_steps),
+            "--min-target-confidence",
+            str(args.min_target_confidence),
+            "--safety-proximity-distance",
+            str(args.safety_proximity_distance),
+            "--safety-proximity-penalty-weight",
+            str(args.safety_proximity_penalty_weight),
             "--graph-encoder",
             graph_encoder,
+            "--graph-relation-ablation",
+            args.graph_relation_ablation,
+            "--graph-message-ablation",
+            args.graph_message_ablation,
+            "--graph-input-ablation",
+            args.graph_input_ablation,
             "--updates",
             str(args.updates),
             "--num-envs",
@@ -198,6 +219,16 @@ def evaluate_split(args: argparse.Namespace, split: str, episodes: int, base_see
         args.target_policy,
         *(["--strict-target-sensing"] if args.strict_target_sensing else ["--no-strict-target-sensing"]),
         *(["--agent-target-info-bottleneck"] if args.agent_target_info_bottleneck else []),
+        "--graph-relation-ablation",
+        args.graph_relation_ablation,
+        "--graph-message-ablation",
+        args.graph_message_ablation,
+        "--graph-input-ablation",
+        args.graph_input_ablation,
+        "--max-target-message-age-steps",
+        str(args.max_target_message_age_steps),
+        "--min-target-confidence",
+        str(args.min_target_confidence),
         "--single-root",
         str(args.out_dir / "runs" / "single"),
         "--multi-root",
@@ -247,6 +278,9 @@ def write_protocol(args: argparse.Namespace) -> None:
         f"scenarios = {list(args.scenarios)}",
         f"strict_target_sensing = {args.strict_target_sensing}",
         f"agent_target_info_bottleneck = {args.agent_target_info_bottleneck}",
+        f"graph_relation_ablation = {args.graph_relation_ablation}",
+        f"graph_message_ablation = {args.graph_message_ablation}",
+        f"graph_input_ablation = {args.graph_input_ablation}",
         f"lr = {args.lr}",
         f"entropy_coef = {args.entropy_coef}",
         f"communication_range_random = [{args.communication_range_random_min}, {args.communication_range_random_max}]",
@@ -256,6 +290,8 @@ def write_protocol(args: argparse.Namespace) -> None:
         f"node_failure_random_prob = {args.node_failure_random_prob}",
         f"node_failure_start_random = [{args.node_failure_start_random_min}, {args.node_failure_start_random_max}]",
         f"node_failure_duration_random = [{args.node_failure_duration_random_min}, {args.node_failure_duration_random_max}]",
+        f"safety_proximity_distance = {args.safety_proximity_distance}",
+        f"safety_proximity_penalty_weight = {args.safety_proximity_penalty_weight}",
         "```",
         "",
         "## Paper Boundary",

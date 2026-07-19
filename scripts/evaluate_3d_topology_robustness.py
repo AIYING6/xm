@@ -40,11 +40,50 @@ SCENARIOS = {
     "radar_010": RobustnessScenario("radar_010", radar_dropout_prob=0.10),
     "radar_025": RobustnessScenario("radar_025", radar_dropout_prob=0.25),
     "relay_failure": RobustnessScenario("relay_failure", failed_blue_agent=1, node_failure_start_step=40, node_failure_duration_steps=80),
+    "relay_failure_early": RobustnessScenario(
+        "relay_failure_early",
+        failed_blue_agent=1,
+        node_failure_start_step=25,
+        node_failure_duration_steps=80,
+    ),
+    "relay_failure_late": RobustnessScenario(
+        "relay_failure_late",
+        failed_blue_agent=1,
+        node_failure_start_step=70,
+        node_failure_duration_steps=80,
+    ),
+    "relay_failure_delayed": RobustnessScenario(
+        "relay_failure_delayed",
+        failed_blue_agent=1,
+        node_failure_start_step=55,
+        node_failure_duration_steps=80,
+    ),
     "dropout030_relay_failure": RobustnessScenario(
         "dropout030_relay_failure",
         communication_dropout_prob=0.30,
         failed_blue_agent=1,
         node_failure_start_step=40,
+        node_failure_duration_steps=80,
+    ),
+    "dropout030_relay_failure_early": RobustnessScenario(
+        "dropout030_relay_failure_early",
+        communication_dropout_prob=0.30,
+        failed_blue_agent=1,
+        node_failure_start_step=25,
+        node_failure_duration_steps=80,
+    ),
+    "dropout030_relay_failure_late": RobustnessScenario(
+        "dropout030_relay_failure_late",
+        communication_dropout_prob=0.30,
+        failed_blue_agent=1,
+        node_failure_start_step=70,
+        node_failure_duration_steps=80,
+    ),
+    "dropout030_relay_failure_delayed": RobustnessScenario(
+        "dropout030_relay_failure_delayed",
+        communication_dropout_prob=0.30,
+        failed_blue_agent=1,
+        node_failure_start_step=55,
         node_failure_duration_steps=80,
     ),
     "scout_failure": RobustnessScenario("scout_failure", failed_blue_agent=0, node_failure_start_step=40, node_failure_duration_steps=80),
@@ -66,7 +105,7 @@ METRICS = (
     "final_mean_range",
     "reward_sum",
 )
-EXTRA_COLUMNS = ("scenario", "graph_encoder", "train_method", "train_seed", "strict_target_sensing")
+EXTRA_COLUMNS = ("scenario", "graph_encoder", "train_method", "train_seed")
 
 
 def parse_args() -> argparse.Namespace:
@@ -86,6 +125,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-base-seed", type=int, default=80_000)
     parser.add_argument("--target-policy", type=str, default="straight")
     parser.add_argument("--strict-target-sensing", action="store_true")
+    parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--max-target-message-age-steps", type=int, default=80)
+    parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--checkpoint-kind", choices=("actor_critic_best.pt", "actor_critic_latest.pt"), default="actor_critic_best.pt")
     parser.add_argument("--no-graph-root", type=Path, default=ROOT / "results" / "intercept_3d_no_graph_matched_protocol" / "runs")
     parser.add_argument("--single-root", type=Path, default=ROOT / "results" / "intercept_3d_single_matched_protocol" / "runs")
@@ -129,6 +171,9 @@ def make_eval_args(
         message_delay_steps=scenario.message_delay_steps,
         radar_dropout_prob=scenario.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
+        agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        max_target_message_age_steps=args.max_target_message_age_steps,
+        min_target_confidence=args.min_target_confidence,
         failed_blue_agent=scenario.failed_blue_agent,
         node_failure_start_step=scenario.node_failure_start_step,
         node_failure_duration_steps=scenario.node_failure_duration_steps,
@@ -171,6 +216,7 @@ def run_suite(args: argparse.Namespace) -> list[dict[str, object]]:
                             "train_method": train_method,
                             "train_seed": train_seed,
                             "strict_target_sensing": int(args.strict_target_sensing),
+                            "agent_target_info_bottleneck": int(args.agent_target_info_bottleneck),
                         }
                         enriched.update(row)
                         rows.append(enriched)
@@ -231,6 +277,9 @@ def write_summary(rows: list[dict[str, object]], out_md: Path, args: argparse.Na
         f"scenarios = {list(args.scenarios)}",
         f"target_policy = {args.target_policy}",
         f"strict_target_sensing = {args.strict_target_sensing}",
+        f"agent_target_info_bottleneck = {args.agent_target_info_bottleneck}",
+        f"max_target_message_age_steps = {args.max_target_message_age_steps}",
+        f"min_target_confidence = {args.min_target_confidence}",
         f"checkpoint_kind = {args.checkpoint_kind}",
         "```",
         "",

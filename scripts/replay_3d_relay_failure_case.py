@@ -66,6 +66,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--communication-dropout-prob", type=float, default=0.0)
     parser.add_argument("--message-delay-steps", type=int, default=0)
     parser.add_argument("--radar-dropout-prob", type=float, default=0.0)
+    parser.add_argument("--max-target-message-age-steps", type=int, default=80)
+    parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--failed-blue-agent", type=int, default=1)
     parser.add_argument("--node-failure-start-step", type=int, default=40)
     parser.add_argument("--node-failure-duration-steps", type=int, default=80)
@@ -101,6 +103,9 @@ def agent_args(args: argparse.Namespace, checkpoint: Path, graph_encoder: str, r
         message_delay_steps=args.message_delay_steps,
         radar_dropout_prob=args.radar_dropout_prob,
         strict_target_sensing=False,
+        agent_target_info_bottleneck=False,
+        max_target_message_age_steps=args.max_target_message_age_steps,
+        min_target_confidence=args.min_target_confidence,
         failed_blue_agent=args.failed_blue_agent,
         node_failure_start_step=args.node_failure_start_step,
         node_failure_duration_steps=args.node_failure_duration_steps,

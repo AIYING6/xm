@@ -1,0 +1,4 @@
+method,label,recovery_mean,recovery_sd,tracking_mean,tracking_sd,connectivity_mean,connectivity_sd,chain_mean,chain_sd,timeout_mean,timeout_sd,collision_mean,collision_sd,min_blue_red_m,min_blue_blue_m,seed_recovery
+no_graph,MAPPO (no graph),0.218,0.418593,0.148162,0.275903,0.0783767,0.0787022,0.0366524,0.0697672,0.774,0.413437,0.008,0.0083666,3669.95,1176.05,"[0.00, 0.96, 0.00, 0.00, 0.13]"
+single,Single-graph MAPPO,0.532,0.381012,0.475247,0.25375,0.145898,0.0595297,0.0764621,0.0552353,0.44,0.361179,0.028,0.0294958,2472.81,1225.76,"[0.82, 0.27, 0.00, 0.69, 0.88]"
+multi_relation,Full multi-relation,0.886,0.136858,0.776353,0.167609,0.202729,0.0184612,0.137655,0.0287391,0.114,0.136858,0,0,3276.94,2011.36,"[0.65, 0.90, 0.99, 0.92, 0.97]"

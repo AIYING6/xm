@@ -23,11 +23,16 @@ SUMMARY_COLUMNS = (
     "split",
     "scenario",
     "graph_encoder",
+    "graph_relation_ablation",
+    "graph_message_ablation",
+    "graph_input_ablation",
     "train_seed",
     "checkpoint_update",
     "checkpoint",
     "strict_target_sensing",
     "agent_target_info_bottleneck",
+    "max_target_message_age_steps",
+    "min_target_confidence",
     "episodes",
     "success_mean",
     "post_failure_chain_recovered_mean",
@@ -35,6 +40,8 @@ SUMMARY_COLUMNS = (
     "chain_closed_during_failure_rate_mean",
     "tracking_during_failure_rate_mean",
     "connectivity_during_failure_mean",
+    "episode_min_blue_red_distance_mean",
+    "episode_min_blue_blue_distance_mean",
     "steps_mean",
     "timeout_mean",
     "collision_mean",
@@ -46,16 +53,23 @@ SELECTION_COLUMNS = (
     "split",
     "scenario",
     "graph_encoder",
+    "graph_relation_ablation",
+    "graph_message_ablation",
+    "graph_input_ablation",
     "train_seed",
     "selected_checkpoint_update",
     "selected_checkpoint",
     "strict_target_sensing",
     "agent_target_info_bottleneck",
+    "max_target_message_age_steps",
+    "min_target_confidence",
     "selection_score",
     "post_failure_chain_recovered_mean",
     "post_failure_chain_recovery_steps_mean",
     "success_mean",
     "collision_mean",
+    "episode_min_blue_red_distance_mean",
+    "episode_min_blue_blue_distance_mean",
     "constraint_violation_mean",
     "episodes",
 )
@@ -83,11 +97,17 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--scenarios", nargs="+", choices=tuple(SCENARIOS), default=("relay_failure",))
     parser.add_argument("--episodes", type=int, default=50)
+    parser.add_argument("--eval-batch-size", type=int, default=1)
     parser.add_argument("--base-seed", type=int, default=120_000)
     parser.add_argument("--target-policy", type=str, default="straight")
     parser.add_argument("--strict-target-sensing", action="store_true", default=True)
     parser.add_argument("--no-strict-target-sensing", dest="strict_target_sensing", action="store_false")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
+    parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
+    parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
+    parser.add_argument("--max-target-message-age-steps", type=int, default=80)
+    parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--single-root", type=Path, default=ROOT / "results" / "intercept_3d_strict_sensing_formal" / "runs" / "single")
     parser.add_argument("--multi-root", type=Path, default=ROOT / "results" / "intercept_3d_strict_sensing_formal" / "runs" / "multi_relation")
     parser.add_argument("--no-graph-root", type=Path, default=ROOT / "results" / "intercept_3d_strict_sensing_fair_baselines" / "runs" / "no_graph")
@@ -195,6 +215,7 @@ def make_eval_args(
     return SimpleNamespace(
         checkpoint=candidate.checkpoint,
         episodes=args.episodes,
+        eval_batch_size=args.eval_batch_size,
         seed=candidate.train_seed,
         base_seed=args.base_seed,
         target_policy=args.target_policy,
@@ -204,6 +225,8 @@ def make_eval_args(
         radar_dropout_prob=scenario.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
         agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        max_target_message_age_steps=args.max_target_message_age_steps,
+        min_target_confidence=args.min_target_confidence,
         failed_blue_agent=scenario.failed_blue_agent,
         node_failure_start_step=scenario.node_failure_start_step,
         node_failure_duration_steps=scenario.node_failure_duration_steps,
@@ -213,9 +236,9 @@ def make_eval_args(
         role_dim=8,
         intent_dim=8,
         graph_encoder=candidate.graph_encoder,
-        graph_relation_ablation="none",
-        graph_message_ablation="none",
-        graph_input_ablation="none",
+        graph_relation_ablation=args.graph_relation_ablation,
+        graph_message_ablation=args.graph_message_ablation,
+        graph_input_ablation=args.graph_input_ablation,
         device=args.device,
     )
 
@@ -264,11 +287,16 @@ def summarize_rows(
         "split": args.split,
         "scenario": scenario_name,
         "graph_encoder": candidate.graph_encoder,
+        "graph_relation_ablation": args.graph_relation_ablation,
+        "graph_message_ablation": args.graph_message_ablation,
+        "graph_input_ablation": args.graph_input_ablation,
         "train_seed": str(candidate.train_seed),
         "checkpoint_update": str(candidate.update),
         "checkpoint": display_path(candidate.checkpoint),
         "strict_target_sensing": str(args.strict_target_sensing),
         "agent_target_info_bottleneck": str(args.agent_target_info_bottleneck),
+        "max_target_message_age_steps": str(args.max_target_message_age_steps),
+        "min_target_confidence": f"{args.min_target_confidence:.6g}",
         "episodes": str(args.episodes),
         "success_mean": f"{success:.6g}",
         "post_failure_chain_recovered_mean": f"{recovery:.6g}",
@@ -276,6 +304,8 @@ def summarize_rows(
         "chain_closed_during_failure_rate_mean": f"{mean(rows, 'chain_closed_during_failure_rate'):.6g}",
         "tracking_during_failure_rate_mean": f"{mean(rows, 'tracking_during_failure_rate'):.6g}",
         "connectivity_during_failure_mean": f"{mean(rows, 'connectivity_during_failure'):.6g}",
+        "episode_min_blue_red_distance_mean": f"{mean(rows, 'episode_min_blue_red_distance'):.6g}",
+        "episode_min_blue_blue_distance_mean": f"{mean(rows, 'episode_min_blue_blue_distance'):.6g}",
         "steps_mean": f"{mean(rows, 'steps'):.6g}",
         "timeout_mean": f"{mean(rows, 'timeout'):.6g}",
         "collision_mean": f"{collision:.6g}",
@@ -304,24 +334,38 @@ def completed_key(row: dict[str, object]) -> tuple[str, str, str, str, str]:
         str(row["split"]),
         str(row["scenario"]),
         str(row["graph_encoder"]),
+        str(row.get("graph_relation_ablation", "none")),
+        str(row.get("graph_message_ablation", "none")),
+        str(row.get("graph_input_ablation", "none")),
         str(row["train_seed"]),
         str(row["checkpoint_update"]),
     )
 
 
 def select_checkpoints(summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
-    grouped: dict[tuple[str, str, str, str], list[dict[str, str]]] = defaultdict(list)
+    grouped: dict[tuple[str, str, str, str, str, str, str], list[dict[str, str]]] = defaultdict(list)
     for row in summary_rows:
-        key = (row["split"], row["scenario"], row["graph_encoder"], row["train_seed"])
+        key = (
+            row["split"],
+            row["scenario"],
+            row["graph_encoder"],
+            row.get("graph_relation_ablation", "none"),
+            row.get("graph_message_ablation", "none"),
+            row.get("graph_input_ablation", "none"),
+            row["train_seed"],
+        )
         grouped[key].append(row)
     selected: list[dict[str, str]] = []
     for key, rows in sorted(grouped.items()):
         eligible_rows = [row for row in rows if float(row["selection_score"]) > -1_000_000_000.0]
         if not eligible_rows:
-            split, scenario, graph_encoder, train_seed = key
+            split, scenario, graph_encoder, graph_relation_ablation, graph_message_ablation, graph_input_ablation, train_seed = key
             raise RuntimeError(
                 "no collision-eligible checkpoint for "
-                f"split={split}, scenario={scenario}, graph_encoder={graph_encoder}, train_seed={train_seed}"
+                f"split={split}, scenario={scenario}, graph_encoder={graph_encoder}, "
+                f"graph_relation_ablation={graph_relation_ablation}, "
+                f"graph_message_ablation={graph_message_ablation}, "
+                f"graph_input_ablation={graph_input_ablation}, train_seed={train_seed}"
             )
         best = max(
             eligible_rows,
@@ -335,16 +379,23 @@ def select_checkpoints(summary_rows: list[dict[str, str]]) -> list[dict[str, str
                 "split": best["split"],
                 "scenario": best["scenario"],
                 "graph_encoder": best["graph_encoder"],
+                "graph_relation_ablation": best.get("graph_relation_ablation", "none"),
+                "graph_message_ablation": best.get("graph_message_ablation", "none"),
+                "graph_input_ablation": best.get("graph_input_ablation", "none"),
                 "train_seed": best["train_seed"],
                 "selected_checkpoint_update": best["checkpoint_update"],
                 "selected_checkpoint": best["checkpoint"],
                 "strict_target_sensing": best.get("strict_target_sensing", ""),
                 "agent_target_info_bottleneck": best.get("agent_target_info_bottleneck", ""),
+                "max_target_message_age_steps": best.get("max_target_message_age_steps", ""),
+                "min_target_confidence": best.get("min_target_confidence", ""),
                 "selection_score": best["selection_score"],
                 "post_failure_chain_recovered_mean": best["post_failure_chain_recovered_mean"],
                 "post_failure_chain_recovery_steps_mean": best["post_failure_chain_recovery_steps_mean"],
                 "success_mean": best["success_mean"],
                 "collision_mean": best.get("collision_mean", ""),
+                "episode_min_blue_red_distance_mean": best.get("episode_min_blue_red_distance_mean", ""),
+                "episode_min_blue_blue_distance_mean": best.get("episode_min_blue_blue_distance_mean", ""),
                 "constraint_violation_mean": best.get("constraint_violation_mean", ""),
                 "episodes": best["episodes"],
             }
@@ -382,6 +433,8 @@ def write_report(
         f"base_seed = {args.base_seed}",
         f"strict_target_sensing = {args.strict_target_sensing}",
         f"agent_target_info_bottleneck = {args.agent_target_info_bottleneck}",
+        f"max_target_message_age_steps = {args.max_target_message_age_steps}",
+        f"min_target_confidence = {args.min_target_confidence}",
         f"selection_csv = {display_path(args.selection_csv) if args.selection_csv else 'none'}",
         f"max_selection_collision_rate = {args.max_selection_collision_rate}",
         "```",

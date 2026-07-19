@@ -33,7 +33,33 @@ Gate 1 progress:
 - Completed a 60-update post-Gate-1 retraining diagnostic with validation checkpoint selection and disjoint test episodes. Under strict sensing plus the target-information bottleneck, `multi_relation` recovered `93.3%` versus `single` `43.3%`; seed-aware recovery delta was `+50.0 pp` with 95% CI `[+15.0, +80.0] pp`.
 - Gate 2 core five-seed formal result is complete for `dropout030_relay_failure + strict_target_sensing + agent_target_info_bottleneck`: `multi_relation` recovers `96.2%` versus `single` `51.8%` and `no_graph` `34.2%` on a disjoint 1500-episode test set. The result is recorded in `docs/intercept_3d_gate1_dropout030_bottleneck_5seed_formal_summary.md`.
 - Failure-aligned mechanism curves and a predefined median-difference representative case are complete under `results/intercept_3d_gate1_dropout030_bottleneck_mechanism_v2/` and documented in `docs/intercept_3d_gate1_dropout030_bottleneck_mechanism_v2/failure_aligned_mechanism_summary.md`.
-- Next item: convert the result into paper-grade evidence by adding five-seed mechanism ablations and baseline fairness diagnostics.
+- Higher-standard Gate 1 review downgraded the completed five-seed result to pre-hardening development evidence. P0-1 actor-localization first pass is complete: actor observation now uses local inbound connectivity, local inbound message age, local target-cache age, and local target-cache confidence instead of team-level aggregate shortcuts; Gate 1 tests now cover this.
+- Target-message TTL/confidence freshness is implemented across environment, training, evaluation, protocol, replay, and mechanism-analysis paths. Gate 1 tests now verify stale and low-confidence target caches cannot keep the kill chain valid.
+- Step/failure/message timing semantics now use a post-step convention, and post-failure metrics distinguish maintained, recovered-after-loss, and unrecovered outcomes.
+- Graph-information hardening now prevents stale global last-detected target state from appearing in the strict-bottleneck graph target node when no agent currently detects the target.
+- A hardened 20-update three-method, three-seed development rerun completed under `results/intercept_3d_gate1_hardened_20update_3seed_dev/`. The strict zero-collision validation gate failed for `single` seed `1`; the relaxed diagnostic preserved the expected ordering (`no_graph < single < multi_relation`) but must not be used as final paper evidence.
+- A hardened 60-update three-method, three-seed development rerun completed under `results/intercept_3d_gate1_hardened_60update_3seed_dev/`. Strict zero-collision validation selection passed. Disjoint test recovery was `no_graph 0.267 +/- 0.411`, `single 0.613 +/- 0.473`, and `multi_relation 0.853 +/- 0.070`. The remaining blocker for formal promotion is test-time collision inspection and seed-aware statistical reporting.
+- Seed-aware statistics and collision-case audit are complete for the hardened 60-update run. `multi_relation` is separated from `no_graph` but not yet from `single`; three collision episodes remain to replay and diagnose.
+- Recovery-time reporting was clarified in the evaluator with explicit censored and recovered-only output fields.
+- Collision replay is complete for the hardened 60-update run. It found one `multi_relation` blue-blue collision and two `single` blue-target collisions, all during relay failure, with sustained unsafe approach before termination.
+- A light proximity safety auxiliary has been implemented and smoke-tested. A three-method, three-seed hardened 60-update safety diagnostic completed under `results/intercept_3d_gate1_hardened_60update_safety_diag/`: recovery was `no_graph 28.0%`, `single 53.3%`, and `multi_relation 86.7%`; `multi_relation` had zero test collisions. The result supports the safety-enabled route versus `no_graph`, but `multi_relation - single` still needs five-seed confirmation or a stronger frozen safety protocol because the three-seed CI touches zero.
+- Minimum-distance metrics have been added to the 3DOF evaluator and checkpoint sweep. The safety diagnostic was re-evaluated without retraining under `results/intercept_3d_gate1_hardened_60update_safety_diag_min_distance_eval/`; `multi_relation` kept zero collisions with mean episode-min distances of `3290.2 m` blue-red and `2334.4 m` blue-blue.
+- A five-seed safety-enabled hardened formal candidate completed all training runs under `results/intercept_3d_gate1_hardened_safety_5seed_formal_candidate/`. It uses the post-Gate-1 60-update checkpoints as a uniform five-seed source and applies 60 additional safety-continuation updates.
+- Full validation checkpoint selection for the five-seed safety candidate repeatedly stalled, so a fixed-update-60 test diagnostic was completed as the practical route.
+- `scripts/merge_checkpoint_sweep_shards.py` now supports merging validation/test shards and regenerating selected-checkpoint CSVs.
+- Batched episode evaluation is now available through `--eval-batch-size` in the policy evaluator and checkpoint sweep.
+- The fixed-update-60 five-seed safety diagnostic is recorded in `docs/intercept_3d_gate1_hardened_safety_5seed_fixed_update60_summary.md`: recovery is `no_graph=21.8%`, `single=53.2%`, and `multi_relation=88.6%`; `multi_relation` has zero collisions; seed-aware `multi_relation - single` recovery delta is `+35.4 pp` with 95% CI `[+1.2, +73.0] pp`.
+- Fixed-protocol mechanism evidence is complete under `results/gate1_safety_fx60_mechanism/` and documented in `docs/gate1_safety_fx60_mechanism/failure_aligned_mechanism_summary.md`.
+- The fixed-protocol `no_task_support` ablation is complete and documented in `docs/intercept_3d_gate1_hardened_safety_no_task_support_5seed_fixed_update60_summary.md`. Recovery drops from `88.6%` to `64.8%`, but the seed-aware CI crosses zero, so it is supportive rather than decisive mechanism evidence.
+- The fixed-protocol `no_role_pair_gate` ablation is complete and documented in `docs/intercept_3d_gate1_hardened_safety_no_role_pair_gate_5seed_fixed_update60_summary.md`. Recovery drops from `88.6%` to `64.8%`, and the seed-aware recovery CI `[+2.8, +59.2] pp` separates in favor of the full method.
+- Paper-facing result tables are complete in `docs/gate1_safety_fx60_paper_tables.md` and `results/gate1_safety_fx60_paper_tables/`.
+- `no_curriculum` is deferred with rationale in `docs/gate1_safety_fx60_no_curriculum_decision.md`.
+- A paper-facing fixed-update-60 experiment-section draft is complete in `docs/gate1_safety_fx60_experiment_section_draft.md`.
+- The fixed-update-60 experiment section and abstract are integrated into the 3D English manuscript path under `paper_latex_3d_en/`.
+- The active manuscript consistency audit is recorded in `docs/gate1_safety_fx60_manuscript_consistency_audit.md`.
+- Contribution-to-evidence alignment is recorded in `docs/gate1_safety_fx60_contribution_evidence_alignment.md`.
+- Method-component audit is recorded in `docs/gate1_safety_fx60_method_component_audit.md`; problem metrics and method equations have been added to the active manuscript.
+- Next item: improve related-work coverage and citation grounding.
 
 ## Milestone 1: Preserve 2D Evidence Chain
 
@@ -125,15 +151,15 @@ Done:
 
 Next:
 
-- Run five-seed ablations for `no_task_support` and `no_role_pair_gate` under the same frozen validation/test protocol.
-- Report parameter counts, inference time, communication load, and seed-level scatter for baseline credibility.
-- Add one controlled scenario-depth extension only after mechanism ablations and fairness diagnostics are finished.
+- Treat the fixed-update-60 safety-enabled result as the current practical formal candidate unless a new protocol is explicitly recorded before any new test evaluation.
+- Compile the active English manuscript when a LaTeX compiler is available, then check PDF table widths, figure placement, captions, and bibliography rendering.
+- Static PDF-readiness audit is complete in `docs/gate1_safety_fx60_pdf_readiness_audit.md`; all five paper-facing tables now have page-width resize protection. Full visual inspection still requires a LaTeX compiler.
+- Polish the fixed-update-60 mechanism figures and captions from the compiled PDF perspective once PDF rendering is available.
+- Parameter-count, inference-time, and communication-load reporting now exists in `docs/gate1_safety_fx60_model_cost_report.md` and is integrated as a compact experiment subsection.
+- Revisit `no_curriculum` only if the manuscript promotes topology curriculum as a core contribution rather than a training protocol.
+- If using validation selection, finish the per-seed validation shards and merge them with `scripts/merge_checkpoint_sweep_shards.py`, then run the selected-checkpoint test split from the merged validation CSV.
+- Fixed-checkpoint early-vs-nominal failure-timing generalization is complete, recorded in `docs/gate1_safety_fx60_failure_timing_generalization_formal_evidence.md`, and integrated into the active experiment section. Early relay failure is valid and discriminative; delayed/late failure remains deferred because pre-window episode termination makes failure-window metrics invalid.
 - Keep `scout_failure` as supporting evidence unless a later formal run separates it; do not let it distract from relay-failure recovery.
-- Remove role information.
-- Remove edge features.
-- Remove multi-relation edge indicators.
-- Train and ablate staged topology curriculum.
-- Test unseen communication radius, dropout, delay, radar perturbation, node failure, target maneuver changes, and strict intermittent sensing.
 
 ## Milestone 5: 4v2 Enhancement
 

@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Model size, actor inference latency, and communication-load proxy. CPU latency is measured by actor-only forward passes on the current evaluation machine and should be interpreted as implementation-specific evidence.}
+\label{tab:gate1-safety-fx60-model-cost}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Method & Actor params & Total params & Batch-1 ms & Comm proxy \\
+\midrule
+No-graph MAPPO & 79989 & 102774 & 0.363 & 744.0 \\
+Single-graph MAPPO & 101232 & 124017 & 1.089 & 744.0 \\
+EA-RG-MAPPO-S & 366960 & 389745 & 4.274 & 744.0 \\
+w/o task-support relation & 366960 & 389745 & 4.337 & 744.0 \\
+w/o role-pair gate & 366960 & 389745 & 4.226 & 744.0 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

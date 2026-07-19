@@ -1,0 +1,9 @@
+metric,label,unit,higher_is_better,n_training_seeds,n_matched_episodes_total,no_graph,multi_relation,delta_proposed_minus_baseline,delta_ci_low,delta_ci_high,bootstrap_samples,bootstrap_seed
+success,Task success,rate,true,3,150,0.28,0.8666666667,0.5866666667,0.07316666667,0.9735,5000,31
+post_failure_chain_recovered,Post-failure chain recovered,rate,true,3,150,0.28,0.8666666667,0.5866666667,0.07316666667,0.9735,5000,31
+timeout,Timeout,rate,false,3,150,0.7066666667,0.1333333333,-0.5733333333,-0.9333333333,-0.07316666667,5000,31
+capped_recovery_steps,Restricted mean recovery steps,steps,false,3,150,158.46,34.33333333,-124.1266667,-204.8165,-14.90516667,5000,31
+tracking_during_failure_rate,Tracking during failure,rate,true,3,150,0.1658196698,0.8783664831,0.7125468132,0.408249822,0.9753698302,5000,31
+connectivity_during_failure,Connectivity during failure,rate,true,3,150,0.09494268361,0.2156113781,0.1206686945,0.01498242439,0.1895096302,5000,31
+chain_closed_during_failure_rate,Chain closure during failure,rate,true,3,150,0.04661640212,0.1342491582,0.08763275613,-0.003184126984,0.1556726852,5000,31
+steps,Episode length,steps,false,3,150,198.46,74.33333333,-124.1266667,-204.8165,-14.90516667,5000,31

@@ -58,6 +58,8 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         message_delay_steps=args.message_delay_steps,
         radar_dropout_prob=args.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
+        max_target_message_age_steps=args.max_target_message_age_steps,
+        min_target_confidence=args.min_target_confidence,
         graph_encoder=args.graph_encoder,
         graph_relation_ablation=args.graph_relation_ablation,
         graph_message_ablation=args.graph_message_ablation,
@@ -217,6 +219,8 @@ def main() -> None:
     parser.add_argument("--message-delay-steps", type=int, default=0)
     parser.add_argument("--radar-dropout-prob", type=float, default=0.0)
     parser.add_argument("--strict-target-sensing", action="store_true")
+    parser.add_argument("--max-target-message-age-steps", type=int, default=80)
+    parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--resume", type=Path, default=None)
     parser.add_argument("--out-dir", type=Path, default=ROOT / "results" / "ri_gmappo_3d_bc_straight")

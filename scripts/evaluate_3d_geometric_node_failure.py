@@ -56,6 +56,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--episodes", type=int, default=30)
     parser.add_argument("--eval-base-seed", type=int, default=91_000)
     parser.add_argument("--target-policy", type=str, default="straight")
+    parser.add_argument("--strict-target-sensing", action="store_true")
+    parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--max-target-message-age-steps", type=int, default=80)
+    parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--scenarios", nargs="+", choices=tuple(SCENARIOS), default=tuple(SCENARIOS))
     parser.add_argument(
         "--out-dir",
@@ -70,6 +74,10 @@ def make_config(args: argparse.Namespace, scenario: NodeFailureScenario, seed: i
         env_name="3d_intercept",
         seed=seed,
         target_policy=args.target_policy,
+        strict_target_sensing=args.strict_target_sensing,
+        agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        max_target_message_age_steps=args.max_target_message_age_steps,
+        min_target_confidence=args.min_target_confidence,
         failed_blue_agent=scenario.failed_blue_agent,
         node_failure_start_step=scenario.node_failure_start_step,
         node_failure_duration_steps=scenario.node_failure_duration_steps,
@@ -122,6 +130,10 @@ def evaluate_episode(
         "communication_dropout_prob": 0.0,
         "message_delay_steps": 0,
         "radar_dropout_prob": 0.0,
+        "strict_target_sensing": int(args.strict_target_sensing),
+        "agent_target_info_bottleneck": int(args.agent_target_info_bottleneck),
+        "max_target_message_age_steps": args.max_target_message_age_steps,
+        "min_target_confidence": args.min_target_confidence,
         "failed_blue_agent": scenario.failed_blue_agent,
         "node_failure_start_step": scenario.node_failure_start_step,
         "node_failure_duration_steps": scenario.node_failure_duration_steps,
@@ -190,6 +202,10 @@ def write_summary(rows: list[dict[str, object]], out_md: Path, args: argparse.Na
         "",
         "```text",
         f"target_policy = {args.target_policy}",
+        f"strict_target_sensing = {args.strict_target_sensing}",
+        f"agent_target_info_bottleneck = {args.agent_target_info_bottleneck}",
+        f"max_target_message_age_steps = {args.max_target_message_age_steps}",
+        f"min_target_confidence = {args.min_target_confidence}",
         f"scenarios = {list(args.scenarios)}",
         f"replicate_seeds = {list(args.seeds)}",
         f"episodes_per_replicate = {args.episodes}",

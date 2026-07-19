@@ -6,12 +6,11 @@ Heterogeneous UAV teams make this problem more difficult. A scout UAV may have a
 
 This paper studies an implementable intermediate step toward high-fidelity air-combat decision making. Instead of directly training all baselines in a full 6DOF JSBSim environment, we build a lightweight constrained 3DOF tactical interception environment. It preserves the key decision constraints needed for the present claim: three-dimensional position, speed, heading, flight-path angle, altitude limits, turn and climb constraints, radar detection, limited communication, message age, and attack-window metrics.
 
-The proposed method is EA-RG-MAPPO-S, a multi-relation edge-aware role graph MAPPO method with staged topology curriculum. It represents the UAV team and target as a role graph, separates perception, communication, and task-support relations, and applies role-pair-conditioned message propagation. The strongest result appears under relay-node communication failure: the multi-relation policy restores the kill chain more reliably and more quickly than a matched single-graph variant.
+The proposed method is EA-RG-MAPPO-S, a multi-relation edge-aware role graph MAPPO method for kill-chain recovery under limited communication. It represents the UAV team and target as a role graph, separates perception, communication, and task-support relations, and applies role-pair-conditioned message propagation. A staged topology-randomization protocol is used as training support. The strongest result appears under strict intermittent sensing and relay-node communication failure: the multi-relation policy restores the kill chain more reliably than no-graph and single-graph baselines under a five-seed fixed-budget evaluation.
 
 The contributions are:
 \begin{enumerate}
-    \item A 3DOF heterogeneous UAV cooperative interception task is constructed around kill-chain closure rather than simple pursuit success.
-    \item A multi-relation role graph policy is proposed, separating perception, communication, and dynamic task-support relations with role-pair-conditioned message propagation.
-    \item A staged topology curriculum is used to expose the policy to communication range variation, dropout, message delay, radar dropout, and temporary communication-node failure.
-    \item A focused evidence chain is provided: relay-failure recovery is the main claim, task-support and role-pair-gate ablations support the mechanism, and strict sensing is reported as a budget-labeled scenario-depth pilot.
+    \item We formulate a strict-sensing 3DOF heterogeneous UAV kill-chain recovery task with relay-node communication failure and post-failure recovery metrics.
+    \item We propose a multi-relation role graph policy with perception, communication, task-support relations, and role-pair-conditioned message propagation for decentralized actors.
+    \item We provide a five-seed fixed-budget evidence chain showing improved relay-failure recovery over no-graph and single-graph baselines, supported by seed-aware bootstrap, mechanism ablations, and failure-aligned analysis.
 \end{enumerate}

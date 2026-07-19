@@ -1,0 +1,10 @@
+split,scenario,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,strict_target_sensing,agent_target_info_bottleneck,max_target_message_age_steps,min_target_confidence,selection_score,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,success_mean,collision_mean,constraint_violation_mean,episodes
+test,dropout030_relay_failure,multi_relation,0,20,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0020.pt,True,True,80,0.2,632.69,0.58,5.31034,0.58,0,0,50
+test,dropout030_relay_failure,multi_relation,1,10,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/multi_relation/bc_ppo_seed1/actor_critic_update_0010.pt,True,True,80,0.2,918.381,0.84,5.61905,0.84,0,0,50
+test,dropout030_relay_failure,multi_relation,2,20,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/multi_relation/bc_ppo_seed2/actor_critic_update_0020.pt,True,True,80,0.2,1050.6,0.96,5.39583,0.96,0,0,50
+test,dropout030_relay_failure,no_graph,0,10,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/no_graph/bc_ppo_seed0/actor_critic_update_0010.pt,True,True,80,0.2,18,0.02,4,0.02,0.02,0,50
+test,dropout030_relay_failure,no_graph,1,10,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/no_graph/bc_ppo_seed1/actor_critic_update_0010.pt,True,True,80,0.2,808.811,0.74,5.18919,0.74,0,0,50
+test,dropout030_relay_failure,no_graph,2,20,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/no_graph/bc_ppo_seed2/actor_critic_update_0020.pt,True,True,80,0.2,-1000,0,inf,0,0,0,50
+test,dropout030_relay_failure,single,0,20,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/single/bc_ppo_seed0/actor_critic_update_0020.pt,True,True,80,0.2,852.564,0.78,5.4359,0.78,0,0,50
+test,dropout030_relay_failure,single,1,20,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/single/bc_ppo_seed1/actor_critic_update_0020.pt,True,True,80,0.2,15,0.02,7,0.02,0.02,0,50
+test,dropout030_relay_failure,single,2,20,results/intercept_3d_gate1_hardened_20update_3seed_dev/runs/single/bc_ppo_seed2/actor_critic_update_0020.pt,True,True,80,0.2,654.333,0.6,5.66667,0.6,0,0,50

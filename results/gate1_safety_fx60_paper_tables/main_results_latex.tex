@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\caption{Fixed-update-60 hardened safety main comparison under strict intermittent sensing.}
+\label{tab:gate1-safety-fx60-main}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Method & Recovery & Tracking & Connectivity & Chain & Timeout & Collision \\
+\midrule
+MAPPO (no graph) & 21.8 +/- 41.9 & 14.8 +/- 27.6 & 7.8 +/- 7.9 & 3.7 +/- 7.0 & 77.4 +/- 41.3 & 0.8 +/- 0.8 \\
+Single-graph MAPPO & 53.2 +/- 38.1 & 47.5 +/- 25.4 & 14.6 +/- 6.0 & 7.6 +/- 5.5 & 44.0 +/- 36.1 & 2.8 +/- 2.9 \\
+Full multi-relation & 88.6 +/- 13.7 & 77.6 +/- 16.8 & 20.3 +/- 1.8 & 13.8 +/- 2.9 & 11.4 +/- 13.7 & 0.0 +/- 0.0 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

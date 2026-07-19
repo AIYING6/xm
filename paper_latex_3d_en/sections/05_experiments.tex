@@ -2,46 +2,68 @@
 
 \subsection{Experimental Protocol}
 
-The current formal comparison uses matched single-graph and multi-relation checkpoints under relay and scout communication-node failure. Each formal node-failure scenario uses three training seeds and 30 independent evaluation episodes per checkpoint-scenario pair. The strongest claim is intentionally narrow: relay-failure kill-chain recovery.
+We evaluate the proposed method in a 3DOF heterogeneous cooperative interception task with strict intermittent target sensing and temporary relay-node communication failure. The decentralized actors do not receive global target-state fallback. Target information is available only through direct sensing or valid communication messages, and stale or low-confidence target caches cannot close the kill chain. Delayed communication follows post-step timing, and the relay-failure window is applied consistently during evaluation.
 
-\subsection{Main 3DOF Evidence}
+The current paper-facing result package uses a fixed-budget checkpoint rule. Each method is trained for 60 safety-continuation PPO updates from the same source-policy family and is evaluated at the fixed checkpoint \texttt{actor\_critic\_update\_0060.pt}. No validation-based checkpoint selection is used in this fixed-budget package. The test scenario is \texttt{dropout030\_relay\_failure}. Each method is evaluated with five training seeds and 100 matched test episodes per seed.
 
-Table~\ref{tab:paper_main_3d} summarizes the current paper-facing evidence. Relay failure is the only row currently promoted as the main statistical claim. Scout failure, dropout, delay, and radar dropout are positive trends. Communication range 0.75 is kept as a mixed stress case.
+The primary metrics are post-failure chain recovery rate, tracking rate during failure, communication connectivity during failure, chain-closure rate during failure, timeout rate, and collision rate. Statistical intervals use a hierarchical bootstrap: training seeds are resampled first, and matched episodes are then resampled within each seed.
 
-\begin{table*}[t]
-    \centering
-    \caption{Paper-facing 3DOF evidence table. Success and recovery deltas are percentage-point differences favoring EA-RG-MAPPO-S over the matched single-graph variant.}
-    \label{tab:paper_main_3d}
-    \resizebox{\textwidth}{!}{\input{../docs/intercept_3d_paper_main_table.tex}}
-\end{table*}
+\subsection{Main Comparison}
 
-Figure~\ref{fig:recovery_summary} shows the main recovery evidence and the relay-failure mechanism ablations. Under relay failure, EA-RG-MAPPO-S improves post-failure recovery from 92.2\% to 100.0\% and reduces recovery time from 21.8 to 5.6 steps. Removing dynamic task-support relations or role-pair message gates degrades relay-failure recovery.
+Table~\ref{tab:gate1-safety-fx60-main} reports the fixed-update-60 main comparison. The full multi-relation method achieves an 88.6\% post-failure recovery rate, compared with 53.2\% for the single-graph baseline and 21.8\% for the no-graph MAPPO-style baseline. The full method also improves failure-window tracking from 47.5\% to 77.6\% relative to the single-graph baseline and from 14.8\% to 77.6\% relative to the no-graph baseline.
+
+\input{../results/gate1_safety_fx60_paper_tables/main_results_latex.tex}
+
+The seed-aware bootstrap indicates that the recovery improvement over the single-graph baseline is 35.4 percentage points, with a 95\% confidence interval of [1.2, 73.0] percentage points. Against the no-graph baseline, the recovery improvement is 66.8 percentage points, with a 95\% confidence interval of [28.6, 93.8] percentage points. The full method maintains zero test collisions in this fixed-budget evaluation, while the single-graph baseline has a 2.8\% mean collision rate.
+
+These results show that under strict information constraints, explicit multi-relation role-graph reasoning improves the ability to recover a cooperative kill chain after a critical communication-node failure.
+
+\subsection{Failure-Timing Generalization}
+
+Table~\ref{tab:gate1-safety-fx60-timing} evaluates whether the fixed-update-60 policies depend on the nominal relay-failure onset time. The same checkpoints are evaluated without retraining under an earlier relay-failure onset. The early-failure setting remains discriminative: the full multi-relation method recovers the kill chain in 88.2\% of episodes, compared with 46.6\% for the single-graph baseline and 23.2\% for the no-graph baseline. The seed-aware full-minus-single recovery delta is 41.6 percentage points with a 95\% confidence interval of [4.4, 78.6] percentage points.
+
+\input{../results/gate1_safety_fx60_failure_timing_generalization_formal_merged/timing_generalization_latex.tex}
+
+Delayed and late relay-failure onsets are not used as primary evidence because many successful episodes terminate before the delayed failure window contributes valid post-failure measurements. Therefore, the timing result supports robustness to earlier-than-nominal relay loss, not arbitrary failure-time robustness.
+
+\subsection{Mechanism Ablations}
+
+Table~\ref{tab:gate1-safety-fx60-ablation} evaluates two mechanism ablations of the full multi-relation model.
+
+\input{../results/gate1_safety_fx60_paper_tables/ablation_results_latex.tex}
+
+Removing role-pair-conditioned message gating reduces recovery from 88.6\% to 64.8\%. The seed-aware recovery-rate delta is 23.8 percentage points, with a 95\% confidence interval of [2.8, 59.2] percentage points. This ablation also increases the timeout rate from 11.4\% to 35.2\% and reduces failure-window tracking from 77.6\% to 60.7\%. Because both the full and ablated variants have zero collision rate, the degradation is not explained by unsafe flight termination. This supports role-pair-conditioned message gating as the cleanest current mechanism contribution.
+
+Removing task-support relations also reduces mean recovery from 88.6\% to 64.8\%, but its seed-aware recovery interval crosses zero. Therefore, the task-support relation is reported as supportive mechanism evidence rather than as a statistically decisive result.
+
+\input{../results/gate1_safety_fx60_paper_tables/seed_aware_deltas_latex.tex}
+
+\subsection{Failure-Aligned Mechanism Analysis}
+
+Figure~\ref{fig:gate1_safety_fx60_mechanism} shows failure-aligned tracking, connectivity, chain-closure, and recovery-CDF curves. All curves are aligned to the relay-failure start time and aggregated over the matched fixed-budget test set. After relay failure, connectivity drops sharply for all methods, indicating that the full method's advantage is not simply caused by maintaining a fully connected communication graph. Instead, the full method preserves higher target tracking and accumulates recovery events earlier and more consistently after the failure.
 
 \begin{figure*}[t]
     \centering
-    \includegraphics[width=0.98\textwidth]{intercept_3d_recovery_evidence_summary.png}
-    \caption{Main relay-failure recovery evidence and mechanism ablations. The relay-failure row supports the primary claim; scout failure is retained as supporting trend evidence.}
-    \label{fig:recovery_summary}
+    \includegraphics[width=0.98\textwidth]{gate1_safety_fx60_mechanism_curves.png}
+    \caption{Failure-aligned mechanism curves under relay failure. Curves are aligned to the relay-failure start time and aggregated over five training seeds and 500 matched test episodes. The full multi-relation method achieves higher post-failure recovery and better target tracking despite the sharp connectivity drop after relay failure.}
+    \label{fig:gate1_safety_fx60_mechanism}
 \end{figure*}
 
-\subsection{Strict Intermittent Sensing Pilot}
-
-The strict-sensing setting removes true target-state fallback from local observations, shared observations, and graph target nodes before valid detection. Existing node-failure curriculum checkpoints are fine-tuned for 10 PPO updates under strict sensing, then evaluated with 30 episodes per seed and scenario. This is reported as a budget-labeled scenario-depth pilot.
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.98\linewidth]{intercept_3d_strict_sensing_summary.png}
-    \caption{Strict intermittent-sensing pilot. The relay-failure result is separated and paper-useful; the scout-failure result is a positive trend whose confidence interval crosses zero.}
-    \label{fig:strict_sensing}
-\end{figure}
-
-\subsection{Qualitative Relay-Failure Replay}
-
-Figure~\ref{fig:relay_replay} shows a matched qualitative relay-failure case. The single-graph policy times out without chain closure, while the multi-relation policy closes the chain after the failure interval. This figure is used for interpretation only; aggregate statistics remain the main evidence.
+Figure~\ref{fig:gate1_safety_fx60_case} presents a representative matched episode selected automatically by a median-positive-difference rule rather than by hand-picking the largest gap. In this episode, the single-graph baseline fails to recover the chain and times out, whereas the full method re-establishes chain closure shortly after the relay failure. This case illustrates the aggregate trend shown in the failure-aligned curves.
 
 \begin{figure*}[t]
     \centering
-    \includegraphics[width=0.98\textwidth]{intercept_3d_relay_failure_case_replay.png}
-    \caption{Matched relay-failure replay case. The figure supports interpretation of the aggregate recovery table and should not be used as a replacement for statistical evaluation.}
-    \label{fig:relay_replay}
+    \includegraphics[width=0.98\textwidth]{gate1_safety_fx60_representative_case_timeline.png}
+    \caption{Representative matched recovery case selected by a median-positive-difference rule. The full multi-relation method re-establishes kill-chain closure shortly after relay failure, whereas the single-graph baseline loses the chain and times out.}
+    \label{fig:gate1_safety_fx60_case}
 \end{figure*}
+
+\subsection{Model Size and Inference Cost}
+
+Table~\ref{tab:gate1-safety-fx60-model-cost} reports model-size and actor-inference-cost diagnostics for the compared graph encoders. The full multi-relation actor is larger than the single-graph baseline because it maintains separate perception, communication, and task-support channels and role-pair-conditioned message gates. This additional cost is modest in absolute CPU actor-forward latency for the present 3v1 setting, but it should be reported as part of the baseline fairness analysis rather than hidden behind the recovery-rate improvement.
+
+\input{../results/gate1_safety_fx60_model_costs/model_costs_latex.tex}
+
+\subsection{Current Limitations}
+
+This fixed-budget package focuses on graph and message mechanisms under a 3v1 strict-sensing relay-failure task. It does not by itself prove that the topology curriculum is the sole source of the performance gain; the no-curriculum ablation is deferred. The current evidence also remains a 3DOF mechanism study rather than a full 4v2 red-blue system with online missile, radar, and 6DOF dynamics. These extensions are treated as future scenario-depth work rather than as claims of the present result.

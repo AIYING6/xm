@@ -1,0 +1,4 @@
+method,label,recovery_mean,recovery_sd,tracking_mean,tracking_sd,connectivity_mean,connectivity_sd,chain_mean,chain_sd,timeout_mean,timeout_sd,collision_mean,collision_sd,min_blue_red_m,min_blue_blue_m,seed_recovery
+multi_relation,Full multi-relation,0.886,0.136858,0.776353,0.167609,0.202729,0.0184612,0.137655,0.0287391,0.114,0.136858,0,0,3276.94,2011.36,"[0.65, 0.90, 0.99, 0.92, 0.97]"
+no_task_support,w/o task-support relation,0.648,0.373323,0.596462,0.393579,0.160435,0.0781306,0.0894706,0.0628698,0.344,0.37647,0.008,0.0083666,3137.91,2044.43,"[0.91, 0.89, 0.72, 0.72, 0.00]"
+no_role_pair_gate,w/o role-pair gate,0.648,0.380092,0.607418,0.380067,0.164863,0.0749137,0.0985205,0.0642253,0.352,0.380092,0,0,3116.78,2047.52,"[0.53, 0.85, 1.00, 0.82, 0.04]"

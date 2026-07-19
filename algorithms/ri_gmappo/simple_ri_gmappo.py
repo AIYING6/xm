@@ -72,6 +72,10 @@ class RIGMAPPOConfig:
     radar_dropout_random_max: float | None = None
     strict_target_sensing: bool = False
     agent_target_info_bottleneck: bool = False
+    max_target_message_age_steps: int = 80
+    min_target_confidence: float = 0.2
+    safety_proximity_distance: float = 0.0
+    safety_proximity_penalty_weight: float = 0.0
     failed_blue_agent: int = -1
     node_failure_random_prob: float = 0.0
     node_failure_start_step: int = 0
@@ -526,6 +530,10 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 else cfg.radar_dropout_prob,
                 strict_target_sensing=cfg.strict_target_sensing,
                 agent_target_info_bottleneck=cfg.agent_target_info_bottleneck,
+                max_target_message_age_steps=cfg.max_target_message_age_steps,
+                min_target_confidence=cfg.min_target_confidence,
+                safety_proximity_distance=cfg.safety_proximity_distance,
+                safety_proximity_penalty_weight=cfg.safety_proximity_penalty_weight,
                 failed_blue_agent=sample_failed_blue_agent(cfg) if training else cfg.failed_blue_agent,
                 node_failure_start_step=sample_int_curriculum(
                     cfg.node_failure_start_step,

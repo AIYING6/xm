@@ -8,6 +8,8 @@ The episode objective is to close the cooperative kill chain. A chain is conside
 
 The main metrics are task success rate, post-failure kill-chain recovery rate, post-failure recovery steps, chain-closed rate during failure, tracking rate during failure, communication connectivity, mean message age, timeout rate, episode length, collision rate, and flight-constraint violation rate.
 
+Let $t_f$ be the relay-failure start step and $[t_f,t_f+T_f]$ be the failure window. Post-failure recovery is counted when the kill chain is closed at least once after $t_f$. Recovery steps are measured from $t_f$ to the first post-failure chain-closure step; unrecovered episodes are handled separately through recovery probability and restricted mean recovery-time statistics. Tracking during failure is the fraction of failure-window steps in which at least one valid target track exists under the strict sensing and target-cache freshness rules. Chain-closed rate during failure is the fraction of failure-window steps in which the complete sensing-communication-attack-window condition is satisfied.
+
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.92\linewidth]{intercept_3d_task_scene.png}

@@ -37,50 +37,91 @@ Completion standard:
 
 ```text
 Task:
-Run the next five-seed mechanism ablation under the frozen bottleneck dropout-relay protocol.
+Run a PDF-readiness and baseline-credibility pass on the active 3D manuscript.
 
 Relevant files:
 - algorithms/ri_gmappo/simple_ri_gmappo.py
-- algorithms/ri_gmappo/role_graph.py
-- scripts/train_ri_gmappo.py
 - scripts/evaluate_ri_gmappo_3d.py
-- scripts/evaluate_3d_topology_robustness.py
 - scripts/evaluate_3d_checkpoint_sweep.py
-- scripts/run_3d_strict_sensing_formal_protocol.py
+- scripts/build_gate1_safety_fx60_paper_tables.py
+- scripts/analyze_3d_failure_aligned_mechanism.py
+- scripts/replay_3d_relay_failure_case.py
 - envs/uav_intercept_3d_env.py
 - tests/
 - docs/Q1_EXECUTION_PLAN.md
 - docs/gate1_communication_feasibility_audit.md
 - docs/actor_critic_observation_boundary.md
 - docs/bottleneck_dropout030_relay_frozen_protocol.md
-- docs/intercept_3d_gate1_dropout030_bottleneck_5seed_formal_summary.md
-- docs/intercept_3d_gate1_dropout030_bottleneck_mechanism_v2/failure_aligned_mechanism_summary.md
+- docs/intercept_3d_gate1_hardened_60update_3seed_dev_summary.md
+- docs/intercept_3d_gate1_hardened_60update_collision_audit.md
+- docs/intercept_3d_gate1_hardened_60update_collision_replay.md
+- docs/intercept_3d_gate1_hardened_60update_safety_diag_summary.md
+- docs/intercept_3d_gate1_hardened_safety_5seed_fixed_update60_summary.md
+- docs/gate1_safety_fx60_paper_tables.md
+- docs/gate1_safety_fx60_no_curriculum_decision.md
+- docs/gate1_safety_fx60_manuscript_consistency_audit.md
+- docs/gate1_safety_fx60_contribution_evidence_alignment.md
+- docs/gate1_safety_fx60_method_component_audit.md
+- docs/gate1_safety_fx60_pdf_readiness_audit.md
+- docs/gate1_safety_fx60_failure_timing_generalization_protocol.md
+- docs/gate1_safety_fx60_failure_timing_generalization_formal_evidence.md
+- paper_latex_3d_en/main.tex
+- paper_latex_3d_en/references.bib
+- paper_latex_3d_en/sections/01_introduction.tex
+- paper_latex_3d_en/sections/02_related_work.tex
+- paper_latex_3d_en/sections/03_problem.tex
+- paper_latex_3d_en/sections/04_method.tex
+- paper_latex_3d_en/sections/05_experiments.tex
+- paper_latex_3d_en/sections/06_discussion.tex
+- paper_latex_3d_en/sections/07_conclusion.tex
+- docs/gate1_safety_fx60_model_cost_report.md
+- results/gate1_safety_fx60_model_costs/model_costs.csv
 - docs/PROJECT_STATE.md
 - docs/ROADMAP.md
 
 Constraints:
 - Do not change the existing default 2D training behavior.
-- Do not rerun or tune the completed five-seed formal test split unless a new frozen protocol is explicitly defined first.
+- Treat the fixed-update-60 safety-enabled result as a frozen fixed-budget candidate unless the repository records a replacement protocol before any new test evaluation.
+- Do not tune on the completed five-seed fixed-update-60 test split.
+- Treat completed five-seed bottleneck results as pre-hardening development evidence until P0 fixes are complete and rerun.
+- Treat `results/intercept_3d_gate1_hardened_20update_3seed_dev/` as a development diagnostic only. Its relaxed-selection result is not final paper evidence.
+- Treat `results/intercept_3d_gate1_hardened_60update_safety_diag/` as three-seed development evidence; the current stronger candidate is the five-seed fixed-update-60 safety result.
 - Preserve the standard environment interface.
 - Existing actor-side tests must keep enforcing communication-feasible information flow.
 - Task-support edges may gate delivered messages but must not transmit target information by themselves.
 - Use graph direction convention `A[receiver, sender] = 1`.
 - Keep centralized critic access separate from decentralized actor access.
+- Actor observation must remain decentralized: no team-level aggregate shortcuts.
+- Stale or low-confidence target cache entries must remain invalid.
+- `info["step"]`, node-failure activation, and delayed message delivery use post-step timing.
+- Strict-bottleneck graph target node must not expose stale global target state when no agent currently detects the target.
 
 Completion standard:
-- Run the relevant Gate 1 tests.
-- Use the documented validation-time collision rejection rule if any new checkpoint selection is needed: `--max-selection-collision-rate 0.0`.
-- Do not selectively repair weak seeds.
-- Compare against the completed post-Gate-1 diagnostics and formal result:
-  - `docs/intercept_3d_gate1_post_change_retrain_20update_diag_summary.md`
-  - `docs/intercept_3d_gate1_post_change_retrain_60update_diag_summary.md`
-  - `docs/intercept_3d_gate1_post_change_retrain_60update_three_method_safety_selected_diag_summary.md`
-  - `docs/intercept_3d_gate1_post_change_retrain_60update_5seed_integration_diag_summary.md`
-  - `docs/intercept_3d_gate1_dropout030_bottleneck_5seed_formal_summary.md`
-- Start with `no_task_support`; then run `no_role_pair_gate` if the first ablation is stable.
-- Use the same frozen validation/test split structure and report seed-aware bootstrap deltas against `multi_relation`.
-- Save generated data/figures under a new result directory and document the method.
-- Relevant tests pass.
+- Use the hardened code path; do not reuse old pre-hardening results as final evidence.
+- Use the completed collision replay as the safety-flaw evidence.
+- Use `docs/intercept_3d_gate1_hardened_safety_5seed_fixed_update60_summary.md` as the current five-seed fixed-budget evidence summary.
+- Main fixed result: recovery `no_graph=21.8%`, `single=53.2%`, `multi_relation=88.6%`; `multi_relation` zero collisions; seed-aware `multi_relation - single` recovery delta `+35.4 pp`, 95% CI `[+1.2, +73.0] pp`.
+- Use `docs/gate1_safety_fx60_mechanism/failure_aligned_mechanism_summary.md` as the current mechanism-evidence summary.
+- `no_task_support` is complete and documented in `docs/intercept_3d_gate1_hardened_safety_no_task_support_5seed_fixed_update60_summary.md`.
+- `no_role_pair_gate` is complete and documented in `docs/intercept_3d_gate1_hardened_safety_no_role_pair_gate_5seed_fixed_update60_summary.md`.
+- Paper-facing result tables are complete in `docs/gate1_safety_fx60_paper_tables.md` and `results/gate1_safety_fx60_paper_tables/`.
+- `no_curriculum` is deferred in `docs/gate1_safety_fx60_no_curriculum_decision.md`; the current paper claim emphasizes graph/message mechanisms more than training-curriculum causality.
+- The fixed-update-60 experiment section is integrated into `paper_latex_3d_en/sections/05_experiments.tex`.
+- The abstract in `paper_latex_3d_en/main.tex` has been updated to match the five-seed fixed-budget evidence.
+- Discussion and conclusion have been updated to avoid overclaiming curriculum causality, 4v2 red-blue capability, missile closure, or 6DOF validation.
+- Contribution-to-evidence alignment is complete in `docs/gate1_safety_fx60_contribution_evidence_alignment.md`.
+- Manuscript consistency audit is complete in `docs/gate1_safety_fx60_manuscript_consistency_audit.md`.
+- Method-component audit is complete in `docs/gate1_safety_fx60_method_component_audit.md`.
+- Related-work and bibliography coverage has been expanded and citation audit currently has no missing or unused BibTeX keys.
+- Baseline-credibility model-cost reporting is available in `docs/gate1_safety_fx60_model_cost_report.md` and `results/gate1_safety_fx60_model_costs/model_costs.csv`.
+- The model-cost LaTeX table is integrated into the experiment section, and recursive static manuscript checks currently pass.
+- PDF-readiness static audit is recorded in `docs/gate1_safety_fx60_pdf_readiness_audit.md`; all five paper-facing tables have page-width resize protection.
+- Failure-timing generalization scenarios are registered and smoke-tested; the protocol is recorded in `docs/gate1_safety_fx60_failure_timing_generalization_protocol.md`.
+- A 5-episode-per-seed diagnostic found early relay failure valid and delayed/late relay failure metric-limited because many full-method episodes end before the delayed failure window.
+- The fixed-checkpoint early-vs-nominal failure-timing generalization formal evaluation is complete under `results/gate1_safety_fx60_failure_timing_generalization_formal_merged/`.
+- The timing-generalization result is integrated into the active experiment section and passes recursive static LaTeX checks.
+- Next, refresh paper-facing table documentation and compile the PDF if a LaTeX compiler is available.
+- Run relevant Gate 1 tests before and after the development run.
 - Current frozen 3v1 bottleneck dropout-relay protocol remains documented as a regression target.
 - `docs/PROJECT_STATE.md` and `docs/ROADMAP.md` are updated with the result and next decision.
 ```

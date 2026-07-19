@@ -1,0 +1,6 @@
+method,graph_encoder,graph_relation_ablation,graph_message_ablation,graph_input_ablation,total_params,actor_params,critic_params,trainable_params,actor_forward_ms_batch1,actor_forward_ms_batch32,num_agents,num_nodes,node_feat_dim,edge_feat_dim,hidden_dim,role_dim,intent_dim,union_edges_mean,perception_edges_mean,communication_edges_mean,task_support_edges_mean,comm_scalars_per_step_proxy
+No-graph MAPPO,no_graph,none,none,none,102774,79989,22785,102774,0.36343500000000084,0.7408850000000022,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+Single-graph MAPPO,single,none,none,none,124017,101232,22785,124017,1.0894570000000048,2.9348329999999923,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+EA-RG-MAPPO-S,multi_relation,none,none,none,389745,366960,22785,389745,4.274047999999997,11.402583000000002,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+w/o task-support relation,multi_relation,no_task_support,none,none,389745,366960,22785,389745,4.337011999999998,10.933567999999996,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+w/o role-pair gate,multi_relation,none,no_role_pair_gate,none,389745,366960,22785,389745,4.226329,10.646439,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0

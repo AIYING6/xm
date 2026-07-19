@@ -67,6 +67,8 @@ class UAVIntercept3DConfig:
     radar_dropout_prob: float = 0.0
     strict_target_sensing: bool = False
     agent_target_info_bottleneck: bool = False
+    max_target_message_age_steps: int = 80
+    min_target_confidence: float = 0.2
     target_prior_position: Tuple[float, float, float] = (10_000.0, 0.0, 5_000.0)
     failed_blue_agent: int = -1
     node_failure_start_step: int = 0
@@ -76,6 +78,8 @@ class UAVIntercept3DConfig:
     seed: int | None = None
     attack_hold_steps: int = 4
     collision_radius: float = 120.0
+    safety_proximity_distance: float = 0.0
+    safety_proximity_penalty_weight: float = 0.0
     blue_types: List[UAV3DType] = field(
         default_factory=lambda: [
             UAV3DType(ROLE_SCOUT, 245.0, 120.0, 18.0, 0.035, 42.0, 0.26, 4.5, 17_500.0, math.radians(130), math.radians(55), 9_500.0, 1_800.0, 6_500.0, math.radians(42), 0.90),
@@ -187,10 +191,10 @@ class UAVIntercept3DEnv:
         prev_tracking = float(np.mean(self.detected_by))
         prev_window = float(np.max(self.attack_window))
 
+        self.step_count += 1
         self._move_blue(actions)
         self._move_red()
         self._update_sensing_and_comm()
-        self.step_count += 1
 
         cur_range = self._mean_target_range()
         tracking = float(np.mean(self.detected_by))
@@ -462,6 +466,31 @@ class UAVIntercept3DEnv:
     def _mean_target_range(self) -> float:
         return float(np.mean(np.linalg.norm(self.blue_pos - self.red_pos[0], axis=1)))
 
+    def _min_blue_red_distance(self) -> float:
+        return float(np.min(np.linalg.norm(self.blue_pos - self.red_pos[0], axis=1)))
+
+    def _min_blue_blue_distance(self) -> float:
+        distances = [
+            float(np.linalg.norm(self.blue_pos[i] - self.blue_pos[j]))
+            for i in range(self.config.num_blue)
+            for j in range(i + 1, self.config.num_blue)
+        ]
+        return float(min(distances)) if distances else float("inf")
+
+    def _safety_proximity_penalty(self) -> float:
+        cfg = self.config
+        if cfg.safety_proximity_distance <= 0.0 or cfg.safety_proximity_penalty_weight <= 0.0:
+            return 0.0
+        threshold = float(cfg.safety_proximity_distance)
+        violations: list[float] = []
+        for i in range(cfg.num_blue):
+            blue_red_dist = float(np.linalg.norm(self.blue_pos[i] - self.red_pos[0]))
+            violations.append(max(0.0, (threshold - blue_red_dist) / threshold))
+            for j in range(i + 1, cfg.num_blue):
+                blue_blue_dist = float(np.linalg.norm(self.blue_pos[i] - self.blue_pos[j]))
+                violations.append(max(0.0, (threshold - blue_blue_dist) / threshold))
+        return float(np.mean(violations)) if violations else 0.0
+
     def _has_collision(self) -> bool:
         for i in range(self.config.num_blue):
             if np.linalg.norm(self.blue_pos[i] - self.red_pos[0]) < self.config.collision_radius:
@@ -485,6 +514,7 @@ class UAVIntercept3DEnv:
         age_penalty = min(1.0, self._mean_message_age() / 80.0)
         base = 0.25 * progress + 0.12 * tracking + 0.18 * window + 0.05 * connectivity - 0.03 * age_penalty
         base += 0.05 * max(0.0, tracking - prev_tracking) + 0.08 * max(0.0, window - prev_window)
+        base -= self.config.safety_proximity_penalty_weight * self._safety_proximity_penalty()
         if self.success:
             base += 2.0
         if self.collision:
@@ -511,23 +541,74 @@ class UAVIntercept3DEnv:
         off_diag = self.message_age[~np.eye(self.config.num_blue, dtype=bool)]
         return float(np.mean(off_diag)) if off_diag.size else 0.0
 
+    def _local_inbound_connectivity(self, agent_id: int) -> float:
+        mask = np.ones(self.config.num_blue, dtype=bool)
+        mask[agent_id] = False
+        if not np.any(mask):
+            return 1.0
+        return float(np.mean(self.comm_adj[agent_id, mask]))
+
+    def _local_inbound_message_age(self, agent_id: int) -> float:
+        mask = np.ones(self.config.num_blue, dtype=bool)
+        mask[agent_id] = False
+        if not np.any(mask):
+            return 0.0
+        return float(np.mean(self.message_age[agent_id, mask]))
+
+    def _local_target_cache_age(self, agent_id: int) -> float:
+        if self.target_cache_valid[agent_id] <= 0.5 or self.target_cache_generation_step[agent_id] < 0:
+            return float(self.config.max_steps)
+        return float(max(0, self.step_count - int(self.target_cache_generation_step[agent_id])))
+
+    def _local_target_cache_confidence(self, agent_id: int) -> float:
+        if not self._has_fresh_target_cache(agent_id):
+            return 0.0
+        return float(self.target_cache_confidence[agent_id])
+
+    def _has_fresh_target_cache(self, agent_id: int) -> bool:
+        if self.target_cache_valid[agent_id] <= 0.5:
+            return False
+        if self.target_cache_generation_step[agent_id] < 0:
+            return False
+        cache_age = self._local_target_cache_age(agent_id)
+        if cache_age > float(self.config.max_target_message_age_steps):
+            return False
+        if float(self.target_cache_confidence[agent_id]) < float(self.config.min_target_confidence):
+            return False
+        return True
+
+    def _target_cache_stale_rate(self) -> float:
+        valid_ids = [i for i in range(self.config.num_blue) if self.target_cache_valid[i] > 0.5]
+        if not valid_ids:
+            return 0.0
+        stale = [not self._has_fresh_target_cache(i) for i in valid_ids]
+        return float(np.mean(stale))
+
     def _info(self, timeout: bool) -> Dict[str, float]:
+        local_cache_ages = [self._local_target_cache_age(i) for i in range(self.config.num_blue)]
+        local_cache_conf = [self._local_target_cache_confidence(i) for i in range(self.config.num_blue)]
         return {
             "success": float(self.success),
             "timeout": float(timeout and not self.success and not self.collision and not self.constraint_violation),
             "collision": float(self.collision),
             "constraint_violation": float(self.constraint_violation),
             "mean_range": self._mean_target_range(),
+            "min_blue_red_distance": self._min_blue_red_distance(),
+            "min_blue_blue_distance": self._min_blue_blue_distance(),
             "tracking_rate": float(np.mean(self.detected_by)),
             "attack_window_rate": float(np.mean(self.attack_window)),
             "chain_closed": float(self.attack_hold >= self.config.attack_hold_steps),
             "comm_connectivity": self._comm_connectivity(),
             "mean_message_age": self._mean_message_age(),
+            "safety_proximity_penalty": self._safety_proximity_penalty(),
             "communication_range_scale": float(self.config.communication_range_scale),
             "strict_target_sensing": float(self.config.strict_target_sensing),
             "agent_target_info_bottleneck": float(self.config.agent_target_info_bottleneck),
             "target_estimate_age": float(self.step_count - self.last_detection_step) if self.last_detection_step >= 0 else float(self.config.max_steps),
             "target_estimate_is_prior": float(self.config.strict_target_sensing and self.last_detected_target_pos is None),
+            "target_cache_age_mean": float(np.mean(local_cache_ages)),
+            "target_cache_confidence_mean": float(np.mean(local_cache_conf)),
+            "target_cache_stale_rate": self._target_cache_stale_rate(),
             "node_failure_active": float(any(self._is_comm_failed(i) for i in range(self.config.num_blue))),
             "failed_blue_agent": float(self.config.failed_blue_agent),
             "step": float(self.step_count),
@@ -539,11 +620,21 @@ class UAVIntercept3DEnv:
             return self.red_pos[0], float(self.red_speed[0]), float(self.red_heading[0]), float(self.red_gamma[0]), vel
         return self._estimated_target_state()
 
+    def _target_state_for_graph_observation(self) -> tuple[np.ndarray, float, float, float, np.ndarray]:
+        if not (self.config.strict_target_sensing and self.config.agent_target_info_bottleneck):
+            return self._target_state_for_observation()
+        if np.any(self.detected_by > 0.5):
+            vel = velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0])
+            return self.red_pos[0], float(self.red_speed[0]), float(self.red_heading[0]), float(self.red_gamma[0]), vel
+        pos = np.asarray(self.config.target_prior_position, dtype=np.float32)
+        vel = np.zeros(3, dtype=np.float32)
+        return pos, 0.0, 0.0, 0.0, vel
+
     def _target_state_for_agent_observation(self, agent_id: int) -> tuple[np.ndarray, float, float, float, np.ndarray]:
         if (
             self.config.strict_target_sensing
             and self.config.agent_target_info_bottleneck
-            and self.target_cache_valid[agent_id] > 0.5
+            and self._has_fresh_target_cache(agent_id)
         ):
             pos = self.target_cache_pos[agent_id]
             vel = self.target_cache_vel[agent_id]
@@ -612,10 +703,10 @@ class UAVIntercept3DEnv:
                     float(typ.role == ROLE_RELAY),
                     float(typ.role == ROLE_ATTACKER),
                     float(typ.role == ROLE_INTERCEPTOR),
-                    self._comm_connectivity(),
-                    self._mean_message_age() / self.config.max_steps,
-                    float(self.step_count - self.last_detection_step) / self.config.max_steps if self.last_detection_step >= 0 else 1.0,
-                    float(self.attack_hold) / max(1, self.config.attack_hold_steps),
+                    self._local_inbound_connectivity(i),
+                    self._local_inbound_message_age(i) / self.config.max_steps,
+                    self._local_target_cache_age(i) / self.config.max_steps,
+                    self._local_target_cache_confidence(i),
                     self.config.communication_dropout_prob,
                     float(self.config.message_delay_steps) / 10.0,
                 ],
@@ -676,7 +767,7 @@ class UAVIntercept3DEnv:
         relation_adj = np.zeros((self.relation_count, n, n), dtype=np.float32)
         role = np.zeros(n, dtype=np.int64)
 
-        target_pos, target_speed, target_heading, target_gamma, target_vel = self._target_state_for_observation()
+        target_pos, target_speed, target_heading, target_gamma, target_vel = self._target_state_for_graph_observation()
         positions = np.vstack([self.blue_pos, target_pos[None, :]])
         speeds = np.concatenate([self.blue_speed, np.asarray([target_speed], dtype=np.float32)])
         headings = np.concatenate([self.blue_heading, np.asarray([target_heading], dtype=np.float32)])
@@ -790,7 +881,7 @@ class UAVIntercept3DEnv:
     def _has_target_information(self, agent_id: int) -> bool:
         if self.detected_by[agent_id] > 0.5:
             return True
-        if self.target_cache_valid[agent_id] > 0.5:
+        if self._has_fresh_target_cache(agent_id):
             return True
         for source in range(self.config.num_blue):
             if self.detected_by[source] <= 0.5:

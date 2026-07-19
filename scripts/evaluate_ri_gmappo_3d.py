@@ -31,6 +31,8 @@ CSV_COLUMNS = (
     "target_policy",
     "strict_target_sensing",
     "agent_target_info_bottleneck",
+    "max_target_message_age_steps",
+    "min_target_confidence",
     "communication_range_scale",
     "communication_dropout_prob",
     "message_delay_steps",
@@ -57,11 +59,21 @@ CSV_COLUMNS = (
     "first_chain_close_step",
     "post_failure_chain_recovered",
     "post_failure_chain_recovery_steps",
+    "post_failure_chain_recovery_steps_censored",
+    "post_failure_chain_recovered_only_steps",
+    "post_failure_chain_maintained",
+    "post_failure_chain_recovered_after_loss",
+    "post_failure_chain_unrecovered",
+    "post_failure_first_chain_step",
     "chain_closed_during_failure_rate",
     "tracking_during_failure_rate",
     "connectivity_during_failure",
     "avg_mean_range",
     "final_mean_range",
+    "episode_min_blue_red_distance",
+    "episode_min_blue_blue_distance",
+    "final_min_blue_red_distance",
+    "final_min_blue_blue_distance",
     "reward_sum",
 )
 
@@ -90,6 +102,8 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         radar_dropout_prob=args.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
         agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        max_target_message_age_steps=args.max_target_message_age_steps,
+        min_target_confidence=args.min_target_confidence,
         failed_blue_agent=args.failed_blue_agent,
         node_failure_start_step=args.node_failure_start_step,
         node_failure_duration_steps=args.node_failure_duration_steps,
@@ -161,22 +175,43 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
         return {
             "post_failure_chain_recovered": -1.0,
             "post_failure_chain_recovery_steps": -1.0,
+            "post_failure_chain_recovery_steps_censored": -1.0,
+            "post_failure_chain_recovered_only_steps": -1.0,
+            "post_failure_chain_maintained": -1.0,
+            "post_failure_chain_recovered_after_loss": -1.0,
+            "post_failure_chain_unrecovered": -1.0,
+            "post_failure_first_chain_step": -1.0,
             "chain_closed_during_failure_rate": -1.0,
             "tracking_during_failure_rate": -1.0,
             "connectivity_during_failure": -1.0,
         }
     start = float(args.node_failure_start_step)
-    first_after_failure = -1.0
+    first_chain_step = -1.0
+    chain_at_failure_start = False
     for info in step_infos:
-        if float(info["step"]) >= start and float(info.get("chain_closed", 0.0)) > 0.5:
-            first_after_failure = float(info["step"])
+        step = float(info["step"])
+        chain_closed = float(info.get("chain_closed", 0.0)) > 0.5
+        if step == start and chain_closed:
+            chain_at_failure_start = True
+        if step >= start and chain_closed:
+            first_chain_step = step
             break
     final_step = float(step_infos[-1]["step"]) if step_infos else start
-    recovered = float(first_after_failure >= 0.0)
-    recovery_steps = first_after_failure - start if recovered > 0.5 else max(0.0, final_step - start)
+    recovered = float(first_chain_step >= 0.0)
+    recovery_steps = first_chain_step - start if recovered > 0.5 else max(0.0, final_step - start)
+    recovered_only_steps = recovery_steps if recovered > 0.5 else -1.0
+    maintained = float(chain_at_failure_start)
+    recovered_after_loss = float(recovered > 0.5 and not chain_at_failure_start)
+    unrecovered = float(recovered <= 0.5)
     return {
         "post_failure_chain_recovered": recovered,
         "post_failure_chain_recovery_steps": float(recovery_steps),
+        "post_failure_chain_recovery_steps_censored": float(recovery_steps),
+        "post_failure_chain_recovered_only_steps": float(recovered_only_steps),
+        "post_failure_chain_maintained": maintained,
+        "post_failure_chain_recovered_after_loss": recovered_after_loss,
+        "post_failure_chain_unrecovered": unrecovered,
+        "post_failure_first_chain_step": float(first_chain_step),
         "chain_closed_during_failure_rate": mean_metric_where(step_infos, "chain_closed", "node_failure_active"),
         "tracking_during_failure_rate": mean_metric_where(step_infos, "tracking_rate", "node_failure_active"),
         "connectivity_during_failure": mean_metric_where(step_infos, "comm_connectivity", "node_failure_active"),
@@ -190,82 +225,130 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
+def build_episode_row(
+    args: argparse.Namespace,
+    policy_source: str,
+    seed: int,
+    episode: int,
+    step_infos: list[dict[str, float]],
+    final: dict[str, float],
+    reward_sum: float,
+) -> dict[str, float | int | str | bool]:
+    recovery = post_failure_recovery_metrics(step_infos, args)
+    return {
+        "method": "EA-RG-MAPPO-S",
+        "checkpoint": display_path(args.checkpoint),
+        "policy_source": policy_source,
+        "seed": seed,
+        "episode": episode,
+        "episodes": args.episodes,
+        "target_policy": args.target_policy,
+        "strict_target_sensing": args.strict_target_sensing,
+        "agent_target_info_bottleneck": args.agent_target_info_bottleneck,
+        "max_target_message_age_steps": args.max_target_message_age_steps,
+        "min_target_confidence": args.min_target_confidence,
+        "communication_range_scale": args.communication_range_scale,
+        "communication_dropout_prob": args.communication_dropout_prob,
+        "message_delay_steps": args.message_delay_steps,
+        "radar_dropout_prob": args.radar_dropout_prob,
+        "failed_blue_agent": args.failed_blue_agent,
+        "node_failure_start_step": args.node_failure_start_step,
+        "node_failure_duration_steps": args.node_failure_duration_steps,
+        "graph_relation_ablation": args.graph_relation_ablation,
+        "graph_message_ablation": args.graph_message_ablation,
+        "graph_input_ablation": args.graph_input_ablation,
+        "deterministic": not args.stochastic,
+        "success": float(final["success"]),
+        "chain_closed": float(final["chain_closed"]),
+        "attack_window_formed": float(max(info["attack_window_rate"] for info in step_infos) > 0.0),
+        "attack_window_rate": mean_metric(step_infos, "attack_window_rate"),
+        "tracking_rate": mean_metric(step_infos, "tracking_rate"),
+        "comm_connectivity": mean_metric(step_infos, "comm_connectivity"),
+        "mean_message_age": mean_metric(step_infos, "mean_message_age"),
+        "collision": float(final["collision"]),
+        "timeout": float(final["timeout"]),
+        "constraint_violation": float(final["constraint_violation"]),
+        "steps": float(final["step"]),
+        "first_attack_window_step": first_step_where(step_infos, "attack_window_rate"),
+        "first_chain_close_step": first_step_where(step_infos, "chain_closed", threshold=0.5),
+        **recovery,
+        "avg_mean_range": mean_metric(step_infos, "mean_range"),
+        "final_mean_range": float(final["mean_range"]),
+        "episode_min_blue_red_distance": float(min(info["min_blue_red_distance"] for info in step_infos)),
+        "episode_min_blue_blue_distance": float(min(info["min_blue_blue_distance"] for info in step_infos)),
+        "final_min_blue_red_distance": float(final["min_blue_red_distance"]),
+        "final_min_blue_blue_distance": float(final["min_blue_blue_distance"]),
+        "reward_sum": reward_sum,
+    }
+
+
 def evaluate(args: argparse.Namespace) -> list[dict[str, float | int | str | bool]]:
     cfg = build_config(args)
     agent, policy_source = build_agent(args, cfg)
     device = torch.device(args.device)
     rows: list[dict[str, float | int | str | bool]] = []
+    eval_batch_size = max(1, int(getattr(args, "eval_batch_size", 1)))
 
     with torch.no_grad():
-        for ep in range(args.episodes):
-            seed = args.base_seed + ep
-            env = make_env(cfg, seed, training=False)
-            obs, share_obs, graph = env.reset()
-            step_infos: list[dict[str, float]] = []
-            reward_sum = 0.0
-            while True:
-                g = stack_graphs([graph])
+        for batch_start in range(0, args.episodes, eval_batch_size):
+            batch_episodes = list(range(batch_start, min(args.episodes, batch_start + eval_batch_size)))
+            envs = []
+            obs_list = []
+            share_obs_list = []
+            graph_list = []
+            step_infos_list: list[list[dict[str, float]]] = []
+            reward_sums: list[float] = []
+            active: list[bool] = []
+            for ep in batch_episodes:
+                seed = args.base_seed + ep
+                env = make_env(cfg, seed, training=False)
+                obs, share_obs, graph = env.reset()
+                envs.append(env)
+                obs_list.append(obs)
+                share_obs_list.append(share_obs)
+                graph_list.append(graph)
+                step_infos_list.append([])
+                reward_sums.append(0.0)
+                active.append(True)
+
+            while any(active):
+                active_indices = [i for i, is_active in enumerate(active) if is_active]
+                g = stack_graphs([graph_list[i] for i in active_indices])
                 actions, _, _, _, _, _ = agent.get_action_and_value(
-                    torch.as_tensor(obs[None, ...], dtype=torch.float32, device=device),
+                    torch.as_tensor(np.stack([obs_list[i] for i in active_indices], axis=0), dtype=torch.float32, device=device),
                     torch.as_tensor(g["node_feat"], dtype=torch.float32, device=device),
                     torch.as_tensor(g["edge_feat"], dtype=torch.float32, device=device),
                     torch.as_tensor(g["role"], dtype=torch.long, device=device),
                     torch.as_tensor(g["adj"], dtype=torch.float32, device=device),
-                    torch.as_tensor(share_obs[None, ...], dtype=torch.float32, device=device),
+                    torch.as_tensor(np.stack([share_obs_list[i] for i in active_indices], axis=0), dtype=torch.float32, device=device),
                     relation_adj=torch.as_tensor(g["relation_adj"], dtype=torch.float32, device=device),
                     deterministic=not args.stochastic,
                     intent_label=torch.as_tensor(g["intent_label"], dtype=torch.long, device=device),
                     detach_intent=False,
                     oracle_intent=False,
                 )
-                obs, share_obs, graph, rewards, dones, info = env.step(actions.squeeze(0).cpu().numpy())
-                reward_sum += float(np.sum(rewards))
-                step_infos.append(info)
-                if np.all(dones):
-                    final = info
-                    recovery = post_failure_recovery_metrics(step_infos, args)
-                    rows.append(
-                        {
-                            "method": "EA-RG-MAPPO-S",
-                            "checkpoint": display_path(args.checkpoint),
-                            "policy_source": policy_source,
-                            "seed": seed,
-                            "episode": ep,
-                            "episodes": args.episodes,
-                            "target_policy": args.target_policy,
-                            "strict_target_sensing": args.strict_target_sensing,
-                            "agent_target_info_bottleneck": args.agent_target_info_bottleneck,
-                            "communication_range_scale": args.communication_range_scale,
-                            "communication_dropout_prob": args.communication_dropout_prob,
-                            "message_delay_steps": args.message_delay_steps,
-                            "radar_dropout_prob": args.radar_dropout_prob,
-                            "failed_blue_agent": args.failed_blue_agent,
-                            "node_failure_start_step": args.node_failure_start_step,
-                            "node_failure_duration_steps": args.node_failure_duration_steps,
-                            "graph_relation_ablation": args.graph_relation_ablation,
-                            "graph_message_ablation": args.graph_message_ablation,
-                            "graph_input_ablation": args.graph_input_ablation,
-                            "deterministic": not args.stochastic,
-                            "success": float(final["success"]),
-                            "chain_closed": float(final["chain_closed"]),
-                            "attack_window_formed": float(max(info["attack_window_rate"] for info in step_infos) > 0.0),
-                            "attack_window_rate": mean_metric(step_infos, "attack_window_rate"),
-                            "tracking_rate": mean_metric(step_infos, "tracking_rate"),
-                            "comm_connectivity": mean_metric(step_infos, "comm_connectivity"),
-                            "mean_message_age": mean_metric(step_infos, "mean_message_age"),
-                            "collision": float(final["collision"]),
-                            "timeout": float(final["timeout"]),
-                            "constraint_violation": float(final["constraint_violation"]),
-                            "steps": float(final["step"]),
-                            "first_attack_window_step": first_step_where(step_infos, "attack_window_rate"),
-                            "first_chain_close_step": first_step_where(step_infos, "chain_closed", threshold=0.5),
-                            **recovery,
-                            "avg_mean_range": mean_metric(step_infos, "mean_range"),
-                            "final_mean_range": float(final["mean_range"]),
-                            "reward_sum": reward_sum,
-                        }
-                    )
-                    break
+                action_batch = actions.cpu().numpy()
+                for action_i, env_i in enumerate(active_indices):
+                    obs, share_obs, graph, rewards, dones, info = envs[env_i].step(action_batch[action_i])
+                    reward_sums[env_i] += float(np.sum(rewards))
+                    step_infos_list[env_i].append(info)
+                    obs_list[env_i] = obs
+                    share_obs_list[env_i] = share_obs
+                    graph_list[env_i] = graph
+                    if np.all(dones):
+                        episode = batch_episodes[env_i]
+                        rows.append(
+                            build_episode_row(
+                                args=args,
+                                policy_source=policy_source,
+                                seed=args.base_seed + episode,
+                                episode=episode,
+                                step_infos=step_infos_list[env_i],
+                                final=info,
+                                reward_sum=reward_sums[env_i],
+                            )
+                        )
+                        active[env_i] = False
     return rows
 
 
@@ -295,10 +378,16 @@ def write_summary(rows: list[dict[str, float | int | str | bool]], out_md: Path,
         "first_chain_close_step",
         "post_failure_chain_recovered",
         "post_failure_chain_recovery_steps",
+        "post_failure_chain_recovery_steps_censored",
+        "post_failure_chain_recovered_only_steps",
         "chain_closed_during_failure_rate",
         "tracking_during_failure_rate",
         "connectivity_during_failure",
         "avg_mean_range",
+        "episode_min_blue_red_distance",
+        "episode_min_blue_blue_distance",
+        "final_min_blue_red_distance",
+        "final_min_blue_blue_distance",
     )
     lines = [
         "# 3DOF RI-GMAPPO Policy Evaluation",
@@ -358,6 +447,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=Path, default=ROOT / "results" / "ri_gmappo_3d_smoke" / "actor_critic_latest.pt")
     parser.add_argument("--episodes", type=int, default=3)
+    parser.add_argument("--eval-batch-size", type=int, default=1)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--base-seed", type=int, default=30_000)
     parser.add_argument("--target-policy", type=str, default="evasive")
@@ -367,6 +457,8 @@ def main() -> None:
     parser.add_argument("--radar-dropout-prob", type=float, default=0.0)
     parser.add_argument("--strict-target-sensing", action="store_true")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--max-target-message-age-steps", type=int, default=80)
+    parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
     parser.add_argument("--node-failure-start-step", type=int, default=0)
     parser.add_argument("--node-failure-duration-steps", type=int, default=0)

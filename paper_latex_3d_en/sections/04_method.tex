@@ -12,6 +12,16 @@ The method constructs separate perception, communication, and task-support adjac
 
 Role-pair-conditioned message propagation is used so that messages can depend on sender role, receiver role, and relation type. This is the key distinction from a single homogeneous graph encoder.
 
+Let $\mathcal{R}=\{\mathrm{per},\mathrm{comm},\mathrm{sup}\}$ denote the perception, communication, and task-support relation set. For receiver node $i$ and sender node $j$, relation $r$ has adjacency $A^r_{ij}$ and edge feature $e^r_{ij}$. The message passed from $j$ to $i$ is
+\begin{equation}
+    m^r_{ij} = A^r_{ij} \, g_{r,\rho_i,\rho_j}\left(h_i, h_j, e^r_{ij}\right),
+\end{equation}
+where $h_i$ and $h_j$ are node embeddings, $\rho_i$ and $\rho_j$ are receiver and sender roles, and $g_{r,\rho_i,\rho_j}$ is the role-pair-conditioned message map. The receiver update aggregates relation-specific messages as
+\begin{equation}
+    \tilde{h}_i = \phi\left(h_i, \sum_{r\in\mathcal{R}}\sum_{j} \alpha^r_{ij} m^r_{ij}\right),
+\end{equation}
+where $\alpha^r_{ij}$ is an edge-aware attention weight. The single-graph baseline replaces $\mathcal{R}$ with one merged adjacency and shared message parameters.
+
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.98\linewidth]{intercept_3d_multi_relation_graph.png}
@@ -19,6 +29,18 @@ Role-pair-conditioned message propagation is used so that messages can depend on
     \label{fig:multi_relation_graph}
 \end{figure}
 
-\subsection{Staged Topology Curriculum}
+\subsection{Training Protocol}
 
-The training procedure first learns the basic straight-target interception task, then performs topology-curriculum fine-tuning under randomized communication range, dropout, message delay, radar dropout, and temporary blue-node communication failure. Demonstration pretraining and reward shaping are used only as training aids, not as claimed innovations.
+The training procedure first learns the basic straight-target interception task, then performs fixed-budget safety-continuation training under randomized communication range, dropout, message delay, radar dropout, and temporary blue-node communication failure. Demonstration pretraining, reward shaping, and topology randomization are used as training aids rather than as isolated claimed innovations. The paper-facing comparison therefore emphasizes the graph/message architecture and its mechanism ablations, while a no-curriculum comparison is left for future training-protocol analysis.
+
+The policy is optimized with a MAPPO-style clipped objective under centralized training and decentralized execution:
+\begin{equation}
+    \mathcal{L}_{\mathrm{PPO}} =
+    \mathbb{E}\left[
+        \min\left(
+            r_t(\theta)\hat{A}_t,
+            \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t
+        \right)
+    \right],
+\end{equation}
+where $r_t(\theta)$ is the policy probability ratio and $\hat{A}_t$ is the advantage estimate from the centralized critic. The actor receives decentralized observations and communication-feasible graph information at execution time.

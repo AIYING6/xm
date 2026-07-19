@@ -1,0 +1,25 @@
+comparison,metric,label,unit,n_training_seeds,n_matched_episodes_total,delta_proposed_minus_baseline,delta_ci_low,delta_ci_high,bootstrap_samples,bootstrap_seed
+multi_relation_vs_single,post_failure_chain_recovered,Post-failure chain recovered,rate,5,500,0.354,0.012,0.73,5000,52
+multi_relation_vs_single,timeout,Timeout,rate,5,500,-0.326,-0.676,0,5000,52
+multi_relation_vs_single,capped_recovery_steps,Restricted mean recovery steps,steps,5,500,-64.536,-144.3807,7.2306,5000,52
+multi_relation_vs_single,tracking_during_failure_rate,Tracking during failure,rate,5,500,0.3011064881,0.01085947189,0.6147481401,5000,52
+multi_relation_vs_single,connectivity_during_failure,Connectivity during failure,rate,5,500,0.0568309276,0.000146315637,0.1154901401,5000,52
+multi_relation_vs_single,chain_closed_during_failure_rate,Chain closure during failure,rate,5,500,0.06119343434,-0.0005408405483,0.1246986977,5000,52
+multi_relation_vs_no_graph,post_failure_chain_recovered,Post-failure chain recovered,rate,5,500,0.668,0.286,0.938,5000,51
+multi_relation_vs_no_graph,timeout,Timeout,rate,5,500,-0.66,-0.924,-0.284,5000,51
+multi_relation_vs_no_graph,capped_recovery_steps,Restricted mean recovery steps,steps,5,500,-135.796,-190.8531,-57.1351,5000,51
+multi_relation_vs_no_graph,tracking_during_failure_rate,Tracking during failure,rate,5,500,0.628190885,0.4246306942,0.8420598133,5000,51
+multi_relation_vs_no_graph,connectivity_during_failure,Connectivity during failure,rate,5,500,0.1243521497,0.05775842434,0.1675175987,5000,51
+multi_relation_vs_no_graph,chain_closed_during_failure_rate,Chain closure during failure,rate,5,500,0.1010031746,0.03766277778,0.1482245833,5000,51
+multi_relation_vs_no_task_support,post_failure_chain_recovered,Post-failure chain recovered,rate,5,500,0.238,-0.092,0.63605,5000,53
+multi_relation_vs_no_task_support,timeout,Timeout,rate,5,500,-0.23,-0.63205,0.098,5000,53
+multi_relation_vs_no_task_support,capped_recovery_steps,Restricted mean recovery steps,steps,5,500,-52.162,-137.26345,19.05615,5000,53
+multi_relation_vs_no_task_support,tracking_during_failure_rate,Tracking during failure,rate,5,500,0.1798907987,-0.06315845255,0.4231831408,5000,53
+multi_relation_vs_no_task_support,connectivity_during_failure,Connectivity during failure,rate,5,500,0.04229426465,-0.009693255536,0.1133580158,5000,53
+multi_relation_vs_no_task_support,chain_closed_during_failure_rate,Chain closure during failure,rate,5,500,0.04818504274,-0.008533185287,0.1098066865,5000,53
+multi_relation_vs_no_role_pair_gate,post_failure_chain_recovered,Post-failure chain recovered,rate,5,500,0.238,0.028,0.592,5000,54
+multi_relation_vs_no_role_pair_gate,timeout,Timeout,rate,5,500,-0.238,-0.592,-0.028,5000,54
+multi_relation_vs_no_role_pair_gate,capped_recovery_steps,Restricted mean recovery steps,steps,5,500,-51.718,-129.83655,-5.7736,5000,54
+multi_relation_vs_no_role_pair_gate,tracking_during_failure_rate,Tracking during failure,rate,5,500,0.1689350557,0.02685267847,0.3875622513,5000,54
+multi_relation_vs_no_role_pair_gate,connectivity_during_failure,Connectivity during failure,rate,5,500,0.03786547732,-0.003385699506,0.1090034606,5000,54
+multi_relation_vs_no_role_pair_gate,chain_closed_during_failure_rate,Chain closure during failure,rate,5,500,0.03913492063,0.001605019841,0.101602381,5000,54

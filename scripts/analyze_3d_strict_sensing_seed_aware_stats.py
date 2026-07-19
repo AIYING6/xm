@@ -159,10 +159,16 @@ def parse_args() -> argparse.Namespace:
         metavar=("BASELINE", "PROPOSED"),
         help="Method names to compare.",
     )
+    parser.add_argument(
+        "--scenario",
+        type=str,
+        default=None,
+        help="Optional scenario filter for combined episode CSVs.",
+    )
     return parser.parse_args()
 
 
-def load_pairs(paths: Iterable[Path], methods: tuple[str, str]) -> PairsBySeed:
+def load_pairs(paths: Iterable[Path], methods: tuple[str, str], scenario: str | None = None) -> PairsBySeed:
     pairs: PairsBySeed = {}
     allowed = set(methods)
     for path in paths:
@@ -171,6 +177,8 @@ def load_pairs(paths: Iterable[Path], methods: tuple[str, str]) -> PairsBySeed:
         with path.open("r", encoding="utf-8", newline="") as f:
             reader = csv.DictReader(f)
             for row in reader:
+                if scenario is not None and row.get("scenario", "") != scenario:
+                    continue
                 method = row.get("graph_encoder", row.get("method", ""))
                 if method not in allowed:
                     continue
@@ -470,7 +478,7 @@ def main() -> None:
     args = parse_args()
     paths = args.episode_csv if args.episode_csv else DEFAULT_ROOTS
     baseline, proposed = tuple(args.methods)
-    pairs_by_seed = load_pairs(paths, (baseline, proposed))
+    pairs_by_seed = load_pairs(paths, (baseline, proposed), scenario=args.scenario)
 
     seed_rows = seed_level_rows(pairs_by_seed, baseline, proposed)
     boot_rows = bootstrap_rows(

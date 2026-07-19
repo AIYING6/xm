@@ -118,6 +118,8 @@ def run_args_from_episode(row: dict[str, str], checkpoint: Path, device: str) ->
         radar_dropout_prob=float(row["radar_dropout_prob"]),
         strict_target_sensing=truth(row["strict_target_sensing"]),
         agent_target_info_bottleneck=truth(row["agent_target_info_bottleneck"]),
+        max_target_message_age_steps=int(float(row.get("max_target_message_age_steps", 80))),
+        min_target_confidence=float(row.get("min_target_confidence", 0.2)),
         failed_blue_agent=int(float(row["failed_blue_agent"])),
         node_failure_start_step=int(float(row["node_failure_start_step"])),
         node_failure_duration_steps=int(float(row["node_failure_duration_steps"])),
