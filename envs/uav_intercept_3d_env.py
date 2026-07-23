@@ -80,6 +80,7 @@ class UAVIntercept3DConfig:
     collision_radius: float = 120.0
     safety_proximity_distance: float = 0.0
     safety_proximity_penalty_weight: float = 0.0
+    attack_geometry_reward_weight: float = 0.0
     blue_types: List[UAV3DType] = field(
         default_factory=lambda: [
             UAV3DType(ROLE_SCOUT, 245.0, 120.0, 18.0, 0.035, 42.0, 0.26, 4.5, 17_500.0, math.radians(130), math.radians(55), 9_500.0, 1_800.0, 6_500.0, math.radians(42), 0.90),
@@ -273,9 +274,13 @@ class UAVIntercept3DEnv:
                     )
                     desired_alt = 5_900.0 if self.red_pos[0, 2] < center_blue[2] else 4_100.0
                     climb = float(np.clip((desired_alt - self.red_pos[0, 2]) / 1_500.0, -1.0, 1.0))
-            elif self.config.target_policy in {"weaving", "weaving_mild"}:
-                weave_amp = 0.45 if self.config.target_policy == "weaving" else 0.20
-                alt_amp = 850.0 if self.config.target_policy == "weaving" else 350.0
+            elif self.config.target_policy in {"weaving", "weaving_mild", "weaving_tiny"}:
+                weave_params = {
+                    "weaving": (0.45, 850.0),
+                    "weaving_mild": (0.20, 350.0),
+                    "weaving_tiny": (0.06, 120.0),
+                }
+                weave_amp, alt_amp = weave_params[self.config.target_policy]
                 desired_heading = wrap_angle(desired_heading + weave_amp * math.sin(0.07 * self.step_count))
                 turn = float(np.clip(angle_diff(desired_heading, self.red_heading[0]), -target.max_turn_rate, target.max_turn_rate))
                 desired_alt = 5_000.0 + alt_amp * math.sin(0.045 * self.step_count + 0.7)
@@ -477,6 +482,33 @@ class UAVIntercept3DEnv:
         ]
         return float(min(distances)) if distances else float("inf")
 
+    def _attack_geometry_score(self) -> float:
+        scores: list[float] = []
+        red_vel = velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0])
+        for i, typ in enumerate(self.config.blue_types):
+            if typ.role not in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
+                continue
+            rel = self.red_pos[0] - self.blue_pos[i]
+            dist = float(np.linalg.norm(rel))
+            if dist <= 1e-6:
+                continue
+            if dist < typ.attack_range_min:
+                range_score = max(0.0, dist / max(typ.attack_range_min, 1e-6))
+            elif dist > typ.attack_range_max:
+                range_score = max(0.0, 1.0 - (dist - typ.attack_range_max) / max(typ.attack_range_max, 1e-6))
+            else:
+                range_score = 1.0
+
+            los_heading = math.atan2(float(rel[1]), float(rel[0]))
+            heading_err = abs(angle_diff(los_heading, self.blue_heading[i]))
+            heading_score = max(0.0, 1.0 - heading_err / max(typ.attack_cone, 1e-6))
+            alt_score = max(0.0, 1.0 - abs(float(rel[2])) / 1_600.0)
+            blue_vel = velocity_from_state(self.blue_speed[i], self.blue_heading[i], self.blue_gamma[i])
+            closure = float(np.dot(blue_vel - red_vel, unit(rel)))
+            closure_score = float(np.clip((closure + 30.0) / 120.0, 0.0, 1.0))
+            scores.append(range_score * heading_score * alt_score * closure_score)
+        return float(max(scores)) if scores else 0.0
+
     def _safety_proximity_penalty(self) -> float:
         cfg = self.config
         if cfg.safety_proximity_distance <= 0.0 or cfg.safety_proximity_penalty_weight <= 0.0:
@@ -514,6 +546,7 @@ class UAVIntercept3DEnv:
         age_penalty = min(1.0, self._mean_message_age() / 80.0)
         base = 0.25 * progress + 0.12 * tracking + 0.18 * window + 0.05 * connectivity - 0.03 * age_penalty
         base += 0.05 * max(0.0, tracking - prev_tracking) + 0.08 * max(0.0, window - prev_window)
+        base += self.config.attack_geometry_reward_weight * self._attack_geometry_score()
         base -= self.config.safety_proximity_penalty_weight * self._safety_proximity_penalty()
         if self.success:
             base += 2.0
@@ -597,6 +630,7 @@ class UAVIntercept3DEnv:
             "min_blue_blue_distance": self._min_blue_blue_distance(),
             "tracking_rate": float(np.mean(self.detected_by)),
             "attack_window_rate": float(np.mean(self.attack_window)),
+            "attack_geometry_score": self._attack_geometry_score(),
             "chain_closed": float(self.attack_hold >= self.config.attack_hold_steps),
             "comm_connectivity": self._comm_connectivity(),
             "mean_message_age": self._mean_message_age(),

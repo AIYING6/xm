@@ -1,0 +1,2 @@
+graph_encoder,success_mean_mean,success_mean_std,collision_mean_mean,collision_mean_std,episode_min_blue_red_distance_mean_mean,episode_min_blue_red_distance_mean_std,episode_min_blue_blue_distance_mean_mean,episode_min_blue_blue_distance_mean_std
+multi_relation,0.3,0.3,0.0,0.0,6084.373333333333,2362.133458768436,1107.517,456.5566728096305

@@ -1,0 +1,10 @@
+split,method,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,selection_score,success_mean,attack_window_formed_mean,tracking_rate_mean,comm_connectivity_mean,collision_mean,episodes
+test,multi_relation,multi_relation,0,20,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0020.pt,943.526,0.85,0.89,0.452553,0.803807,0,100
+test,multi_relation,multi_relation,1,15,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/multi_relation/bc_ppo_seed1/actor_critic_update_0015.pt,26.2013,0.02,0.02,0.420126,0.504694,0,100
+test,multi_relation,multi_relation,2,25,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/multi_relation/bc_ppo_seed2/actor_critic_update_0025.pt,462.862,0.41,0.48,0.486177,0.971667,0,100
+test,no_graph,no_graph,0,10,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/no_graph/bc_ppo_seed0/actor_critic_update_0010.pt,0.471538,0,0,0.0471538,0.558551,0,100
+test,no_graph,no_graph,1,5,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/no_graph/bc_ppo_seed1/actor_critic_update_0005.pt,0.736282,0,0,0.0736282,0.345218,0,100
+test,no_graph,no_graph,2,25,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/no_graph/bc_ppo_seed2/actor_critic_update_0025.pt,0.291538,0,0,0.0291538,0.339269,0,100
+test,single,single,0,5,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/single/bc_ppo_seed0/actor_critic_update_0005.pt,478.045,0.42,0.54,0.4045,0.581647,0,100
+test,single,single,1,10,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/single/bc_ppo_seed1/actor_critic_update_0010.pt,1.09244,0,0,0.109244,0.642487,0,100
+test,single,single,2,25,results/gate1_nominal_weaving_mild_formal_protocol/stage2_weaving_mild_ppo/runs/single/bc_ppo_seed2/actor_critic_update_0025.pt,-1e+09,0,0,0.0943124,0.410918,0.01,100

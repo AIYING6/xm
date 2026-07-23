@@ -1,0 +1,7 @@
+graph_encoder,train_seed,checkpoint_update,episodes,success_mean,timeout_mean,collision_mean,constraint_violation_mean,steps_mean,episode_min_blue_red_distance_mean,episode_min_blue_blue_distance_mean
+multi_relation,0,20,40,0.525,0.475,0.0,0,191.3,3443.17,1267.44
+multi_relation,1,20,40,0.0,1.0,0.0,0,260.0,8790.07,1394.04
+multi_relation,2,5,40,0.275,0.725,0.0,0,240.975,6196.09,637.236
+single,0,20,40,0.0,1.0,0.0,0,260.0,9339.64,394.562
+single,1,20,40,0.0,0.975,0.025,0,255.25,9153.3,2176.49
+single,2,20,40,0.0,1.0,0.0,0,260.0,10661.5,1332.79

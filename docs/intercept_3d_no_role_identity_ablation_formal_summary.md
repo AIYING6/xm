@@ -2,7 +2,9 @@
 
 Generated: 2026-07-16T10:22:41
 
-This table compares the full multi-relation role graph against `no_role_identity`, which maps every role ID to the same neutral role inside the actor while preserving relation channels and edge features. Positive success/recovery deltas favor the full model; negative step deltas favor the full model.
+This is now pre-hardening evidence. At the time of this run, `no_role_identity` mapped every role ID to the same neutral role inside the actor, but explicit role indicators still remained in 3DOF local observations and graph node features. The implementation was hardened on 2026-07-19; these numbers should not be used in a paper main table until the ablation is rerun.
+
+The table is retained only as historical diagnostic context. Positive success/recovery deltas favor the full model; negative step deltas favor the full model.
 
 | Scenario | N | Success full/no-role | Success delta [95% CI] | Recovery full/no-role | Recovery delta [95% CI] | Recovery-step delta [95% CI] | Steps delta [95% CI] |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -12,6 +14,6 @@ This table compares the full multi-relation role graph against `no_role_identity
 ## Interpretation
 
 ```text
-Use this as auxiliary diagnostic evidence only. Relay failure supports a modest recovery-speed benefit from explicit role identity, but scout failure is mixed and does not support a broad no-role claim.
+Use this as pre-hardening auxiliary diagnostic evidence only. Relay failure supported a modest recovery-speed trend, but the old ablation did not fully remove explicit actor role labels and scout failure was mixed.
 The stronger mechanism evidence remains no_task_support and no_role_pair_gate.
 ```

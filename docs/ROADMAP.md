@@ -6,6 +6,14 @@ Status: Active
 
 The current target is a Q1-level submission attempt with a Q2 fallback path. The governing plan is `docs/Q1_EXECUTION_PLAN.md`.
 
+Final single-paper scope is now fixed in `docs/FINAL_SINGLE_PAPER_SCOPE.md`. The project will produce one paper centered on the Gate 1 strict-sensing relay-failure kill-chain recovery evidence. New experiments are allowed only if they strengthen this paper; full 4v2/5v2, self-play, online missile/radar, and full JSBSim baseline training are out of scope for the current paper.
+
+The active three-stage execution route is recorded in `docs/Q1_THREE_STAGE_EXECUTION_PLAN.md`:
+
+1. close the Gate 1 manuscript/evidence package;
+2. formalize `nominal weaving_mild` as scenario-depth evidence;
+3. then choose one small realism supplement: 4v2/5v2 or LAG/JSBSim replay.
+
 Execution order:
 
 - Gate 1: information realism and communication-feasibility tests;
@@ -16,6 +24,8 @@ Execution order:
 - Gate 6: LAG/JSBSim 6DOF replay validation.
 
 Do not start 5v2 formal training before Gate 1 passes.
+
+Accelerated finish-mode decision: keep Gates 4-6 paused until the Gate 1 manuscript package is internally consistent, reproducible, and visually checked. Do not add 5v2, JSBSim, missile, ELO, or self-play work to the current evidence package unless a specific review-critical gap remains after manuscript audit.
 
 Gate 1 progress:
 
@@ -53,13 +63,30 @@ Gate 1 progress:
 - The fixed-protocol `no_task_support` ablation is complete and documented in `docs/intercept_3d_gate1_hardened_safety_no_task_support_5seed_fixed_update60_summary.md`. Recovery drops from `88.6%` to `64.8%`, but the seed-aware CI crosses zero, so it is supportive rather than decisive mechanism evidence.
 - The fixed-protocol `no_role_pair_gate` ablation is complete and documented in `docs/intercept_3d_gate1_hardened_safety_no_role_pair_gate_5seed_fixed_update60_summary.md`. Recovery drops from `88.6%` to `64.8%`, and the seed-aware recovery CI `[+2.8, +59.2] pp` separates in favor of the full method.
 - Paper-facing result tables are complete in `docs/gate1_safety_fx60_paper_tables.md` and `results/gate1_safety_fx60_paper_tables/`.
-- `no_curriculum` is deferred with rationale in `docs/gate1_safety_fx60_no_curriculum_decision.md`.
+- The three-seed `no_curriculum` diagnostic is complete and does not support claiming topology curriculum as an independent main contribution. Keep curriculum as training support.
 - A paper-facing fixed-update-60 experiment-section draft is complete in `docs/gate1_safety_fx60_experiment_section_draft.md`.
 - The fixed-update-60 experiment section and abstract are integrated into the 3D English manuscript path under `paper_latex_3d_en/`.
 - The active manuscript consistency audit is recorded in `docs/gate1_safety_fx60_manuscript_consistency_audit.md`.
 - Contribution-to-evidence alignment is recorded in `docs/gate1_safety_fx60_contribution_evidence_alignment.md`.
 - Method-component audit is recorded in `docs/gate1_safety_fx60_method_component_audit.md`; problem metrics and method equations have been added to the active manuscript.
-- Next item: improve related-work coverage and citation grounding.
+- External project-content review accepted the current direction but raised several hardening requirements before Q1-scale claims: critic/reward consistency, true role-removal ablation, parameter-matched strong graph baselines, explicit masked-global-graph wording, and documentation cleanup.
+- Critic/reward consistency first pass is complete: the centralized critic now conditions on each blue agent's role one-hot while keeping the decentralized actor boundary unchanged. Audit: `docs/critic_role_conditioning_audit.md`.
+- True `no_role_identity` implementation hardening is complete: the actor now removes explicit role labels from local observation fields, graph node fields, role embeddings, and role-pair message inputs while preserving physical capability heterogeneity. Audit: `docs/true_no_role_identity_ablation_audit.md`.
+- A small post-hardening `no_role_identity` diagnostic is complete in `docs/true_no_role_identity_post_hardening_diag10_summary.md`. It shows clear degradation under hardened no-role inference, but the no-role checkpoints were trained before hardening, so this is not manuscript-level evidence.
+- Parameter-matched single-graph baseline planning is complete in `docs/parameter_matched_single_graph_baseline_plan.md`. The target capacity-control baseline is `graph_encoder=single, hidden_dim=240`, with `394913` total parameters versus full EA-RG-MAPPO-S at `390385`.
+- Seed-0 parameter-matched single-graph development is complete in `docs/parameter_matched_single_graph_seed0_dev_summary.md`. It confirms the capacity-control baseline is runnable and remains far below the full method on the small matched strict bottleneck test split.
+- Three-seed parameter-matched single-graph development is complete in `docs/parameter_matched_single_graph_3seed_dev_summary.md`. Full multi-relation remains far above parameter-matched single-graph on the small strict bottleneck diagnostic, but the result is not yet formal because the strict-stage budget and test episode count are still development-level.
+- A fairer three-seed parameter-matched single-graph update-60 development extension is complete in `docs/parameter_matched_single_graph_update60_dev_summary.md`. The capacity-control baseline improves compared with the ten-update diagnostic, but full multi-relation still recovers `88.3%` versus parameter-matched single-graph `18.3%` on the same small matched test split.
+- A five-seed parameter-matched single-graph test50 formal candidate is complete in `docs/parameter_matched_single_graph_5seed_test50_candidate_summary.md`. Full multi-relation recovers `89.2%` versus parameter-matched single-graph `33.2%`; the single-graph baseline is high-variance across seeds.
+- Seed-aware hierarchical bootstrap is complete for the five-seed capacity-control candidate. Recovery delta is `+56.0 pp` with 95% CI `[+11.2, +98.8] pp`, supporting use as a parameter-count credibility result while still requiring seed-level scatter reporting.
+- The capacity-control result is integrated into the paper table package as a separate supplemental table and delta table.
+- Hardened true `no_role_identity` staged-source training is enabled by passing `--graph-input-ablation` through the fair staged source protocol.
+- Hardened true `no_role_identity` three-seed dev20 rerun is complete in `docs/true_no_role_identity_hardened_3seed_dev20_summary.md`. It shows a large recovery drop (`20.0%` versus full same-split `93.3%`) and supports formalization if role identity is kept as a main mechanism claim.
+- Evaluation metrics now handle pre-failure episode termination without negative failure-window rates.
+- Hardened true `no_role_identity` five-seed formal test50 candidate is complete in `docs/true_no_role_identity_hardened_5seed_formal_test50_summary.md`. Full multi-relation recovers `87.2%` versus no-role `56.8%`; the seed-aware recovery delta is `+30.4 pp` with 95% CI `[+7.2, +64.4] pp`.
+- The hardened role-identity formal result is integrated into the paper table package as a standalone mechanism table and delta table.
+- First fixed-checkpoint `weaving_mild` scenario-depth diagnostic is complete in `docs/gate1_safety_fx60_weaving_mild_fixed_checkpoint_diag20_summary.md`. Zero-shot transfer is too hard for the current straight-trained checkpoints; full recovery is only `11.0%`.
+- Finish-mode next item: return to Gate 1 manuscript packaging under the final single-paper scope. Treat Stage 2 `nominal weaving_mild` as diagnostic unless a separate validation-only revision later passes its gate.
 
 ## Milestone 1: Preserve 2D Evidence Chain
 
@@ -152,14 +179,42 @@ Done:
 Next:
 
 - Treat the fixed-update-60 safety-enabled result as the current practical formal candidate unless a new protocol is explicitly recorded before any new test evaluation.
+- Paper-facing table documentation is now reproducible: `scripts/build_gate1_safety_fx60_paper_tables.py` regenerates the timing-generalization section and artifact links in `docs/gate1_safety_fx60_paper_tables.md`.
+- Submission readiness reporting has been migrated to the active 3DOF Gate 1 package. `docs/submission_readiness_report.md` now states the 3DOF strict-sensing relay-failure recovery claim rather than the obsolete 2D claim.
 - Compile the active English manuscript when a LaTeX compiler is available, then check PDF table widths, figure placement, captions, and bibliography rendering.
 - Static PDF-readiness audit is complete in `docs/gate1_safety_fx60_pdf_readiness_audit.md`; all five paper-facing tables now have page-width resize protection. Full visual inspection still requires a LaTeX compiler.
 - Polish the fixed-update-60 mechanism figures and captions from the compiled PDF perspective once PDF rendering is available.
 - Parameter-count, inference-time, and communication-load reporting now exists in `docs/gate1_safety_fx60_model_cost_report.md` and is integrated as a compact experiment subsection.
-- Revisit `no_curriculum` only if the manuscript promotes topology curriculum as a core contribution rather than a training protocol.
+- A seed-0 no-curriculum fixed full-difficulty diagnostic is complete and recorded in `docs/gate1_safety_fx60_no_curriculum_seed0_dev60_summary.md`. It did not show a curriculum advantage on the matched 30-episode diagnostic, so topology curriculum must remain a training protocol rather than a main contribution unless stronger multi-seed evidence reverses this.
+- The three-seed no-curriculum development comparison is complete and recorded in `docs/gate1_safety_fx60_no_curriculum_3seed_dev60_summary.md`. Validation-selected recovery is tied within development noise (`88.9%` no-curriculum versus `87.8%` topology curriculum), and fixed-update-60 only slightly favors curriculum (`85.6%` versus `87.8%`). Decision: do not spend five-seed formal compute on no-curriculum now, and keep curriculum out of the primary contribution list.
+- Seed-level mechanism figures are complete under `results/gate1_safety_fx60_seed_mechanism/` and documented in `docs/gate1_safety_fx60_seed_mechanism_summary.md`. These figures package the frozen fixed-update-60 evidence as seed scatter, paired mechanism-ablation deltas, and seed-aware bootstrap intervals.
+- A small opt-in graph-relation stressor, `dropout030_scout_failure`, is registered and screened in `docs/gate1_safety_fx60_dropout030_scout_failure_diag20_summary.md`. It keeps the expected ordering (`no_graph 24.0% < single 51.0% < multi_relation 76.0%`) but does not cleanly separate full from single under seed-aware bootstrap, so it is a scenario-design hint rather than paper evidence.
+- The accelerated delayed scout-failure stressor, `dropout030_delay2_scout_failure`, is screened in `docs/gate1_safety_fx60_dropout030_delay2_scout_failure_diag20_summary.md`. It improves the screen (`no_graph 37.0% < single 56.0% < multi_relation 85.0%`) and separates full from single on tracking, but recovery CI still crosses zero. Decision: stop adding small stressors and move to finish mode.
+
+Finish-mode boundary:
+
+- Freeze the current evidence package.
+- Do not add more scenario variants unless tied to a specific reviewer-critical gap.
+- Prioritize manuscript consistency, figure/table packaging, reproducibility, and final claim discipline.
 - If using validation selection, finish the per-seed validation shards and merge them with `scripts/merge_checkpoint_sweep_shards.py`, then run the selected-checkpoint test split from the merged validation CSV.
 - Fixed-checkpoint early-vs-nominal failure-timing generalization is complete, recorded in `docs/gate1_safety_fx60_failure_timing_generalization_formal_evidence.md`, and integrated into the active experiment section. Early relay failure is valid and discriminative; delayed/late failure remains deferred because pre-window episode termination makes failure-window metrics invalid.
 - Keep `scout_failure` as supporting evidence unless a later formal run separates it; do not let it distract from relay-failure recovery.
+- Scenario-depth diagnostics show that fixed straight-target checkpoints transfer poorly to `weaving_mild`, and direct strict relay-failure weaving fine-tuning remains at zero recovery. Nominal weaving is weakly feasible for `multi_relation` but not for `single`. The next scenario-depth route is staged weaving curriculum: nominal weaving first, strict sensing second, relay failure third.
+- Stage 1 nominal weaving fine-tuning from correctly matched `hidden_dim=64` straight-target checkpoints improves `multi_relation` to `26.7%` success versus `single` at `0.0%`, but this is below the acceptance gate for Stage 2. Continue Stage 1 with longer checkpoint-compatible fine-tuning before adding strict sensing or relay failure.
+- The 60-update `weaving_mild` Stage 1 extension did not improve the aggregate result (`24.7%` success, seed 1 still `0.0%`). A new opt-in `weaving_tiny` curriculum entry improves the entry difficulty slightly but still leaves seed 1 at zero. The next route is a target-policy curriculum and/or maneuver-aware reward shaping, not more direct `weaving_mild` updates.
+- `scripts/run_3d_target_policy_curriculum.py` now provides the target-policy curriculum route and has passed a two-stage smoke. Next run: a small `multi_relation` three-seed diagnostic with `weaving_tiny -> weaving_mild` before considering any strict-sensing maneuvering-target experiment.
+- The three-seed `weaving_tiny -> weaving_mild` diagnostic completed but remained weak (`27.3%` success, seed 1 `0.0%`). Opt-in attack-geometry shaping also failed to unstick seed 1.
+- Maneuvering-target reachability analysis shows that seed 1 can reduce range similarly to other seeds but cannot convert approach into attack geometry: no attack-window episodes and no geometry score above `0.25`. The next maneuvering-target step is a deterministic geometric-oracle reachability check, not larger formal PPO training.
+- Geometric-oracle reachability is complete. Lead/offset geometric policies solve matched nominal `weaving_mild` evaluations with `100%` success and `0%` collision, while direct pursuit is less safe (`66.7%` success, `36.7%` collision). This confirms scenario feasibility. Next: use oracle traces for BC warm start or auxiliary imitation in Stage 1 maneuvering-target training, then compare against the current curriculum-only baseline.
+- Oracle-BC support is now available in the existing 3DOF BC script. Seed-1 attacker-weighted offset BC produces the first nonzero learned-policy signal on nominal `weaving_mild` (`3.3%` success, zero collision), but pure BC remains far below the acceptance gate. Next: run a short PPO fine-tune from this oracle-BC checkpoint before expanding to three seeds.
+- Seed-1 oracle-BC + PPO dev10 improved the nominal `weaving_mild` learned-policy signal to `13.3%` success with zero collision. This is not yet enough for scenario-depth reporting, but it validates oracle-assisted training as the right next development route. Continue only seed 1 for 20-40 updates with checkpoint evaluation before spending three-seed budget.
+- Seed-1 oracle-BC + PPO continuation reached `40.0%` success and `0.0%` collision on matched nominal `weaving_mild` test episodes. This clears the seed-1 development threshold. Next: repeat the same oracle-assisted protocol for seeds 0 and 2, then compare the three-seed aggregate against the curriculum-only `27.3%` baseline.
+- Three-seed oracle-assisted nominal `weaving_mild` development reached `62.2%` success and zero collision, versus the previous curriculum-only `27.3%`. This passes the maneuvering-target Stage 1 development gate. Next: run fair oracle-assisted `single` graph controls before promoting this route toward paper-facing evidence.
+- The first fair `single` graph control is complete for seed 1. Under the same oracle-assisted route, `single` stays at `0.0%` while `multi_relation` reaches `40.0%`. Next: run `single` controls for seeds 0 and 2 to establish a three-seed fairness comparison.
+- The three-seed oracle-assisted `multi_relation` versus `single` comparison is complete. `multi_relation` reaches `62.2%` success versus `single` `11.1%`, both with zero collision. This is strong development evidence for maneuvering-target scenario depth. Next: harden validation/test protocol before treating it as paper-facing evidence.
+- Validation-selected nominal `weaving_mild` protocol hardening is complete. Frozen validation-selected checkpoints reach `63.3%` success for `multi_relation`, `11.1%` for `single`, and `0.0%` for `no_graph` on the development test split, all with zero collision. The formal protocol is now frozen in `docs/nominal_weaving_mild_frozen_protocol.md`, and the orchestration smoke passed in `docs/nominal_weaving_mild_formal_protocol_smoke_summary.md`.
+- The frozen Stage 2 three-seed run with a new `609000` test split is complete in `docs/nominal_weaving_mild_formal_protocol_3seed_summary.md`. It preserves the method hierarchy but does not reach the paper-facing success gate, so it remains diagnostic scenario-depth evidence.
+- The `no_graph` oracle-assisted control is complete and fails at `0.0%` success under the same validation-selected protocol. The maneuvering-target method hierarchy is now `no_graph 0.0% < single 11.1% < multi_relation 63.3%`. Freeze this branch as supporting scenario-depth evidence and return to the main strict-sensing relay-failure package.
 
 ## Milestone 5: 4v2 Enhancement
 

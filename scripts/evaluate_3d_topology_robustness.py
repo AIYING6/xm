@@ -87,6 +87,21 @@ SCENARIOS = {
         node_failure_duration_steps=80,
     ),
     "scout_failure": RobustnessScenario("scout_failure", failed_blue_agent=0, node_failure_start_step=40, node_failure_duration_steps=80),
+    "dropout030_scout_failure": RobustnessScenario(
+        "dropout030_scout_failure",
+        communication_dropout_prob=0.30,
+        failed_blue_agent=0,
+        node_failure_start_step=40,
+        node_failure_duration_steps=80,
+    ),
+    "dropout030_delay2_scout_failure": RobustnessScenario(
+        "dropout030_delay2_scout_failure",
+        communication_dropout_prob=0.30,
+        message_delay_steps=2,
+        failed_blue_agent=0,
+        node_failure_start_step=40,
+        node_failure_duration_steps=80,
+    ),
 }
 
 METRICS = (

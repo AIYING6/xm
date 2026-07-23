@@ -6,14 +6,16 @@ The communication-load value is a proxy: average active directed communication e
 
 | Method | Actor params | Total params | Batch-1 actor ms | Batch-32 actor ms | Comm edges | Comm scalar proxy |
 |---|---:|---:|---:|---:|---:|---:|
-| No-graph MAPPO | 79989 | 102774 | 0.3634 | 0.7409 | 5.81 | 744.0 |
-| Single-graph MAPPO | 101232 | 124017 | 1.0895 | 2.9348 | 5.81 | 744.0 |
-| EA-RG-MAPPO-S | 366960 | 389745 | 4.2740 | 11.4026 | 5.81 | 744.0 |
-| w/o task-support relation | 366960 | 389745 | 4.3370 | 10.9336 | 5.81 | 744.0 |
-| w/o role-pair gate | 366960 | 389745 | 4.2263 | 10.6464 | 5.81 | 744.0 |
+| No-graph MAPPO | 79989 | 103414 | 0.3317 | 0.5294 | 5.81 | 744.0 |
+| Single-graph MAPPO | 101232 | 124657 | 0.8817 | 2.0088 | 5.81 | 744.0 |
+| Single-graph MAPPO (param-matched) | 324112 | 394913 | 1.1401 | 3.3651 | 5.81 | 1395.0 |
+| EA-RG-MAPPO-S | 366960 | 390385 | 3.7846 | 8.5520 | 5.81 | 744.0 |
+| w/o task-support relation | 366960 | 390385 | 3.5795 | 8.3315 | 5.81 | 744.0 |
+| w/o role-pair gate | 366960 | 390385 | 3.3970 | 7.7234 | 5.81 | 744.0 |
 
 ## Notes
 
 - `w/o task-support relation` changes the environment relation channel, so its neural parameter count matches the full multi-relation encoder.
 - `w/o role-pair gate` preserves the same module shape for scale-matched comparison; the role-pair gate is disabled at inference.
+- `Single-graph MAPPO (param-matched)` increases hidden dimension to 240 so its parameter count is close to the full multi-relation model while preserving the single-graph information structure.
 - CPU latency should be reported as environment-specific evidence, not as hardware-independent complexity.

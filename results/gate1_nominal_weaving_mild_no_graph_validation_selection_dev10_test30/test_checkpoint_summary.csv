@@ -1,0 +1,4 @@
+split,method,graph_encoder,train_seed,checkpoint_update,checkpoint,episodes,success_mean,attack_window_formed_mean,tracking_rate_mean,comm_connectivity_mean,timeout_mean,collision_mean,constraint_violation_mean,selection_score
+test,no_graph,no_graph,0,30,results/gate1_oracle_bc_ppo_weaving_mild_no_graph_seed0_cont30/actor_critic_update_0030.pt,30,0,0,0.0470085,0.552265,1,0,0,0.470085
+test,no_graph,no_graph,1,20,results/gate1_oracle_bc_ppo_weaving_mild_no_graph_seed1_cont30/actor_critic_update_0020.pt,30,0,0,0.0860256,0.324231,1,0,0,0.860256
+test,no_graph,no_graph,2,20,results/gate1_oracle_bc_ppo_weaving_mild_no_graph_seed2_cont30/actor_critic_update_0020.pt,30,0,0,0.0317521,0.336154,1,0,0,0.317521

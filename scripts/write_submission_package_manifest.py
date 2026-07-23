@@ -23,35 +23,25 @@ CHINESE_MANUSCRIPT = [
 
 
 ENGLISH_MANUSCRIPT = [
-    PackageItem("paper_latex_en/main.tex", "English LaTeX manuscript entry point"),
-    PackageItem("paper_latex_en/sections/", "English LaTeX section files"),
-    PackageItem("paper_latex/references.bib", "Shared BibTeX database"),
+    PackageItem("paper_latex_3d_en/main.tex", "Current 3DOF English LaTeX manuscript entry point"),
+    PackageItem("paper_latex_3d_en/sections/", "Current 3DOF English LaTeX section files"),
+    PackageItem("paper_latex_3d_en/references.bib", "Current 3DOF BibTeX database"),
 ]
 
 
 SHARED_TABLES_FIGURES = [
-    PackageItem("results/latex_training_settings_table.tex", "Training/evaluation settings table"),
-    PackageItem("results/latex_final_comm_300_table.tex", "Final 300-episode main table"),
-    PackageItem("results/latex_final_300_paired_ci_table.tex", "Seed-paired descriptive confidence-interval table"),
-    PackageItem("results/latex_comm_dropout_robustness_table.tex", "Appendix communication-dropout diagnostic table"),
-    PackageItem("results/latex_comm_dropout_paired_ci_table.tex", "Appendix communication-dropout paired confidence-interval table"),
-    PackageItem("results/latex_aggregate_robustness_table.tex", "Appendix aggregate robustness diagnostic table"),
-    PackageItem("results/latex_radius_interpolation_table.tex", "Appendix communication-radius interpolation table"),
-    PackageItem("results/latex_ablation_comm_table.tex", "Ablation table"),
-    PackageItem("results/latex_speed_robustness_table.tex", "Appendix target-speed robustness table"),
-    PackageItem("results/latex_edge_feature_ablation_table.tex", "Appendix edge-feature masking table"),
-    PackageItem("results/figures/method_overview_ea_rg_mappo_s.png", "Method overview figure"),
-    PackageItem("results/figures/final_300_success_rate.png", "Final success-rate figure"),
-    PackageItem("results/figures/final_300_collision_rate.png", "Final collision-rate figure"),
-    PackageItem("results/figures/speed_robustness_success_r4.png", "Appendix robustness figure"),
-    PackageItem("results/figures/speed_robustness_collision_r4.png", "Appendix robustness figure"),
-    PackageItem("results/figures/speed_robustness_success_r8.png", "Appendix robustness figure"),
-    PackageItem("results/figures/speed_robustness_collision_r8.png", "Appendix robustness figure"),
-    PackageItem("results/figures/comm_dropout_success_rate.png", "Appendix communication-dropout figure"),
-    PackageItem("results/figures/comm_dropout_collision_rate.png", "Appendix communication-dropout figure"),
-    PackageItem("results/figures/radius_interpolation_success_rate.png", "Appendix communication-radius interpolation figure"),
-    PackageItem("results/figures/radius_interpolation_collision_rate.png", "Appendix communication-radius interpolation figure"),
-    PackageItem("results/figures/edge_feature_ablation_delta.png", "Appendix mechanism diagnostic figure"),
+    PackageItem("results/gate1_safety_fx60_paper_tables/main_results_latex.tex", "Gate 1 fixed-update-60 main comparison table"),
+    PackageItem("results/gate1_safety_fx60_paper_tables/ablation_results_latex.tex", "Gate 1 mechanism-ablation table"),
+    PackageItem("results/gate1_safety_fx60_paper_tables/seed_aware_deltas_latex.tex", "Gate 1 seed-aware delta table"),
+    PackageItem("results/gate1_safety_fx60_paper_tables/capacity_control_latex.tex", "Parameter-matched single-graph capacity-control table"),
+    PackageItem("results/gate1_safety_fx60_paper_tables/capacity_control_deltas_latex.tex", "Parameter-matched single-graph seed-aware delta table"),
+    PackageItem("results/gate1_safety_fx60_paper_tables/role_identity_latex.tex", "Hardened role-identity ablation table"),
+    PackageItem("results/gate1_safety_fx60_paper_tables/role_identity_deltas_latex.tex", "Hardened role-identity seed-aware delta table"),
+    PackageItem("results/gate1_safety_fx60_failure_timing_generalization_formal_merged/timing_generalization_latex.tex", "Early relay-failure timing-generalization table"),
+    PackageItem("results/gate1_safety_fx60_model_costs/model_costs_latex.tex", "Model-size and CPU actor-latency table"),
+    PackageItem("results/figures/intercept_3d_multi_relation_graph.png", "3DOF multi-relation role-graph method figure"),
+    PackageItem("results/figures/gate1_safety_fx60_mechanism_curves.png", "Failure-aligned mechanism curves"),
+    PackageItem("results/figures/gate1_safety_fx60_representative_case_timeline.png", "Representative relay-failure recovery case"),
 ]
 
 
@@ -176,9 +166,9 @@ def main() -> None:
         "## Package Decision",
         "",
         "```text",
-        "Use paper_latex_en/ for an English submission route.",
-        "Use paper_latex/ for a Chinese submission route.",
-        "Include shared results/ tables and figures required by the chosen LaTeX project.",
+        "Use paper_latex_3d_en/ for the current English Gate 1 submission route.",
+        "Use paper_latex/ only if a Chinese route is explicitly selected and updated to the same Gate 1 claim boundary.",
+        "Include the Gate 1 result tables and figures required by the chosen LaTeX project.",
         "Keep internal diagnostics and long-running progress logs out of the actual journal submission unless requested as supplementary material.",
         "```",
         "",

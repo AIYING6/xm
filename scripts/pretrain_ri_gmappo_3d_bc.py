@@ -20,6 +20,7 @@ from algorithms.ri_gmappo.simple_ri_gmappo import (
     make_env,
     stack_graphs,
 )
+from envs.uav_intercept_3d_env import ROLE_ATTACKER, ROLE_RELAY, ROLE_SCOUT, velocity_from_state
 
 
 def angle_diff(target: float, source: float) -> float:
@@ -30,7 +31,71 @@ def action_index(turn: int, climb: int, accel: int) -> int:
     return (turn + 1) * 9 + (climb + 1) * 3 + (accel + 1)
 
 
-def geometric_policy(env) -> np.ndarray:
+def sign_command(value: float, deadband: float) -> int:
+    if value > deadband:
+        return 1
+    if value < -deadband:
+        return -1
+    return 0
+
+
+def action_from_setpoints(env, agent_id: int, desired_pos: np.ndarray, desired_speed: float) -> int:
+    typ = env.config.blue_types[agent_id]
+    rel = desired_pos - env.blue_pos[agent_id]
+    desired_heading = math.atan2(float(rel[1]), float(rel[0]))
+    heading_error = angle_diff(desired_heading, float(env.blue_heading[agent_id]))
+    turn = sign_command(heading_error, 0.18 * typ.max_turn_rate)
+
+    xy_dist = float(np.linalg.norm(rel[:2]))
+    desired_gamma = math.atan2(float(rel[2]), xy_dist + 1e-6)
+    gamma_error = desired_gamma - float(env.blue_gamma[agent_id])
+    climb = sign_command(gamma_error, 0.20 * typ.max_gamma)
+
+    speed_error = float(desired_speed) - float(env.blue_speed[agent_id])
+    accel = sign_command(speed_error, 4.0)
+    return action_index(turn, climb, accel)
+
+
+def lead_offset_geometric_policy(env, mode: str) -> np.ndarray:
+    red_pos = env.red_pos[0].astype(np.float32)
+    red_vel = velocity_from_state(float(env.red_speed[0]), float(env.red_heading[0]), float(env.red_gamma[0]))
+    red_xy_vel = red_vel[:2]
+    red_xy_speed = float(np.linalg.norm(red_xy_vel))
+    red_dir_xy = red_xy_vel / red_xy_speed if red_xy_speed > 1e-6 else np.asarray([1.0, 0.0], dtype=np.float32)
+    lateral_xy = np.asarray([-red_dir_xy[1], red_dir_xy[0]], dtype=np.float32)
+
+    actions = []
+    for i in range(env.config.num_blue):
+        typ = env.config.blue_types[i]
+        rel = red_pos - env.blue_pos[i]
+        dist = float(np.linalg.norm(rel))
+        lead_time = float(np.clip(dist / max(float(env.blue_speed[i]), 1.0), 8.0, 55.0))
+        lead_pos = red_pos + red_vel * lead_time
+
+        if mode == "lead":
+            desired_pos = lead_pos
+        elif typ.role == ROLE_ATTACKER:
+            trail = 3_800.0 if dist > 7_000.0 else 2_400.0
+            desired_pos = lead_pos - np.r_[red_dir_xy * trail, 0.0]
+        elif typ.role == ROLE_RELAY:
+            desired_pos = 0.55 * env.blue_pos[2] + 0.45 * env.blue_pos[0]
+            desired_pos[2] = 5_100.0
+        elif typ.role == ROLE_SCOUT:
+            side = -1.0 if i == 0 else 1.0
+            desired_pos = red_pos + np.r_[lateral_xy * side * 3_800.0, 500.0]
+        else:
+            desired_pos = lead_pos
+
+        if typ.role == ROLE_ATTACKER and dist <= typ.attack_range_max:
+            desired_pos = red_pos
+        desired_speed = typ.max_speed if dist > typ.attack_range_max + 1_500.0 else min(typ.max_speed, float(env.red_speed[0]) + 25.0)
+        actions.append(action_from_setpoints(env, i, desired_pos.astype(np.float32), desired_speed))
+    return np.asarray(actions, dtype=np.int64)
+
+
+def geometric_policy(env, mode: str = "direct") -> np.ndarray:
+    if mode in {"lead", "offset"}:
+        return lead_offset_geometric_policy(env, mode)
     actions = []
     target = env.red_pos[0]
     for i in range(env.config.num_blue):
@@ -96,7 +161,7 @@ def collect_demonstrations(cfg: RIGMAPPOConfig, args: argparse.Namespace) -> dic
         env = make_env(cfg, args.seed + ep, training=False)
         obs, share_obs, graph = env.reset()
         while True:
-            actions = geometric_policy(env)
+            actions = geometric_policy(env, args.geometric_policy_mode)
             g = stack_graphs([graph])
             obs_rows.append(obs.copy())
             share_rows.append(share_obs.copy())
@@ -143,6 +208,8 @@ def train_bc(agent: RIGMAPPOAgent, data: dict[str, np.ndarray], args: argparse.N
     for epoch in range(1, args.epochs + 1):
         np.random.default_rng(args.seed + epoch).shuffle(indices)
         losses, correct, total = [], 0, 0
+        attacker_correct, attacker_total = 0, 0
+        support_correct, support_total = 0, 0
         for start in range(0, n, args.batch_size):
             batch_idx = indices[start : start + args.batch_size]
             obs = torch.as_tensor(data["obs"][batch_idx], dtype=torch.float32, device=device)
@@ -164,7 +231,18 @@ def train_bc(agent: RIGMAPPOAgent, data: dict[str, np.ndarray], args: argparse.N
                 relation_adj=relation_adj,
                 intent_label=intent,
             )
-            loss = F.cross_entropy(logits.reshape(-1, logits.shape[-1]), actions.reshape(-1), weight=class_weight)
+            flat_logits = logits.reshape(-1, logits.shape[-1])
+            flat_actions = actions.reshape(-1)
+            per_action_loss = F.cross_entropy(flat_logits, flat_actions, weight=class_weight, reduction="none").view_as(actions)
+            blue_roles = role[:, : agent.num_agents]
+            action_weights = torch.ones_like(per_action_loss)
+            if args.attacker_action_weight != 1.0:
+                action_weights = torch.where(
+                    blue_roles == ROLE_ATTACKER,
+                    torch.full_like(action_weights, float(args.attacker_action_weight)),
+                    action_weights,
+                )
+            loss = (per_action_loss * action_weights).sum() / action_weights.sum().clamp_min(1.0)
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
@@ -172,17 +250,28 @@ def train_bc(agent: RIGMAPPOAgent, data: dict[str, np.ndarray], args: argparse.N
 
             with torch.no_grad():
                 pred = logits.argmax(dim=-1)
-                correct += int((pred == actions).sum().item())
+                correct_mask = pred == actions
+                correct += int(correct_mask.sum().item())
                 total += int(actions.numel())
+                attacker_mask = blue_roles == ROLE_ATTACKER
+                support_mask = ~attacker_mask
+                attacker_correct += int(correct_mask[attacker_mask].sum().item())
+                attacker_total += int(attacker_mask.sum().item())
+                support_correct += int(correct_mask[support_mask].sum().item())
+                support_total += int(support_mask.sum().item())
             losses.append(float(loss.item()))
         logs.append(
             {
                 "epoch": epoch,
                 "loss": float(np.mean(losses)),
                 "action_accuracy": float(correct / max(1, total)),
+                "attacker_action_accuracy": float(attacker_correct / max(1, attacker_total)),
+                "support_action_accuracy": float(support_correct / max(1, support_total)),
                 "samples": int(n),
                 "demo_success_rate": float(data["demo_success_rate"][0]),
                 "balanced_loss": int(args.balanced_loss),
+                "geometric_policy_mode": args.geometric_policy_mode,
+                "attacker_action_weight": float(args.attacker_action_weight),
             }
         )
         print(logs[-1], flush=True)
@@ -213,8 +302,10 @@ def main() -> None:
     parser.add_argument("--max-grad-norm", type=float, default=1.0)
     parser.add_argument("--no-balanced-loss", dest="balanced_loss", action="store_false")
     parser.add_argument("--max-class-weight", type=float, default=10.0)
+    parser.add_argument("--attacker-action-weight", type=float, default=1.0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--target-policy", type=str, default="straight")
+    parser.add_argument("--geometric-policy-mode", choices=("direct", "lead", "offset"), default="direct")
     parser.add_argument("--communication-dropout-prob", type=float, default=0.0)
     parser.add_argument("--message-delay-steps", type=int, default=0)
     parser.add_argument("--radar-dropout-prob", type=float, default=0.0)

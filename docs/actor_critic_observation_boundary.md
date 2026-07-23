@@ -1,6 +1,6 @@
 # Actor-Critic Observation Boundary
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 
 ## Purpose
 
@@ -69,8 +69,11 @@ The critic receives `share_obs`, which may include global state for CTDE trainin
 - all blue platform states;
 - red/target state estimate or global state depending on strict-sensing mode;
 - aggregate detection, attack-window, communication, message-age, dropout, delay, and time features.
+- the controlled blue-agent role one-hot for the value being estimated.
 
 The critic output is used only for training value estimation. It must not be used as an execution-time communication channel.
+
+The role-conditioned critic is intentional because the environment uses role-specific rewards and heterogeneous platform responsibilities. Without an agent-role condition, the centralized value target can become ambiguous for agents that share the same global `share_obs` but optimize different role-dependent returns. This does not expand the decentralized actor's execution-time information.
 
 ## Current Tests
 
@@ -83,6 +86,7 @@ Current coverage:
 - receiver-sender graph direction;
 - task-support no-bypass;
 - disconnected attacker action-logit invariance to hidden target changes;
+- centralized critic role conditioning;
 - delayed-message delivery timing;
 - packet-dropout prevention;
 - communication-subsystem failure delivery blocking;

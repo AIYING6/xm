@@ -1,0 +1,4 @@
+graph_encoder,train_seed,selected_update,success,chain_closed,attack_window_formed,timeout,collision,steps,tracking_rate,comm_connectivity,constraint_violation
+multi_relation,0,60,0.58,0.58,0.58,0.42,0.0,184.18,0.31101944257211067,0.6954526958585303,0.0
+multi_relation,1,60,0.0,0.0,0.0,1.0,0.0,260.0,0.19353846730635713,0.3585641041260499,0.0
+multi_relation,2,30,0.16,0.16,0.16,0.84,0.0,247.1,0.22638204521292382,0.3603397643652599,0.0

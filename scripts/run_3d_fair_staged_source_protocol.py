@@ -21,6 +21,7 @@ def parse_args() -> argparse.Namespace:
         choices=("no_graph", "single", "multi_relation"),
         default=("no_graph", "single", "multi_relation"),
     )
+    parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
     parser.add_argument("--target-policy", type=str, default="straight")
     parser.add_argument("--bc-episodes", type=int, default=8)
     parser.add_argument("--bc-epochs", type=int, default=1)
@@ -96,6 +97,8 @@ def train_bc(args: argparse.Namespace, graph_encoder: str, seed: int) -> Path:
             args.target_policy,
             "--graph-encoder",
             graph_encoder,
+            "--graph-input-ablation",
+            args.graph_input_ablation,
             "--device",
             args.device,
             "--out-dir",
@@ -123,6 +126,8 @@ def train_nominal(args: argparse.Namespace, graph_encoder: str, seed: int, check
             args.target_policy,
             "--graph-encoder",
             graph_encoder,
+            "--graph-input-ablation",
+            args.graph_input_ablation,
             "--updates",
             str(args.nominal_updates),
             "--num-envs",
@@ -172,6 +177,8 @@ def train_curriculum(args: argparse.Namespace, graph_encoder: str, seed: int, ch
             args.target_policy,
             "--graph-encoder",
             graph_encoder,
+            "--graph-input-ablation",
+            args.graph_input_ablation,
             "--updates",
             str(args.curriculum_updates),
             "--num-envs",
@@ -270,6 +277,8 @@ def run_strict_smoke(args: argparse.Namespace) -> None:
             str(args.strict_test_base_seed),
             "--target-policy",
             args.target_policy,
+            "--graph-input-ablation",
+            args.graph_input_ablation,
             "--device",
             args.device,
             "--out-dir",
@@ -291,6 +300,7 @@ def write_protocol(args: argparse.Namespace) -> None:
         "```text",
         f"seeds = {list(args.seeds)}",
         f"graph_encoders = {list(args.graph_encoders)}",
+        f"graph_input_ablation = {args.graph_input_ablation}",
         f"bc_episodes = {args.bc_episodes}",
         f"bc_epochs = {args.bc_epochs}",
         f"nominal_updates = {args.nominal_updates}",

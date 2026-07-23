@@ -1,0 +1,7 @@
+variant,train_seed,success,post_failure_chain_recovered,timeout,collision,steps,tracking_during_failure_rate,chain_closed_during_failure_rate,connectivity_during_failure
+full_multi_update60_reference,0,0.8,0.8,0.2,0.0,88.0,0.8300000003352761,0.13678571428571426,0.20401786322306306
+full_multi_update60_reference,1,1.0,1.0,0.0,0.0,45.6,0.991666667163372,0.16119047619047616,0.23555556257565816
+full_multi_update60_reference,2,1.0,1.0,0.0,0.0,45.1,1.0,0.16968253968253966,0.24801588040732198
+hardened_no_role_identity_dev20,0,0.6,0.6,0.4,0.0,131.2,0.4262500127032399,0.09873015873015871,0.15370040140602556
+hardened_no_role_identity_dev20,1,0.0,0.0,0.9,0.0,259.6,0.012500000372529008,0.0,0.03645833441987628
+hardened_no_role_identity_dev20,2,0.0,0.0,0.1,0.1,233.4,0.05583333499729629,0.0,0.029375000875443154

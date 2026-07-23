@@ -1,0 +1,10 @@
+metric,mean_delta_multi_minus_single,seed_deltas
+success_mean,0.0,0;0;0
+post_failure_chain_recovered_mean,0.0,0;0;0
+timeout_mean,0.0,0;0;0
+collision_mean,0.0,0;0;0
+steps_mean,0.0,0;0;0
+tracking_during_failure_rate_mean,-0.02361122333333333,0.072083;-0.142917;0
+chain_closed_during_failure_rate_mean,0.0,0;0;0
+connectivity_during_failure_mean,-0.041388999999999995,-0.032917;-0.09125;0
+constraint_violation_mean,0.0,0;0;0

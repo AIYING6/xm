@@ -1,0 +1,4 @@
+graph_encoder,train_seed,selected_checkpoint_update,episodes,success_mean,collision_mean,episode_min_blue_red_distance_mean,episode_min_blue_blue_distance_mean
+multi_relation,0,30,30,0.6,0,3673.97,1381.57
+multi_relation,1,30,30,0.0,0,8395.08,1360.51
+multi_relation,2,20,30,0.3,0,6184.07,580.471

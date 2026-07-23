@@ -374,7 +374,7 @@ def write_markdown(
     lines: List[str] = [
         "# Strict-Sensing Seed-Aware Statistics",
         "",
-        "This report uses matched strict-sensing relay-failure test episodes from the formal development runs.",
+        "This report uses matched strict-sensing evaluation episodes from the selected scenario.",
         "Uncertainty is estimated with a hierarchical bootstrap: training seeds are resampled first, then matched episodes are resampled within each selected training seed.",
         "",
         f"- Baseline: `{baseline}`",

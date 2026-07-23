@@ -1,0 +1,22 @@
+[
+  {
+    "method": "multi_relation",
+    "seeds": 3,
+    "success": 0.6222222222222222,
+    "attack_window": 0.6444444444444445,
+    "collision": 0,
+    "timeout": 0.37777777777777777,
+    "tracking": 0.46225738668205185,
+    "connectivity": 0.7444060129087884
+  },
+  {
+    "method": "single",
+    "seeds": 3,
+    "success": 0.1111111111111111,
+    "attack_window": 0.15555555555555556,
+    "collision": 0,
+    "timeout": 0.8888888888888888,
+    "tracking": 0.2103250628703097,
+    "connectivity": 0.5420636243277912
+  }
+]

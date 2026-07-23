@@ -1,0 +1,41 @@
+train_seed,metric,label,unit,n_matched_episodes,no_graph,multi_relation,delta_proposed_minus_baseline
+0,success,Task success,rate,20,0.05,0.8,0.75
+0,post_failure_chain_recovered,Post-failure chain recovered,rate,20,0.05,0.8,0.75
+0,timeout,Timeout,rate,20,0.95,0.2,-0.75
+0,capped_recovery_steps,Restricted mean recovery steps,steps,20,217.8,48.7,-169.1
+0,tracking_during_failure_rate,Tracking during failure,rate,20,0.06041666847,0.828958334,0.7685416655
+0,connectivity_during_failure,Connectivity during failure,rate,20,0.08947916933,0.2337797689,0.1443005995
+0,chain_closed_during_failure_rate,Chain closure during failure,rate,20,0,0.1240674603,0.1240674603
+0,steps,Episode length,steps,20,257.8,88.7,-169.1
+1,success,Task success,rate,20,1,0.7,-0.3
+1,post_failure_chain_recovered,Post-failure chain recovered,rate,20,1,0.7,-0.3
+1,timeout,Timeout,rate,20,0,0.3,0.3
+1,capped_recovery_steps,Restricted mean recovery steps,steps,20,5.6,70.1,64.5
+1,tracking_during_failure_rate,Tracking during failure,rate,20,0.6623737571,0.7454166679,0.08304291074
+1,connectivity_during_failure,Connectivity during failure,rate,20,0.2282810313,0.1941567518,-0.03412427952
+1,chain_closed_during_failure_rate,Chain closure during failure,rate,20,0.1587914863,0.1056547619,-0.05313672439
+1,steps,Episode length,steps,20,45.6,110.1,64.5
+2,success,Task success,rate,20,0,1,1
+2,post_failure_chain_recovered,Post-failure chain recovered,rate,20,0,1,1
+2,timeout,Timeout,rate,20,1,0,-1
+2,capped_recovery_steps,Restricted mean recovery steps,steps,20,220,5.15,-214.85
+2,tracking_during_failure_rate,Tracking during failure,rate,20,0.003541666772,1,0.9964583332
+2,connectivity_during_failure,Connectivity during failure,rate,20,0.2214583399,0.2224669378,0.001008597914
+2,chain_closed_during_failure_rate,Chain closure during failure,rate,20,0,0.1670436508,0.1670436508
+2,steps,Episode length,steps,20,260,45.15,-214.85
+3,success,Task success,rate,20,0,0.75,0.75
+3,post_failure_chain_recovered,Post-failure chain recovered,rate,20,0,0.75,0.75
+3,timeout,Timeout,rate,20,1,0.25,-0.75
+3,capped_recovery_steps,Restricted mean recovery steps,steps,20,220,59,-161
+3,tracking_during_failure_rate,Tracking during failure,rate,20,0,0.6869444493,0.6869444493
+3,connectivity_during_failure,Connectivity during failure,rate,20,0.1373958374,0.2181216996,0.08072586219
+3,chain_closed_during_failure_rate,Chain closure during failure,rate,20,0,0.1225198413,0.1225198413
+3,steps,Episode length,steps,20,260,99,-161
+4,success,Task success,rate,20,0.8,1,0.2
+4,post_failure_chain_recovered,Post-failure chain recovered,rate,20,0.8,1,0.2
+4,timeout,Timeout,rate,20,0.2,0,-0.2
+4,capped_recovery_steps,Restricted mean recovery steps,steps,20,47.95,5.5,-42.45
+4,tracking_during_failure_rate,Tracking during failure,rate,20,0.4653472348,0.6552741859,0.1899269511
+4,connectivity_during_failure,Connectivity during failure,rate,20,0.1982936567,0.2198917814,0.02159812474
+4,chain_closed_during_failure_rate,Chain closure during failure,rate,20,0.1373809524,0.1606764069,0.02329545455
+4,steps,Episode length,steps,20,87.95,45.5,-42.45

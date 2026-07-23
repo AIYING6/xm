@@ -1,32 +1,31 @@
 # Submission Readiness Report
 
-Generated: 2026-07-16T22:21:38
+Generated: 2026-07-22T22:53:29
 
 ## Summary
 
 ```text
 Research manuscript package is internally consistent and evidence-backed.
 Not final submission-ready in this runtime because PDF rendering cannot be verified without a LaTeX toolchain.
-Current strongest claim: EA-RG-MAPPO-S improves limited-communication stability and reduces collision in simplified 2D heterogeneous UAV pursuit.
-Boundary: full 6DOF air combat, missile/radar modeling, and human-UAV teaming have not been experimentally validated yet.
+Current strongest claim: EA-RG-MAPPO-S improves post-relay-failure kill-chain recovery in a hardened 3DOF strict-sensing, limited-communication heterogeneous UAV task.
+Boundary: full 4v2 red-blue combat, 6DOF JSBSim execution, online missile closure, high-fidelity radar, and human-UAV teaming have not been experimentally validated yet.
 ```
 
 ## Main Evidence
 
-| Radius | EA-RG-MAPPO-S Success | EA-RG-MAPPO-S Collision |
-|---:|---:|---:|
-| 4 | 0.926 ± 0.004 | 0.054 ± 0.007 |
-| 6 | 0.919 ± 0.012 | 0.064 ± 0.006 |
-| 8 | 0.890 ± 0.021 | 0.083 ± 0.012 |
-| 10 | 0.879 ± 0.017 | 0.086 ± 0.020 |
+| Method | Recovery | Tracking | Chain | Collision |
+|---|---:|---:|---:|---:|
+| MAPPO (no graph) | 21.8 ± 41.9 | 14.8 | 3.7 | 0.8 |
+| Single-graph MAPPO | 53.2 ± 38.1 | 47.5 | 7.6 | 2.8 |
+| Full multi-relation | 88.6 ± 13.7 | 77.6 | 13.8 | 0.0 |
 
 ## Material Coverage
 
 | Category | Present | Missing |
 |---|---:|---:|
-| Manuscripts | 4 | 0 |
-| Result evidence | 8 | 0 |
-| Reproducibility gates | 16 | 0 |
+| Manuscripts | 9 | 0 |
+| Result evidence | 16 | 0 |
+| Reproducibility gates | 23 | 0 |
 
 ## Missing Internal Artifacts
 
@@ -34,7 +33,7 @@ None.
 
 ## Quantitative Warnings
 
-None. Final EA-RG-MAPPO-S success/collision values satisfy the current readiness thresholds.
+None. Full EA-RG-MAPPO-S recovery/collision values and full-vs-single separation satisfy the current readiness thresholds.
 
 ## Runtime and Submission Limitations
 
@@ -47,7 +46,7 @@ None. Final EA-RG-MAPPO-S success/collision values satisfy the current readiness
 
 ## Recommended Next Actions
 
-1. Compile `paper_latex/main.tex` and `paper_latex_en/main.tex` in an environment with `xelatex`, `bibtex`, and a full LaTeX distribution.
+1. Compile `paper_latex_3d_en/main.tex` in an environment with `xelatex`, `bibtex`, and a full LaTeX distribution.
 2. Perform visual PDF layout checks for tables, figures, captions, and references.
 3. Choose the target journal/template and adapt the English LaTeX project accordingly.
-4. If the target venue expects stronger statistics, extend the final comparison to five seeds or add a small LAG/JSBSim migration experiment.
+4. If the target venue expects stronger realism, add a limited 5v2 or LAG/JSBSim replay extension after the 3v1 manuscript is stable.

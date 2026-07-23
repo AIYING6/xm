@@ -1,0 +1,31 @@
+source,method,label,seed,recovery,tracking_mean,chain_mean,timeout_mean,collision_mean
+main,no_graph,MAPPO (no graph),0,0.0,0.148162,0.0366524,0.774,0.008
+main,no_graph,MAPPO (no graph),1,0.96,0.148162,0.0366524,0.774,0.008
+main,no_graph,MAPPO (no graph),2,0.0,0.148162,0.0366524,0.774,0.008
+main,no_graph,MAPPO (no graph),3,0.0,0.148162,0.0366524,0.774,0.008
+main,no_graph,MAPPO (no graph),4,0.13,0.148162,0.0366524,0.774,0.008
+main,single,Single-graph MAPPO,0,0.82,0.475247,0.0764621,0.44,0.028
+main,single,Single-graph MAPPO,1,0.27,0.475247,0.0764621,0.44,0.028
+main,single,Single-graph MAPPO,2,0.0,0.475247,0.0764621,0.44,0.028
+main,single,Single-graph MAPPO,3,0.69,0.475247,0.0764621,0.44,0.028
+main,single,Single-graph MAPPO,4,0.88,0.475247,0.0764621,0.44,0.028
+main,multi_relation,Full multi-relation,0,0.65,0.776353,0.137655,0.114,0.0
+main,multi_relation,Full multi-relation,1,0.9,0.776353,0.137655,0.114,0.0
+main,multi_relation,Full multi-relation,2,0.99,0.776353,0.137655,0.114,0.0
+main,multi_relation,Full multi-relation,3,0.92,0.776353,0.137655,0.114,0.0
+main,multi_relation,Full multi-relation,4,0.97,0.776353,0.137655,0.114,0.0
+ablation,multi_relation,Full multi-relation,0,0.65,0.776353,0.137655,0.114,0.0
+ablation,multi_relation,Full multi-relation,1,0.9,0.776353,0.137655,0.114,0.0
+ablation,multi_relation,Full multi-relation,2,0.99,0.776353,0.137655,0.114,0.0
+ablation,multi_relation,Full multi-relation,3,0.92,0.776353,0.137655,0.114,0.0
+ablation,multi_relation,Full multi-relation,4,0.97,0.776353,0.137655,0.114,0.0
+ablation,no_task_support,w/o task-support relation,0,0.91,0.596462,0.0894706,0.344,0.008
+ablation,no_task_support,w/o task-support relation,1,0.89,0.596462,0.0894706,0.344,0.008
+ablation,no_task_support,w/o task-support relation,2,0.72,0.596462,0.0894706,0.344,0.008
+ablation,no_task_support,w/o task-support relation,3,0.72,0.596462,0.0894706,0.344,0.008
+ablation,no_task_support,w/o task-support relation,4,0.0,0.596462,0.0894706,0.344,0.008
+ablation,no_role_pair_gate,w/o role-pair gate,0,0.53,0.607418,0.0985205,0.352,0.0
+ablation,no_role_pair_gate,w/o role-pair gate,1,0.85,0.607418,0.0985205,0.352,0.0
+ablation,no_role_pair_gate,w/o role-pair gate,2,1.0,0.607418,0.0985205,0.352,0.0
+ablation,no_role_pair_gate,w/o role-pair gate,3,0.82,0.607418,0.0985205,0.352,0.0
+ablation,no_role_pair_gate,w/o role-pair gate,4,0.04,0.607418,0.0985205,0.352,0.0

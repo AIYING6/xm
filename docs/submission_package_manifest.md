@@ -1,6 +1,6 @@
 # Submission Package Manifest
 
-Generated: 2026-07-16T22:22:50
+Generated: 2026-07-22T22:53:29
 
 Purpose:
 
@@ -12,9 +12,9 @@ This manifest does not compile PDFs and does not select a journal template.
 ## Package Decision
 
 ```text
-Use paper_latex_en/ for an English submission route.
-Use paper_latex/ for a Chinese submission route.
-Include shared results/ tables and figures required by the chosen LaTeX project.
+Use paper_latex_3d_en/ for the current English Gate 1 submission route.
+Use paper_latex/ only if a Chinese route is explicitly selected and updated to the same Gate 1 claim boundary.
+Include the Gate 1 result tables and figures required by the chosen LaTeX project.
 Keep internal diagnostics and long-running progress logs out of the actual journal submission unless requested as supplementary material.
 ```
 
@@ -30,36 +30,26 @@ Keep internal diagnostics and long-running progress logs out of the actual journ
 
 | Item | Status | Note |
 |---|---|---|
-| `paper_latex_en/main.tex` | present | English LaTeX manuscript entry point |
-| `paper_latex_en/sections/` | present | English LaTeX section files |
-| `paper_latex/references.bib` | present | Shared BibTeX database |
+| `paper_latex_3d_en/main.tex` | present | Current 3DOF English LaTeX manuscript entry point |
+| `paper_latex_3d_en/sections/` | present | Current 3DOF English LaTeX section files |
+| `paper_latex_3d_en/references.bib` | present | Current 3DOF BibTeX database |
 
 ## Shared Tables and Figures
 
 | Item | Status | Note |
 |---|---|---|
-| `results/latex_training_settings_table.tex` | present | Training/evaluation settings table |
-| `results/latex_final_comm_300_table.tex` | present | Final 300-episode main table |
-| `results/latex_final_300_paired_ci_table.tex` | present | Seed-paired descriptive confidence-interval table |
-| `results/latex_comm_dropout_robustness_table.tex` | present | Appendix communication-dropout diagnostic table |
-| `results/latex_comm_dropout_paired_ci_table.tex` | present | Appendix communication-dropout paired confidence-interval table |
-| `results/latex_aggregate_robustness_table.tex` | present | Appendix aggregate robustness diagnostic table |
-| `results/latex_radius_interpolation_table.tex` | present | Appendix communication-radius interpolation table |
-| `results/latex_ablation_comm_table.tex` | present | Ablation table |
-| `results/latex_speed_robustness_table.tex` | present | Appendix target-speed robustness table |
-| `results/latex_edge_feature_ablation_table.tex` | present | Appendix edge-feature masking table |
-| `results/figures/method_overview_ea_rg_mappo_s.png` | present | Method overview figure |
-| `results/figures/final_300_success_rate.png` | present | Final success-rate figure |
-| `results/figures/final_300_collision_rate.png` | present | Final collision-rate figure |
-| `results/figures/speed_robustness_success_r4.png` | present | Appendix robustness figure |
-| `results/figures/speed_robustness_collision_r4.png` | present | Appendix robustness figure |
-| `results/figures/speed_robustness_success_r8.png` | present | Appendix robustness figure |
-| `results/figures/speed_robustness_collision_r8.png` | present | Appendix robustness figure |
-| `results/figures/comm_dropout_success_rate.png` | present | Appendix communication-dropout figure |
-| `results/figures/comm_dropout_collision_rate.png` | present | Appendix communication-dropout figure |
-| `results/figures/radius_interpolation_success_rate.png` | present | Appendix communication-radius interpolation figure |
-| `results/figures/radius_interpolation_collision_rate.png` | present | Appendix communication-radius interpolation figure |
-| `results/figures/edge_feature_ablation_delta.png` | present | Appendix mechanism diagnostic figure |
+| `results/gate1_safety_fx60_paper_tables/main_results_latex.tex` | present | Gate 1 fixed-update-60 main comparison table |
+| `results/gate1_safety_fx60_paper_tables/ablation_results_latex.tex` | present | Gate 1 mechanism-ablation table |
+| `results/gate1_safety_fx60_paper_tables/seed_aware_deltas_latex.tex` | present | Gate 1 seed-aware delta table |
+| `results/gate1_safety_fx60_paper_tables/capacity_control_latex.tex` | present | Parameter-matched single-graph capacity-control table |
+| `results/gate1_safety_fx60_paper_tables/capacity_control_deltas_latex.tex` | present | Parameter-matched single-graph seed-aware delta table |
+| `results/gate1_safety_fx60_paper_tables/role_identity_latex.tex` | present | Hardened role-identity ablation table |
+| `results/gate1_safety_fx60_paper_tables/role_identity_deltas_latex.tex` | present | Hardened role-identity seed-aware delta table |
+| `results/gate1_safety_fx60_failure_timing_generalization_formal_merged/timing_generalization_latex.tex` | present | Early relay-failure timing-generalization table |
+| `results/gate1_safety_fx60_model_costs/model_costs_latex.tex` | present | Model-size and CPU actor-latency table |
+| `results/figures/intercept_3d_multi_relation_graph.png` | present | 3DOF multi-relation role-graph method figure |
+| `results/figures/gate1_safety_fx60_mechanism_curves.png` | present | Failure-aligned mechanism curves |
+| `results/figures/gate1_safety_fx60_representative_case_timeline.png` | present | Representative relay-failure recovery case |
 
 ## Supplemental Evidence Candidates
 

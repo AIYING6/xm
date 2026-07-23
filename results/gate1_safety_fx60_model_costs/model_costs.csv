@@ -1,6 +1,7 @@
 method,graph_encoder,graph_relation_ablation,graph_message_ablation,graph_input_ablation,total_params,actor_params,critic_params,trainable_params,actor_forward_ms_batch1,actor_forward_ms_batch32,num_agents,num_nodes,node_feat_dim,edge_feat_dim,hidden_dim,role_dim,intent_dim,union_edges_mean,perception_edges_mean,communication_edges_mean,task_support_edges_mean,comm_scalars_per_step_proxy
-No-graph MAPPO,no_graph,none,none,none,102774,79989,22785,102774,0.36343500000000084,0.7408850000000022,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
-Single-graph MAPPO,single,none,none,none,124017,101232,22785,124017,1.0894570000000048,2.9348329999999923,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
-EA-RG-MAPPO-S,multi_relation,none,none,none,389745,366960,22785,389745,4.274047999999997,11.402583000000002,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
-w/o task-support relation,multi_relation,no_task_support,none,none,389745,366960,22785,389745,4.337011999999998,10.933567999999996,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
-w/o role-pair gate,multi_relation,none,no_role_pair_gate,none,389745,366960,22785,389745,4.226329,10.646439,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+No-graph MAPPO,no_graph,none,none,none,103414,79989,23425,103414,0.33168100000000145,0.5293690000000018,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+Single-graph MAPPO,single,none,none,none,124657,101232,23425,124657,0.8816900000000016,2.008776000000001,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+Single-graph MAPPO (param-matched),single,none,none,none,394913,324112,70801,394913,1.1400949999999987,3.3650819999999992,3,4,20,18,240,8,8,6.8125,0.0,5.8125,0.0,1395.0
+EA-RG-MAPPO-S,multi_relation,none,none,none,390385,366960,23425,390385,3.7846139999999995,8.551997,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+w/o task-support relation,multi_relation,no_task_support,none,none,390385,366960,23425,390385,3.5794999999999977,8.33151599999999,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0
+w/o role-pair gate,multi_relation,none,no_role_pair_gate,none,390385,366960,23425,390385,3.396958000000012,7.723408000000003,3,4,20,18,128,8,8,6.8125,0.0,5.8125,0.0,744.0

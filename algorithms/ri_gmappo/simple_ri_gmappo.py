@@ -76,6 +76,7 @@ class RIGMAPPOConfig:
     min_target_confidence: float = 0.2
     safety_proximity_distance: float = 0.0
     safety_proximity_penalty_weight: float = 0.0
+    attack_geometry_reward_weight: float = 0.0
     failed_blue_agent: int = -1
     node_failure_random_prob: float = 0.0
     node_failure_start_step: int = 0
@@ -264,6 +265,20 @@ class MultiRelationGraphEncoder(nn.Module):
         return self._apply_layer(x, self.layer2, relation_adj, union_adj, edge_feat, role, self.fuse2)
 
 
+OBS_ROLE_IDENTITY_SLICE = slice(22, 26)
+NODE_ROLE_IDENTITY_SLICE = slice(11, 16)
+
+
+def zero_feature_slice(x: torch.Tensor, feature_slice: slice) -> torch.Tensor:
+    start = 0 if feature_slice.start is None else feature_slice.start
+    if x.shape[-1] <= start:
+        return x
+    stop = x.shape[-1] if feature_slice.stop is None else min(feature_slice.stop, x.shape[-1])
+    out = x.clone()
+    out[..., start:stop] = 0.0
+    return out
+
+
 class RIActor(nn.Module):
     def __init__(
         self,
@@ -340,6 +355,8 @@ class RIActor(nn.Module):
         if self.graph_input_ablation == "no_edge_features" and edge_feat is not None:
             edge_feat = torch.zeros_like(edge_feat)
         if self.graph_input_ablation == "no_role_identity":
+            obs = zero_feature_slice(obs, OBS_ROLE_IDENTITY_SLICE)
+            node_feat = zero_feature_slice(node_feat, NODE_ROLE_IDENTITY_SLICE)
             role = torch.zeros_like(role)
         role_feat = self.role_emb(role.long())
         x = self.input(torch.cat([node_feat, role_feat], dim=-1))
@@ -432,6 +449,7 @@ class RIGMAPPOAgent(nn.Module):
     ):
         super().__init__()
         self.num_agents = num_agents
+        self.num_roles = num_roles
         self.actor = RIActor(
             obs_dim,
             node_feat_dim,
@@ -446,7 +464,12 @@ class RIGMAPPOAgent(nn.Module):
             graph_input_ablation=graph_input_ablation,
             use_intent_context=use_intent_context,
         )
-        self.critic = MLP(share_obs_dim, 1, hidden_dim)
+        self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
+
+    def critic_value(self, share_obs: torch.Tensor, role: torch.Tensor) -> torch.Tensor:
+        agent_role = role[:, : self.num_agents].long().clamp(min=0, max=self.num_roles - 1)
+        role_one_hot = F.one_hot(agent_role, num_classes=self.num_roles).to(dtype=share_obs.dtype, device=share_obs.device)
+        return self.critic(torch.cat([share_obs, role_one_hot], dim=-1)).squeeze(-1)
 
     def get_action_and_value(
         self,
@@ -480,7 +503,7 @@ class RIGMAPPOAgent(nn.Module):
             action = torch.argmax(logits, dim=-1) if deterministic else dist.sample()
         log_prob = dist.log_prob(action)
         entropy = dist.entropy()
-        value = self.critic(share_obs).squeeze(-1)
+        value = self.critic_value(share_obs, role)
         return action, log_prob, entropy, value, attn, intent_logits
 
 
@@ -534,6 +557,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 min_target_confidence=cfg.min_target_confidence,
                 safety_proximity_distance=cfg.safety_proximity_distance,
                 safety_proximity_penalty_weight=cfg.safety_proximity_penalty_weight,
+                attack_geometry_reward_weight=cfg.attack_geometry_reward_weight,
                 failed_blue_agent=sample_failed_blue_agent(cfg) if training else cfg.failed_blue_agent,
                 node_failure_start_step=sample_int_curriculum(
                     cfg.node_failure_start_step,
@@ -892,7 +916,10 @@ def collect_rollout(
         graph_obs = stack_graphs(next_graphs)
 
     with torch.no_grad():
-        next_values = agent.critic(torch.as_tensor(share_obs, dtype=torch.float32, device=device)).squeeze(-1)
+        next_values = agent.critic_value(
+            torch.as_tensor(share_obs, dtype=torch.float32, device=device),
+            torch.as_tensor(graph_obs["role"], dtype=torch.long, device=device),
+        )
         next_values = next_values.cpu().numpy()
 
     rewards_np = np.asarray(reward_buf, dtype=np.float32)

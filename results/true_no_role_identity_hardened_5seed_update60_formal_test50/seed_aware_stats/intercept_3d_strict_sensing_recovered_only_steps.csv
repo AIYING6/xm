@@ -1,0 +1,3 @@
+method,metric,unit,n_recovered_episodes,mean,note
+no_role_identity,recovered_only_recovery_steps,steps,142,5.73943662,Conditional on episodes that recovered; use capped_recovery_steps for a comparable recovery-time proxy.
+full_multi,recovered_only_recovery_steps,steps,218,11.20183486,Conditional on episodes that recovered; use capped_recovery_steps for a comparable recovery-time proxy.

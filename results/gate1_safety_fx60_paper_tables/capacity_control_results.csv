@@ -1,0 +1,3 @@
+method,label,recovery_mean,recovery_sd,tracking_mean,tracking_sd,chain_mean,chain_sd,timeout_mean,timeout_sd,collision_mean,collision_sd,seed_recovery
+param_matched_single_h240_update60,Param-matched single graph,0.332,0.463379,0.203015,0.324052,0.0402034,0.0601053,0.668,0.463379,0,0,"[0.64, 0.00, 0.00, 0.02, 1.00]"
+full_multi_update60,Full multi-relation,0.892,0.197282,0.789346,0.201695,0.133762,0.0294658,0.108,0.197282,0,0,"[0.54, 0.98, 1.00, 0.98, 0.96]"

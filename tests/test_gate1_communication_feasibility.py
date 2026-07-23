@@ -86,6 +86,104 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
 
         np.testing.assert_allclose(logits_a, logits_b, atol=1e-6, rtol=0.0)
 
+    def test_centralized_critic_conditions_on_agent_role(self) -> None:
+        torch.manual_seed(17)
+        env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=17))
+        _, share_obs, graph = env.reset()
+        num_roles = max(4, int(np.max(graph["role"])) + 1)
+        agent = RIGMAPPOAgent(
+            obs_dim=env.obs_dim,
+            node_feat_dim=graph["node_feat"].shape[-1],
+            edge_feat_dim=graph["edge_feat"].shape[-1],
+            share_obs_dim=share_obs.shape[-1],
+            action_dim=env.action_dim,
+            num_agents=env.num_agents,
+            num_roles=num_roles,
+            hidden_dim=32,
+            role_dim=4,
+            intent_dim=4,
+            graph_encoder="multi_relation",
+            use_intent_context=False,
+        )
+
+        captured_inputs: list[torch.Tensor] = []
+
+        def _capture_critic_input(_module, inputs, _output) -> None:
+            captured_inputs.append(inputs[0].detach().clone())
+
+        handle = agent.critic.net[0].register_forward_hook(_capture_critic_input)
+        try:
+            role = torch.as_tensor(graph["role"][None, :], dtype=torch.long)
+            share = torch.as_tensor(share_obs[None, :, :], dtype=torch.float32)
+            values = agent.critic_value(share, role)
+        finally:
+            handle.remove()
+
+        self.assertEqual(tuple(values.shape), (1, env.num_agents))
+        self.assertEqual(captured_inputs[0].shape[-1], share_obs.shape[-1] + num_roles)
+        role_tail = captured_inputs[0][0, :, share_obs.shape[-1] :]
+        expected = torch.nn.functional.one_hot(role[0, : env.num_agents], num_classes=num_roles).float()
+        torch.testing.assert_close(role_tail, expected)
+
+    def test_no_role_identity_masks_explicit_actor_role_features(self) -> None:
+        torch.manual_seed(19)
+        env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=19))
+        obs, share_obs, graph = env.reset()
+        num_roles = max(4, int(np.max(graph["role"])) + 1)
+        agent = RIGMAPPOAgent(
+            obs_dim=env.obs_dim,
+            node_feat_dim=graph["node_feat"].shape[-1],
+            edge_feat_dim=graph["edge_feat"].shape[-1],
+            share_obs_dim=share_obs.shape[-1],
+            action_dim=env.action_dim,
+            num_agents=env.num_agents,
+            num_roles=num_roles,
+            hidden_dim=32,
+            role_dim=4,
+            intent_dim=4,
+            graph_encoder="multi_relation",
+            graph_input_ablation="no_role_identity",
+            use_intent_context=False,
+        )
+        agent.eval()
+
+        captured_obs: list[torch.Tensor] = []
+        captured_node_and_role: list[torch.Tensor] = []
+
+        def _capture_obs_input(_module, inputs, _output) -> None:
+            captured_obs.append(inputs[0].detach().clone())
+
+        def _capture_node_input(_module, inputs, _output) -> None:
+            captured_node_and_role.append(inputs[0].detach().clone())
+
+        obs_handle = agent.actor.obs_encoder[0].register_forward_hook(_capture_obs_input)
+        node_handle = agent.actor.input[0].register_forward_hook(_capture_node_input)
+        try:
+            with torch.no_grad():
+                agent.get_action_and_value(
+                    torch.as_tensor(obs[None, :, :], dtype=torch.float32),
+                    torch.as_tensor(graph["node_feat"][None, :, :], dtype=torch.float32),
+                    torch.as_tensor(graph["edge_feat"][None, :, :, :], dtype=torch.float32),
+                    torch.as_tensor(graph["role"][None, :], dtype=torch.long),
+                    torch.as_tensor(graph["adj"][None, :, :], dtype=torch.float32),
+                    torch.as_tensor(share_obs[None, :, :], dtype=torch.float32),
+                    relation_adj=torch.as_tensor(graph["relation_adj"][None, :, :, :], dtype=torch.float32),
+                    deterministic=True,
+                )
+        finally:
+            obs_handle.remove()
+            node_handle.remove()
+
+        torch.testing.assert_close(captured_obs[0][..., 22:26], torch.zeros_like(captured_obs[0][..., 22:26]))
+        node_input = captured_node_and_role[0]
+        node_feat_dim = graph["node_feat"].shape[-1]
+        torch.testing.assert_close(node_input[..., 11:16], torch.zeros_like(node_input[..., 11:16]))
+        role_embedding_input = node_input[..., node_feat_dim:]
+        torch.testing.assert_close(
+            role_embedding_input,
+            role_embedding_input[:, :1, :].expand_as(role_embedding_input),
+        )
+
     def test_actor_observation_does_not_include_global_aggregate_shortcuts(self) -> None:
         env = UAVIntercept3DEnv(
             UAVIntercept3DConfig(
@@ -254,6 +352,30 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         self.assertEqual(float(unrecovered["post_failure_chain_maintained"]), 0.0)
         self.assertEqual(float(unrecovered["post_failure_chain_recovered_after_loss"]), 0.0)
         self.assertEqual(float(unrecovered["post_failure_chain_unrecovered"]), 1.0)
+
+    def test_post_failure_rates_are_zero_when_episode_ends_before_failure(self) -> None:
+        args = argparse.Namespace(
+            failed_blue_agent=1,
+            node_failure_start_step=40,
+            node_failure_duration_steps=80,
+        )
+        metrics = post_failure_recovery_metrics(
+            [
+                {
+                    "step": 34.0,
+                    "node_failure_active": 0.0,
+                    "chain_closed": 0.0,
+                    "tracking_rate": 1.0,
+                    "comm_connectivity": 1.0,
+                }
+            ],
+            args,
+        )
+
+        self.assertEqual(float(metrics["post_failure_chain_recovered"]), 0.0)
+        self.assertEqual(float(metrics["chain_closed_during_failure_rate"]), 0.0)
+        self.assertEqual(float(metrics["tracking_during_failure_rate"]), 0.0)
+        self.assertEqual(float(metrics["connectivity_during_failure"]), 0.0)
 
     def test_packet_dropout_prevents_delayed_delivery(self) -> None:
         env = UAVIntercept3DEnv(
@@ -459,6 +581,73 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         self.assertTrue(env._has_target_information(attacker))
         self.assertTrue(env._comm_has_chain_to_attacker())
         self.assertAlmostEqual(float(env._get_obs()[attacker, 31]), 0.7, places=6)
+
+    def test_weaving_tiny_is_lower_amplitude_than_weaving_mild(self) -> None:
+        def one_step_heading_delta(target_policy: str) -> float:
+            env = UAVIntercept3DEnv(UAVIntercept3DConfig(target_policy=target_policy, seed=3))
+            env.reset()
+            env.blue_pos[:] = np.array(
+                [
+                    [-1_000.0, 0.0, 5_000.0],
+                    [0.0, 0.0, 5_000.0],
+                    [1_000.0, 0.0, 5_000.0],
+                ],
+                dtype=np.float32,
+            )
+            env.red_pos[0] = np.array([10_000.0, 0.0, 5_000.0], dtype=np.float32)
+            env.red_heading[0] = 0.0
+            env.red_gamma[0] = 0.0
+            env.step_count = 8
+
+            env._move_red()
+            return abs(float(env.red_heading[0]))
+
+        tiny_delta = one_step_heading_delta("weaving_tiny")
+        mild_delta = one_step_heading_delta("weaving_mild")
+
+        self.assertGreater(tiny_delta, 0.0)
+        self.assertLess(tiny_delta, mild_delta)
+
+    def test_attack_geometry_score_prefers_near_attack_geometry(self) -> None:
+        env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=51))
+        env.reset()
+        attacker = 2
+        env.blue_pos[attacker] = np.array([0.0, 0.0, 5_000.0], dtype=np.float32)
+        env.blue_heading[attacker] = 0.0
+        env.blue_gamma[attacker] = 0.0
+        env.blue_speed[attacker] = 270.0
+        env.red_speed[0] = 130.0
+        env.red_heading[0] = 0.0
+        env.red_gamma[0] = 0.0
+
+        env.red_pos[0] = np.array([3_000.0, 0.0, 5_000.0], dtype=np.float32)
+        near_score = env._attack_geometry_score()
+        env.red_pos[0] = np.array([20_000.0, 0.0, 5_000.0], dtype=np.float32)
+        far_score = env._attack_geometry_score()
+
+        self.assertGreater(near_score, 0.5)
+        self.assertGreater(near_score, far_score)
+
+    def test_attack_geometry_reward_weight_is_opt_in(self) -> None:
+        env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=52))
+        env.reset()
+        attacker = 2
+        env.blue_pos[attacker] = np.array([0.0, 0.0, 5_000.0], dtype=np.float32)
+        env.blue_heading[attacker] = 0.0
+        env.blue_gamma[attacker] = 0.0
+        env.blue_speed[attacker] = 270.0
+        env.red_pos[0] = np.array([3_000.0, 0.0, 5_000.0], dtype=np.float32)
+        env.red_speed[0] = 130.0
+        env.red_heading[0] = 0.0
+        env.red_gamma[0] = 0.0
+        cur_range = env._mean_target_range()
+
+        env.config.attack_geometry_reward_weight = 0.0
+        reward_without = float(env._compute_rewards(cur_range, cur_range, 0.0, 0.0, 0.0, 0.0)[attacker, 0])
+        env.config.attack_geometry_reward_weight = 0.5
+        reward_with = float(env._compute_rewards(cur_range, cur_range, 0.0, 0.0, 0.0, 0.0)[attacker, 0])
+
+        self.assertGreater(reward_with, reward_without)
 
     def _attacker_logits_for_hidden_target(
         self,

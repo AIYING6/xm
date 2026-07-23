@@ -64,6 +64,12 @@ Table~\ref{tab:gate1-safety-fx60-model-cost} reports model-size and actor-infere
 
 \input{../results/gate1_safety_fx60_model_costs/model_costs_latex.tex}
 
+\subsection{Contribution-Boundary Diagnostics}
+
+A three-seed no-curriculum development diagnostic was conducted to check whether topology curriculum should be claimed as an independent source of the improvement. The diagnostic did not show a clear curriculum advantage: validation-selected recovery was 88.9\% without curriculum and 87.8\% with the topology curriculum, and the fixed-update-60 comparison differed by only 2.2 percentage points. Therefore, topology curriculum is treated as a training protocol in this paper, not as a primary contribution.
+
+We also screened a stronger scout-failure stressor with 0.30 communication dropout and a two-step message delay. The expected ordering was preserved, with 37.0\% recovery for the no-graph baseline, 56.0\% for the single-graph baseline, and 85.0\% for the full multi-relation method. However, the seed-aware recovery interval between the full and single-graph methods still crossed zero. This result is used as supplemental scenario-screening evidence rather than as a main-table claim.
+
 \subsection{Current Limitations}
 
-This fixed-budget package focuses on graph and message mechanisms under a 3v1 strict-sensing relay-failure task. It does not by itself prove that the topology curriculum is the sole source of the performance gain; the no-curriculum ablation is deferred. The current evidence also remains a 3DOF mechanism study rather than a full 4v2 red-blue system with online missile, radar, and 6DOF dynamics. These extensions are treated as future scenario-depth work rather than as claims of the present result.
+This fixed-budget package focuses on graph and message mechanisms under a 3v1 strict-sensing relay-failure task. It supports the claim that multi-relation role-graph reasoning and role-pair-conditioned message passing improve kill-chain recovery under strict information constraints. It does not claim that topology curriculum is an independent contribution, nor does it claim full-system 4v2 red-blue air-combat validity with online missile, radar, and 6DOF dynamics. These extensions are treated as future scenario-depth work rather than as claims of the present result.

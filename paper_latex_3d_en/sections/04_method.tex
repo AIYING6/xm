@@ -31,7 +31,7 @@ where $\alpha^r_{ij}$ is an edge-aware attention weight. The single-graph baseli
 
 \subsection{Training Protocol}
 
-The training procedure first learns the basic straight-target interception task, then performs fixed-budget safety-continuation training under randomized communication range, dropout, message delay, radar dropout, and temporary blue-node communication failure. Demonstration pretraining, reward shaping, and topology randomization are used as training aids rather than as isolated claimed innovations. The paper-facing comparison therefore emphasizes the graph/message architecture and its mechanism ablations, while a no-curriculum comparison is left for future training-protocol analysis.
+The training procedure first learns the basic straight-target interception task, then performs fixed-budget safety-continuation training under randomized communication range, dropout, message delay, radar dropout, and temporary blue-node communication failure. Demonstration pretraining, reward shaping, and topology randomization are used as training aids rather than as isolated claimed innovations. A three-seed no-curriculum diagnostic did not show an independent curriculum advantage, so the paper-facing comparison emphasizes the graph/message architecture and its mechanism ablations.
 
 The policy is optimized with a MAPPO-style clipped objective under centralized training and decentralized execution:
 \begin{equation}

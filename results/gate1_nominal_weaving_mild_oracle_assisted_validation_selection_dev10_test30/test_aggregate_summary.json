@@ -1,0 +1,20 @@
+[
+  {
+    "method": "multi_relation",
+    "seeds": 3,
+    "success": 0.6333333333333334,
+    "attack_window": 0.6666666666666666,
+    "collision": 0,
+    "tracking": 0.4664093333333333,
+    "connectivity": 0.74391
+  },
+  {
+    "method": "single",
+    "seeds": 3,
+    "success": 0.111111,
+    "attack_window": 0.15555566666666668,
+    "collision": 0,
+    "tracking": 0.22333033333333333,
+    "connectivity": 0.5500266666666667
+  }
+]

@@ -165,9 +165,15 @@ def first_step_where(step_infos: list[dict[str, float]], key: str, threshold: fl
     return -1.0
 
 
-def mean_metric_where(step_infos: list[dict[str, float]], key: str, mask_key: str, threshold: float = 0.0) -> float:
+def mean_metric_where(
+    step_infos: list[dict[str, float]],
+    key: str,
+    mask_key: str,
+    threshold: float = 0.0,
+    empty_value: float = -1.0,
+) -> float:
     values = [float(info[key]) for info in step_infos if float(info.get(mask_key, 0.0)) > threshold]
-    return float(np.mean(values)) if values else -1.0
+    return float(np.mean(values)) if values else empty_value
 
 
 def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argparse.Namespace) -> dict[str, float]:
@@ -212,9 +218,15 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
         "post_failure_chain_recovered_after_loss": recovered_after_loss,
         "post_failure_chain_unrecovered": unrecovered,
         "post_failure_first_chain_step": float(first_chain_step),
-        "chain_closed_during_failure_rate": mean_metric_where(step_infos, "chain_closed", "node_failure_active"),
-        "tracking_during_failure_rate": mean_metric_where(step_infos, "tracking_rate", "node_failure_active"),
-        "connectivity_during_failure": mean_metric_where(step_infos, "comm_connectivity", "node_failure_active"),
+        "chain_closed_during_failure_rate": mean_metric_where(
+            step_infos, "chain_closed", "node_failure_active", empty_value=0.0
+        ),
+        "tracking_during_failure_rate": mean_metric_where(
+            step_infos, "tracking_rate", "node_failure_active", empty_value=0.0
+        ),
+        "connectivity_during_failure": mean_metric_where(
+            step_infos, "comm_connectivity", "node_failure_active", empty_value=0.0
+        ),
     }
 
 

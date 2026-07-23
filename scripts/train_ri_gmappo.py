@@ -55,6 +55,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--safety-proximity-distance", type=float, default=0.0)
     parser.add_argument("--safety-proximity-penalty-weight", type=float, default=0.0)
+    parser.add_argument("--attack-geometry-reward-weight", type=float, default=0.0)
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
     parser.add_argument("--node-failure-random-prob", type=float, default=0.0)
     parser.add_argument("--node-failure-start-step", type=int, default=0)
@@ -113,6 +114,7 @@ def parse_args() -> RIGMAPPOConfig:
         min_target_confidence=args.min_target_confidence,
         safety_proximity_distance=args.safety_proximity_distance,
         safety_proximity_penalty_weight=args.safety_proximity_penalty_weight,
+        attack_geometry_reward_weight=args.attack_geometry_reward_weight,
         failed_blue_agent=args.failed_blue_agent,
         node_failure_random_prob=args.node_failure_random_prob,
         node_failure_start_step=args.node_failure_start_step,

@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAPER = ROOT / "paper_latex_en"
+PAPER = ROOT / "paper_latex_3d_en"
 OUT = ROOT / "docs" / "english_manuscript_readiness_audit.md"
 
 
@@ -20,7 +20,6 @@ SECTION_FILES = [
     "sections/05_experiments.tex",
     "sections/06_discussion.tex",
     "sections/07_conclusion.tex",
-    "sections/08_appendix_experiments.tex",
 ]
 
 
@@ -36,19 +35,21 @@ PUBLISHABLE_SECTION_FILES = [
 
 
 REQUIRED_BOUNDARY_MARKERS = [
-    "two-dimensional",
-    "not used as a main contribution",
-    "not be treated as a full air-combat system",
-    "new experimental validation",
+    "training protocol in this paper, not as a primary contribution",
+    "nor does it claim full-system 4v2 red-blue air-combat validity",
+    "Instead of directly training all baselines in a full 6DOF JSBSim environment",
+    "future scenario-depth work",
 ]
 
 
 REQUIRED_EVIDENCE_MARKERS = [
-    "300 evaluation episodes per seed",
-    "95\\% descriptive interval",
-    "100 episodes per seed",
-    "30-episode diagnostic",
-    "balanced accuracy",
+    "fixed-budget checkpoint rule",
+    "five training seeds",
+    "100 matched test episodes per seed",
+    "hierarchical bootstrap",
+    "88.6\\%",
+    "role-pair-conditioned message gating",
+    "100 matched test episodes per seed",
 ]
 
 
@@ -98,7 +99,7 @@ def collect_stats() -> list[FileStats]:
                 rel=rel,
                 lines=len(text.splitlines()),
                 words=word_count(text),
-                tables=len(re.findall(r"\\begin\{table", text)) + len(re.findall(r"\\input\{../results/latex_", text)),
+                tables=len(re.findall(r"\\begin\{table", text)) + len(re.findall(r"\\input\{../results/", text)),
                 figures=len(re.findall(r"\\begin\{figure", text)),
                 citations=len(re.findall(r"\\cite\{", text)),
             )
@@ -138,7 +139,7 @@ def make_report() -> tuple[str, list[str]]:
     total_words = word_count(full_text)
 
     if "To be completed" in author:
-        action_items.append("Replace the author placeholder in paper_latex_en/main.tex.")
+        action_items.append("Replace the author placeholder in paper_latex_3d_en/main.tex.")
     if abstract_words > 300:
         action_items.append(f"Shorten the abstract from {abstract_words} words to about 180-250 words.")
     elif abstract_words < 150:
@@ -226,7 +227,7 @@ def make_report() -> tuple[str, list[str]]:
             "## Recommended Next Edit",
             "",
             "```text",
-            "For Drones/Aerospace/JIRS first submission: keep the current technical core, replace the generic article class with the target template,",
+            "For Drones/Aerospace/JIRS first submission: keep the current 3DOF Gate 1 technical core, replace the generic article class with the target template,",
             "add required declarations, and avoid turning future 6DOF/radar/missile extensions into current experimental claims.",
             "```",
             "",

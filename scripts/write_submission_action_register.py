@@ -36,9 +36,9 @@ def build_items() -> list[ActionItem]:
     xelatex = tool_status("xelatex")
     latexmk = tool_status("latexmk")
     bibtex = tool_status("bibtex")
-    english_author_open = file_contains("paper_latex_en/main.tex", "To be completed")
+    english_author_open = file_contains("paper_latex_3d_en/main.tex", "To be completed")
     chinese_author_open = file_contains("paper_latex/main.tex", "待补充")
-    plain_bib_en = file_contains("paper_latex_en/main.tex", r"\bibliographystyle{plain}")
+    plain_bib_en = file_contains("paper_latex_3d_en/main.tex", r"\bibliographystyle{plain}")
     plain_bib_zh = file_contains("paper_latex/main.tex", r"\bibliographystyle{plain}")
     jsbsim_data_missing = not (ROOT.parent / "LAG" / "envs" / "JSBSim" / "data").exists()
 
@@ -111,9 +111,9 @@ def build_items() -> list[ActionItem]:
             "medium",
             "deferred",
             "statistics",
-            "Decide whether to extend final evaluation from three seeds to five seeds.",
-            "Current final 300-episode evidence uses three seeds and descriptive paired intervals.",
-            "Only run extra seeds if the target venue or adviser expects stronger statistical evidence.",
+            "Decide whether to add a larger scenario-depth formal evaluation beyond the completed five-seed Gate 1 package.",
+            "Current Gate 1 main evidence already uses five seeds, 100 matched test episodes per seed, and seed-aware hierarchical bootstrap.",
+            "Only run a new formal scenario-depth budget if the target venue or adviser requires stronger realism beyond the current 3v1 mechanism package.",
         ),
         ActionItem(
             "A9",

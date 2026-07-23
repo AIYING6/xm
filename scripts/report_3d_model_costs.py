@@ -58,6 +58,14 @@ METHODS = (
         "graph_input_ablation": "none",
     },
     {
+        "method": "Single-graph MAPPO (param-matched)",
+        "graph_encoder": "single",
+        "graph_relation_ablation": "none",
+        "graph_message_ablation": "none",
+        "graph_input_ablation": "none",
+        "hidden_dim": 240,
+    },
+    {
         "method": "EA-RG-MAPPO-S",
         "graph_encoder": "multi_relation",
         "graph_relation_ablation": "none",
@@ -203,17 +211,18 @@ def actor_latency_ms(
     return float(elapsed * 1000.0 / timed_iters)
 
 
-def row_for_method(args: argparse.Namespace, method: dict[str, str]) -> dict[str, object]:
+def row_for_method(args: argparse.Namespace, method: dict[str, object]) -> dict[str, object]:
+    hidden_dim = int(method.get("hidden_dim", args.hidden_dim))
     cfg = RIGMAPPOConfig(
         env_name="3d_intercept",
         seed=args.seed,
-        hidden_dim=args.hidden_dim,
+        hidden_dim=hidden_dim,
         role_dim=args.role_dim,
         intent_dim=args.intent_dim,
-        graph_encoder=method["graph_encoder"],
-        graph_relation_ablation=method["graph_relation_ablation"],
-        graph_message_ablation=method["graph_message_ablation"],
-        graph_input_ablation=method["graph_input_ablation"],
+        graph_encoder=str(method["graph_encoder"]),
+        graph_relation_ablation=str(method["graph_relation_ablation"]),
+        graph_message_ablation=str(method["graph_message_ablation"]),
+        graph_input_ablation=str(method["graph_input_ablation"]),
         target_policy="straight",
         strict_target_sensing=True,
         agent_target_info_bottleneck=True,
@@ -226,9 +235,9 @@ def row_for_method(args: argparse.Namespace, method: dict[str, str]) -> dict[str
         device=args.device,
     )
     agent, graph, _, num_agents = build_agent(
-        method["graph_encoder"],
-        method["graph_message_ablation"],
-        method["graph_input_ablation"],
+        str(method["graph_encoder"]),
+        str(method["graph_message_ablation"]),
+        str(method["graph_input_ablation"]),
         cfg,
     )
     load = graph_load_stats(cfg, args.episodes)
@@ -244,11 +253,11 @@ def row_for_method(args: argparse.Namespace, method: dict[str, str]) -> dict[str
         "num_nodes": int(graph["node_feat"].shape[0]),
         "node_feat_dim": int(graph["node_feat"].shape[-1]),
         "edge_feat_dim": int(graph["edge_feat"].shape[-1]),
-        "hidden_dim": args.hidden_dim,
+        "hidden_dim": hidden_dim,
         "role_dim": args.role_dim,
         "intent_dim": args.intent_dim,
         **load,
-        "comm_scalars_per_step_proxy": float(load["communication_edges_mean"] * args.hidden_dim),
+        "comm_scalars_per_step_proxy": float(load["communication_edges_mean"] * hidden_dim),
     }
 
 
@@ -270,6 +279,7 @@ def write_markdown(rows: list[dict[str, object]], path: Path) -> None:
         f.write("\n## Notes\n\n")
         f.write("- `w/o task-support relation` changes the environment relation channel, so its neural parameter count matches the full multi-relation encoder.\n")
         f.write("- `w/o role-pair gate` preserves the same module shape for scale-matched comparison; the role-pair gate is disabled at inference.\n")
+        f.write("- `Single-graph MAPPO (param-matched)` increases hidden dimension to 240 so its parameter count is close to the full multi-relation model while preserving the single-graph information structure.\n")
         f.write("- CPU latency should be reported as environment-specific evidence, not as hardware-independent complexity.\n")
 
 

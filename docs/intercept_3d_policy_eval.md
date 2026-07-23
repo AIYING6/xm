@@ -1,6 +1,6 @@
 # 3DOF RI-GMAPPO Policy Evaluation
 
-Generated: 2026-07-17T13:34:42
+Generated: 2026-07-22T20:51:30
 
 Purpose:
 
@@ -12,16 +12,16 @@ This is a diagnostic artifact until multi-seed 3DOF training is completed.
 ## Configuration
 
 ```text
-checkpoint = results/intercept_3d_strict_sensing_fair_60update_dropout030_diag/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0060.pt
-episodes = 1
-target_policy = straight
+checkpoint = results/gate1_oracle_bc_ppo_weaving_mild_no_graph_seed2_cont30/actor_critic_best.pt
+episodes = 30
+target_policy = weaving_mild
 communication_range_scale = 1.0
-communication_dropout_prob = 0.3
+communication_dropout_prob = 0.0
 message_delay_steps = 0
 radar_dropout_prob = 0.0
-failed_blue_agent = 1
-node_failure_start_step = 40
-node_failure_duration_steps = 80
+failed_blue_agent = -1
+node_failure_start_step = 0
+node_failure_duration_steps = 0
 graph_relation_ablation = none
 graph_message_ablation = none
 graph_input_ablation = none
@@ -32,25 +32,31 @@ deterministic = True
 
 | Metric | Mean |
 |---|---:|
-| `success` | 1 |
-| `chain_closed` | 1 |
-| `attack_window_formed` | 1 |
-| `attack_window_rate` | 0.0283688 |
-| `tracking_rate` | 0.460993 |
-| `comm_connectivity` | 0.62766 |
-| `mean_message_age` | 65.1773 |
+| `success` | 0 |
+| `chain_closed` | 0 |
+| `attack_window_formed` | 0 |
+| `attack_window_rate` | 0 |
+| `tracking_rate` | 0.0230342 |
+| `comm_connectivity` | 0.383333 |
+| `mean_message_age` | 62.774 |
 | `collision` | 0 |
-| `timeout` | 0 |
+| `timeout` | 1 |
 | `constraint_violation` | 0 |
-| `steps` | 47 |
-| `first_attack_window_step` | 44 |
-| `first_chain_close_step` | 47 |
-| `post_failure_chain_recovered` | 1 |
-| `post_failure_chain_recovery_steps` | 7 |
-| `chain_closed_during_failure_rate` | 0.125 |
-| `tracking_during_failure_rate` | 1 |
-| `connectivity_during_failure` | 0.395833 |
-| `avg_mean_range` | 14498.5 |
+| `steps` | 260 |
+| `first_attack_window_step` | -1 |
+| `first_chain_close_step` | -1 |
+| `post_failure_chain_recovered` | -1 |
+| `post_failure_chain_recovery_steps` | -1 |
+| `post_failure_chain_recovery_steps_censored` | -1 |
+| `post_failure_chain_recovered_only_steps` | -1 |
+| `chain_closed_during_failure_rate` | -1 |
+| `tracking_during_failure_rate` | -1 |
+| `connectivity_during_failure` | -1 |
+| `avg_mean_range` | 37243.8 |
+| `episode_min_blue_red_distance` | 13054.7 |
+| `episode_min_blue_blue_distance` | 1608.65 |
+| `final_min_blue_red_distance` | 55921.6 |
+| `final_min_blue_blue_distance` | 11245.2 |
 
 ## Boundary
 
