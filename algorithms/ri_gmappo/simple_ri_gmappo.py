@@ -74,6 +74,7 @@ class RIGMAPPOConfig:
     radar_dropout_random_max: float | None = None
     strict_target_sensing: bool = False
     agent_target_info_bottleneck: bool = False
+    target_prior_position: tuple[float, float, float] = (10_000.0, 0.0, 5_000.0)
     max_target_message_age_steps: int = 80
     min_target_confidence: float = 0.2
     safety_proximity_distance: float = 0.0
@@ -557,6 +558,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 else cfg.radar_dropout_prob,
                 strict_target_sensing=cfg.strict_target_sensing,
                 agent_target_info_bottleneck=cfg.agent_target_info_bottleneck,
+                target_prior_position=cfg.target_prior_position,
                 max_target_message_age_steps=cfg.max_target_message_age_steps,
                 min_target_confidence=cfg.min_target_confidence,
                 safety_proximity_distance=cfg.safety_proximity_distance,

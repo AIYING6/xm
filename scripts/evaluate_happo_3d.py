@@ -48,6 +48,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         radar_dropout_prob=args.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
         agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        target_prior_position=tuple(args.target_prior_position),
         max_target_message_age_steps=args.max_target_message_age_steps,
         min_target_confidence=args.min_target_confidence,
         failed_blue_agent=args.failed_blue_agent,
@@ -238,6 +239,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--radar-dropout-prob", type=float, default=0.0)
     parser.add_argument("--strict-target-sensing", action="store_true")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--target-prior-position", type=float, nargs=3, default=(10_000.0, 0.0, 5_000.0))
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--failed-blue-agent", type=int, default=-1)

@@ -5,6 +5,8 @@
     "target_policy": "straight",
     "strict_target_sensing": true,
     "agent_target_info_bottleneck": true,
+    "target_prior_position": [10000.0, 0.0, 5000.0],
+    "target_prior_ablation_status": "default_fixed_prior_for_main_training; perturbation/no-prior diagnostics must be run after dev_1m validation selection",
     "communication_dropout_prob_test": 0.30,
     "message_delay_steps_test": 0,
     "failed_blue_agent": 1,

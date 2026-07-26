@@ -378,6 +378,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--target-policy", type=str, default="straight")
     parser.add_argument("--strict-target-sensing", action="store_true")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--target-prior-position", type=float, nargs=3, default=(10_000.0, 0.0, 5_000.0))
     parser.add_argument("--communication-dropout-prob", type=float, default=0.0)
     parser.add_argument("--message-delay-steps", type=int, default=0)
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
@@ -413,6 +414,7 @@ def parse_args() -> RIGMAPPOConfig:
         target_policy=args.target_policy,
         strict_target_sensing=args.strict_target_sensing,
         agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        target_prior_position=tuple(args.target_prior_position),
         communication_dropout_prob=args.communication_dropout_prob,
         message_delay_steps=args.message_delay_steps,
         failed_blue_agent=args.failed_blue_agent,

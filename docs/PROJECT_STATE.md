@@ -1,6 +1,6 @@
 # Current Project State
 
-Last updated: 2026-07-24
+Last updated: 2026-07-26
 
 ## Current Milestone
 
@@ -69,7 +69,7 @@ P1 training-protocol standardization has started and is documented in `docs/p1_t
 - launched dev_1m seed-0 training jobs for EA-RG-MAPPO, Single-Graph MAPPO, MAPPO/no-graph, and HAPPO through `scripts/start_paper_manifest_job.py`. Progress should be monitored with `scripts/check_training_progress.py --mode dev_1m --methods ea_rg_mappo single_graph mappo happo --seeds 0`.
 - current dev_1m seed-0 progress snapshot is recorded in `docs/dev1m_seed0_progress.md`; all four seed-0 jobs are active and should finish on an hours-level timescale if current throughput holds.
 - detached background jobs stopped updating before completion in the Codex sandbox, so seed-0 dev_1m training has moved to foreground resumable chunks via `scripts/run_manifest_training_chunk.py`.
-- current chunked seed-0 progress: EA-RG-MAPPO 2200 updates, Single-Graph 2200, MAPPO/no-graph 2200, HAPPO 2200.
+- current chunked seed-0 progress: EA-RG-MAPPO 2300 updates, Single-Graph 2300, MAPPO/no-graph 2300, HAPPO 2300.
 - first seed-0 1000-update audit passed and is recorded in `docs/dev1m_seed0_1000update_audit.md`; this is a development-training checkpoint, not formal paper evidence.
 - seed-0 1200-update output audit passed and wrote `results/dev1m_seed0_1200update_summary.csv`.
 - seed-0 1300-update output audit passed and wrote `results/dev1m_seed0_1300update_summary.csv`.
@@ -82,6 +82,9 @@ P1 training-protocol standardization has started and is documented in `docs/p1_t
 - seed-0 2000-update output audit passed and wrote `results/dev1m_seed0_2000update_summary.csv`; all four methods are now past the halfway point of dev_1m seed-0 training and remain in development-monitoring mode until full 3907-update completion.
 - seed-0 2100-update output audit passed and wrote `results/dev1m_seed0_2100update_summary.csv`; all four methods remain synchronized and continue toward the 3907-update validation gate.
 - seed-0 2200-update output audit passed and wrote `results/dev1m_seed0_2200update_summary.csv`; all four methods remain synchronized at 56.31% of the dev_1m budget.
+- seed-0 2300-update output audit passed and wrote `results/dev1m_seed0_2300update_summary.csv`; all four methods remain synchronized at 58.87% of the dev_1m budget.
+- The project-summary review on 2026-07-26 identified four paper-risk items and the first fixes are now implemented: README rewritten as paper-facing documentation, dependencies pinned in `requirements.txt`, HAPPO renamed to HAPPO-style unless a standard implementation is integrated, and target-prior sensitivity exposed through `--target-prior-position`.
+- Added `docs/target_prior_ablation_protocol.md`; target-prior perturbation diagnostics are now a required post-validation robustness check, not a main contribution.
 
 ## Stable Research Direction
 

@@ -34,10 +34,10 @@ Updated after switching from unreliable detached background jobs to foreground r
 
 | Method | Update | Progress | Active | Rough ETA |
 |---|---:|---:|---|---:|
-| EA-RG-MAPPO | 2200 | 56.31% | chunk complete | 2.27 h |
-| Single-Graph MAPPO | 2200 | 56.31% | chunk complete | 2.23 h |
-| MAPPO/no-graph | 2200 | 56.31% | chunk complete | 2.19 h |
-| HAPPO | 2200 | 56.31% | chunk complete | 2.31 h |
+| EA-RG-MAPPO | 2300 | 58.87% | chunk complete | 2.11 h |
+| Single-Graph MAPPO | 2300 | 58.87% | chunk complete | 2.07 h |
+| MAPPO/no-graph | 2300 | 58.87% | chunk complete | 2.03 h |
+| HAPPO | 2300 | 58.87% | chunk complete | 2.15 h |
 
 These ETA values are rough runtime diagnostics, not experiment results.
 
@@ -60,20 +60,20 @@ The 1000-update audit is recorded in:
 docs/dev1m_seed0_1000update_audit.md
 ```
 
-The 2200-update output audit passed and wrote:
+The 2300-update output audit passed and wrote:
 
 ```text
-results/dev1m_seed0_2200update_summary.csv
+results/dev1m_seed0_2300update_summary.csv
 ```
 
-At update 2200, the online 5-episode monitor showed:
+At update 2300, the online 5-episode monitor showed:
 
 | Method | Eval Success | Eval Timeout | Avg Distance |
 |---|---:|---:|---:|
-| EA-RG-MAPPO | 0.0 | 1.0 | 45366.77 |
-| Single-Graph MAPPO | 0.0 | 1.0 | 60984.54 |
-| MAPPO/no-graph | 0.0 | 1.0 | 22848.85 |
-| HAPPO | 0.0 | 1.0 | 30661.40 |
+| EA-RG-MAPPO | 0.0 | 1.0 | 30708.76 |
+| Single-Graph MAPPO | 0.0 | 1.0 | 28763.21 |
+| MAPPO/no-graph | 0.0 | 1.0 | 22786.01 |
+| HAPPO | 0.0 | 1.0 | 30790.41 |
 
 ## Execution Note
 

@@ -51,6 +51,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--radar-dropout-random-max", type=float, default=None)
     parser.add_argument("--strict-target-sensing", action="store_true")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--target-prior-position", type=float, nargs=3, default=(10_000.0, 0.0, 5_000.0))
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--safety-proximity-distance", type=float, default=0.0)
@@ -112,6 +113,7 @@ def parse_args() -> RIGMAPPOConfig:
         radar_dropout_random_max=args.radar_dropout_random_max,
         strict_target_sensing=args.strict_target_sensing,
         agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        target_prior_position=tuple(args.target_prior_position),
         max_target_message_age_steps=args.max_target_message_age_steps,
         min_target_confidence=args.min_target_confidence,
         safety_proximity_distance=args.safety_proximity_distance,

@@ -39,6 +39,7 @@ Required environment properties:
 - relay-node failure;
 - target information must propagate through physically valid sensing/communication paths;
 - decentralized actor information boundary and centralized critic separation.
+- target-prior sensitivity must be diagnosed after validation-selected checkpoints are available; follow `docs/target_prior_ablation_protocol.md`.
 
 ## Method Name
 
@@ -74,13 +75,13 @@ For the Q1 target, the baseline set is:
 - IPPO, if the existing MAPPO code path can support it with low risk;
 - MAPPO / no-graph CTDE baseline;
 - Single-Graph GAT-MAPPO;
-- HAPPO as the priority external strong MARL baseline;
+- HAPPO-style / heterogeneous sequential PPO as the current external strong-baseline attempt;
 - Parameter-Matched Single Graph;
 - EA-RG-MAPPO.
 
-HAPPO is no longer merely optional for the Q1 attempt. It must be attempted early as the external strong baseline. The stop rule is:
+The current code path is not to be described as standard HAPPO. It is a HAPPO-style heterogeneous sequential PPO baseline unless the original HAPPO objective and update correction are implemented or a trusted public implementation is integrated. The stop rule is:
 
-> If HAPPO cannot pass smoke, BC compatibility, fair PPO training, and evaluation within 3-5 focused engineering days, record the blocker and proceed with IPPO/MAPPO/Single-Graph/Parameter-Matched Single as the minimum defensible baseline package.
+> If a standard HAPPO implementation cannot pass smoke, BC compatibility, fair PPO training, and evaluation within 3-5 focused engineering days, report the current baseline honestly as HAPPO-style and proceed with IPPO/MAPPO/Single-Graph/Parameter-Matched Single as the minimum defensible baseline package.
 
 Do not add many external algorithms. One strong external MARL baseline is enough if it is fair and reproducible.
 

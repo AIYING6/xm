@@ -100,6 +100,7 @@ def make_eval_args(args: argparse.Namespace, candidate: Candidate, scenario_name
         radar_dropout_prob=scenario.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
         agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        target_prior_position=tuple(args.target_prior_position),
         max_target_message_age_steps=args.max_target_message_age_steps,
         min_target_confidence=args.min_target_confidence,
         failed_blue_agent=scenario.failed_blue_agent,
@@ -140,6 +141,7 @@ def summarize_rows(
         "checkpoint": display_path(candidate.checkpoint),
         "strict_target_sensing": str(args.strict_target_sensing),
         "agent_target_info_bottleneck": str(args.agent_target_info_bottleneck),
+        "target_prior_position": ";".join(f"{float(x):.6g}" for x in args.target_prior_position),
         "max_target_message_age_steps": str(args.max_target_message_age_steps),
         "min_target_confidence": f"{args.min_target_confidence:.6g}",
         "episodes": str(args.episodes),
@@ -210,6 +212,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--strict-target-sensing", action="store_true", default=True)
     parser.add_argument("--no-strict-target-sensing", dest="strict_target_sensing", action="store_false")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--target-prior-position", type=float, nargs=3, default=(10_000.0, 0.0, 5_000.0))
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--happo-root", type=Path, default=ROOT / "results" / "paper_config_runs" / "smoke" / "runs" / "happo")

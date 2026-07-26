@@ -1,161 +1,160 @@
-# RI-GMAPPO UAV
+# EA-RG-MAPPO UAV Kill-Chain Recovery
 
-This project is the phase-1 sandbox for heterogeneous UAV cooperative decision-making under limited communication.
+This repository studies heterogeneous UAV cooperative decision-making under strict intermittent sensing, limited communication, message uncertainty, and relay-node failure.
 
-Current scope:
+The current paper-facing method is:
 
-- 2D multi-UAV pursuit environment.
-- Heterogeneous pursuer dynamics.
-- Rule-based policy for environment validation.
-- Trajectory rendering and episode metrics.
-
-Planned method:
-
-- MAPPO baseline.
-- GAT-MAPPO.
-- RI-GMAPPO with role-aware graph encoding, intent prediction, and limited-communication attention.
-
-## Quick Start
-
-```bash
-python scripts/render_episode.py
+```text
+EA-RG-MAPPO: Edge-Aware Multi-Relation Role-Graph MAPPO
 ```
 
-The script runs one rule-based episode and saves a trajectory image under `results/`.
+The project is not a complete 6DOF red-blue air-combat system. The main statistical evidence is a lightweight 3DOF, 3v1 heterogeneous UAV kill-chain recovery task. Small 4v2/5v2 and LAG/JSBSim replay studies are planned only as controlled scenario-depth supplements after the main 3v1 evidence is hardened.
 
-If `matplotlib` is unavailable, it saves a trajectory CSV instead.
+## Research Question
 
-## Environment Validation
+Under limited communication, intermittent sensing, message loss/delay, and relay-node failure, can a perception-communication-task-support multi-relation role graph improve heterogeneous UAV kill-chain recovery?
 
-```bash
-python scripts/smoke_test_env.py
-python scripts/evaluate_policies.py --episodes 50 --target-policy mixed
+## Main Scenario
+
+The main environment is `3d_intercept`:
+
+- Scout detects and tracks the target.
+- Relay forwards target information.
+- Attacker forms and holds an attack window.
+- The relay node loses communication function during the episode.
+- Remaining UAVs must recover the reconnaissance-information-attack chain.
+
+The environment includes:
+
+- 3DOF position, speed, heading, and flight-path-angle dynamics;
+- heterogeneous radar, communication, maneuver, and attack capabilities;
+- strict target sensing and actor target-information bottleneck;
+- communication dropout, message delay, cache TTL, and confidence;
+- node failure and post-failure recovery metrics;
+- CTDE separation between decentralized actor inputs and centralized critic state.
+
+## Method
+
+EA-RG-MAPPO separates three relation types:
+
+- perception relation: who can directly sense target information;
+- communication relation: which messages are physically delivered;
+- task-support relation: which role pair currently supports kill-chain recovery.
+
+The graph encoder uses role-pair-conditioned message passing so Scout-to-Relay, Scout-to-Attacker, Relay-to-Attacker, and peer-support messages are not forced to share one homogeneous edge rule.
+
+## Baselines
+
+The paper-facing baseline set is:
+
+- Rule / geometric controller for feasibility reference;
+- MAPPO / no-graph CTDE;
+- Single-Graph GAT-MAPPO;
+- Parameter-Matched Single Graph;
+- HAPPO-style / heterogeneous sequential PPO baseline;
+- EA-RG-MAPPO.
+
+The current `happo` code path is intentionally named HAPPO-style. Do not describe it as standard HAPPO unless the original HAPPO objective and update correction are implemented or a trusted public implementation is integrated.
+
+## Repository Layout
+
+```text
+algorithms/ri_gmappo/      MAPPO, graph encoders, training loop
+envs/                      2D debug environment and 3DOF intercept environment
+configs/paper/             paper-facing protocol and method configs
+scripts/                   training, evaluation, audits, manifest utilities
+tests/                     information-boundary and environment tests
+docs/                      current project state, decisions, protocols, audits
+results/                   development and paper-protocol outputs
 ```
 
-The expected rough result before learning is:
+## Environment
 
-- random policy: low success rate, high timeout rate.
-- rule policy: high success rate, some collisions.
+The active local environment is:
 
-This gap indicates that the task is learnable but not trivial.
+```text
+conda env: cac
+python: 3.8.20
+torch: 2.4.1+cu124
+numpy: 1.24.4
+matplotlib: 3.7.5
+```
 
-## MAPPO Baseline
-
-Install dependencies in a PyTorch-enabled environment:
+Install minimal Python dependencies with:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Train a compact MAPPO baseline:
+If using CUDA-specific PyTorch wheels, install PyTorch from the official index matching the local CUDA runtime, then install the remaining requirements.
+
+## Validation Commands
+
+Run the core information-boundary tests:
 
 ```bash
-python scripts/train_mappo.py --updates 200 --num-envs 8 --rollout-steps 128
+D:/Anaconda/envs/.conda/envs/cac/python.exe -m pytest tests/test_gate1_communication_feasibility.py -q
 ```
 
-For a quick smoke run:
+Audit paper configs and checkpoint-selection schema:
 
 ```bash
-python scripts/train_mappo.py --updates 2 --num-envs 2 --rollout-steps 16 --eval-episodes 2 --eval-interval 1
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/audit_paper_configs.py
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/audit_checkpoint_selection_schema.py
 ```
 
-Training logs are saved to:
+Generate the current dev-1M command manifest:
+
+```bash
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode dev_1m --methods mappo single_graph ea_rg_mappo happo --seeds 0 1 2 --include-sweeps
+```
+
+Run one resumable training chunk:
+
+```bash
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/run_manifest_training_chunk.py --method ea_rg_mappo --seed 0 --chunk-updates 100 --python-exe D:/Anaconda/envs/.conda/envs/cac/python.exe
+```
+
+Check current long-run progress:
+
+```bash
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/check_training_progress.py --mode dev_1m --methods ea_rg_mappo single_graph mappo happo --seeds 0
+```
+
+## Current Experiment Status
+
+The active formalization path is:
+
+1. Complete dev-1M seed-0 training for MAPPO, Single-Graph, EA-RG-MAPPO, and HAPPO-style.
+2. Run validation checkpoint sweeps only.
+3. Freeze checkpoint-selection and training-budget decisions.
+4. Expand to more training seeds.
+5. Run final test once after all protocol choices are frozen.
+
+Training-time online evaluations use only 5 episodes and are noisy monitors. They are not paper evidence. Current progress and audit status are recorded in:
 
 ```text
-results/mappo/train_log.csv
+docs/PROJECT_STATE.md
+docs/dev1m_seed0_progress.md
 ```
 
-Current baseline scope:
+## Target-Prior Risk
 
-- shared actor for all UAVs.
-- centralized critic with global state.
-- discrete 9-action maneuver set.
-- no graph network yet.
-- no intent prediction yet.
-
-The next step after this baseline is stable is `GAT-MAPPO`.
-
-## 3DOF Interception Smoke Run
-
-The RI/EA-RG-MAPPO-S runner also supports the first 3DOF heterogeneous
-interception environment. This command is an integration check only, not a
-reported learning result:
-
-```bash
-python scripts/train_ri_gmappo.py --env-name 3d_intercept --updates 1 --num-envs 2 --rollout-steps 8 --eval-episodes 1 --eval-interval 1 --save-interval 1 --hidden-dim 32 --out-dir results/ri_gmappo_3d_smoke
-```
-
-Evaluate the saved 3DOF checkpoint and write the maintained diagnostic CSV:
-
-```bash
-python scripts/evaluate_ri_gmappo_3d.py
-```
-
-The output is diagnostic only until multi-seed 3DOF training is complete:
+Strict target sensing uses a configurable target prior before valid target information is available:
 
 ```text
-results/intercept_3d_policy_eval.csv
-docs/intercept_3d_policy_eval.md
+target_prior_position = (10000, 0, 5000)
 ```
 
-## 3DOF Learnability Curriculum
+This is now exposed through `--target-prior-position` and recorded in evaluation CSVs. Target-prior perturbation/no-prior diagnostics should be run after dev-1M validation selection to test whether the learned policy depends on the fixed initial prior.
 
-The straight-target 3DOF task uses a geometric-controller demonstration warm
-start before PPO fine-tuning. This is a training aid for sparse attack-window
-exploration, not a paper contribution.
+## Evidence Boundary
 
-```bash
-python scripts/pretrain_ri_gmappo_3d_bc.py --episodes 200 --epochs 80 --hidden-dim 64 --no-balanced-loss --out-dir results/ri_gmappo_3d_bc_straight_seed0
+Historical results before P0 information-boundary hardening are development evidence only. Paper-facing claims must use checkpoints and evaluations generated after:
 
-python scripts/train_ri_gmappo.py --env-name 3d_intercept --target-policy straight --updates 60 --num-envs 4 --rollout-steps 64 --eval-episodes 5 --eval-interval 10 --save-interval 10 --hidden-dim 64 --intent-coef 0.0 --lr 1e-4 --resume results/ri_gmappo_3d_bc_straight_seed0/actor_critic_latest.pt --out-dir results/ri_gmappo_3d_bc_ppo_straight_seed0
+- actor graph feature leakage removal;
+- role-identity ablation correction;
+- strict target-cache TTL/confidence tests;
+- checkpoint selection on validation split only.
 
-python scripts/evaluate_ri_gmappo_3d.py --checkpoint results/ri_gmappo_3d_bc_ppo_straight_seed0/actor_critic_best.pt --episodes 30 --target-policy straight --out-csv results/intercept_3d_policy_eval_bc_ppo_straight_seed0.csv --summary-md docs/intercept_3d_policy_eval_bc_ppo_straight_seed0.md
-```
-
-This curriculum has passed a single-seed learnability check. Use matched seeds
-and independent evaluation seeds before treating any 3DOF result as evidence.
-
-Run the matched 3DOF baseline protocol:
-
-```bash
-python scripts/run_3d_baseline_protocol.py --seeds 0 1 2 --eval-episodes 30
-```
-
-It writes per-seed checkpoints and evaluations under
-`results/intercept_3d_baseline_protocol/`, plus `episode_metrics.csv` and a
-mean-plus-standard-deviation `summary.csv`. The protocol is a curriculum
-baseline only; it does not test the multi-relation graph contribution.
-
-For the multi-relation graph diagnostic, use a separate result directory and
-the conservative fine-tuning settings:
-
-```bash
-python scripts/run_3d_baseline_protocol.py --graph-encoder multi_relation --ppo-lr 5e-5 --entropy-coef 0.001 --seeds 0 1 2 --out-dir results/intercept_3d_multirelation_protocol
-```
-
-The multi-relation path separates perception, communication, and task-support
-adjacencies, with role-pair-conditioned messages and a union-graph residual.
-
-Run zero-shot communication-topology robustness screening over the matched
-single-graph and multi-relation checkpoints:
-
-```bash
-python scripts/evaluate_3d_topology_robustness.py --episodes 5 --out-dir results/intercept_3d_topology_robustness_screen
-```
-
-This screening reuses nominally trained checkpoints. Use it to choose
-non-trivial disruption levels before running topology-curriculum retraining and
-formal 30+ episode evaluations.
-
-Run a matched topology-curriculum pilot from the nominal BC-to-PPO checkpoints:
-
-```bash
-python scripts/run_3d_topology_curriculum_protocol.py --seeds 0 1 2 --updates 20 --eval-episodes 5 --out-dir results/intercept_3d_topology_curriculum_protocol_pilot
-```
-
-For a node-failure-focused curriculum, keep the communication range less severe
-and randomize temporary failed blue nodes:
-
-```bash
-python scripts/run_3d_topology_curriculum_protocol.py --seeds 0 1 2 --updates 20 --eval-episodes 5 --communication-range-random-min 0.65 --communication-range-random-max 1.0 --node-failure-random-prob 0.5 --node-failure-start-random-min 30 --node-failure-start-random-max 80 --node-failure-duration-random-min 40 --node-failure-duration-random-max 100 --out-dir results/intercept_3d_node_failure_curriculum_pilot
-```
+Do not mix historical development diagnostics with final paper tables.

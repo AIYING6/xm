@@ -31,6 +31,7 @@ SUMMARY_COLUMNS = (
     "checkpoint",
     "strict_target_sensing",
     "agent_target_info_bottleneck",
+    "target_prior_position",
     "max_target_message_age_steps",
     "min_target_confidence",
     "episodes",
@@ -61,6 +62,7 @@ SELECTION_COLUMNS = (
     "selected_checkpoint",
     "strict_target_sensing",
     "agent_target_info_bottleneck",
+    "target_prior_position",
     "max_target_message_age_steps",
     "min_target_confidence",
     "selection_score",
@@ -103,6 +105,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--strict-target-sensing", action="store_true", default=True)
     parser.add_argument("--no-strict-target-sensing", dest="strict_target_sensing", action="store_false")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--target-prior-position", type=float, nargs=3, default=(10_000.0, 0.0, 5_000.0))
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
@@ -225,6 +228,7 @@ def make_eval_args(
         radar_dropout_prob=scenario.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
         agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        target_prior_position=tuple(args.target_prior_position),
         max_target_message_age_steps=args.max_target_message_age_steps,
         min_target_confidence=args.min_target_confidence,
         failed_blue_agent=scenario.failed_blue_agent,
@@ -295,6 +299,7 @@ def summarize_rows(
         "checkpoint": display_path(candidate.checkpoint),
         "strict_target_sensing": str(args.strict_target_sensing),
         "agent_target_info_bottleneck": str(args.agent_target_info_bottleneck),
+        "target_prior_position": ";".join(f"{float(x):.6g}" for x in args.target_prior_position),
         "max_target_message_age_steps": str(args.max_target_message_age_steps),
         "min_target_confidence": f"{args.min_target_confidence:.6g}",
         "episodes": str(args.episodes),
@@ -387,6 +392,7 @@ def select_checkpoints(summary_rows: list[dict[str, str]]) -> list[dict[str, str
                 "selected_checkpoint": best["checkpoint"],
                 "strict_target_sensing": best.get("strict_target_sensing", ""),
                 "agent_target_info_bottleneck": best.get("agent_target_info_bottleneck", ""),
+                "target_prior_position": best.get("target_prior_position", ""),
                 "max_target_message_age_steps": best.get("max_target_message_age_steps", ""),
                 "min_target_confidence": best.get("min_target_confidence", ""),
                 "selection_score": best["selection_score"],
@@ -433,6 +439,7 @@ def write_report(
         f"base_seed = {args.base_seed}",
         f"strict_target_sensing = {args.strict_target_sensing}",
         f"agent_target_info_bottleneck = {args.agent_target_info_bottleneck}",
+        f"target_prior_position = {tuple(args.target_prior_position)}",
         f"max_target_message_age_steps = {args.max_target_message_age_steps}",
         f"min_target_confidence = {args.min_target_confidence}",
         f"selection_csv = {display_path(args.selection_csv) if args.selection_csv else 'none'}",
