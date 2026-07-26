@@ -1,10 +1,12 @@
 # Current Requirements
 
-Last updated: 2026-07-17
+Last updated: 2026-07-24
 
 ## Research Target
 
-The project target is now a Q1-level submission attempt, while preserving a realistic Q2 fallback if the expanded evidence chain is not strong enough.
+The project target is one Q1-level submission attempt, while preserving a realistic Q2 fallback if the expanded evidence chain is not strong enough.
+
+The controlling plan is `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`. If older requirements conflict with that file, follow `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`.
 
 The current core problem is:
 
@@ -14,20 +16,31 @@ The current main claim should remain focused:
 
 > A perception-communication-task-support multi-relation role graph improves post-failure kill-chain recovery probability and robustness under strict intermittent sensing.
 
-For the Q1 attempt, this claim must be upgraded from a graph-structure result to a communication-feasible mission-chain resilience result. The detailed gate plan is recorded in `docs/Q1_EXECUTION_PLAN.md`.
+For the Q1 attempt, this claim must be upgraded from a graph-structure result to a communication-feasible mission-chain resilience result. The final implementation sequence is recorded in `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`.
 
 ## Scope Boundary
 
 Do not immediately expand into a large all-in-one system. The near-term work should not prioritize:
 
-- full 4v2 self-play;
+- full 4v2/5v2 self-play;
 - ELO as a contribution;
 - full 6DOF retraining;
 - online missile closed-loop training;
 - high-fidelity radar modeling;
 - JSBSim training for every baseline.
 
-These can be later validation or enhancement modules after the 3DOF main evidence is stable.
+These can be later validation or enhancement modules after the 3DOF main evidence is stable. A small 4v2/5v2 rule-red extension and small LAG/JSBSim replay are now required Q1-supporting supplements, but they must not become full new training projects.
+
+## Immediate P0 Requirements
+
+Before any million-step training:
+
+- replace magic-number observation slices with a documented observation schema;
+- verify or correct the `no_role_identity` actor observation slice;
+- remove global attack-chain progress from actor graph inputs;
+- keep attack-chain progress available to centralized critic and metrics;
+- add actor information-boundary tests;
+- mark pre-hardening results that violate these rules as development evidence only.
 
 ## Current Implementation Goal
 

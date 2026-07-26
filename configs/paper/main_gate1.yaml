@@ -1,0 +1,62 @@
+{
+  "protocol_version": "p1_gate1_2026_07_24",
+  "scenario": {
+    "env_name": "3d_intercept",
+    "target_policy": "straight",
+    "strict_target_sensing": true,
+    "agent_target_info_bottleneck": true,
+    "communication_dropout_prob_test": 0.30,
+    "message_delay_steps_test": 0,
+    "failed_blue_agent": 1,
+    "node_failure_start_step": 40,
+    "node_failure_duration_steps": 80,
+    "max_target_message_age_steps": 80,
+    "min_target_confidence": 0.20,
+    "safety_proximity_distance": 0.0,
+    "safety_proximity_penalty_weight": 0.0
+  },
+  "training_budget": {
+    "unit": "environment_steps",
+    "formula": "num_envs * rollout_steps * updates",
+    "development_steps": 1000000,
+    "extension_steps": [2000000, 5000000],
+    "formal_budget_name": "B_star",
+    "checkpoint_selection": "validation_only",
+    "final_test_usage": "once_after_freeze"
+  },
+  "rollout": {
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "updates_for_1m_steps": 3907,
+    "save_environment_steps": [50000, 100000, 200000, 300000, 400000, 500000, 750000, 1000000]
+  },
+  "seeds": {
+    "development_train": [0, 1, 2],
+    "formal_train": [0, 1, 2, 3, 4],
+    "validation_base_seed": 120000,
+    "test_base_seed": 130000,
+    "validation_episodes_per_seed": 50,
+    "test_episodes_per_seed": 100
+  },
+  "statistics": {
+    "primary": "seed_aware_hierarchical_bootstrap",
+    "bootstrap_repeats": 10000,
+    "confidence_interval": 0.95,
+    "paired_tests": "seed_level_secondary"
+  },
+  "primary_metrics": [
+    "kill_chain_recovery_rate",
+    "restricted_mean_recovery_time"
+  ],
+  "secondary_metrics": [
+    "timeout_rate",
+    "completion_time",
+    "post_failure_tracking_rate",
+    "attacker_fresh_target_cache_ratio",
+    "chain_closed_probability",
+    "communication_connectivity",
+    "collision_rate",
+    "flight_envelope_violation_rate",
+    "mean_message_age"
+  ]
+}

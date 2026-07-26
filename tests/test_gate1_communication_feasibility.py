@@ -12,11 +12,33 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from algorithms.ri_gmappo.simple_ri_gmappo import GraphAttentionLayer, RIGMAPPOAgent
-from envs import RELATION_TASK_SUPPORT, UAVIntercept3DConfig, UAVIntercept3DEnv
+from envs import (
+    EDGE3D_FEAT_DIM,
+    OBS3D_FIELD_NAMES,
+    OBS3D_ROLE_IDENTITY_SLICE,
+    RELATION_TASK_SUPPORT,
+    UAVIntercept3DConfig,
+    UAVIntercept3DEnv,
+)
 from scripts.evaluate_ri_gmappo_3d import post_failure_recovery_metrics
 
 
 class Gate1CommunicationFeasibilityTest(unittest.TestCase):
+    def test_actor_observation_schema_matches_role_identity_slice(self) -> None:
+        env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=5))
+        obs, _, _ = env.reset()
+
+        self.assertEqual(len(OBS3D_FIELD_NAMES), env.obs_dim)
+        self.assertEqual(tuple(OBS3D_FIELD_NAMES[OBS3D_ROLE_IDENTITY_SLICE]), (
+            "role_scout",
+            "role_relay",
+            "role_attacker",
+            "role_interceptor",
+        ))
+        np.testing.assert_allclose(obs[0, OBS3D_ROLE_IDENTITY_SLICE], np.array([1.0, 0.0, 0.0, 0.0]))
+        np.testing.assert_allclose(obs[1, OBS3D_ROLE_IDENTITY_SLICE], np.array([0.0, 1.0, 0.0, 0.0]))
+        np.testing.assert_allclose(obs[2, OBS3D_ROLE_IDENTITY_SLICE], np.array([0.0, 0.0, 1.0, 0.0]))
+
     def test_graph_attention_uses_receiver_sender_direction(self) -> None:
         layer = GraphAttentionLayer(in_dim=2, out_dim=2, edge_dim=0)
         with torch.no_grad():
@@ -174,7 +196,10 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
             obs_handle.remove()
             node_handle.remove()
 
-        torch.testing.assert_close(captured_obs[0][..., 22:26], torch.zeros_like(captured_obs[0][..., 22:26]))
+        role_obs = captured_obs[0][..., OBS3D_ROLE_IDENTITY_SLICE]
+        torch.testing.assert_close(role_obs, torch.zeros_like(role_obs))
+        ability_slice = captured_obs[0][..., 21:24]
+        self.assertGreater(float(torch.abs(ability_slice).sum()), 0.0)
         node_input = captured_node_and_role[0]
         node_feat_dim = graph["node_feat"].shape[-1]
         torch.testing.assert_close(node_input[..., 11:16], torch.zeros_like(node_input[..., 11:16]))
@@ -224,6 +249,81 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         obs_after = env._get_obs()[attacker].copy()
 
         np.testing.assert_allclose(obs_before, obs_after, atol=1e-6, rtol=0.0)
+
+    def test_actor_graph_does_not_include_global_attack_hold_progress(self) -> None:
+        env = UAVIntercept3DEnv(
+            UAVIntercept3DConfig(
+                strict_target_sensing=True,
+                agent_target_info_bottleneck=True,
+                seed=41,
+            )
+        )
+        env.reset()
+        env.attack_hold = 0
+        graph_before = env._get_graph_obs()
+
+        env.attack_hold = env.config.attack_hold_steps
+        graph_after = env._get_graph_obs()
+
+        self.assertEqual(graph_before["edge_feat"].shape[-1], EDGE3D_FEAT_DIM)
+        np.testing.assert_allclose(graph_before["node_feat"], graph_after["node_feat"], atol=1e-6, rtol=0.0)
+        np.testing.assert_allclose(graph_before["edge_feat"], graph_after["edge_feat"], atol=1e-6, rtol=0.0)
+        np.testing.assert_allclose(graph_before["adj"], graph_after["adj"], atol=1e-6, rtol=0.0)
+        np.testing.assert_allclose(graph_before["relation_adj"], graph_after["relation_adj"], atol=1e-6, rtol=0.0)
+
+    def test_actor_logits_do_not_change_with_global_attack_hold(self) -> None:
+        torch.manual_seed(41)
+        env = UAVIntercept3DEnv(
+            UAVIntercept3DConfig(
+                strict_target_sensing=True,
+                agent_target_info_bottleneck=True,
+                seed=41,
+            )
+        )
+        obs, share_obs, graph = env.reset()
+        agent = self._make_multi_relation_agent(env, share_obs, graph, seed=41)
+
+        env.attack_hold = 0
+        logits_before = self._actor_logits(env, agent)
+        env.attack_hold = env.config.attack_hold_steps
+        logits_after = self._actor_logits(env, agent)
+
+        np.testing.assert_allclose(logits_before, logits_after, atol=1e-6, rtol=0.0)
+
+    def test_unreachable_target_cache_does_not_change_attacker_logits(self) -> None:
+        torch.manual_seed(43)
+        env = UAVIntercept3DEnv(
+            UAVIntercept3DConfig(
+                strict_target_sensing=True,
+                agent_target_info_bottleneck=True,
+                seed=43,
+            )
+        )
+        obs, share_obs, graph = env.reset()
+        agent = self._make_multi_relation_agent(env, share_obs, graph, seed=43)
+        env.detected_by[:] = 0.0
+        env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
+        env.message_age[:] = env.config.max_steps
+        np.fill_diagonal(env.message_age, 0.0)
+        env.target_cache_valid[:] = 0.0
+        env.target_cache_confidence[:] = 0.0
+        env.target_cache_path = [[] for _ in range(env.config.num_blue)]
+
+        logits_before = self._actor_logits(env, agent)[2]
+        env._write_target_cache(
+            0,
+            pos=np.array([18_000.0, 6_000.0, 6_500.0], dtype=np.float32),
+            vel=np.array([120.0, 70.0, 10.0], dtype=np.float32),
+            source=0,
+            generation_step=env.step_count,
+            delivery_step=env.step_count,
+            hop_count=0,
+            confidence=1.0,
+            path=[0],
+        )
+        logits_after = self._actor_logits(env, agent)[2]
+
+        np.testing.assert_allclose(logits_before, logits_after, atol=1e-6, rtol=0.0)
 
     def test_strict_bottleneck_graph_hides_stale_global_target_state(self) -> None:
         env = UAVIntercept3DEnv(
@@ -677,6 +777,48 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
                 relation_adj=torch.as_tensor(graph["relation_adj"][None, ...], dtype=torch.float32),
             )
         return logits[0, 2].numpy()
+
+    def _make_multi_relation_agent(
+        self,
+        env: UAVIntercept3DEnv,
+        share_obs: np.ndarray,
+        graph: dict[str, np.ndarray],
+        *,
+        seed: int,
+    ) -> RIGMAPPOAgent:
+        torch.manual_seed(seed)
+        num_roles = max(5, int(np.max(graph["role"])) + 1)
+        agent = RIGMAPPOAgent(
+            obs_dim=env.obs_dim,
+            node_feat_dim=graph["node_feat"].shape[-1],
+            edge_feat_dim=graph["edge_feat"].shape[-1],
+            share_obs_dim=share_obs.shape[-1],
+            action_dim=env.action_dim,
+            num_agents=env.num_agents,
+            num_roles=num_roles,
+            hidden_dim=32,
+            role_dim=4,
+            intent_dim=4,
+            graph_encoder="multi_relation",
+            use_intent_context=False,
+        )
+        agent.eval()
+        return agent
+
+    def _actor_logits(self, env: UAVIntercept3DEnv, agent: RIGMAPPOAgent) -> np.ndarray:
+        obs = env._get_obs()
+        graph = env._get_graph_obs()
+        with torch.no_grad():
+            logits, _, _ = agent.actor(
+                torch.as_tensor(obs[None, ...], dtype=torch.float32),
+                torch.as_tensor(graph["node_feat"][None, ...], dtype=torch.float32),
+                torch.as_tensor(graph["edge_feat"][None, ...], dtype=torch.float32),
+                torch.as_tensor(graph["role"][None, ...], dtype=torch.long),
+                torch.as_tensor(graph["adj"][None, ...], dtype=torch.float32),
+                env.num_agents,
+                relation_adj=torch.as_tensor(graph["relation_adj"][None, ...], dtype=torch.float32),
+            )
+        return logits[0].numpy()
 
 
 if __name__ == "__main__":

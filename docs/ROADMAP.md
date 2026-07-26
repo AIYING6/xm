@@ -4,28 +4,45 @@
 
 Status: Active
 
-The current target is a Q1-level submission attempt with a Q2 fallback path. The governing plan is `docs/Q1_EXECUTION_PLAN.md`.
+The current target is one Q1-level submission attempt with a Q2 fallback path. The controlling final plan is `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`.
 
-Final single-paper scope is now fixed in `docs/FINAL_SINGLE_PAPER_SCOPE.md`. The project will produce one paper centered on the Gate 1 strict-sensing relay-failure kill-chain recovery evidence. New experiments are allowed only if they strengthen this paper; full 4v2/5v2, self-play, online missile/radar, and full JSBSim baseline training are out of scope for the current paper.
+Final single-paper scope is now fixed in `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`. The project will produce one paper centered on the 3DOF 3v1 strict-sensing relay-failure kill-chain recovery evidence, with controlled Q1 supplements rather than uncontrolled system expansion.
 
-The active three-stage execution route is recorded in `docs/Q1_THREE_STAGE_EXECUTION_PLAN.md`:
+Current execution route:
 
-1. close the Gate 1 manuscript/evidence package;
-2. formalize `nominal weaving_mild` as scenario-depth evidence;
-3. then choose one small realism supplement: 4v2/5v2 or LAG/JSBSim replay.
+1. P0 scientific-validity hardening: observation schema, role-identity correctness, actor/critic boundary, and information-boundary tests.
+2. P1 unified training protocol: environment-step budgets, validation checkpoint selection, metric schema, and paper configs.
+3. P2 development training: MAPPO, Single-Graph, HAPPO, and EA-RG-MAPPO at 1M steps first.
+4. P3 formal 3v1 evidence: five seeds, key ablations, parameter-matched baseline, seed-aware statistics.
+5. P4 Q1 supplements: mild maneuver target, 4v2/5v2 rule-red extension, and LAG/JSBSim replay.
+6. P5 paper package: figures, tables, reproducibility, manuscript, and PDF-ready review.
 
-Execution order:
+Do not launch million-step formal training or Q1 supplements before P0 passes.
 
-- Gate 1: information realism and communication-feasibility tests;
-- Gate 2: five-seed 3v1 mechanism evidence;
-- Gate 3: strong baseline and method hardening;
-- Gate 4: 5v2 rule-jammer main scenario family;
-- Gate 5: formal Q1-scale experiments and OOD tests;
-- Gate 6: LAG/JSBSim 6DOF replay validation.
+P0 first pass status:
 
-Do not start 5v2 formal training before Gate 1 passes.
+- role-identity slice bug fixed by exporting the 3DOF observation/node role slices;
+- `attack_hold` removed from actor graph edge features;
+- `EDGE3D_FEAT_DIM` is now 17;
+- P0 tests now include direct actor-logit invariance for global `attack_hold` and unreachable target-cache changes;
+- P0 tests and 3DOF smoke passed;
+- details are recorded in `docs/p0_scientific_validity_hardening_update.md`.
 
-Accelerated finish-mode decision: keep Gates 4-6 paused until the Gate 1 manuscript package is internally consistent, reproducible, and visually checked. Do not add 5v2, JSBSim, missile, ELO, or self-play work to the current evidence package unless a specific review-critical gap remains after manuscript audit.
+Remaining P0 work: freeze the P0 environment/config state at commit time, then move to P1 training-protocol standardization.
+
+P1 first pass status:
+
+- `configs/paper/` exists with the main Gate 1 scenario, method, strong-baseline, and ablation configs;
+- HAPPO is recorded as a priority Q1 external baseline attempt with a 3-5 engineering-day stop rule;
+- `scripts/audit_paper_configs.py` passed and validates the environment-step budget convention.
+- `scripts/generate_paper_commands.py` now generates smoke/dev/formal command manifests from `configs/paper/`;
+- config-driven smoke training passed for MAPPO, Single-Graph, and EA-RG-MAPPO.
+- `dev_1m` command generation now includes validation/test checkpoint sweeps, with test sweeps requiring validation `selected_checkpoints.csv`.
+- HAPPO training smoke passed through `scripts/train_happo_baseline.py`; HAPPO validation/test checkpoint-sweep smoke also passed through `scripts/evaluate_happo_checkpoint_sweep.py`.
+- `scripts/write_paper_run_provenance.py` now records hashes for paper configs and critical code.
+- checkpoint-selection schema is now fixed by `configs/paper/checkpoint_selection_schema.yaml` and audited by `scripts/audit_checkpoint_selection_schema.py`.
+
+Next P1 work: review the generated development-budget commands, then launch MAPPO/Single-Graph/EA-RG-MAPPO/HAPPO `dev_1m` training.
 
 Gate 1 progress:
 

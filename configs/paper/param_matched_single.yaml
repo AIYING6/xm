@@ -1,0 +1,13 @@
+{
+  "method": "Parameter-Matched Single Graph",
+  "paper_role": "capacity-control graph baseline",
+  "graph_encoder": "single",
+  "graph_relation_ablation": "none",
+  "graph_message_ablation": "none",
+  "graph_input_ablation": "none",
+  "hidden_dim": 96,
+  "role_dim": 8,
+  "intent_dim": 8,
+  "use_bc_initialization": true,
+  "hyperparameter_policy": "inherit_single_graph_after_capacity_match"
+}

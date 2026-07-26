@@ -1,0 +1,10 @@
+{
+  "method": "w/o Explicit Role Identity",
+  "paper_role": "role-information ablation",
+  "graph_encoder": "multi_relation",
+  "graph_relation_ablation": "none",
+  "graph_message_ablation": "none",
+  "graph_input_ablation": "no_role_identity",
+  "inherit_hyperparameters_from": "ea_rg_mappo",
+  "validity_note": "Only post-2026-07-24 P0-hardened runs are paper-eligible because the old role slice was incorrect."
+}

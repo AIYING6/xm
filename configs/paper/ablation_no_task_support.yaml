@@ -1,0 +1,9 @@
+{
+  "method": "w/o Task-Support Relation",
+  "paper_role": "relation ablation",
+  "graph_encoder": "multi_relation",
+  "graph_relation_ablation": "no_task_support",
+  "graph_message_ablation": "none",
+  "graph_input_ablation": "none",
+  "inherit_hyperparameters_from": "ea_rg_mappo"
+}

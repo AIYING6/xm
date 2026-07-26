@@ -13,7 +13,45 @@ ROLE_ATTACKER = 2
 ROLE_INTERCEPTOR = 3
 ROLE_TARGET = 4
 
-EDGE3D_FEAT_DIM = 18
+OBS3D_FIELD_NAMES = (
+    "blue_x_norm",
+    "blue_y_norm",
+    "blue_z_norm",
+    "blue_speed_norm",
+    "blue_heading_sin",
+    "blue_heading_cos",
+    "blue_gamma_sin",
+    "blue_gamma_cos",
+    "target_rel_x_norm",
+    "target_rel_y_norm",
+    "target_rel_z_norm",
+    "target_range_norm",
+    "target_vel_x_norm",
+    "target_vel_y_norm",
+    "target_vel_z_norm",
+    "blue_vel_x_norm",
+    "blue_vel_y_norm",
+    "blue_vel_z_norm",
+    "direct_target_detected",
+    "attack_window",
+    "blue_energy",
+    "radar_range_norm",
+    "comm_range_norm",
+    "attack_range_max_norm",
+    "role_scout",
+    "role_relay",
+    "role_attacker",
+    "role_interceptor",
+    "local_inbound_connectivity",
+    "local_inbound_message_age_norm",
+    "local_target_cache_age_norm",
+    "local_target_cache_confidence",
+    "communication_dropout_prob",
+    "message_delay_norm",
+)
+OBS3D_ROLE_IDENTITY_SLICE = slice(24, 28)
+NODE3D_ROLE_IDENTITY_SLICE = slice(11, 16)
+EDGE3D_FEAT_DIM = 17
 RELATION3D_COUNT = 3
 RELATION_PERCEPTION = 0
 RELATION_COMMUNICATION = 1
@@ -887,7 +925,6 @@ class UAVIntercept3DEnv:
                         attack,
                         age,
                         confidence,
-                        float(self.attack_hold) / max(1, self.config.attack_hold_steps),
                     ],
                     dtype=np.float32,
                 )

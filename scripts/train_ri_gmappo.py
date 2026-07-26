@@ -69,6 +69,8 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--save-interval", type=int, default=10)
     parser.add_argument("--save-snapshots", action="store_true")
     parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--update-offset", type=int, default=0)
+    parser.add_argument("--append-log", action="store_true")
     args = parser.parse_args()
     return RIGMAPPOConfig(
         seed=args.seed,
@@ -128,6 +130,8 @@ def parse_args() -> RIGMAPPOConfig:
         save_interval=args.save_interval,
         save_snapshots=args.save_snapshots,
         resume=args.resume,
+        update_offset=args.update_offset,
+        append_log=args.append_log,
     )
 
 

@@ -1,18 +1,91 @@
 # Current Project State
 
-Last updated: 2026-07-22
+Last updated: 2026-07-24
 
 ## Current Milestone
 
-Finish the hardened Gate 1 strict-sensing relay-failure evidence package and manuscript alignment before launching any new large experiment.
+Execute the final single-paper Q1 plan recorded in `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`.
 
-The user target is a Q1-level submission attempt, with a Q2-level fallback. The current 3v1 bottleneck dropout-relay evidence is the mechanism foundation. The immediate objective is to make this evidence package internally consistent, statistically defensible, and reproducible, rather than expanding into 4v2, JSBSim, online missile, or self-play.
+The user target is one paper, Q1 attempt with Q2 fallback. The 3DOF 3v1 strict-sensing relay-failure evidence remains the statistical foundation, but the final version now also requires controlled Q1-supporting supplements: HAPPO as a priority external baseline attempt, a small 4v2/5v2 rule-red extension, and a small LAG/JSBSim replay or feasibility validation.
 
-Active execution route is recorded in `docs/FINAL_SINGLE_PAPER_SCOPE.md`: write one high-quality paper around the Gate 1 kill-chain recovery evidence, use `nominal weaving_mild` only as diagnostic unless revised evidence passes, and keep LAG/JSBSim or 4v2/5v2 as optional supplements rather than new project goals.
+Immediate execution is P0 scientific-validity hardening:
+
+- replace magic-number observation slices with a documented schema;
+- verify/correct `no_role_identity`;
+- remove global attack-chain progress from actor graph inputs while keeping it available to critic/evaluation;
+- add actor information-boundary tests;
+- mark any violating pre-hardening results as development evidence only.
+
+P0 first pass completed on 2026-07-24 and is documented in `docs/p0_scientific_validity_hardening_update.md`:
+
+- exported `OBS3D_ROLE_IDENTITY_SLICE = slice(24, 28)` and `NODE3D_ROLE_IDENTITY_SLICE = slice(11, 16)`;
+- `no_role_identity` now uses the exported 3DOF schema instead of `slice(22, 26)`;
+- global normalized `attack_hold` was removed from actor graph edge features;
+- `EDGE3D_FEAT_DIM` changed from 18 to 17;
+- Gate 1 communication/information-boundary tests passed: `24 passed`;
+- 3DOF environment smoke and one-update multi-relation training smoke passed.
+
+The follow-up P0 pass added full `OBS3D_FIELD_NAMES` coverage and direct actor-logit invariance tests for global `attack_hold` and unreachable target-cache changes.
+
+Because the 3DOF actor graph feature dimension changed, pre-hardening 3DOF checkpoints and old no-role-identity results are development evidence only.
+
+P1 training-protocol standardization has started and is documented in `docs/p1_training_protocol_standardization.md`:
+
+- created JSON-compatible YAML configs under `configs/paper/`;
+- defined `configs/paper/main_gate1.yaml` with environment-step budget, validation/test split, metrics, and relay-failure scenario;
+- added method configs for MAPPO, Single-Graph, EA-RG-MAPPO, Parameter-Matched Single, HAPPO, IPPO, and key ablations;
+- HAPPO is now recorded as a priority external strong baseline attempt for Q1 credibility;
+- added `scripts/audit_paper_configs.py`;
+- config audit passed for 10 configs, with the 1M-step approximation equal to 1,000,192 environment steps.
+- added `scripts/generate_paper_commands.py`;
+- generated the first smoke command manifest in `results/paper_command_manifest.csv` and `docs/paper_command_manifest.md`;
+- config-driven one-update smoke training passed for `mappo`, `single_graph`, and `ea_rg_mappo` under `results/paper_config_runs/smoke/`;
+- `happo` initially entered the command manifest as `pending_implementation`, then advanced after HAPPO training and checkpoint-sweep smoke passed;
+- `scripts/generate_paper_commands.py --mode dev_1m --methods mappo single_graph ea_rg_mappo happo --seeds 0 1 2 --include-sweeps` generated 20 commands: 12 training commands, 4 validation sweeps, and 4 test sweeps;
+- generated test-sweep commands explicitly depend on validation `selected_checkpoints.csv`;
+- added `scripts/train_happo_baseline.py`;
+- HAPPO no-graph external-baseline training smoke passed with separate per-agent actor/critic modules and sequential PPO updates;
+- HAPPO command generation now emits training, validation-sweep, and test-sweep commands;
+- HAPPO validation/test checkpoint-sweep smoke passed and both outputs passed the checkpoint-selection schema audit;
+- HAPPO smoke details are documented in `docs/happo_baseline_smoke.md`;
+- added `scripts/write_paper_run_provenance.py`;
+- added `configs/paper/checkpoint_selection_schema.yaml` and `scripts/audit_checkpoint_selection_schema.py`;
+- checkpoint-selection schema audit passed with 27 summary columns, 22 selection columns, and 58 episode columns;
+- generated `results/paper_run_provenance.csv` and `docs/paper_run_provenance.md` with hashes for 26 critical config/code files.
+- added `scripts/run_paper_manifest.py`, `scripts/audit_paper_manifest.py`, and `docs/paper_manifest_runner.md` so long paper experiments can be checked and launched from the audited command manifest while preserving per-row logs and run status.
+- manifest runner smoke execution passed for MAPPO seed 0 and wrote `results/paper_manifest_run_status.csv` plus stdout/stderr logs.
+- dev_1m command manifest audit passed: 20 rows total, including 12 training rows and validation/test checkpoint sweeps for MAPPO, Single-Graph, EA-RG-MAPPO, and HAPPO over seeds 0, 1, and 2.
+- added `probe_20` command-generation mode for launch-readiness and runtime estimation; probe outputs are engineering diagnostics only, not paper evidence.
+- `probe_20` launch-readiness training passed for MAPPO/no-graph, Single-Graph, EA-RG-MAPPO, and HAPPO seed 0. The HAPPO parser was fixed to accept shared fairness/protocol arguments before it passed.
+- wrote `docs/dev1m_launch_plan.md`: first real development-budget stage starts with seed 0 for EA-RG-MAPPO, Single-Graph, MAPPO/no-graph, and HAPPO, followed by validation-only checkpoint sweeps before any test sweep.
+- added `scripts/audit_training_outputs.py` to verify train logs and checkpoints before validation sweeps.
+- `scripts/audit_training_outputs.py --mode probe_20 --methods mappo single_graph ea_rg_mappo happo --seeds 0` passed, verifying the output-audit path against real probe outputs.
+- added background job helpers `scripts/start_paper_manifest_job.py` and `scripts/check_paper_manifest_jobs.py` for hour-level dev_1m training runs.
+- added `scripts/check_training_progress.py` to monitor long training by `train_log.csv` progress when Windows PID checks are unreliable.
+- added `scripts/summarize_training_logs.py` to summarize train/eval columns and flag non-finite values before validation sweeps.
+- added `scripts/gate_validation_readiness.py` so validation sweeps are gated by completed training outputs and log sanity checks.
+- added `scripts/run_manifest_training_chunk.py` for foreground, resumable training chunks when detached background jobs are not reliable in the Codex sandbox.
+- added full training-state checkpoint support for chunked MAPPO/Single-Graph/EA-RG-MAPPO and HAPPO training. Weight-only `actor_critic_latest.pt` and `happo_latest.pt` remain available for existing evaluation scripts, while `actor_critic_training_state_latest.pt` and `happo_training_state_latest.pt` preserve optimizer state for subsequent resume chunks. Resume-smoke verification passed for both RI-GMAPPO and HAPPO after the 1700-update chunks.
+- launched dev_1m seed-0 training jobs for EA-RG-MAPPO, Single-Graph MAPPO, MAPPO/no-graph, and HAPPO through `scripts/start_paper_manifest_job.py`. Progress should be monitored with `scripts/check_training_progress.py --mode dev_1m --methods ea_rg_mappo single_graph mappo happo --seeds 0`.
+- current dev_1m seed-0 progress snapshot is recorded in `docs/dev1m_seed0_progress.md`; all four seed-0 jobs are active and should finish on an hours-level timescale if current throughput holds.
+- detached background jobs stopped updating before completion in the Codex sandbox, so seed-0 dev_1m training has moved to foreground resumable chunks via `scripts/run_manifest_training_chunk.py`.
+- current chunked seed-0 progress: EA-RG-MAPPO 2200 updates, Single-Graph 2200, MAPPO/no-graph 2200, HAPPO 2200.
+- first seed-0 1000-update audit passed and is recorded in `docs/dev1m_seed0_1000update_audit.md`; this is a development-training checkpoint, not formal paper evidence.
+- seed-0 1200-update output audit passed and wrote `results/dev1m_seed0_1200update_summary.csv`.
+- seed-0 1300-update output audit passed and wrote `results/dev1m_seed0_1300update_summary.csv`.
+- seed-0 1400-update output audit passed and wrote `results/dev1m_seed0_1400update_summary.csv`.
+- seed-0 1500-update output audit passed and wrote `results/dev1m_seed0_1500update_summary.csv`; the 5-episode online monitor at this checkpoint showed EA-RG-MAPPO success 0.4 and Single-Graph/MAPPO/HAPPO success 0.0.
+- seed-0 1600-update output audit passed and wrote `results/dev1m_seed0_1600update_summary.csv`; the 5-episode online monitor at this checkpoint showed EA-RG-MAPPO and HAPPO success 0.4, while Single-Graph and MAPPO/no-graph remained 0.0.
+- seed-0 1700-update output audit passed and wrote `results/dev1m_seed0_1700update_summary.csv`; the 5-episode online monitor at this checkpoint showed EA-RG-MAPPO success 0.6 and Single-Graph/MAPPO/HAPPO success 0.0.
+- seed-0 1800-update output audit passed and wrote `results/dev1m_seed0_1800update_summary.csv`; the 5-episode online monitor at this checkpoint showed Single-Graph success 0.4 and EA-RG-MAPPO/MAPPO/HAPPO success 0.0, reinforcing that online 5-episode checks are only noisy monitors and validation-set checkpoint selection is mandatory.
+- seed-0 1900-update output audit passed and wrote `results/dev1m_seed0_1900update_summary.csv`; the 5-episode online monitor at this checkpoint showed all four methods success 0.0, so training continues toward full 3907-update completion before validation selection.
+- seed-0 2000-update output audit passed and wrote `results/dev1m_seed0_2000update_summary.csv`; all four methods are now past the halfway point of dev_1m seed-0 training and remain in development-monitoring mode until full 3907-update completion.
+- seed-0 2100-update output audit passed and wrote `results/dev1m_seed0_2100update_summary.csv`; all four methods remain synchronized and continue toward the 3907-update validation gate.
+- seed-0 2200-update output audit passed and wrote `results/dev1m_seed0_2200update_summary.csv`; all four methods remain synchronized at 56.31% of the dev_1m budget.
 
 ## Stable Research Direction
 
-`EA-RG-MAPPO-S` is the main method:
+`EA-RG-MAPPO` is the main paper method:
 
 - edge-aware role graph policy;
 - perception, communication, and dynamic task-support multi-relation graph reasoning;

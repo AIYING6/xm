@@ -16,7 +16,9 @@ from torch.distributions import Categorical
 
 from envs import (
     EDGE_FEAT_DIM,
+    NODE3D_ROLE_IDENTITY_SLICE,
     NUM_INTENTS,
+    OBS3D_ROLE_IDENTITY_SLICE,
     UAVIntercept3DConfig,
     UAVIntercept3DEnv,
     UAVPursuitConfig,
@@ -90,6 +92,8 @@ class RIGMAPPOConfig:
     save_interval: int = 10
     save_snapshots: bool = False
     resume: str | None = None
+    update_offset: int = 0
+    append_log: bool = False
 
 
 class MLP(nn.Module):
@@ -265,8 +269,8 @@ class MultiRelationGraphEncoder(nn.Module):
         return self._apply_layer(x, self.layer2, relation_adj, union_adj, edge_feat, role, self.fuse2)
 
 
-OBS_ROLE_IDENTITY_SLICE = slice(22, 26)
-NODE_ROLE_IDENTITY_SLICE = slice(11, 16)
+OBS_ROLE_IDENTITY_SLICE = OBS3D_ROLE_IDENTITY_SLICE
+NODE_ROLE_IDENTITY_SLICE = NODE3D_ROLE_IDENTITY_SLICE
 
 
 def zero_feature_slice(x: torch.Tensor, feature_slice: slice) -> torch.Tensor:
@@ -649,12 +653,19 @@ def stack_graphs(graphs: List[dict]) -> dict:
     }
 
 
-def load_matching_state_dict(agent: nn.Module, checkpoint_path: str, device: torch.device) -> None:
-    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
+def checkpoint_model_state(checkpoint: dict) -> dict:
+    if "model_state" in checkpoint:
+        return checkpoint["model_state"]
+    return checkpoint
+
+
+def load_matching_state_dict(agent: nn.Module, checkpoint_path: str, device: torch.device) -> tuple[dict, bool]:
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
+    model_state = checkpoint_model_state(checkpoint)
     current = agent.state_dict()
     loaded = 0
     partial = 0
-    for key, value in checkpoint.items():
+    for key, value in model_state.items():
         if key not in current:
             continue
         if current[key].shape == value.shape:
@@ -672,11 +683,46 @@ def load_matching_state_dict(agent: nn.Module, checkpoint_path: str, device: tor
             current[key] = expanded
             partial += 1
     agent.load_state_dict(current)
-    skipped = len(checkpoint) - loaded - partial
+    skipped = len(model_state) - loaded - partial
     print(
         f"loaded {loaded} matching tensors and {partial} partial tensors from {checkpoint_path}; skipped {skipped}",
         flush=True,
     )
+    exact_match = partial == 0 and skipped == 0 and loaded == len(model_state)
+    return checkpoint, exact_match
+
+
+def load_training_checkpoint(
+    agent: nn.Module,
+    optimizer: optim.Optimizer,
+    checkpoint_path: str,
+    device: torch.device,
+) -> None:
+    checkpoint, exact_match = load_matching_state_dict(agent, checkpoint_path, device)
+    optimizer_state = checkpoint.get("optimizer_state") if isinstance(checkpoint, dict) else None
+    if optimizer_state is not None:
+        if exact_match:
+            optimizer.load_state_dict(optimizer_state)
+            print(f"loaded optimizer state from {checkpoint_path}", flush=True)
+        else:
+            print(f"skipped optimizer state from {checkpoint_path} because model tensors were not an exact match", flush=True)
+
+
+def save_training_checkpoint(
+    path: Path,
+    agent: nn.Module,
+    optimizer: optim.Optimizer,
+    update: int,
+    best_eval_key: tuple[float, float, float, float] | None = None,
+) -> None:
+    payload = {
+        "model_state": agent.state_dict(),
+        "optimizer_state": optimizer.state_dict(),
+        "update": int(update),
+    }
+    if best_eval_key is not None:
+        payload["best_eval_key"] = tuple(float(x) for x in best_eval_key)
+    torch.save(payload, path)
 
 
 def eval_policy(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig, base_seed: int = 10_000) -> dict:
@@ -760,35 +806,37 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         use_intent_context=cfg.env_name != "3d_intercept",
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
-    if cfg.resume:
-        load_matching_state_dict(agent, cfg.resume, device)
     optimizer = optim.Adam(agent.parameters(), lr=cfg.lr, eps=1e-5)
+    if cfg.resume:
+        load_training_checkpoint(agent, optimizer, cfg.resume, device)
 
     log_path = out_dir / "train_log.csv"
-    with log_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=[
-                "update",
-                "loss",
-                "policy_loss",
-                "value_loss",
-                "entropy",
-                "intent_loss",
-                "intent_acc",
-                "train_avg_reward",
-                "eval_success_rate",
-                "eval_collision_rate",
-                "eval_timeout_rate",
-                "eval_avg_steps",
-                "eval_avg_distance",
-                "eval_intent_acc",
-            ],
-        )
-        writer.writeheader()
+    fieldnames = [
+        "update",
+        "loss",
+        "policy_loss",
+        "value_loss",
+        "entropy",
+        "intent_loss",
+        "intent_acc",
+        "train_avg_reward",
+        "eval_success_rate",
+        "eval_collision_rate",
+        "eval_timeout_rate",
+        "eval_avg_steps",
+        "eval_avg_distance",
+        "eval_intent_acc",
+    ]
+    write_header = not (cfg.append_log and log_path.exists())
+    mode = "a" if cfg.append_log else "w"
+    with log_path.open(mode, newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if write_header:
+            writer.writeheader()
         f.flush()
         best_eval_key = (-1.0, float("-inf"), float("-inf"), float("-inf"))
-        for update in range(1, cfg.updates + 1):
+        for local_update in range(1, cfg.updates + 1):
+            update = cfg.update_offset + local_update
             batch = collect_rollout(agent, envs, obs, share_obs, graph_obs, cfg, device)
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
             train_info = update_policy(agent, optimizer, batch, cfg, device)
@@ -818,10 +866,24 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 )
             writer.writerow(row)
             f.flush()
-            if update % cfg.save_interval == 0 or update == cfg.updates:
+            if update % cfg.save_interval == 0 or local_update == cfg.updates:
                 torch.save(agent.state_dict(), out_dir / "actor_critic_latest.pt")
+                save_training_checkpoint(
+                    out_dir / "actor_critic_training_state_latest.pt",
+                    agent,
+                    optimizer,
+                    update,
+                    best_eval_key,
+                )
                 if cfg.save_snapshots:
                     torch.save(agent.state_dict(), out_dir / f"actor_critic_update_{update:04d}.pt")
+                    save_training_checkpoint(
+                        out_dir / f"actor_critic_training_state_update_{update:04d}.pt",
+                        agent,
+                        optimizer,
+                        update,
+                        best_eval_key,
+                    )
     return log_path
 
 

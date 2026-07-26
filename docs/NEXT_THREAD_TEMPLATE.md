@@ -14,6 +14,10 @@ Please first read:
 - docs/Q1_EXECUTION_PLAN.md
 - docs/Q1_THREE_STAGE_EXECUTION_PLAN.md
 - docs/FINAL_SINGLE_PAPER_SCOPE.md
+- docs/FINAL_Q1_SINGLE_PAPER_PLAN.md
+- docs/p0_scientific_validity_hardening_update.md
+- docs/p1_training_protocol_standardization.md
+- docs/dev1m_launch_plan.md
 
 Then inspect the current relevant code and continue from the repository state, not from chat memory.
 
@@ -39,7 +43,7 @@ Completion standard:
 
 ```text
 Task:
-Return to Gate 1 manuscript packaging under the final single-paper scope.
+Start P1 training-protocol standardization under the final Q1 single-paper plan.
 
 Relevant files:
 - algorithms/ri_gmappo/simple_ri_gmappo.py
@@ -56,6 +60,9 @@ Relevant files:
 - docs/Q1_EXECUTION_PLAN.md
 - docs/Q1_THREE_STAGE_EXECUTION_PLAN.md
 - docs/FINAL_SINGLE_PAPER_SCOPE.md
+- docs/FINAL_Q1_SINGLE_PAPER_PLAN.md
+- docs/p0_scientific_validity_hardening_update.md
+- docs/p1_training_protocol_standardization.md
 - docs/ACCELERATED_FINISH_PLAN.md
 - docs/actor_critic_observation_boundary.md
 - docs/gate1_communication_feasibility_audit.md
@@ -93,6 +100,8 @@ Constraints:
 - Do not change the existing default 2D training behavior.
 - Preserve the standard environment interface.
 - Use the hardened communication-feasible code path only.
+- Follow `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md` if older docs conflict.
+- Do not launch million-step training before P0 information-boundary tests pass.
 - Do not tune on the completed five-seed fixed-update-60 test split.
 - Actor observation must remain decentralized: no team-level aggregate shortcuts.
 - Task-support edges may gate delivered messages but must not transmit target information by themselves.
@@ -103,6 +112,14 @@ Constraints:
 - Treat the current five-seed test50 parameter-matched single-graph result as a capacity-control credibility result.
 - Report seed-level scatter because parameter-matched single-graph is competitive on seeds 0 and 4 but weak on seeds 1, 2, and 3.
 - Treat old no-role-identity checkpoints as pre-hardening and not manuscript-level evidence.
+- Treat all pre-2026-07-24 3DOF checkpoints with 18 edge features as pre-hardening because actor graph edge features now exclude global `attack_hold`.
+- P0 actor information-boundary tests passed at 24 tests; continue with P1 unless new leakage is found.
+- `configs/paper/` and `scripts/audit_paper_configs.py` now exist; use them as the P1 source of truth for formal training protocol.
+- `scripts/generate_paper_commands.py` generated and executed one-update smoke commands for mappo/single_graph/ea_rg_mappo.
+- `scripts/generate_paper_commands.py --include-sweeps` now generates validation/test checkpoint sweep commands; test sweeps require validation selection CSVs.
+- `scripts/write_paper_run_provenance.py` generated hashes for paper configs and critical code.
+- `configs/paper/checkpoint_selection_schema.yaml` and `scripts/audit_checkpoint_selection_schema.py` fix the validation/test selection schema.
+- `scripts/train_happo_baseline.py` HAPPO training smoke passed; `scripts/evaluate_happo_checkpoint_sweep.py` validation/test sweep smoke also passed.
 - Treat the hardened no-role dev20 result as development evidence only: three seeds and ten test episodes per seed.
 - Treat the hardened no-role five-seed test50 result as paper-facing mechanism evidence, but report seed scatter.
 - The role-identity result has already been integrated into the paper table package.

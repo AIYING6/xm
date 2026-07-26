@@ -1,0 +1,26 @@
+{
+  "method": "HAPPO",
+  "paper_role": "priority external strong MARL baseline for Q1 credibility",
+  "implementation_status": "training_and_checkpoint_sweep_smoke_passed_pending_dev_1m",
+  "trainer_script": "scripts/train_happo_baseline.py",
+  "graph_encoder": "no_graph",
+  "hidden_dim": 64,
+  "role_dim": 8,
+  "intent_dim": 8,
+  "stop_rule": "If smoke, BC compatibility, fair PPO training, and evaluation cannot pass within 3-5 focused engineering days, document blocker and continue with IPPO/MAPPO/Single-Graph/Parameter-Matched Single.",
+  "current_limitations": [
+    "minimal no-graph HAPPO-style external baseline",
+    "per-agent actor/critic modules with sequential PPO updates",
+    "training smoke passed",
+    "validation/test checkpoint-sweep smoke passed",
+    "not yet run at 1M-step development budget"
+  ],
+  "fairness_requirements": [
+    "same scenario",
+    "same training budget B_star",
+    "same validation checkpoint selection rule",
+    "same final test episodes",
+    "same BC data if BC initialization is used",
+    "same reward and safety constraints"
+  ]
+}

@@ -1,6 +1,23 @@
 # Final Single-Paper Scope
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
+
+## Controlling Update
+
+The controlling final plan is now:
+
+> `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`
+
+If this older scope file conflicts with `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`, follow `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`.
+
+The important update is:
+
+- the project still produces one paper;
+- the target is now Q1 attempt with Q2 fallback;
+- the 3DOF 3v1 strict-sensing relay-failure task remains the main statistical evidence;
+- HAPPO is a priority external strong baseline attempt for Q1 credibility;
+- 4v2/5v2 rule-red and LAG/JSBSim replay are Q1-supporting supplements, not full new training projects;
+- P0 scientific-validity hardening must precede any million-step formal training.
 
 ## Decision
 
