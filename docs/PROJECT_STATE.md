@@ -69,7 +69,7 @@ P1 training-protocol standardization has started and is documented in `docs/p1_t
 - launched dev_1m seed-0 training jobs for EA-RG-MAPPO, Single-Graph MAPPO, MAPPO/no-graph, and HAPPO through `scripts/start_paper_manifest_job.py`. Progress should be monitored with `scripts/check_training_progress.py --mode dev_1m --methods ea_rg_mappo single_graph mappo happo --seeds 0`.
 - current dev_1m seed-0 progress snapshot is recorded in `docs/dev1m_seed0_progress.md`; all four seed-0 jobs are active and should finish on an hours-level timescale if current throughput holds.
 - detached background jobs stopped updating before completion in the Codex sandbox, so seed-0 dev_1m training has moved to foreground resumable chunks via `scripts/run_manifest_training_chunk.py`.
-- current chunked seed-0 progress: EA-RG-MAPPO 2300 updates, Single-Graph 2300, MAPPO/no-graph 2300, HAPPO 2300.
+- current chunked seed-0 progress: EA-RG-MAPPO 3907 updates, Single-Graph 3907, MAPPO/no-graph 3907, corrected HAPPO 3907 updates. The older pre-correction HAPPO-style run reached 2300 updates but is no longer eligible for formal paper comparison; all four seed-0 methods completed the dev-1M training budget.
 - first seed-0 1000-update audit passed and is recorded in `docs/dev1m_seed0_1000update_audit.md`; this is a development-training checkpoint, not formal paper evidence.
 - seed-0 1200-update output audit passed and wrote `results/dev1m_seed0_1200update_summary.csv`.
 - seed-0 1300-update output audit passed and wrote `results/dev1m_seed0_1300update_summary.csv`.
@@ -84,6 +84,8 @@ P1 training-protocol standardization has started and is documented in `docs/p1_t
 - seed-0 2200-update output audit passed and wrote `results/dev1m_seed0_2200update_summary.csv`; all four methods remain synchronized at 56.31% of the dev_1m budget.
 - seed-0 2300-update output audit passed and wrote `results/dev1m_seed0_2300update_summary.csv`; all four methods remain synchronized at 58.87% of the dev_1m budget.
 - The project-summary review on 2026-07-26 identified four paper-risk items and the first fixes are now implemented: README rewritten as paper-facing documentation, dependencies pinned in `requirements.txt`, HAPPO renamed to HAPPO-style unless a standard implementation is integrated, and target-prior sensitivity exposed through `--target-prior-position`.
+- HAPPO hardening on 2026-07-26 replaced the earlier HAPPO-style sequential PPO loss with a HAPPO sequential joint-ratio-corrected surrogate. Formal HAPPO evidence must be generated from post-correction checkpoints; older HAPPO-style outputs remain historical diagnostics only.
+- Corrected HAPPO manifest commands now write to `results/paper_config_runs/<mode>/runs/happo_standard/` so they cannot accidentally resume from the older `runs/happo/` HAPPO-style checkpoint directory.
 - Added `docs/target_prior_ablation_protocol.md`; target-prior perturbation diagnostics are now a required post-validation robustness check, not a main contribution.
 
 ## Stable Research Direction
@@ -391,3 +393,35 @@ provenance audit rows: 56
 ## Next Recommended Task
 
 Next task: finish mode. Freeze the current evidence set and organize the manuscript package around the fixed-update-60 main result, mechanism ablations, capacity-control baseline, timing generalization, no-curriculum boundary, seed-level mechanism figures, and delayed scout-failure stressor as supplemental scenario-depth evidence. Do not add more stressors unless a specific reviewer-critical gap remains.
+
+Current dev-1M paper-protocol track: all four seed-0 methods reached 3907
+updates and completed validation checkpoint selection on the strict-sensing
+relay-failure task with 50 matched episodes per checkpoint. Validation-selected
+success/recovery are: EA-RG-MAPPO `0.94/0.94` at update 1600, Single-Graph
+MAPPO `0.82/0.82` at update 3907, MAPPO/no-graph `0.62/0.62` at update 3800,
+and HAPPO `0.14/0.14` at update 900; all selected checkpoints have zero
+collisions. The consolidated summary is in
+`docs/dev1m_seed0_validation_selection_summary.md` and
+`results/paper_config_runs/dev_1m/checkpoint_sweeps/seed0_validation_selected_summary.csv`.
+The held-out test split is also complete for seed 0 using 100 matched episodes
+and base seed `220000`: EA-RG-MAPPO reaches `0.89` success/recovery,
+Single-Graph MAPPO `0.80`, MAPPO/no-graph `0.60`, and HAPPO `0.08`, all with
+zero collisions. This preserves the validation ordering and is the strongest
+current seed-0 evidence. Detailed test results are in
+`docs/dev1m_seed0_heldout_test_summary.md` and
+`results/paper_config_runs/dev_1m/test_eval/seed0_heldout_test_summary.csv`.
+Next, launch seeds 1/2 unchanged and repeat validation selection plus held-out
+testing before making paper-level claims.
+
+Seeds 1 and 2 are now fully trained for EA-RG-MAPPO, Single-Graph MAPPO,
+MAPPO/no-graph, and HAPPO under the unchanged `dev_1m` protocol. All eight new
+runs reached update 3907 and passed the training-output audit; the training log
+summary is in `results/dev1m_seed1_seed2_3907update_summary.csv`. Next, run
+validation checkpoint selection for seeds 1/2, then held-out test evaluation
+before making multi-seed paper-level claims.
+
+EA-RG-MAPPO seed-1 validation selection is complete: update 2200 is selected
+with `0.34` success/recovery and zero collision. EA-RG-MAPPO seed-2 validation
+has started and has completed 10/50 checkpoints through update 600, with no
+nonzero success/recovery yet. Continue the full seed-2 sweep before interpreting
+the multi-seed stability of the main method.

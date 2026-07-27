@@ -18,9 +18,11 @@ sys.path.insert(0, str(ROOT))
 from scripts.evaluate_3d_checkpoint_sweep import (  # noqa: E402
     SELECTION_COLUMNS,
     SUMMARY_COLUMNS,
+    completed_key,
     display_path,
     mean,
     mean_recovery_steps,
+    read_existing_csv,
     selection_score,
     select_checkpoints,
     write_csv,
@@ -224,6 +226,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "results" / "happo_checkpoint_sweep")
     parser.add_argument("--allow-missing", action="store_true")
+    parser.add_argument("--resume", action="store_true", help="Resume an interrupted sweep by skipping completed checkpoint/scenario rows.")
+    parser.add_argument(
+        "--max-new-evals",
+        type=int,
+        default=None,
+        help="Stop after this many newly evaluated checkpoint/scenario pairs. Useful for chunking long sweeps.",
+    )
     parser.add_argument("--max-selection-collision-rate", type=float, default=None)
     return parser.parse_args()
 
@@ -235,12 +244,23 @@ def main() -> None:
     summary_path = args.out_dir / f"{args.split}_checkpoint_summary.csv"
     selection_path = args.out_dir / f"{args.split}_selected_checkpoints.csv"
     report_path = args.out_dir / f"{args.split}_checkpoint_sweep.md"
-    episode_rows: list[dict[str, object]] = []
-    summary_rows: list[dict[str, str]] = []
+    episode_rows: list[dict[str, object]] = read_existing_csv(episode_path) if args.resume else []
+    summary_rows: list[dict[str, str]] = read_existing_csv(summary_path) if args.resume else []
+    completed = {completed_key(row) for row in summary_rows}
     extra_episode_columns = ("split", "scenario", "graph_encoder", "train_seed", "checkpoint_update")
 
+    new_evals = 0
+    stop_requested = False
     for candidate in candidates:
         for scenario_name in args.scenarios:
+            key = (args.split, scenario_name, "happo", "none", "none", "none", str(candidate.train_seed), str(candidate.update))
+            if key in completed:
+                print(
+                    f"skip completed {args.split} {scenario_name} happo "
+                    f"seed={candidate.train_seed} update={candidate.update}",
+                    flush=True,
+                )
+                continue
             print(f"eval {args.split} {scenario_name} happo seed={candidate.train_seed} update={candidate.update}", flush=True)
             rows = evaluate(make_eval_args(args, candidate, scenario_name))
             for row in rows:
@@ -255,6 +275,15 @@ def main() -> None:
                 )
             episode_rows.extend(rows)
             summary_rows.append(summarize_rows(args, candidate, scenario_name, rows))
+            completed.add(key)
+            write_csv(episode_path, episode_rows, (*extra_episode_columns, *CSV_COLUMNS))
+            write_csv(summary_path, summary_rows, SUMMARY_COLUMNS)
+            new_evals += 1
+            if args.max_new_evals is not None and new_evals >= args.max_new_evals:
+                stop_requested = True
+                break
+        if stop_requested:
+            break
 
     selected_rows = select_checkpoints(summary_rows)
     write_csv(episode_path, episode_rows, (*extra_episode_columns, *CSV_COLUMNS))

@@ -51,7 +51,7 @@ def main() -> None:
     if computed < 1_000_000:
         raise SystemExit(f"updates_for_1m_steps under-runs 1M environment steps: {computed}")
 
-    required_methods = {"MAPPO", "Single-Graph GAT-MAPPO", "EA-RG-MAPPO", "HAPPO-style"}
+    required_methods = {"MAPPO", "Single-Graph GAT-MAPPO", "EA-RG-MAPPO", "HAPPO"}
     present_methods = {cfg.get("method") for cfg in loaded.values()}
     missing_methods = sorted(required_methods - present_methods)
     if missing_methods:

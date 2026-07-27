@@ -28,6 +28,14 @@ def expected_updates(mode: str) -> int:
     raise ValueError(f"unsupported mode: {mode}")
 
 
+def method_run_name(method: str) -> str:
+    path = CONFIG_DIR / f"{method}.yaml"
+    if not path.exists():
+        return method
+    cfg = json.loads(path.read_text(encoding="utf-8"))
+    return str(cfg.get("output_method_name", method))
+
+
 def read_last_row(log_path: Path) -> dict[str, str] | None:
     if not log_path.exists():
         return None
@@ -66,7 +74,7 @@ def main() -> None:
     print(f"checked_utc: {datetime.now(timezone.utc).isoformat(timespec='seconds')}")
     for method in args.methods:
         for seed in args.seeds:
-            run_dir = args.run_root / args.mode / "runs" / method / f"bc_ppo_seed{seed}"
+            run_dir = args.run_root / args.mode / "runs" / method_run_name(method) / f"bc_ppo_seed{seed}"
             log_path = run_dir / "train_log.csv"
             last_row = read_last_row(log_path)
             update = parse_update(last_row)

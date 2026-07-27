@@ -51,10 +51,10 @@ The paper-facing baseline set is:
 - MAPPO / no-graph CTDE;
 - Single-Graph GAT-MAPPO;
 - Parameter-Matched Single Graph;
-- HAPPO-style / heterogeneous sequential PPO baseline;
+- HAPPO no-graph heterogeneous-policy baseline;
 - EA-RG-MAPPO.
 
-The current `happo` code path is intentionally named HAPPO-style. Do not describe it as standard HAPPO unless the original HAPPO objective and update correction are implemented or a trusted public implementation is integrated.
+The current `happo` code path implements sequential heterogeneous-agent PPO updates with the HAPPO previous-agent joint-ratio correction. Earlier runs produced before this correction are historical HAPPO-style diagnostics and must not be mixed into formal paper evidence.
 
 ## Repository Layout
 
@@ -125,7 +125,7 @@ D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/check_training_progress.py -
 
 The active formalization path is:
 
-1. Complete dev-1M seed-0 training for MAPPO, Single-Graph, EA-RG-MAPPO, and HAPPO-style.
+1. Re-run/continue dev-1M training with the corrected HAPPO baseline and keep pre-correction HAPPO-style outputs out of formal comparisons.
 2. Run validation checkpoint sweeps only.
 3. Freeze checkpoint-selection and training-budget decisions.
 4. Expand to more training seeds.

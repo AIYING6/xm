@@ -1,0 +1,5 @@
+method,checkpoint_update,success,recovery,recovery_steps,tracking_during_failure,connectivity_during_failure,timeout,collision,selection_score
+EA-RG-MAPPO,1600,0.89,0.89,18.9663,0.562743,0.332292,0.11,0,960.034
+Single-Graph MAPPO,3907,0.8,0.8,19.4875,0.819542,0.303333,0.2,0,860.513
+MAPPO/no-graph,3800,0.6,0.6,17.8667,0.404787,0.301625,0.4,0,642.133
+HAPPO,900,0.08,0.08,79.875,0.122026,0.0708423,0.92,0,8.125

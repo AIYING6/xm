@@ -28,11 +28,12 @@ from algorithms.ri_gmappo.simple_ri_gmappo import (  # noqa: E402
 
 
 class HAPPOBaselineAgent(nn.Module):
-    """Minimal role-heterogeneous HAPPO-style baseline.
+    """Role-heterogeneous no-graph HAPPO baseline.
 
-    Each blue UAV owns a separate no-graph actor/critic. The training update is
-    sequential over agents. This is intentionally a no-graph external baseline,
-    not a variant of the proposed multi-relation graph method.
+    Each blue UAV owns a separate actor/centralized critic pair. The update is
+    sequential over agents and uses the HAPPO joint-ratio correction in the
+    policy objective. This remains a no-graph external baseline, not a variant
+    of the proposed multi-relation graph method.
     """
 
     def __init__(
@@ -192,6 +193,19 @@ def save_happo_training_checkpoint(
     )
 
 
+def happo_policy_loss(
+    *,
+    ratio: torch.Tensor,
+    prefix_ratio: torch.Tensor,
+    advantage: torch.Tensor,
+    clip_coef: float,
+) -> torch.Tensor:
+    """HAPPO clipped surrogate with previous-agent joint-ratio correction."""
+    unclipped = prefix_ratio * ratio * advantage
+    clipped = prefix_ratio * torch.clamp(ratio, 1.0 - clip_coef, 1.0 + clip_coef) * advantage
+    return -torch.min(unclipped, clipped).mean()
+
+
 def update_happo_policy(
     agent: HAPPOBaselineAgent,
     optimizers: list[optim.Optimizer],
@@ -216,12 +230,13 @@ def update_happo_policy(
     returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
-    losses, policy_losses, value_losses, entropies = [], [], [], []
+    losses, policy_losses, value_losses, entropies, prefix_ratios = [], [], [], [], []
     indices = np.arange(num_graphs)
     for _ in range(cfg.ppo_epochs):
         np.random.shuffle(indices)
         for start in range(0, num_graphs, cfg.minibatch_graphs):
             mb = indices[start : start + cfg.minibatch_graphs]
+            prefix_ratio = torch.ones(len(mb), dtype=torch.float32, device=device)
             for agent_id in range(num_agents):
                 _, new_logp, entropy, values = agent.get_single_action_and_value(
                     agent_id,
@@ -235,9 +250,12 @@ def update_happo_policy(
                     relation_adj=relation_adj[mb],
                 )
                 ratio = (new_logp - old_logp[mb, agent_id]).exp()
-                pg_loss1 = -advantages[mb, agent_id] * ratio
-                pg_loss2 = -advantages[mb, agent_id] * torch.clamp(ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef)
-                policy_loss = torch.max(pg_loss1, pg_loss2).mean()
+                policy_loss = happo_policy_loss(
+                    ratio=ratio,
+                    prefix_ratio=prefix_ratio.detach(),
+                    advantage=advantages[mb, agent_id],
+                    clip_coef=cfg.clip_coef,
+                )
                 value_loss = 0.5 * (returns[mb, agent_id] - values).pow(2).mean()
                 entropy_loss = entropy.mean()
                 loss = policy_loss + cfg.value_coef * value_loss - cfg.entropy_coef * entropy_loss
@@ -247,10 +265,25 @@ def update_happo_policy(
                 nn.utils.clip_grad_norm_(agent.policies[agent_id].parameters(), cfg.max_grad_norm)
                 optimizers[agent_id].step()
 
+                with torch.no_grad():
+                    _, updated_logp, _, _ = agent.get_single_action_and_value(
+                        agent_id,
+                        obs[mb],
+                        node_feat[mb],
+                        edge_feat[mb],
+                        role[mb],
+                        adj[mb],
+                        share_obs[mb],
+                        action=actions[mb, agent_id],
+                        relation_adj=relation_adj[mb],
+                    )
+                    prefix_ratio = prefix_ratio * (updated_logp - old_logp[mb, agent_id]).exp()
+
                 losses.append(float(loss.detach().cpu()))
                 policy_losses.append(float(policy_loss.detach().cpu()))
                 value_losses.append(float(value_loss.detach().cpu()))
                 entropies.append(float(entropy_loss.detach().cpu()))
+                prefix_ratios.append(float(prefix_ratio.mean().detach().cpu()))
     return {
         "loss": float(np.mean(losses)),
         "policy_loss": float(np.mean(policy_losses)),
@@ -258,6 +291,7 @@ def update_happo_policy(
         "entropy": float(np.mean(entropies)),
         "intent_loss": 0.0,
         "intent_acc": 0.0,
+        "happo_prefix_ratio_mean": float(np.mean(prefix_ratios)),
     }
 
 
@@ -306,6 +340,7 @@ def train_happo(cfg: RIGMAPPOConfig) -> Path:
         "entropy",
         "intent_loss",
         "intent_acc",
+        "happo_prefix_ratio_mean",
         "train_avg_reward",
         "eval_success_rate",
         "eval_collision_rate",
@@ -357,7 +392,7 @@ def train_happo(cfg: RIGMAPPOConfig) -> Path:
 
 
 def parse_args() -> RIGMAPPOConfig:
-    parser = argparse.ArgumentParser(description="Train a minimal no-graph HAPPO-style external baseline.")
+    parser = argparse.ArgumentParser(description="Train a no-graph HAPPO external baseline.")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--updates", type=int, default=1)
     parser.add_argument("--num-envs", type=int, default=1)

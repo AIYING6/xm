@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import math
 from io import StringIO
 from pathlib import Path
@@ -13,6 +14,15 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUN_ROOT = ROOT / "results" / "paper_config_runs"
 DEFAULT_METHODS = ("mappo", "single_graph", "ea_rg_mappo", "happo")
 ALLOWED_NAN_COLUMNS = {"eval_intent_acc"}
+CONFIG_DIR = ROOT / "configs" / "paper"
+
+
+def method_run_name(method: str) -> str:
+    path = CONFIG_DIR / f"{method}.yaml"
+    if not path.exists():
+        return method
+    cfg = json.loads(path.read_text(encoding="utf-8"))
+    return str(cfg.get("output_method_name", method))
 
 
 def read_rows(path: Path) -> list[dict[str, str]]:
@@ -90,7 +100,7 @@ def main() -> None:
     all_errors: list[str] = []
     for method in args.methods:
         for seed in args.seeds:
-            log_path = args.run_root / args.mode / "runs" / method / f"bc_ppo_seed{seed}" / "train_log.csv"
+            log_path = args.run_root / args.mode / "runs" / method_run_name(method) / f"bc_ppo_seed{seed}" / "train_log.csv"
             summary, errors = summarize_rows(read_rows(log_path), allowed_nan_columns=ALLOWED_NAN_COLUMNS)
             row = {"mode": args.mode, "method": method, "seed": str(seed), **summary}
             rows_out.append(row)

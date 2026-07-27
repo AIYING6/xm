@@ -62,7 +62,8 @@ def method_train_command(
 ) -> list[str]:
     scenario = main_cfg["scenario"]
     updates, num_envs, rollout_steps, eval_episodes, save_interval = mode_budget(main_cfg, mode)
-    out_dir = out_root / mode / "runs" / method_name / f"bc_ppo_seed{seed}"
+    output_method_name = method_cfg.get("output_method_name", method_name)
+    out_dir = out_root / mode / "runs" / output_method_name / f"bc_ppo_seed{seed}"
     ppo = method_cfg.get("ppo", {})
     lr = ppo.get("learning_rate_candidates", [5e-5])[0]
     entropy = ppo.get("entropy_coef_candidates", [0.001])[-1]
@@ -230,12 +231,14 @@ def happo_sweep_command(
     seeds: list[int],
     device: str,
     out_root: Path,
+    output_method_name: str | None = None,
 ) -> list[str]:
     scenario = main_cfg["scenario"]
     seed_cfg = main_cfg["seeds"]
     episodes = seed_cfg["validation_episodes_per_seed"] if split == "validation" else seed_cfg["test_episodes_per_seed"]
     base_seed = seed_cfg["validation_base_seed"] if split == "validation" else seed_cfg["test_base_seed"]
     out_dir = out_root / mode / "checkpoint_sweeps" / method_name
+    run_method_name = output_method_name or method_name
     command = [
         "python",
         "-B",
@@ -261,7 +264,7 @@ def happo_sweep_command(
         "--min-target-confidence",
         str(scenario["min_target_confidence"]),
         "--happo-root",
-        (out_root / mode / "runs" / method_name).as_posix(),
+        (out_root / mode / "runs" / run_method_name).as_posix(),
         "--checkpoint-glob",
         "happo_update_*.pt",
         "--device",
@@ -388,6 +391,7 @@ def main() -> None:
                     seeds=list(args.seeds),
                     device=args.device,
                     out_root=args.out_root,
+                    output_method_name=method_cfg.get("output_method_name", method_name),
                 )
                 rows.append(
                     {

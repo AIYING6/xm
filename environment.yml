@@ -1,0 +1,14 @@
+name: cac
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8.20
+  - pip
+  - numpy=1.24.4
+  - matplotlib=3.7.5
+  - pytest=8.3.5
+  - pip:
+      - torch==2.4.1

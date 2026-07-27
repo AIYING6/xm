@@ -121,6 +121,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-missing", action="store_true")
     parser.add_argument("--resume", action="store_true", help="Resume an interrupted sweep by skipping completed checkpoint/scenario rows.")
     parser.add_argument(
+        "--max-new-evals",
+        type=int,
+        default=None,
+        help="Stop after this many newly evaluated checkpoint/scenario pairs. Useful for chunking long sweeps.",
+    )
+    parser.add_argument(
         "--max-selection-collision-rate",
         type=float,
         default=None,
@@ -334,7 +340,7 @@ def read_existing_csv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(f))
 
 
-def completed_key(row: dict[str, object]) -> tuple[str, str, str, str, str]:
+def completed_key(row: dict[str, object]) -> tuple[str, str, str, str, str, str, str, str]:
     return (
         str(row["split"]),
         str(row["scenario"]),
@@ -492,9 +498,20 @@ def main() -> None:
     completed = {completed_key(row) for row in summary_rows}
     extra_episode_columns = ("split", "scenario", "graph_encoder", "train_seed", "checkpoint_update")
 
+    new_evals = 0
+    stop_requested = False
     for candidate in candidates:
         for scenario_name in args.scenarios:
-            key = (args.split, scenario_name, candidate.graph_encoder, str(candidate.train_seed), str(candidate.update))
+            key = (
+                args.split,
+                scenario_name,
+                candidate.graph_encoder,
+                args.graph_relation_ablation,
+                args.graph_message_ablation,
+                args.graph_input_ablation,
+                str(candidate.train_seed),
+                str(candidate.update),
+            )
             if key in completed:
                 print(
                     f"skip completed {args.split} {scenario_name} {candidate.graph_encoder} "
@@ -522,6 +539,12 @@ def main() -> None:
             completed.add(key)
             write_csv(episode_path, episode_rows, (*extra_episode_columns, *CSV_COLUMNS))
             write_csv(summary_path, summary_rows, SUMMARY_COLUMNS)
+            new_evals += 1
+            if args.max_new_evals is not None and new_evals >= args.max_new_evals:
+                stop_requested = True
+                break
+        if stop_requested:
+            break
 
     selected_rows = select_checkpoints(summary_rows)
     write_csv(episode_path, episode_rows, (*extra_episode_columns, *CSV_COLUMNS))

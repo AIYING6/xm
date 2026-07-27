@@ -18,6 +18,14 @@ def load_main_config() -> dict:
     return json.loads((CONFIG_DIR / "main_gate1.yaml").read_text(encoding="utf-8"))
 
 
+def method_run_name(method: str) -> str:
+    path = CONFIG_DIR / f"{method}.yaml"
+    if not path.exists():
+        return method
+    cfg = json.loads(path.read_text(encoding="utf-8"))
+    return str(cfg.get("output_method_name", method))
+
+
 def expected_updates(mode: str) -> int:
     if mode == "smoke":
         return 1
@@ -43,7 +51,7 @@ def read_last_update(log_path: Path) -> int | None:
 
 def audit_method_seed(run_root: Path, mode: str, method: str, seed: int, min_update: int) -> list[str]:
     errors: list[str] = []
-    run_dir = run_root / mode / "runs" / method / f"bc_ppo_seed{seed}"
+    run_dir = run_root / mode / "runs" / method_run_name(method) / f"bc_ppo_seed{seed}"
     if not run_dir.exists():
         return [f"missing run dir: {run_dir}"]
     log_path = run_dir / "train_log.csv"
