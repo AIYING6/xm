@@ -38,9 +38,16 @@ SUMMARY_COLUMNS = (
     "success_mean",
     "post_failure_chain_recovered_mean",
     "post_failure_chain_recovered_after_loss_mean",
+    "post_failure_fresh_info_recovered_mean",
+    "post_failure_fresh_info_acquired_without_prior_loss_mean",
+    "post_failure_fresh_direct_recovered_mean",
+    "post_failure_fresh_comm_recovered_mean",
+    "post_failure_post_delivered_old_info_recovered_mean",
+    "post_failure_stale_cache_recovered_mean",
     "delayed_recovery_min_step",
     "delayed_recovery_mean",
     "post_failure_chain_recovery_steps_mean",
+    "post_failure_fresh_info_recovery_steps_mean",
     "delayed_recovery_steps_mean",
     "chain_closed_during_failure_rate_mean",
     "tracking_during_failure_rate_mean",
@@ -76,9 +83,16 @@ SELECTION_COLUMNS = (
     "selection_success_weight",
     "post_failure_chain_recovered_mean",
     "post_failure_chain_recovered_after_loss_mean",
+    "post_failure_fresh_info_recovered_mean",
+    "post_failure_fresh_info_acquired_without_prior_loss_mean",
+    "post_failure_fresh_direct_recovered_mean",
+    "post_failure_fresh_comm_recovered_mean",
+    "post_failure_post_delivered_old_info_recovered_mean",
+    "post_failure_stale_cache_recovered_mean",
     "delayed_recovery_min_step",
     "delayed_recovery_mean",
     "post_failure_chain_recovery_steps_mean",
+    "post_failure_fresh_info_recovery_steps_mean",
     "delayed_recovery_steps_mean",
     "success_mean",
     "collision_mean",
@@ -166,12 +180,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--selection-metric",
-        choices=("legacy_recovery", "delayed_recovery"),
+        choices=("legacy_recovery", "delayed_recovery", "fresh_info_recovery"),
         default="legacy_recovery",
         help=(
             "Checkpoint-selection metric. legacy_recovery preserves the original "
             "score; delayed_recovery selects using first post-failure chain closure "
-            "at or after --delayed-recovery-min-step."
+            "at or after --delayed-recovery-min-step; fresh_info_recovery selects "
+            "stable post-failure recovery with attacker fresh target information."
         ),
     )
     parser.add_argument(
@@ -204,6 +219,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=0,
         help="Optional minimum environment step before chain closure can terminate an episode as success.",
+    )
+    parser.add_argument(
+        "--attack-hold-steps",
+        type=int,
+        default=4,
+        help="Number of consecutive chain-closed steps required by the environment success condition.",
     )
     return parser.parse_args()
 
@@ -315,6 +336,7 @@ def make_eval_args(
         failed_blue_agent=scenario.failed_blue_agent,
         node_failure_start_step=scenario.node_failure_start_step,
         node_failure_duration_steps=scenario.node_failure_duration_steps,
+        attack_hold_steps=args.attack_hold_steps,
         min_success_step=args.min_success_step,
         stochastic=False,
         allow_random_policy=False,
@@ -337,6 +359,15 @@ def mean(rows: list[dict[str, object]], key: str) -> float:
 
 def mean_recovery_steps(rows: list[dict[str, object]]) -> float:
     values = [float(row["post_failure_chain_recovery_steps"]) for row in rows if float(row["post_failure_chain_recovered"]) > 0.5]
+    return float(np.mean(values)) if values else float("inf")
+
+
+def mean_fresh_info_recovery_steps(rows: list[dict[str, object]]) -> float:
+    values = [
+        float(row["post_failure_fresh_info_recovery_steps"])
+        for row in rows
+        if float(row.get("post_failure_fresh_info_recovered", 0.0)) > 0.5
+    ]
     return float(np.mean(values)) if values else float("inf")
 
 
@@ -382,13 +413,27 @@ def summarize_rows(
 ) -> dict[str, str]:
     recovery = mean(rows, "post_failure_chain_recovered")
     recovered_after_loss = mean(rows, "post_failure_chain_recovered_after_loss")
+    fresh_info_recovered = mean(rows, "post_failure_fresh_info_recovered")
+    fresh_without_prior_loss = mean(rows, "post_failure_fresh_info_acquired_without_prior_loss")
+    fresh_direct_recovered = mean(rows, "post_failure_fresh_direct_recovered")
+    fresh_comm_recovered = mean(rows, "post_failure_fresh_comm_recovered")
+    post_delivered_old_recovered = mean(rows, "post_failure_post_delivered_old_info_recovered")
+    stale_cache_recovered = mean(rows, "post_failure_stale_cache_recovered")
     delayed = mean_delayed_recovery(rows, args.delayed_recovery_min_step)
     recovery_steps = mean_recovery_steps(rows)
+    fresh_info_steps = mean_fresh_info_recovery_steps(rows)
     delayed_steps = mean_delayed_recovery_steps(rows, args.delayed_recovery_min_step)
     success = mean(rows, "success")
     collision = mean(rows, "collision")
-    score_recovery = delayed if args.selection_metric == "delayed_recovery" else recovery
-    score_steps = delayed_steps if args.selection_metric == "delayed_recovery" else recovery_steps
+    if args.selection_metric == "fresh_info_recovery":
+        score_recovery = fresh_info_recovered
+        score_steps = fresh_info_steps
+    elif args.selection_metric == "delayed_recovery":
+        score_recovery = delayed
+        score_steps = delayed_steps
+    else:
+        score_recovery = recovery
+        score_steps = recovery_steps
     score = selection_score(
         recovery=score_recovery,
         recovery_steps=score_steps,
@@ -416,9 +461,16 @@ def summarize_rows(
         "success_mean": f"{success:.6g}",
         "post_failure_chain_recovered_mean": f"{recovery:.6g}",
         "post_failure_chain_recovered_after_loss_mean": f"{recovered_after_loss:.6g}",
+        "post_failure_fresh_info_recovered_mean": f"{fresh_info_recovered:.6g}",
+        "post_failure_fresh_info_acquired_without_prior_loss_mean": f"{fresh_without_prior_loss:.6g}",
+        "post_failure_fresh_direct_recovered_mean": f"{fresh_direct_recovered:.6g}",
+        "post_failure_fresh_comm_recovered_mean": f"{fresh_comm_recovered:.6g}",
+        "post_failure_post_delivered_old_info_recovered_mean": f"{post_delivered_old_recovered:.6g}",
+        "post_failure_stale_cache_recovered_mean": f"{stale_cache_recovered:.6g}",
         "delayed_recovery_min_step": str(args.delayed_recovery_min_step),
         "delayed_recovery_mean": f"{delayed:.6g}",
         "post_failure_chain_recovery_steps_mean": "inf" if not np.isfinite(recovery_steps) else f"{recovery_steps:.6g}",
+        "post_failure_fresh_info_recovery_steps_mean": "inf" if not np.isfinite(fresh_info_steps) else f"{fresh_info_steps:.6g}",
         "delayed_recovery_steps_mean": "inf" if not np.isfinite(delayed_steps) else f"{delayed_steps:.6g}",
         "chain_closed_during_failure_rate_mean": f"{mean(rows, 'chain_closed_during_failure_rate'):.6g}",
         "tracking_during_failure_rate_mean": f"{mean(rows, 'tracking_during_failure_rate'):.6g}",
@@ -515,8 +567,15 @@ def aggregate_suite_rows(args: argparse.Namespace, summary_rows: list[dict[str, 
         for key in (
             "post_failure_chain_recovered_mean",
             "post_failure_chain_recovered_after_loss_mean",
+            "post_failure_fresh_info_recovered_mean",
+            "post_failure_fresh_info_acquired_without_prior_loss_mean",
+            "post_failure_fresh_direct_recovered_mean",
+            "post_failure_fresh_comm_recovered_mean",
+            "post_failure_post_delivered_old_info_recovered_mean",
+            "post_failure_stale_cache_recovered_mean",
             "delayed_recovery_mean",
             "post_failure_chain_recovery_steps_mean",
+            "post_failure_fresh_info_recovery_steps_mean",
             "delayed_recovery_steps_mean",
             "success_mean",
             "chain_closed_mean",
@@ -569,8 +628,29 @@ def select_checkpoints(args: argparse.Namespace, summary_rows: list[dict[str, st
         best = max(
             eligible_rows,
             key=lambda row: (
-                parse_score(row["selection_score"]),
-                int(row["checkpoint_update"]),
+                parse_score(
+                    row.get(
+                        "post_failure_fresh_info_recovered_mean"
+                        if row.get("selection_metric") == "fresh_info_recovery"
+                        else "delayed_recovery_mean"
+                        if row.get("selection_metric") == "delayed_recovery"
+                        else "post_failure_chain_recovered_mean",
+                        "0",
+                    )
+                ),
+                -parse_score(row.get("collision_mean", "0")),
+                -parse_score(
+                    row.get(
+                        "post_failure_fresh_info_recovery_steps_mean"
+                        if row.get("selection_metric") == "fresh_info_recovery"
+                        else "delayed_recovery_steps_mean"
+                        if row.get("selection_metric") == "delayed_recovery"
+                        else "post_failure_chain_recovery_steps_mean",
+                        "inf",
+                    )
+                ),
+                parse_score(row.get("success_mean", "0")),
+                -int(row["checkpoint_update"]),
             ),
         )
         selected.append(
@@ -596,9 +676,30 @@ def select_checkpoints(args: argparse.Namespace, summary_rows: list[dict[str, st
                 "post_failure_chain_recovered_after_loss_mean": best.get(
                     "post_failure_chain_recovered_after_loss_mean", ""
                 ),
+                "post_failure_fresh_info_recovered_mean": best.get(
+                    "post_failure_fresh_info_recovered_mean", ""
+                ),
+                "post_failure_fresh_info_acquired_without_prior_loss_mean": best.get(
+                    "post_failure_fresh_info_acquired_without_prior_loss_mean", ""
+                ),
+                "post_failure_fresh_direct_recovered_mean": best.get(
+                    "post_failure_fresh_direct_recovered_mean", ""
+                ),
+                "post_failure_fresh_comm_recovered_mean": best.get(
+                    "post_failure_fresh_comm_recovered_mean", ""
+                ),
+                "post_failure_post_delivered_old_info_recovered_mean": best.get(
+                    "post_failure_post_delivered_old_info_recovered_mean", ""
+                ),
+                "post_failure_stale_cache_recovered_mean": best.get(
+                    "post_failure_stale_cache_recovered_mean", ""
+                ),
                 "delayed_recovery_min_step": best.get("delayed_recovery_min_step", ""),
                 "delayed_recovery_mean": best.get("delayed_recovery_mean", ""),
                 "post_failure_chain_recovery_steps_mean": best["post_failure_chain_recovery_steps_mean"],
+                "post_failure_fresh_info_recovery_steps_mean": best.get(
+                    "post_failure_fresh_info_recovery_steps_mean", ""
+                ),
                 "delayed_recovery_steps_mean": best.get("delayed_recovery_steps_mean", ""),
                 "success_mean": best["success_mean"],
                 "collision_mean": best.get("collision_mean", ""),

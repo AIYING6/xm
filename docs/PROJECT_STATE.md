@@ -754,3 +754,215 @@ balanced offset demonstrations used by the other methods. A HAPPO BC smoke and a
 BC-initialized 1-update PPO smoke both passed, with all 84 HAPPO tensors loaded
 from the BC checkpoint. The next HAPPO comparison should therefore use BC +
 PPO, not random initialization.
+
+The HAPPO BC + PPO development comparison for seeds 0/1/2 is complete and
+documented in `docs/happo_strong_protocol_comparison_summary.md`. With the same
+strong recovery protocol and suite-level checkpoint selection, HAPPO selected
+mean success/recovery/delayed-recovery/collision is
+`0.167/0.258/0.083/0.017`. HAPPO is therefore a useful external MARL baseline,
+but it remains weaker than EA, Single-Graph, and MAPPO/no-graph in this
+development setting. Next, merge the four-method strong-protocol comparison
+table and then decide whether to launch longer 1M/2M runs immediately or first
+run the role-gate prior 100-update diagnostic.
+
+The four-method strong-protocol comparison table is now documented in
+`docs/strong_protocol_four_method_comparison.md`. Development validation means
+are: EA-RG-MAPPO `0.625/0.717/0.342/0.000`
+(success/recovery/delayed/collision), Single-Graph MAPPO
+`0.675/0.783/0.358/0.008`, MAPPO/no-graph `0.383/0.517/0.333/0.008`, and HAPPO
+`0.167/0.258/0.083/0.017`. The result supports graph-based coordination over
+no-graph MARL baselines, but it does not yet support a broad EA dominance claim
+over Single-Graph MAPPO. Next priority is to run the role-gate prior diagnostic
+before committing expensive 1M/2M formal training.
+
+Role-gate prior seed0 dev100 is complete and documented in
+`docs/role_gate_prior_seed0_dev100_summary.md`. The selected checkpoint is
+update 60 with suite success/recovery/delayed-recovery/collision
+`0.925/0.950/0.525/0.000`, compared with original EA seed0
+`0.575/0.725/0.275/0.000`. Role-pair gate diagnostics on the selected checkpoint
+show mean/max absolute gate deviation from 0.5 of `0.025573/0.121487`, much
+larger than the previous near-neutral gate result (`~0.000154`). This is a
+strong one-seed signal that the role-gate prior may improve both performance and
+mechanism evidence. Next, run the same dev100 protocol for seeds 1 and 2 before
+promoting it to the main long-budget method.
+
+The gate-prior dev100 three-seed decision is complete and documented in
+`docs/gate_prior_dev100_three_seed_decision.md`. Original EA was fairly extended
+to 100 updates for seeds 0/1/2 and compared against gate-prior using the same
+20/40/60/80/100 checkpoint set and suite-level selection. Gate-prior selected
+mean success/recovery/delayed-recovery/collision is
+`0.783/0.850/0.417/0.000`; original EA is `0.625/0.725/0.317/0.033`. Gate-prior
+improves success and recovery on all seeds, improves delayed recovery on seeds 0
+and 1, and has zero selected-checkpoint collisions. Decision: promote
+`role_gate_prior_strength=0.4` as the current main EA-RG-MAPPO-S candidate and
+stop further gate tuning. Next, freeze the common safety, BC, reward, and
+checkpoint-selection protocol before formal budget studies.
+
+The formal protocol freeze is documented in `docs/formal_protocol_freeze.md`.
+Frozen items include the main gate-prior candidate, four baseline methods,
+strict-sensing relay-failure scenario suite, BC settings, PPO settings, reward
+and safety settings, checkpoint selection policy, and validation/test split
+rules. Development base seed `291000` must not be treated as final held-out
+evidence. Formal validation should use a new base seed such as `391000`, and the
+final held-out test should use a separate base seed such as `491000` exactly
+once. Next, prepare the common-budget study commands for 1M/2M runs and choose a
+shared `B*` before five-seed formal training.
+
+Formal budget-study command templates are documented in
+`docs/formal_budget_study_commands.md`. The frozen budget mapping is 1M =
+approximately 977 updates and 2M = approximately 1954 updates with
+`num_envs=8` and `rollout_steps=128`. The budget study should first run seeds
+0/1/2 for the four methods under the frozen protocol, evaluate validation with
+base seed `391000`, and choose one shared `B*` for all methods. The next
+execution step is to launch the 1M budget-study runs; do not run final held-out
+test before `B*` and five-seed formal checkpoints are frozen.
+
+Formal budget-study execution has started and is tracked in
+`docs/formal_budget_progress.md`. EA-RG-MAPPO-S with role-gate prior seed0 BC is
+complete, and its 1M PPO run has been restarted with safer 40-update chunks and
+`save_interval=20` after an initial non-resumable partial attempt. Current seed0
+progress is `400/977` updates, with saved candidate checkpoints at updates 200
+and 400. Online monitor success at updates 200/300/400 is `0.8/1.0/0.8` with
+zero collision, but this is not formal checkpoint-selection evidence. Next,
+continue seed0 from `actor_critic_training_state_update_0400.pt` to 977, then
+run seed1/2 for the same method before the fixed validation suite.
+
+P0 information-boundary hardening was extended after manuscript review. The
+environment now separates evaluation-only `attack_window`, computed from true
+target state, from actor-visible `local_attack_window`, computed only from
+legal target estimates and forced to zero when an attacker lacks direct sensing
+or a valid target cache under strict sensing. Actor observations, graph node
+features, attack edges, and attacker-originated task-support edges now use
+`local_attack_window`; reward, critic, termination, and evaluation may still use
+the true `attack_window`. A new regression test,
+`test_local_attack_window_requires_actor_visible_target_information`, was added.
+`D:/Anaconda/envs/.conda/envs/cac/python.exe -m pytest
+tests/test_gate1_communication_feasibility.py -q` passes with `29 passed`.
+Checkpoints trained before this hardening should remain development evidence
+unless rerun or explicitly audited under the new actor information boundary.
+
+The third manuscript-review P0 items were then addressed. Relay-originated
+task-support evidence now uses only the relay's own updated target information;
+the previous shortcut through a teammate's current private target-information
+state was removed from `_has_target_information` / `_active_support_edge`.
+Post-failure recovery delay now uses the start of the first stable
+`attack_hold_steps`-length closure window rather than a one-step closure event,
+and evaluation scripts expose/pass `attack_hold_steps=4` on formal paths. New
+regression tests cover relay-private-state leakage, stable-window recovery
+metrics, and fresh-information versus stale-cache recovery. `D:/Anaconda/envs/.conda/envs/cac/python.exe -m pytest
+tests/test_gate1_communication_feasibility.py -q` now passes with `33 passed`.
+The manuscript and protocol docs were updated to make Parameter-Matched
+Single-Graph MAPPO a required main baseline and to freeze the primary comparison
+as EA-RG-MAPPO-S versus Parameter-Matched Single-Graph on suite-level delayed
+recovery under collision reporting.
+
+Formal-budget protocol audit was completed after the P0 information-boundary
+hardening. `RIGMAPPOConfig`, RI-GMAPPO PPO training, RI-GMAPPO BC pretraining,
+single-checkpoint evaluation, and checkpoint-sweep evaluation now explicitly
+pass `attack_hold_steps` into the 3DOF environment instead of relying only on
+the environment default. HAPPO BC and HAPPO PPO training now do the same, while
+HAPPO evaluation already had the pass-through. The Gate 1 regression suite now
+includes `test_ri_config_passes_attack_hold_steps_to_3d_env`, and
+`D:/Anaconda/envs/.conda/envs/cac/python.exe -m pytest -q
+tests/test_gate1_communication_feasibility.py` passes with `33 passed`. A
+one-update strict-sensing RI-GMAPPO training smoke, a minimal HAPPO BC smoke,
+and a minimal HAPPO training smoke with `attack_hold_steps=4` also passed under
+`results/protocol_hardening_smoke/`. The completed seed0 1M run and the seed1
+partial 400-update run in `results/paper_config_runs/formal_budget/` are kept as
+development/continuity artifacts only; the next formal-budget execution must
+restart from a clean post-audit run directory before any checkpoint is treated
+as formal validation or test evidence.
+
+Clean post-audit formal-budget execution has restarted under
+`results/paper_config_runs/formal_budget_post_audit/ea_rg_mappo_s_gate_prior/`.
+Seed0 BC is complete with final action accuracy about `0.496` and demonstration
+success about `0.908`. Seed0 PPO has reached `40/977` updates with training
+states saved at updates 20 and 40. Online 5-episode monitor success at updates
+20/40 is `1.0/1.0` with zero collision, but these values are only health checks;
+the next execution step is to continue seed0 PPO to the 1M checkpoint set
+`200/400/600/800/977`, then evaluate the fixed validation suite.
+
+Clean post-audit seed0 PPO has advanced to `80/977` updates. Additional
+training states are saved at updates 60 and 80, and online 5-episode monitor
+success remains `1.0` with zero collision at updates 60/80. These are still
+health checks only; continue toward the first formal candidate checkpoint at
+update 200 before suite-level validation.
+
+Clean post-audit seed0 PPO has advanced to `120/977` updates. Training states
+are saved through update 120. Online monitor success/collision/timeout at
+updates 100 and 120 is `0.8/0.0/0.2` and `1.0/0.0/0.0`, respectively; this
+remains training health monitoring rather than checkpoint-selection evidence.
+Continue from `actor_critic_training_state_update_0120.pt` toward update 200.
+
+Clean post-audit seed0 PPO has reached the first formal budget candidate at
+`200/977` updates under
+`results/paper_config_runs/formal_budget_post_audit/ea_rg_mappo_s_gate_prior/ppo_seed0_1m/`.
+The run now contains `actor_critic_update_0200.pt` and a matching training state
+for continuation. Online monitor success/collision/timeout at updates 140, 160,
+180, and 200 is `1.0/0.0/0.0`, `1.0/0.0/0.0`, `1.0/0.0/0.0`, and
+`0.8/0.0/0.2`. These remain health checks only; continue to candidate
+checkpoints 400, 600, 800, and 977 before fixed validation selection.
+
+Fourth-review P0 hardening started on 2026-07-29. The review correctly noted
+that ordinary post-failure recovery can still be inflated by attack-platform
+target caches created before relay failure. The code now logs attacker cache
+generation/delivery times and separates `post_failure_fresh_info_recovered`
+from `post_failure_stale_cache_recovered`; checkpoint sweeps can use
+`selection_metric=fresh_info_recovery`. The Gate 1 communication/information
+boundary regression suite passes with `33 passed`, the 3DOF smoke test passes,
+and the touched environment/evaluation scripts compile. Protocol and manuscript
+docs now treat fresh-information recovery as the primary checkpoint-selection
+metric, while delayed recovery and stale-cache recovery are auxiliary
+diagnostics. At that point, remaining fourth-review items before formal multi-seed evidence were:
+freeze target-invisible zero/mask semantics, delete or mathematically define
+attack-edge semantics, correct the gamma-update notation, complete the
+communication queue/cache/confidence formulas, formalize role-pair gate/prior
+equations, and align PPO/HAPPO losses with code.
+
+Fourth-review hardening continued by freezing actor graph target masking:
+under `strict_target_sensing + agent_target_info_bottleneck`, the shared actor
+graph target node is now always the public target prior with zero velocity and
+does not expose the true target state or an `any_detected` flag. Legal target
+information remains in the detecting/receiving agent's local observation and
+target cache. The local attack-window union edge is documented as an auxiliary
+edge derived from `local_attack_window`, not as a fourth relation or a
+contribution. The 3DOF gamma update notation was also corrected in the methods
+draft by defining \(k_\gamma=0.35\,s^{-1}\). Gate 1 tests pass with `33
+passed` after this stricter mask update. Remaining fourth-review items before
+formal multi-seed evidence are now narrowed to: complete communication
+queue/cache/confidence formulas, formalize role-pair gate/prior equations, and
+align PPO/HAPPO losses with code.
+
+Those remaining fourth-review documentation P0 items were then completed in
+`docs/formal_methods_experiments_latex_zh.md`: communication delivery queues,
+target-cache replacement, confidence decay, role-pair sigmoid gates, gate-prior
+initialization, MAPPO minimization loss, and the HAPPO prefix-ratio baseline
+loss are now written to match the code. The fourth-review hardening stage is
+therefore ready for a final lightweight validation pass and then continuation
+of clean post-audit formal-budget training. Because the shared actor graph
+target mask changed after the previous clean post-audit seed0 run had reached
+200/977 updates, that run is now a health/development artifact rather than
+formal budget evidence. Formal budget training should restart from BC in a new
+post-graph-mask directory and use `selection_metric=fresh_info_recovery`. Do
+not run held-out test yet.
+
+Fifth-review FreshRec hardening started on 2026-07-30. The review correctly
+identified that `max(generation_step, delivery_step) >= failure_start` can
+misclassify a pre-failure observation delivered after failure as fresh
+information. Evaluation now defines `post_failure_fresh_info_recovered` as
+after-loss, generation-based, continuous-window recovery: for every step in the
+`attack_hold_steps` recovery window, an attacking platform must be in the true
+attack window and its currently effective target cache must have
+`generation_step >= node_failure_start_step`. Post-failure delivery of
+pre-failure information is logged separately as
+`post_failure_post_delivered_old_info_recovered`; maintained episodes with
+fresh information but no prior loss are logged as
+`post_failure_fresh_info_acquired_without_prior_loss`; direct and communicated
+fresh recovery are split into `post_failure_fresh_direct_recovered` and
+`post_failure_fresh_comm_recovered`. Checkpoint sweep summaries and selected
+checkpoint CSVs now include these fields, and selection tie-breaks follow the
+frozen order: higher fresh recovery, lower collision, shorter fresh recovery
+time, higher success, earlier checkpoint. Gate 1 tests pass with `33 passed`
+after this metric change. Formal budget training must restart after this
+hardening; pre-Fifth-review validation selections are development evidence
+only.

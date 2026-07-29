@@ -66,6 +66,13 @@ CSV_COLUMNS = (
     "post_failure_chain_maintained",
     "post_failure_chain_recovered_after_loss",
     "post_failure_chain_unrecovered",
+    "post_failure_fresh_info_recovered",
+    "post_failure_fresh_info_recovery_steps",
+    "post_failure_fresh_info_acquired_without_prior_loss",
+    "post_failure_fresh_direct_recovered",
+    "post_failure_fresh_comm_recovered",
+    "post_failure_post_delivered_old_info_recovered",
+    "post_failure_stale_cache_recovered",
     "post_failure_first_chain_step",
     "chain_closed_during_failure_rate",
     "tracking_during_failure_rate",
@@ -110,6 +117,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         failed_blue_agent=args.failed_blue_agent,
         node_failure_start_step=args.node_failure_start_step,
         node_failure_duration_steps=args.node_failure_duration_steps,
+        attack_hold_steps=args.attack_hold_steps,
         min_success_step=args.min_success_step,
         graph_relation_ablation=args.graph_relation_ablation,
         graph_encoder=args.graph_encoder,
@@ -192,6 +200,13 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
             "post_failure_chain_maintained": -1.0,
             "post_failure_chain_recovered_after_loss": -1.0,
             "post_failure_chain_unrecovered": -1.0,
+            "post_failure_fresh_info_recovered": -1.0,
+            "post_failure_fresh_info_recovery_steps": -1.0,
+            "post_failure_fresh_info_acquired_without_prior_loss": -1.0,
+            "post_failure_fresh_direct_recovered": -1.0,
+            "post_failure_fresh_comm_recovered": -1.0,
+            "post_failure_post_delivered_old_info_recovered": -1.0,
+            "post_failure_stale_cache_recovered": -1.0,
             "post_failure_first_chain_step": -1.0,
             "chain_closed_during_failure_rate": -1.0,
             "tracking_during_failure_rate": -1.0,
@@ -209,12 +224,86 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
             first_chain_step = step
             break
     final_step = float(step_infos[-1]["step"]) if step_infos else start
+    hold_steps = max(1.0, float(getattr(args, "attack_hold_steps", 1)))
+    stable_window_start = max(start, first_chain_step - hold_steps + 1.0) if first_chain_step >= 0.0 else -1.0
     recovered = float(first_chain_step >= 0.0)
-    recovery_steps = first_chain_step - start if recovered > 0.5 else max(0.0, final_step - start)
+    recovery_steps = stable_window_start - start if recovered > 0.5 else max(0.0, final_step - start)
     recovered_only_steps = recovery_steps if recovered > 0.5 else -1.0
     maintained = float(chain_at_failure_start)
     recovered_after_loss = float(recovered > 0.5 and not chain_at_failure_start)
     unrecovered = float(recovered <= 0.5)
+
+    def has_chain_loss_before(window_start: float) -> bool:
+        for item in step_infos:
+            step = float(item["step"])
+            if start <= step < window_start and float(item.get("chain_closed", 0.0)) <= 0.5:
+                return True
+        return not chain_at_failure_start
+
+    def fresh_closure(item: dict[str, float]) -> bool:
+        return (
+            float(item.get("attacker_info_attack_window", 0.0)) > 0.5
+            and float(item.get("attacker_window_cache_generation_step_max", -1.0)) >= start
+        )
+
+    def post_delivered_old_closure(item: dict[str, float]) -> bool:
+        return (
+            float(item.get("attacker_info_attack_window", 0.0)) > 0.5
+            and 0.0 <= float(item.get("attacker_window_cache_generation_step_max", -1.0)) < start
+            and float(item.get("attacker_window_cache_delivery_step_max", -1.0)) >= start
+        )
+
+    fresh_rec_end = -1.0
+    fresh_window: list[dict[str, float]] = []
+    old_delivered_rec_end = -1.0
+    for end_idx, info in enumerate(step_infos):
+        step = float(info["step"])
+        if step < start + hold_steps - 1.0:
+            continue
+        window = step_infos[max(0, end_idx - int(hold_steps) + 1) : end_idx + 1]
+        if len(window) < int(hold_steps):
+            continue
+        window_start = float(window[0]["step"])
+        if window_start < start:
+            continue
+        if fresh_rec_end < 0.0 and all(fresh_closure(item) for item in window):
+            fresh_rec_end = step
+            fresh_window = window
+        if old_delivered_rec_end < 0.0 and all(post_delivered_old_closure(item) for item in window):
+            old_delivered_rec_end = step
+        if fresh_rec_end >= 0.0 and old_delivered_rec_end >= 0.0:
+            break
+
+    fresh_window_start = fresh_rec_end - hold_steps + 1.0 if fresh_rec_end >= 0.0 else -1.0
+    fresh_after_loss = float(fresh_rec_end >= 0.0 and has_chain_loss_before(fresh_window_start))
+    fresh_without_prior_loss = float(fresh_rec_end >= 0.0 and not has_chain_loss_before(fresh_window_start))
+    fresh_info_recovery_steps = fresh_window_start - start if fresh_after_loss > 0.5 else -1.0
+    fresh_direct = float(
+        fresh_after_loss > 0.5
+        and any(
+            float(item.get("attacker_window_direct_info", 0.0)) > 0.5
+            and float(item.get("attacker_window_cache_generation_step_max", -1.0)) >= start
+            for item in fresh_window
+        )
+    )
+    fresh_comm = float(
+        fresh_after_loss > 0.5
+        and any(
+            float(item.get("attacker_window_comm_info", 0.0)) > 0.5
+            and float(item.get("attacker_window_cache_generation_step_max", -1.0)) >= start
+            and float(item.get("attacker_window_cache_delivery_step_max", -1.0)) >= start
+            for item in fresh_window
+        )
+    )
+    old_delivered_window_start = old_delivered_rec_end - hold_steps + 1.0 if old_delivered_rec_end >= 0.0 else -1.0
+    old_delivered_recovered = float(
+        old_delivered_rec_end >= 0.0 and has_chain_loss_before(old_delivered_window_start)
+    )
+    stale_cache_recovered = float(
+        recovered_after_loss > 0.5
+        and fresh_after_loss <= 0.5
+        and old_delivered_recovered <= 0.5
+    )
     return {
         "post_failure_chain_recovered": recovered,
         "post_failure_chain_recovery_steps": float(recovery_steps),
@@ -223,6 +312,13 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
         "post_failure_chain_maintained": maintained,
         "post_failure_chain_recovered_after_loss": recovered_after_loss,
         "post_failure_chain_unrecovered": unrecovered,
+        "post_failure_fresh_info_recovered": fresh_after_loss,
+        "post_failure_fresh_info_recovery_steps": float(fresh_info_recovery_steps),
+        "post_failure_fresh_info_acquired_without_prior_loss": fresh_without_prior_loss,
+        "post_failure_fresh_direct_recovered": fresh_direct,
+        "post_failure_fresh_comm_recovered": fresh_comm,
+        "post_failure_post_delivered_old_info_recovered": old_delivered_recovered,
+        "post_failure_stale_cache_recovered": stale_cache_recovered,
         "post_failure_first_chain_step": float(first_chain_step),
         "chain_closed_during_failure_rate": mean_metric_where(
             step_infos, "chain_closed", "node_failure_active", empty_value=0.0
@@ -400,6 +496,13 @@ def write_summary(rows: list[dict[str, float | int | str | bool]], out_md: Path,
         "post_failure_chain_recovery_steps",
         "post_failure_chain_recovery_steps_censored",
         "post_failure_chain_recovered_only_steps",
+        "post_failure_fresh_info_recovered",
+        "post_failure_fresh_info_recovery_steps",
+        "post_failure_fresh_info_acquired_without_prior_loss",
+        "post_failure_fresh_direct_recovered",
+        "post_failure_fresh_comm_recovered",
+        "post_failure_post_delivered_old_info_recovered",
+        "post_failure_stale_cache_recovered",
         "chain_closed_during_failure_rate",
         "tracking_during_failure_rate",
         "connectivity_during_failure",
@@ -485,6 +588,7 @@ def main() -> None:
     parser.add_argument("--node-failure-start-step", type=int, default=0)
     parser.add_argument("--node-failure-duration-steps", type=int, default=0)
     parser.add_argument("--min-success-step", type=int, default=0)
+    parser.add_argument("--attack-hold-steps", type=int, default=4)
     parser.add_argument("--stochastic", action="store_true")
     parser.add_argument("--allow-random-policy", action="store_true")
     parser.add_argument("--hidden-dim", type=int, default=128)

@@ -59,6 +59,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         failed_blue_agent=args.failed_blue_agent,
         node_failure_start_step=args.node_failure_start_step,
         node_failure_duration_steps=args.node_failure_duration_steps,
+        attack_hold_steps=args.attack_hold_steps,
         min_success_step=args.min_success_step,
         graph_encoder="no_graph",
         graph_relation_ablation="none",
@@ -252,6 +253,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--node-failure-start-step", type=int, default=0)
     parser.add_argument("--node-failure-duration-steps", type=int, default=0)
     parser.add_argument("--min-success-step", type=int, default=0)
+    parser.add_argument("--attack-hold-steps", type=int, default=4)
     parser.add_argument("--stochastic", action="store_true")
     parser.add_argument("--allow-random-policy", action="store_true")
     parser.add_argument("--hidden-dim", type=int, default=64)

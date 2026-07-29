@@ -69,6 +69,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--safety-proximity-distance", type=float, default=0.0)
     parser.add_argument("--safety-proximity-penalty-weight", type=float, default=0.0)
     parser.add_argument("--attack-geometry-reward-weight", type=float, default=0.0)
+    parser.add_argument("--attack-hold-steps", type=int, default=4)
     parser.add_argument("--min-success-step", type=int, default=0)
     parser.add_argument("--post-loss-chain-reclosure-reward-weight", type=float, default=0.0)
     parser.add_argument("--post-loss-chain-reclosure-min-step", type=int, default=0)
@@ -84,6 +85,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--out-dir", type=str, default=str(ROOT / "results" / "ri_gmappo"))
     parser.add_argument("--save-interval", type=int, default=10)
     parser.add_argument("--save-snapshots", action="store_true")
+    parser.add_argument("--init-checkpoint", type=str, default=None)
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--update-offset", type=int, default=0)
     parser.add_argument("--append-log", action="store_true")
@@ -146,6 +148,7 @@ def parse_args() -> RIGMAPPOConfig:
         safety_proximity_distance=args.safety_proximity_distance,
         safety_proximity_penalty_weight=args.safety_proximity_penalty_weight,
         attack_geometry_reward_weight=args.attack_geometry_reward_weight,
+        attack_hold_steps=args.attack_hold_steps,
         min_success_step=args.min_success_step,
         post_loss_chain_reclosure_reward_weight=args.post_loss_chain_reclosure_reward_weight,
         post_loss_chain_reclosure_min_step=args.post_loss_chain_reclosure_min_step,
@@ -161,6 +164,7 @@ def parse_args() -> RIGMAPPOConfig:
         out_dir=args.out_dir,
         save_interval=args.save_interval,
         save_snapshots=args.save_snapshots,
+        init_checkpoint=args.init_checkpoint,
         resume=args.resume,
         update_offset=args.update_offset,
         append_log=args.append_log,

@@ -107,6 +107,7 @@ class RIGMAPPOConfig:
     safety_proximity_distance: float = 0.0
     safety_proximity_penalty_weight: float = 0.0
     attack_geometry_reward_weight: float = 0.0
+    attack_hold_steps: int = 4
     min_success_step: int = 0
     post_loss_chain_reclosure_reward_weight: float = 0.0
     post_loss_chain_reclosure_min_step: int = 0
@@ -122,6 +123,7 @@ class RIGMAPPOConfig:
     out_dir: str = "results/ri_gmappo"
     save_interval: int = 10
     save_snapshots: bool = False
+    init_checkpoint: str | None = None
     resume: str | None = None
     update_offset: int = 0
     append_log: bool = False
@@ -665,6 +667,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 safety_proximity_distance=cfg.safety_proximity_distance,
                 safety_proximity_penalty_weight=cfg.safety_proximity_penalty_weight,
                 attack_geometry_reward_weight=cfg.attack_geometry_reward_weight,
+                attack_hold_steps=cfg.attack_hold_steps,
                 min_success_step=cfg.min_success_step,
                 post_loss_chain_reclosure_reward_weight=cfg.post_loss_chain_reclosure_reward_weight,
                 post_loss_chain_reclosure_min_step=cfg.post_loss_chain_reclosure_min_step,
@@ -937,6 +940,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     optimizer = make_optimizer(agent, cfg)
+    if cfg.init_checkpoint:
+        load_matching_state_dict(agent, cfg.init_checkpoint, device)
     if cfg.resume:
         load_training_checkpoint(agent, optimizer, cfg.resume, device)
 

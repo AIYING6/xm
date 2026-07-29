@@ -239,6 +239,7 @@ def main() -> None:
     parser.add_argument("--failed-blue-agent", type=int, default=1)
     parser.add_argument("--node-failure-start-step", type=int, default=40)
     parser.add_argument("--node-failure-duration-steps", type=int, default=80)
+    parser.add_argument("--min-success-step", type=int, default=0)
     parser.add_argument("--stochastic", action="store_true")
     parser.add_argument("--allow-random-policy", action="store_true")
     parser.add_argument("--hidden-dim", type=int, default=128)

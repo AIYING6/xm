@@ -76,6 +76,18 @@ def assert_multirelation_semantics() -> None:
     env.detected_by[:] = np.asarray([1.0, 0.0, 0.0], dtype=np.float32)
     env.comm_adj[:] = 1.0
     env.attack_window[:] = np.asarray([0.0, 0.0, 1.0], dtype=np.float32)
+    env.local_attack_window[:] = np.asarray([0.0, 0.0, 1.0], dtype=np.float32)
+    env._write_target_cache(
+        1,
+        pos=np.array([10_000.0, 0.0, 5_000.0], dtype=np.float32),
+        vel=np.array([200.0, 0.0, 0.0], dtype=np.float32),
+        source=0,
+        generation_step=env.step_count,
+        delivery_step=env.step_count,
+        hop_count=1,
+        confidence=0.9,
+        path=[0, 1],
+    )
     graph = env._get_graph_obs()
     perception, communication, support = graph["relation_adj"]
     target = env.config.num_blue
@@ -92,6 +104,8 @@ def assert_multirelation_semantics() -> None:
     env.detected_by[:] = 0.0
     env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
     env.attack_window[:] = 0.0
+    env.local_attack_window[:] = 0.0
+    env.target_cache_valid[:] = 0.0
     inactive = env._get_graph_obs()["relation_adj"][2]
     assert np.count_nonzero(inactive) == 0
 
@@ -100,6 +114,18 @@ def assert_multirelation_semantics() -> None:
     ablated.detected_by[:] = np.asarray([1.0, 0.0, 0.0], dtype=np.float32)
     ablated.comm_adj[:] = 1.0
     ablated.attack_window[:] = np.asarray([0.0, 0.0, 1.0], dtype=np.float32)
+    ablated.local_attack_window[:] = np.asarray([0.0, 0.0, 1.0], dtype=np.float32)
+    ablated._write_target_cache(
+        1,
+        pos=np.array([10_000.0, 0.0, 5_000.0], dtype=np.float32),
+        vel=np.array([200.0, 0.0, 0.0], dtype=np.float32),
+        source=0,
+        generation_step=ablated.step_count,
+        delivery_step=ablated.step_count,
+        hop_count=1,
+        confidence=0.9,
+        path=[0, 1],
+    )
     ablated_graph = ablated._get_graph_obs()
     assert np.count_nonzero(ablated_graph["relation_adj"][2]) == 0
     assert ablated_graph["edge_feat"][2, 0, 13] == 0.0

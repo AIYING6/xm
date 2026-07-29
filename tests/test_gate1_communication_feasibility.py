@@ -11,11 +11,12 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from algorithms.ri_gmappo.simple_ri_gmappo import GraphAttentionLayer, RIGMAPPOAgent
+from algorithms.ri_gmappo.simple_ri_gmappo import GraphAttentionLayer, RIGMAPPOAgent, RIGMAPPOConfig, make_env
 from envs import (
     EDGE3D_FEAT_DIM,
     OBS3D_FIELD_NAMES,
     OBS3D_ROLE_IDENTITY_SLICE,
+    RELATION_COMMUNICATION,
     RELATION_TASK_SUPPORT,
     UAVIntercept3DConfig,
     UAVIntercept3DEnv,
@@ -38,6 +39,20 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         np.testing.assert_allclose(obs[0, OBS3D_ROLE_IDENTITY_SLICE], np.array([1.0, 0.0, 0.0, 0.0]))
         np.testing.assert_allclose(obs[1, OBS3D_ROLE_IDENTITY_SLICE], np.array([0.0, 1.0, 0.0, 0.0]))
         np.testing.assert_allclose(obs[2, OBS3D_ROLE_IDENTITY_SLICE], np.array([0.0, 0.0, 1.0, 0.0]))
+
+    def test_ri_config_passes_attack_hold_steps_to_3d_env(self) -> None:
+        env = make_env(
+            RIGMAPPOConfig(
+                env_name="3d_intercept",
+                attack_hold_steps=7,
+                seed=7,
+            ),
+            seed=7,
+            training=False,
+        )
+
+        self.assertIsInstance(env, UAVIntercept3DEnv)
+        self.assertEqual(env.config.attack_hold_steps, 7)
 
     def test_graph_attention_uses_receiver_sender_direction(self) -> None:
         layer = GraphAttentionLayer(in_dim=2, out_dim=2, edge_dim=0)
@@ -115,6 +130,311 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         graph = env._get_graph_obs()
         self.assertEqual(float(graph["relation_adj"][RELATION_TASK_SUPPORT, 2, 0]), 1.0)
         self.assertEqual(float(graph["relation_adj"][RELATION_TASK_SUPPORT, 0, 2]), 0.0)
+
+    def test_task_support_relation_does_not_depend_on_hidden_target_state(self) -> None:
+        env = UAVIntercept3DEnv(
+            UAVIntercept3DConfig(
+                strict_target_sensing=True,
+                agent_target_info_bottleneck=True,
+                seed=71,
+            )
+        )
+        env.reset()
+        env.detected_by[:] = 0.0
+        env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
+        env.message_age[:] = env.config.max_steps
+        np.fill_diagonal(env.message_age, 0.0)
+        env.target_cache_valid[:] = 0.0
+        env.target_cache_confidence[:] = 0.0
+        env.attack_window[:] = 0.0
+
+        env.last_detected_target_pos = np.array([8_000.0, -1_000.0, 5_100.0], dtype=np.float32)
+        graph_a = env._get_graph_obs()
+        env.last_detected_target_pos = np.array([18_000.0, 6_000.0, 7_000.0], dtype=np.float32)
+        graph_b = env._get_graph_obs()
+
+        np.testing.assert_allclose(
+            graph_a["relation_adj"][RELATION_TASK_SUPPORT],
+            graph_b["relation_adj"][RELATION_TASK_SUPPORT],
+            atol=1e-6,
+            rtol=0.0,
+        )
+
+    def test_local_attack_window_requires_actor_visible_target_information(self) -> None:
+        env = UAVIntercept3DEnv(
+            UAVIntercept3DConfig(
+                strict_target_sensing=True,
+                agent_target_info_bottleneck=True,
+                radar_dropout_prob=1.0,
+                seed=75,
+            )
+        )
+        env.reset()
+        attacker = 2
+        typ = env.config.blue_types[attacker]
+        env.blue_pos[attacker] = np.array([0.0, 0.0, 5_000.0], dtype=np.float32)
+        env.blue_heading[attacker] = 0.0
+        env.blue_gamma[attacker] = 0.0
+        env.blue_speed[attacker] = 270.0
+        env.red_pos[0] = np.array([3_000.0, 0.0, 5_000.0], dtype=np.float32)
+        env.red_speed[0] = 130.0
+        env.red_heading[0] = 0.0
+        env.red_gamma[0] = 0.0
+        env.detected_by[:] = 0.0
+        env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
+        env.target_cache_valid[:] = 0.0
+        env.target_cache_confidence[:] = 0.0
+
+        env.attack_window[attacker] = float(env._in_attack_window(attacker, typ))
+        env.local_attack_window[attacker] = float(env._in_local_attack_window(attacker, typ))
+        obs = env._get_obs()
+        graph = env._get_graph_obs()
+        local_window_idx = OBS3D_FIELD_NAMES.index("local_attack_window")
+
+        self.assertEqual(float(env.attack_window[attacker]), 1.0)
+        self.assertEqual(float(env.local_attack_window[attacker]), 0.0)
+        self.assertEqual(float(obs[attacker, local_window_idx]), 0.0)
+        self.assertEqual(
+            float(graph["relation_adj"][RELATION_TASK_SUPPORT, 1, attacker]),
+            0.0,
+        )
+
+        env._write_target_cache(
+            attacker,
+            pos=env.red_pos[0].copy(),
+            vel=np.array([130.0, 0.0, 0.0], dtype=np.float32),
+            source=attacker,
+            generation_step=env.step_count,
+            delivery_step=env.step_count,
+            hop_count=0,
+            confidence=1.0,
+            path=[attacker],
+        )
+        env.local_attack_window[attacker] = float(env._in_local_attack_window(attacker, typ))
+        obs = env._get_obs()
+
+        self.assertEqual(float(env.local_attack_window[attacker]), 1.0)
+        self.assertEqual(float(obs[attacker, local_window_idx]), 1.0)
+
+    def test_union_graph_does_not_use_potential_task_support_without_delivery(self) -> None:
+        env = UAVIntercept3DEnv(
+            UAVIntercept3DConfig(
+                strict_target_sensing=True,
+                agent_target_info_bottleneck=True,
+                seed=73,
+            )
+        )
+        env.reset()
+        env.detected_by[:] = 0.0
+        env.detected_by[0] = 1.0
+        env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
+        env.message_age[:] = env.config.max_steps
+        np.fill_diagonal(env.message_age, 0.0)
+        env.attack_window[:] = 0.0
+
+        graph = env._get_graph_obs()
+        off_diag_blue = ~np.eye(env.config.num_blue, dtype=bool)
+
+        self.assertEqual(float(np.sum(graph["relation_adj"][RELATION_TASK_SUPPORT, : env.config.num_blue, : env.config.num_blue][off_diag_blue])), 0.0)
+        self.assertEqual(float(np.sum(graph["relation_adj"][RELATION_COMMUNICATION, : env.config.num_blue, : env.config.num_blue][off_diag_blue])), 0.0)
+        self.assertEqual(float(np.sum(graph["adj"][: env.config.num_blue, : env.config.num_blue][off_diag_blue])), 0.0)
+        # Static role compatibility may still be present as an edge feature, but
+        # it must remain masked out by relation_adj/adj until communication is delivered.
+        self.assertGreater(float(np.sum(graph["edge_feat"][: env.config.num_blue, : env.config.num_blue, 13][off_diag_blue])), 0.0)
+
+    def test_relay_failure_blocks_relay_originated_task_support(self) -> None:
+        env = UAVIntercept3DEnv(
+            UAVIntercept3DConfig(
+                strict_target_sensing=True,
+                agent_target_info_bottleneck=True,
+                radar_dropout_prob=1.0,
+                communication_range_scale=10.0,
+                communication_dropout_prob=0.0,
+                message_delay_steps=1,
+                failed_blue_agent=1,
+                node_failure_start_step=1,
+                node_failure_duration_steps=10,
+                seed=79,
+            )
+        )
+        env.reset()
+        relay = 1
+        attacker = 2
+        env.pending_messages.clear()
+        env.pending_target_messages.clear()
+        env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
+        env.detected_by[:] = 0.0
+        env.target_cache_valid[:] = 0.0
+        env.target_cache_path = [[] for _ in range(env.config.num_blue)]
+        env.step_count = 1
+        env._write_target_cache(
+            relay,
+            pos=np.array([10_000.0, 0.0, 5_000.0], dtype=np.float32),
+            vel=np.array([200.0, 0.0, 0.0], dtype=np.float32),
+            source=0,
+            generation_step=0,
+            delivery_step=0,
+            hop_count=1,
+            confidence=0.9,
+            path=[0, relay],
+        )
+        env.pending_messages.append((1, attacker, relay))
+        env.pending_target_messages.append(
+            {
+                "deliver_step": 1,
+                "receiver": attacker,
+                "sender": relay,
+                "pos": env.target_cache_pos[relay].copy(),
+                "vel": env.target_cache_vel[relay].copy(),
+                "source": int(env.target_cache_source[relay]),
+                "generation_step": int(env.target_cache_generation_step[relay]),
+                "hop_count": int(env.target_cache_hop_count[relay] + 1),
+                "confidence": 0.8,
+                "path": [0, relay, attacker],
+            }
+        )
+
+        env._update_sensing_and_comm()
+        graph = env._get_graph_obs()
+
+        self.assertTrue(env._is_comm_failed(relay))
+        self.assertEqual(float(env.comm_adj[attacker, relay]), 0.0)
+        self.assertEqual(float(env.target_cache_valid[attacker]), 0.0)
+        self.assertEqual(float(graph["relation_adj"][RELATION_COMMUNICATION, attacker, relay]), 0.0)
+        self.assertEqual(float(graph["relation_adj"][RELATION_TASK_SUPPORT, attacker, relay]), 0.0)
+        self.assertEqual(float(graph["adj"][attacker, relay]), 0.0)
+
+    def test_relay_task_support_uses_relay_cache_not_teammate_private_state(self) -> None:
+        env = UAVIntercept3DEnv(
+            UAVIntercept3DConfig(
+                strict_target_sensing=True,
+                agent_target_info_bottleneck=True,
+                seed=81,
+            )
+        )
+        env.reset()
+        scout = 0
+        relay = 1
+        attacker = 2
+        env.detected_by[:] = 0.0
+        env.detected_by[scout] = 1.0
+        env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
+        env.comm_adj[relay, scout] = 1.0
+        env.comm_adj[attacker, relay] = 1.0
+        env.message_age[:] = env.config.max_steps
+        np.fill_diagonal(env.message_age, 0.0)
+        env.target_cache_valid[:] = 0.0
+        env.target_cache_confidence[:] = 0.0
+
+        graph = env._get_graph_obs()
+        self.assertEqual(float(graph["relation_adj"][RELATION_TASK_SUPPORT, attacker, relay]), 0.0)
+
+        env._write_target_cache(
+            relay,
+            pos=np.array([10_000.0, 0.0, 5_000.0], dtype=np.float32),
+            vel=np.array([200.0, 0.0, 0.0], dtype=np.float32),
+            source=scout,
+            generation_step=env.step_count,
+            delivery_step=env.step_count,
+            hop_count=1,
+            confidence=0.9,
+            path=[scout, relay],
+        )
+        graph = env._get_graph_obs()
+        self.assertEqual(float(graph["relation_adj"][RELATION_TASK_SUPPORT, attacker, relay]), 1.0)
+
+    def test_post_failure_recovery_steps_use_stable_closure_window_start(self) -> None:
+        args = argparse.Namespace(
+            failed_blue_agent=1,
+            node_failure_start_step=10,
+            node_failure_duration_steps=40,
+            attack_hold_steps=4,
+        )
+        step_infos = [
+            {
+                "step": float(step),
+                "chain_closed": float(step >= 23),
+                "node_failure_active": float(10 <= step < 50),
+                "tracking_rate": 1.0,
+                "comm_connectivity": 1.0,
+            }
+            for step in range(1, 31)
+        ]
+
+        metrics = post_failure_recovery_metrics(step_infos, args)
+
+        self.assertEqual(float(metrics["post_failure_first_chain_step"]), 23.0)
+        self.assertEqual(float(metrics["post_failure_chain_recovered"]), 1.0)
+        self.assertEqual(float(metrics["post_failure_chain_recovery_steps"]), 10.0)
+
+    def test_post_failure_fresh_info_recovery_separates_stale_cache(self) -> None:
+        args = argparse.Namespace(
+            failed_blue_agent=1,
+            node_failure_start_step=10,
+            node_failure_duration_steps=40,
+            attack_hold_steps=4,
+        )
+        base_infos = [
+            {
+                "step": float(step),
+                "chain_closed": float(step >= 23),
+                "node_failure_active": float(10 <= step < 50),
+                "tracking_rate": 1.0,
+                "comm_connectivity": 1.0,
+                "attacker_info_attack_window": float(step >= 20),
+                "attacker_window_cache_generation_step_max": 4.0,
+                "attacker_window_cache_delivery_step_max": 5.0,
+                "attacker_window_direct_info": 0.0,
+                "attacker_window_comm_info": 1.0,
+            }
+            for step in range(1, 31)
+        ]
+
+        stale = post_failure_recovery_metrics(base_infos, args)
+        self.assertEqual(float(stale["post_failure_chain_recovered"]), 1.0)
+        self.assertEqual(float(stale["post_failure_fresh_info_recovered"]), 0.0)
+        self.assertEqual(float(stale["post_failure_stale_cache_recovered"]), 1.0)
+
+        post_delivered_old_infos = [dict(info) for info in base_infos]
+        for info in post_delivered_old_infos:
+            if float(info["step"]) >= 20.0:
+                info["attacker_window_cache_delivery_step_max"] = 21.0
+        old_delivered = post_failure_recovery_metrics(post_delivered_old_infos, args)
+        self.assertEqual(float(old_delivered["post_failure_chain_recovered"]), 1.0)
+        self.assertEqual(float(old_delivered["post_failure_fresh_info_recovered"]), 0.0)
+        self.assertEqual(float(old_delivered["post_failure_post_delivered_old_info_recovered"]), 1.0)
+        self.assertEqual(float(old_delivered["post_failure_stale_cache_recovered"]), 0.0)
+
+        endpoint_only_fresh_infos = [dict(info) for info in base_infos]
+        for info in endpoint_only_fresh_infos:
+            if float(info["step"]) == 23.0:
+                info["attacker_window_cache_generation_step_max"] = 23.0
+                info["attacker_window_cache_delivery_step_max"] = 23.0
+        endpoint_only = post_failure_recovery_metrics(endpoint_only_fresh_infos, args)
+        self.assertEqual(float(endpoint_only["post_failure_chain_recovered"]), 1.0)
+        self.assertEqual(float(endpoint_only["post_failure_fresh_info_recovered"]), 0.0)
+
+        fresh_infos = [dict(info) for info in base_infos]
+        for info in fresh_infos:
+            if float(info["step"]) >= 20.0:
+                info["attacker_window_cache_generation_step_max"] = 20.0
+                info["attacker_window_cache_delivery_step_max"] = 21.0
+
+        fresh = post_failure_recovery_metrics(fresh_infos, args)
+        self.assertEqual(float(fresh["post_failure_chain_recovered"]), 1.0)
+        self.assertEqual(float(fresh["post_failure_fresh_info_recovered"]), 1.0)
+        self.assertEqual(float(fresh["post_failure_stale_cache_recovered"]), 0.0)
+        self.assertEqual(float(fresh["post_failure_fresh_info_recovery_steps"]), 10.0)
+        self.assertEqual(float(fresh["post_failure_fresh_comm_recovered"]), 1.0)
+
+        maintained_infos = [dict(info) for info in fresh_infos]
+        for info in maintained_infos:
+            if float(info["step"]) >= 10.0:
+                info["chain_closed"] = 1.0
+        maintained = post_failure_recovery_metrics(maintained_infos, args)
+        self.assertEqual(float(maintained["post_failure_chain_maintained"]), 1.0)
+        self.assertEqual(float(maintained["post_failure_fresh_info_recovered"]), 0.0)
+        self.assertEqual(float(maintained["post_failure_fresh_info_acquired_without_prior_loss"]), 1.0)
 
     def test_disconnected_attacker_logits_do_not_change_with_hidden_target(self) -> None:
         torch.manual_seed(11)
@@ -403,12 +723,37 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         env.detected_by[:] = 0.0
         env.detected_by[0] = 1.0
         env.red_pos[0] = np.array([12000.0, 3000.0, 5300.0], dtype=np.float32)
-        graph_detected = env._get_graph_obs()
-        self.assertNotAlmostEqual(
-            float(graph_detected["node_feat"][target_node, 0]),
-            float(graph_a["node_feat"][target_node, 0]),
-            places=5,
+        env.last_detected_target_pos = env.red_pos[0].copy()
+        env.last_detected_target_vel = np.array([200.0, 0.0, 0.0], dtype=np.float32)
+        env._write_target_cache(
+            0,
+            pos=env.last_detected_target_pos,
+            vel=env.last_detected_target_vel,
+            source=0,
+            generation_step=env.step_count,
+            delivery_step=env.step_count,
+            hop_count=0,
+            confidence=1.0,
+            path=[0],
         )
+        graph_detected = env._get_graph_obs()
+        np.testing.assert_allclose(
+            graph_a["node_feat"][target_node],
+            graph_detected["node_feat"][target_node],
+            atol=1e-6,
+            rtol=0.0,
+        )
+        np.testing.assert_allclose(
+            graph_a["edge_feat"][:, target_node, :11],
+            graph_detected["edge_feat"][:, target_node, :11],
+            atol=1e-6,
+            rtol=0.0,
+        )
+
+        obs_detected = env._get_obs()
+        rel_x_idx = OBS3D_FIELD_NAMES.index("target_rel_x_norm")
+        expected_rel_x = (env.red_pos[0, 0] - env.blue_pos[0, 0]) / env.config.world_radius
+        self.assertAlmostEqual(float(obs_detected[0, rel_x_idx]), float(expected_rel_x), places=6)
 
     def test_message_delay_requires_future_delivery_step(self) -> None:
         env = UAVIntercept3DEnv(

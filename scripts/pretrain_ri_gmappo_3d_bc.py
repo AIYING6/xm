@@ -133,11 +133,13 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         node_failure_duration_steps=args.node_failure_duration_steps,
         node_failure_duration_random_min=args.node_failure_duration_random_min,
         node_failure_duration_random_max=args.node_failure_duration_random_max,
+        attack_hold_steps=args.attack_hold_steps,
         min_success_step=args.min_success_step,
         graph_encoder=args.graph_encoder,
         graph_relation_ablation=args.graph_relation_ablation,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        role_gate_prior_strength=args.role_gate_prior_strength,
         multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
         device=args.device,
     )
@@ -160,6 +162,7 @@ def build_agent(cfg: RIGMAPPOConfig, args: argparse.Namespace) -> RIGMAPPOAgent:
         graph_encoder=args.graph_encoder,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        role_gate_prior_strength=args.role_gate_prior_strength,
         multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
         use_intent_context=False,
     )
@@ -315,6 +318,7 @@ def main() -> None:
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
+    parser.add_argument("--role-gate-prior-strength", type=float, default=0.0)
     parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--max-grad-norm", type=float, default=1.0)
@@ -338,6 +342,7 @@ def main() -> None:
     parser.add_argument("--node-failure-duration-steps", type=int, default=0)
     parser.add_argument("--node-failure-duration-random-min", type=int, default=None)
     parser.add_argument("--node-failure-duration-random-max", type=int, default=None)
+    parser.add_argument("--attack-hold-steps", type=int, default=4)
     parser.add_argument("--min-success-step", type=int, default=0)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--resume", type=Path, default=None)

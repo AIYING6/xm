@@ -33,7 +33,7 @@ OBS3D_FIELD_NAMES = (
     "blue_vel_y_norm",
     "blue_vel_z_norm",
     "direct_target_detected",
-    "attack_window",
+    "local_attack_window",
     "blue_energy",
     "radar_range_norm",
     "comm_range_norm",
@@ -214,6 +214,7 @@ class UAVIntercept3DEnv:
         self.target_cache_path: list[list[int]] = [[] for _ in range(cfg.num_blue)]
         self.detected_by = np.zeros(cfg.num_blue, dtype=np.float32)
         self.attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
+        self.local_attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
         self._update_sensing_and_comm()
 
         self.history = {
@@ -363,6 +364,7 @@ class UAVIntercept3DEnv:
         cfg = self.config
         self.detected_by = np.zeros(cfg.num_blue, dtype=np.float32)
         self.attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
+        self.local_attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
         for i, typ in enumerate(cfg.blue_types):
             visible = self._radar_visible(i, typ)
             if visible and self.dropout_rng.random() >= cfg.radar_dropout_prob:
@@ -479,6 +481,7 @@ class UAVIntercept3DEnv:
 
         for i, typ in enumerate(cfg.blue_types):
             self.attack_window[i] = float(self._in_attack_window(i, typ))
+            self.local_attack_window[i] = float(self._in_local_attack_window(i, typ))
 
     def _is_comm_failed(self, agent_id: int) -> bool:
         cfg = self.config
@@ -510,6 +513,28 @@ class UAVIntercept3DEnv:
         heading_err = abs(angle_diff(los_heading, self.blue_heading[i]))
         alt_err = abs(float(rel[2]))
         closure = float(np.dot(velocity_from_state(self.blue_speed[i], self.blue_heading[i], self.blue_gamma[i]) - velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0]), unit(rel)))
+        return heading_err <= typ.attack_cone and alt_err <= 1_600.0 and closure > -30.0
+
+    def _in_local_attack_window(self, i: int, typ: UAV3DType) -> bool:
+        """Actor-visible attack-window proxy computed from legal target estimates."""
+        if typ.role not in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
+            return False
+        if (
+            self.config.strict_target_sensing
+            and self.config.agent_target_info_bottleneck
+            and not self._has_target_information(i)
+        ):
+            return False
+        target_pos, _, _, _, target_vel = self._target_state_for_agent_observation(i)
+        rel = target_pos - self.blue_pos[i]
+        dist = float(np.linalg.norm(rel))
+        if dist < typ.attack_range_min or dist > typ.attack_range_max:
+            return False
+        los_heading = math.atan2(float(rel[1]), float(rel[0]))
+        heading_err = abs(angle_diff(los_heading, self.blue_heading[i]))
+        alt_err = abs(float(rel[2]))
+        blue_vel = velocity_from_state(self.blue_speed[i], self.blue_heading[i], self.blue_gamma[i])
+        closure = float(np.dot(blue_vel - target_vel, unit(rel)))
         return heading_err <= typ.attack_cone and alt_err <= 1_600.0 and closure > -30.0
 
     def _comm_has_chain_to_attacker(self) -> bool:
@@ -680,6 +705,46 @@ class UAVIntercept3DEnv:
     def _info(self, timeout: bool) -> Dict[str, float]:
         local_cache_ages = [self._local_target_cache_age(i) for i in range(self.config.num_blue)]
         local_cache_conf = [self._local_target_cache_confidence(i) for i in range(self.config.num_blue)]
+        attacker_ids = [
+            i
+            for i, typ in enumerate(self.config.blue_types)
+            if typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}
+        ]
+        fresh_attacker_ids = [i for i in attacker_ids if self._has_target_information(i)]
+        attacker_window_info_ids = [
+            i for i in fresh_attacker_ids if self.attack_window[i] > 0.5
+        ]
+        attacker_cache_generation_steps = [
+            float(self.target_cache_generation_step[i])
+            for i in fresh_attacker_ids
+            if self.target_cache_generation_step[i] >= 0
+        ]
+        attacker_cache_delivery_steps = [
+            float(self.target_cache_delivery_step[i])
+            for i in fresh_attacker_ids
+            if self.target_cache_delivery_step[i] >= 0
+        ]
+        attacker_window_cache_generation_steps = [
+            float(self.target_cache_generation_step[i])
+            for i in attacker_window_info_ids
+            if self.target_cache_generation_step[i] >= 0
+        ]
+        attacker_window_cache_delivery_steps = [
+            float(self.target_cache_delivery_step[i])
+            for i in attacker_window_info_ids
+            if self.target_cache_delivery_step[i] >= 0
+        ]
+        attacker_window_cache_hop_counts = [
+            float(self.target_cache_hop_count[i])
+            for i in attacker_window_info_ids
+            if self.target_cache_hop_count[i] >= 0
+        ]
+        direct_window_info_ids = [
+            i for i in attacker_window_info_ids if self.detected_by[i] > 0.5
+        ]
+        comm_window_info_ids = [
+            i for i in attacker_window_info_ids if self.target_cache_hop_count[i] > 0
+        ]
         return {
             "success": float(self.success),
             "timeout": float(timeout and not self.success and not self.collision and not self.constraint_violation),
@@ -706,6 +771,15 @@ class UAVIntercept3DEnv:
             "target_cache_age_mean": float(np.mean(local_cache_ages)),
             "target_cache_confidence_mean": float(np.mean(local_cache_conf)),
             "target_cache_stale_rate": self._target_cache_stale_rate(),
+            "attacker_has_fresh_target_info": float(bool(fresh_attacker_ids)),
+            "attacker_target_cache_generation_step_max": max(attacker_cache_generation_steps) if attacker_cache_generation_steps else -1.0,
+            "attacker_target_cache_delivery_step_max": max(attacker_cache_delivery_steps) if attacker_cache_delivery_steps else -1.0,
+            "attacker_info_attack_window": float(bool(attacker_window_info_ids)),
+            "attacker_window_cache_generation_step_max": max(attacker_window_cache_generation_steps) if attacker_window_cache_generation_steps else -1.0,
+            "attacker_window_cache_delivery_step_max": max(attacker_window_cache_delivery_steps) if attacker_window_cache_delivery_steps else -1.0,
+            "attacker_window_cache_hop_count_min": min(attacker_window_cache_hop_counts) if attacker_window_cache_hop_counts else -1.0,
+            "attacker_window_direct_info": float(bool(direct_window_info_ids)),
+            "attacker_window_comm_info": float(bool(comm_window_info_ids)),
             "node_failure_active": float(any(self._is_comm_failed(i) for i in range(self.config.num_blue))),
             "failed_blue_agent": float(self.config.failed_blue_agent),
             "step": float(self.step_count),
@@ -720,9 +794,12 @@ class UAVIntercept3DEnv:
     def _target_state_for_graph_observation(self) -> tuple[np.ndarray, float, float, float, np.ndarray]:
         if not (self.config.strict_target_sensing and self.config.agent_target_info_bottleneck):
             return self._target_state_for_observation()
-        if np.any(self.detected_by > 0.5):
-            vel = velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0])
-            return self.red_pos[0], float(self.red_speed[0]), float(self.red_heading[0]), float(self.red_gamma[0]), vel
+        # Actor graph observations are shared by all blue actors. Under the
+        # strict target-information bottleneck, putting a detected target state
+        # into the shared graph would leak a scout's private detection to agents
+        # that have not received a delivered message. Target information is
+        # therefore carried only by per-agent observations/caches, while the
+        # graph target node remains a public prior with zero velocity.
         pos = np.asarray(self.config.target_prior_position, dtype=np.float32)
         vel = np.zeros(3, dtype=np.float32)
         return pos, 0.0, 0.0, 0.0, vel
@@ -791,7 +868,7 @@ class UAVIntercept3DEnv:
                     vel[1] / typ.max_speed,
                     vel[2] / typ.max_speed,
                     self.detected_by[i],
-                    self.attack_window[i],
+                    self.local_attack_window[i],
                     self.blue_energy[i],
                     typ.radar_range / self.config.world_radius,
                     typ.comm_range * self.config.communication_range_scale / self.config.world_radius,
@@ -871,10 +948,12 @@ class UAVIntercept3DEnv:
         gammas = np.concatenate([self.blue_gamma, np.asarray([target_gamma], dtype=np.float32)])
         roles = [typ.role for typ in self.config.blue_types] + [ROLE_TARGET]
         max_speeds = [typ.max_speed for typ in self.config.blue_types] + [self.config.target_type.max_speed]
+        graph_target_masked = self.config.strict_target_sensing and self.config.agent_target_info_bottleneck
 
         for i in range(n):
             vel = velocity_from_state(speeds[i], headings[i], gammas[i])
             role[i] = roles[i]
+            target_detection_flag = 0.0 if graph_target_masked else float(np.any(self.detected_by))
             node[i] = np.asarray(
                 [
                     positions[i, 0] / self.config.world_radius,
@@ -893,8 +972,8 @@ class UAVIntercept3DEnv:
                     float(roles[i] == ROLE_ATTACKER),
                     float(roles[i] == ROLE_INTERCEPTOR),
                     float(roles[i] == ROLE_TARGET),
-                    self.detected_by[i] if i < n_blue else float(np.any(self.detected_by)),
-                    self.attack_window[i] if i < n_blue else 0.0,
+                    self.detected_by[i] if i < n_blue else target_detection_flag,
+                    self.local_attack_window[i] if i < n_blue else 0.0,
                     self.blue_energy[i] if i < n_blue else 1.0,
                     float(i < n_blue),
                 ],
@@ -922,7 +1001,11 @@ class UAVIntercept3DEnv:
                 if self.config.graph_relation_ablation == "no_task_support":
                     support = 0.0
                     active_support = 0.0
-                attack = float(i < n_blue and j >= n_blue and self.attack_window[i] > 0.5)
+                # Local attack-window edge for the union graph only. It is not
+                # a fourth relation and is derived from actor-visible target
+                # estimates, so it cannot expose the evaluation-only true
+                # attack window under strict sensing.
+                attack = float(i < n_blue and j >= n_blue and self.local_attack_window[i] > 0.5)
                 age = 0.0
                 if i < n_blue and j < n_blue:
                     age = self.message_age[i, j] / self.config.max_steps
@@ -979,11 +1062,6 @@ class UAVIntercept3DEnv:
             return True
         if self._has_fresh_target_cache(agent_id):
             return True
-        for source in range(self.config.num_blue):
-            if self.detected_by[source] <= 0.5:
-                continue
-            if self.comm_adj[agent_id, source] > 0.5:
-                return True
         return False
 
     def _active_support_edge(self, src: int, dst: int) -> bool:
@@ -996,13 +1074,9 @@ class UAVIntercept3DEnv:
         if src_role == ROLE_SCOUT:
             return self._has_target_information(src)
         if src_role == ROLE_RELAY:
-            return self._has_target_information(src) or any(
-                self.comm_adj[src, teammate] > 0.5 and self._has_target_information(teammate)
-                for teammate in range(self.config.num_blue)
-                if teammate != src
-            )
+            return self._has_target_information(src)
         if src_role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
-            return bool(self.attack_window[src] > 0.5)
+            return bool(self.local_attack_window[src] > 0.5)
         return False
 
     def _write_target_cache(

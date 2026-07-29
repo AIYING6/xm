@@ -1,0 +1,2 @@
+update,loss,policy_loss,value_loss,entropy,intent_loss,intent_acc,happo_prefix_ratio_mean,train_avg_reward,eval_success_rate,eval_collision_rate,eval_timeout_rate,eval_avg_steps,eval_avg_distance,eval_intent_acc
+1,0.03288242220878601,-0.006395318234960238,0.08513152599334717,3.2880213260650635,0.0,0.0,0.9995589603980383,0.09281762689352036,0.0,0.0,1.0,260.0,39319.53125,nan

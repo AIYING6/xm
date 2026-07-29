@@ -23,6 +23,7 @@ from scripts.evaluate_3d_checkpoint_sweep import (  # noqa: E402
     mean,
     mean_delayed_recovery,
     mean_delayed_recovery_steps,
+    mean_fresh_info_recovery_steps,
     mean_recovery_steps,
     read_existing_csv,
     selection_score,
@@ -116,6 +117,7 @@ def make_eval_args(args: argparse.Namespace, candidate: Candidate, scenario_name
         node_failure_start_step=scenario.node_failure_start_step,
         node_failure_duration_steps=scenario.node_failure_duration_steps,
         min_success_step=args.min_success_step,
+        attack_hold_steps=args.attack_hold_steps,
         stochastic=False,
         allow_random_policy=False,
         hidden_dim=args.hidden_dim,
@@ -136,13 +138,27 @@ def summarize_rows(
 ) -> dict[str, str]:
     recovery = mean(rows, "post_failure_chain_recovered")
     recovered_after_loss = mean(rows, "post_failure_chain_recovered_after_loss")
+    fresh_info_recovered = mean(rows, "post_failure_fresh_info_recovered")
+    fresh_without_prior_loss = mean(rows, "post_failure_fresh_info_acquired_without_prior_loss")
+    fresh_direct_recovered = mean(rows, "post_failure_fresh_direct_recovered")
+    fresh_comm_recovered = mean(rows, "post_failure_fresh_comm_recovered")
+    post_delivered_old_recovered = mean(rows, "post_failure_post_delivered_old_info_recovered")
+    stale_cache_recovered = mean(rows, "post_failure_stale_cache_recovered")
     delayed = mean_delayed_recovery(rows, args.delayed_recovery_min_step)
     recovery_steps = mean_recovery_steps(rows)
+    fresh_info_steps = mean_fresh_info_recovery_steps(rows)
     delayed_steps = mean_delayed_recovery_steps(rows, args.delayed_recovery_min_step)
     success = mean(rows, "success")
     collision = mean(rows, "collision")
-    score_recovery = delayed if args.selection_metric == "delayed_recovery" else recovery
-    score_steps = delayed_steps if args.selection_metric == "delayed_recovery" else recovery_steps
+    if args.selection_metric == "fresh_info_recovery":
+        score_recovery = fresh_info_recovered
+        score_steps = fresh_info_steps
+    elif args.selection_metric == "delayed_recovery":
+        score_recovery = delayed
+        score_steps = delayed_steps
+    else:
+        score_recovery = recovery
+        score_steps = recovery_steps
     score = selection_score(
         score_recovery,
         score_steps,
@@ -170,9 +186,16 @@ def summarize_rows(
         "success_mean": f"{success:.6g}",
         "post_failure_chain_recovered_mean": f"{recovery:.6g}",
         "post_failure_chain_recovered_after_loss_mean": f"{recovered_after_loss:.6g}",
+        "post_failure_fresh_info_recovered_mean": f"{fresh_info_recovered:.6g}",
+        "post_failure_fresh_info_acquired_without_prior_loss_mean": f"{fresh_without_prior_loss:.6g}",
+        "post_failure_fresh_direct_recovered_mean": f"{fresh_direct_recovered:.6g}",
+        "post_failure_fresh_comm_recovered_mean": f"{fresh_comm_recovered:.6g}",
+        "post_failure_post_delivered_old_info_recovered_mean": f"{post_delivered_old_recovered:.6g}",
+        "post_failure_stale_cache_recovered_mean": f"{stale_cache_recovered:.6g}",
         "delayed_recovery_min_step": str(args.delayed_recovery_min_step),
         "delayed_recovery_mean": f"{delayed:.6g}",
         "post_failure_chain_recovery_steps_mean": "inf" if not np.isfinite(recovery_steps) else f"{recovery_steps:.6g}",
+        "post_failure_fresh_info_recovery_steps_mean": "inf" if not np.isfinite(fresh_info_steps) else f"{fresh_info_steps:.6g}",
         "delayed_recovery_steps_mean": "inf" if not np.isfinite(delayed_steps) else f"{delayed_steps:.6g}",
         "chain_closed_during_failure_rate_mean": f"{mean(rows, 'chain_closed_during_failure_rate'):.6g}",
         "tracking_during_failure_rate_mean": f"{mean(rows, 'tracking_during_failure_rate'):.6g}",
@@ -249,6 +272,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--min-success-step", type=int, default=0)
+    parser.add_argument("--attack-hold-steps", type=int, default=4)
     parser.add_argument("--happo-root", type=Path, default=ROOT / "results" / "paper_config_runs" / "smoke" / "runs" / "happo")
     parser.add_argument(
         "--run-dir-template",
@@ -283,7 +307,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--selection-metric",
-        choices=("legacy_recovery", "delayed_recovery"),
+        choices=("legacy_recovery", "delayed_recovery", "fresh_info_recovery"),
         default="legacy_recovery",
         help="Checkpoint-selection metric, matching the RI-GMAPPO checkpoint sweep.",
     )

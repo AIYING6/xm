@@ -111,6 +111,7 @@ def evaluate_episode(
         failed_blue_agent=scenario.failed_blue_agent,
         node_failure_start_step=scenario.node_failure_start_step,
         node_failure_duration_steps=scenario.node_failure_duration_steps,
+        attack_hold_steps=4,
     )
     recovery = post_failure_recovery_metrics(step_infos, recovery_args)
 
