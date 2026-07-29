@@ -41,6 +41,7 @@ CSV_COLUMNS = (
     "failed_blue_agent",
     "node_failure_start_step",
     "node_failure_duration_steps",
+    "min_success_step",
     "graph_relation_ablation",
     "graph_message_ablation",
     "graph_input_ablation",
@@ -109,10 +110,12 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         failed_blue_agent=args.failed_blue_agent,
         node_failure_start_step=args.node_failure_start_step,
         node_failure_duration_steps=args.node_failure_duration_steps,
+        min_success_step=args.min_success_step,
         graph_relation_ablation=args.graph_relation_ablation,
         graph_encoder=args.graph_encoder,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        multi_relation_global_residual_weight=getattr(args, "multi_relation_global_residual_weight", 1.0),
         device=args.device,
     )
 
@@ -148,6 +151,7 @@ def build_agent(args: argparse.Namespace, cfg: RIGMAPPOConfig) -> tuple[RIGMAPPO
         graph_encoder=args.graph_encoder,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        multi_relation_global_residual_weight=getattr(args, "multi_relation_global_residual_weight", 1.0),
         use_intent_context=False,
     )
     if checkpoint is not None:
@@ -269,6 +273,7 @@ def build_episode_row(
         "failed_blue_agent": args.failed_blue_agent,
         "node_failure_start_step": args.node_failure_start_step,
         "node_failure_duration_steps": args.node_failure_duration_steps,
+        "min_success_step": args.min_success_step,
         "graph_relation_ablation": args.graph_relation_ablation,
         "graph_message_ablation": args.graph_message_ablation,
         "graph_input_ablation": args.graph_input_ablation,
@@ -329,7 +334,7 @@ def evaluate(args: argparse.Namespace) -> list[dict[str, float | int | str | boo
             while any(active):
                 active_indices = [i for i, is_active in enumerate(active) if is_active]
                 g = stack_graphs([graph_list[i] for i in active_indices])
-                actions, _, _, _, _, _ = agent.get_action_and_value(
+                actions, _, _, _, _, _, _ = agent.get_action_and_value(
                     torch.as_tensor(np.stack([obs_list[i] for i in active_indices], axis=0), dtype=torch.float32, device=device),
                     torch.as_tensor(g["node_feat"], dtype=torch.float32, device=device),
                     torch.as_tensor(g["edge_feat"], dtype=torch.float32, device=device),
@@ -432,6 +437,7 @@ def write_summary(rows: list[dict[str, float | int | str | bool]], out_md: Path,
         f"graph_relation_ablation = {args.graph_relation_ablation}",
         f"graph_message_ablation = {args.graph_message_ablation}",
         f"graph_input_ablation = {args.graph_input_ablation}",
+        f"multi_relation_global_residual_weight = {getattr(args, 'multi_relation_global_residual_weight', 1.0)}",
         f"deterministic = {not args.stochastic}",
         "```",
         "",
@@ -478,6 +484,7 @@ def main() -> None:
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
     parser.add_argument("--node-failure-start-step", type=int, default=0)
     parser.add_argument("--node-failure-duration-steps", type=int, default=0)
+    parser.add_argument("--min-success-step", type=int, default=0)
     parser.add_argument("--stochastic", action="store_true")
     parser.add_argument("--allow-random-policy", action="store_true")
     parser.add_argument("--hidden-dim", type=int, default=128)
@@ -487,6 +494,7 @@ def main() -> None:
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
+    parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--out-csv", type=Path, default=ROOT / "results" / "intercept_3d_policy_eval.csv")
     parser.add_argument("--summary-md", type=Path, default=ROOT / "docs" / "intercept_3d_policy_eval.md")

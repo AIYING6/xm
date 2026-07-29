@@ -50,6 +50,15 @@ def command_quote(parts: list[str]) -> str:
     return " ".join(shlex.quote(str(part)) for part in parts)
 
 
+def sweep_scenarios(main_cfg: dict, split: str) -> list[str]:
+    scenario = main_cfg["scenario"]
+    key = f"{split}_scenarios"
+    scenarios = scenario.get(key)
+    if scenarios:
+        return [str(name) for name in scenarios]
+    return ["relay_failure"]
+
+
 def method_train_command(
     *,
     main_cfg: dict,
@@ -142,6 +151,12 @@ def method_train_command(
             method_cfg.get("graph_message_ablation", "none"),
             "--graph-input-ablation",
             method_cfg.get("graph_input_ablation", "none"),
+            "--chain-aux-coef",
+            str(method_cfg.get("chain_aux_coef", 0.0)),
+            "--chain-aux-warmup-updates",
+            str(method_cfg.get("chain_aux_warmup_updates", 0)),
+            "--role-gate-prior-strength",
+            str(method_cfg.get("role_gate_prior_strength", 0.0)),
         ]
     return base_command
 
@@ -158,6 +173,7 @@ def method_sweep_command(
     out_root: Path,
 ) -> list[str]:
     scenario = main_cfg["scenario"]
+    scenarios = sweep_scenarios(main_cfg, split)
     seed_cfg = main_cfg["seeds"]
     episodes = seed_cfg["validation_episodes_per_seed"] if split == "validation" else seed_cfg["test_episodes_per_seed"]
     base_seed = seed_cfg["validation_base_seed"] if split == "validation" else seed_cfg["test_base_seed"]
@@ -180,7 +196,7 @@ def method_sweep_command(
         "--graph-encoders",
         graph_encoder,
         "--scenarios",
-        "relay_failure",
+        *scenarios,
         "--episodes",
         str(episodes),
         "--base-seed",
@@ -212,6 +228,8 @@ def method_sweep_command(
         "--max-selection-collision-rate",
         "0.0",
     ]
+    if len(scenarios) > 1:
+        command.extend(["--selection-group", "suite"])
     if split == "test":
         command.extend(
             [
@@ -234,6 +252,7 @@ def happo_sweep_command(
     output_method_name: str | None = None,
 ) -> list[str]:
     scenario = main_cfg["scenario"]
+    scenarios = sweep_scenarios(main_cfg, split)
     seed_cfg = main_cfg["seeds"]
     episodes = seed_cfg["validation_episodes_per_seed"] if split == "validation" else seed_cfg["test_episodes_per_seed"]
     base_seed = seed_cfg["validation_base_seed"] if split == "validation" else seed_cfg["test_base_seed"]
@@ -248,7 +267,7 @@ def happo_sweep_command(
         "--seeds",
         *[str(seed) for seed in seeds],
         "--scenarios",
-        "relay_failure",
+        *scenarios,
         "--episodes",
         str(episodes),
         "--base-seed",
@@ -274,6 +293,8 @@ def happo_sweep_command(
         "--max-selection-collision-rate",
         "0.0",
     ]
+    if len(scenarios) > 1:
+        command.extend(["--selection-group", "suite"])
     if split == "test":
         command.extend(["--selection-csv", (out_dir / "validation_selected_checkpoints.csv").as_posix()])
     return command

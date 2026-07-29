@@ -1,5 +1,5 @@
 {
-  "schema_version": "checkpoint_selection_v1_2026_07_24",
+  "schema_version": "checkpoint_selection_v2_2026_07_29",
   "summary_columns": [
     "split",
     "scenario",
@@ -18,7 +18,11 @@
     "episodes",
     "success_mean",
     "post_failure_chain_recovered_mean",
+    "post_failure_chain_recovered_after_loss_mean",
+    "delayed_recovery_min_step",
+    "delayed_recovery_mean",
     "post_failure_chain_recovery_steps_mean",
+    "delayed_recovery_steps_mean",
     "chain_closed_during_failure_rate_mean",
     "tracking_during_failure_rate_mean",
     "connectivity_during_failure_mean",
@@ -28,7 +32,9 @@
     "timeout_mean",
     "collision_mean",
     "constraint_violation_mean",
-    "selection_score"
+    "selection_score",
+    "selection_metric",
+    "selection_success_weight"
   ],
   "selection_columns": [
     "split",
@@ -46,8 +52,14 @@
     "max_target_message_age_steps",
     "min_target_confidence",
     "selection_score",
+    "selection_metric",
+    "selection_success_weight",
     "post_failure_chain_recovered_mean",
+    "post_failure_chain_recovered_after_loss_mean",
+    "delayed_recovery_min_step",
+    "delayed_recovery_mean",
     "post_failure_chain_recovery_steps_mean",
+    "delayed_recovery_steps_mean",
     "success_mean",
     "collision_mean",
     "episode_min_blue_red_distance_mean",
@@ -65,7 +77,8 @@
   "selection_policy": {
     "validation_split": "select_checkpoint",
     "test_split": "evaluate_selected_validation_checkpoint_only",
-    "score": "1000 * post_failure_chain_recovered_mean + 100 * success_mean - post_failure_chain_recovery_steps_mean",
+    "score": "default legacy_recovery: 1000 * post_failure_chain_recovered_mean + selection_success_weight * success_mean - post_failure_chain_recovery_steps_mean; optional delayed_recovery: 1000 * delayed_recovery_mean + selection_success_weight * success_mean - delayed_recovery_steps_mean",
+    "delayed_recovery_metric": "post_failure_chain_recovered_after_loss == 1 and post_failure_first_chain_step >= delayed_recovery_min_step",
     "tie_breaker": "larger checkpoint_update",
     "test_must_use_selection_csv": true,
     "validation_must_not_use_test_results": true

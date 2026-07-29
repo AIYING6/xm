@@ -119,6 +119,9 @@ class UAVIntercept3DConfig:
     safety_proximity_distance: float = 0.0
     safety_proximity_penalty_weight: float = 0.0
     attack_geometry_reward_weight: float = 0.0
+    min_success_step: int = 0
+    post_loss_chain_reclosure_reward_weight: float = 0.0
+    post_loss_chain_reclosure_min_step: int = 0
     blue_types: List[UAV3DType] = field(
         default_factory=lambda: [
             UAV3DType(ROLE_SCOUT, 245.0, 120.0, 18.0, 0.035, 42.0, 0.26, 4.5, 17_500.0, math.radians(130), math.radians(55), 9_500.0, 1_800.0, 6_500.0, math.radians(42), 0.90),
@@ -169,6 +172,9 @@ class UAVIntercept3DEnv:
         self.collision = False
         self.constraint_violation = False
         self.attack_hold = 0
+        self.post_loss_chain_lost = False
+        self.post_loss_chain_reclosure_rewarded = False
+        self.post_loss_chain_reclosure_bonus = 0.0
         self.last_detected_target_pos: np.ndarray | None = None
         self.last_detected_target_vel: np.ndarray | None = None
         self.last_detection_step = -1
@@ -243,7 +249,22 @@ class UAVIntercept3DEnv:
         else:
             self.attack_hold = 0
 
-        self.success = self.attack_hold >= self.config.attack_hold_steps
+        chain_closed = self.attack_hold >= self.config.attack_hold_steps
+        failure_active = any(self._is_comm_failed(i) for i in range(self.config.num_blue))
+        self.post_loss_chain_reclosure_bonus = 0.0
+        if failure_active and not chain_closed:
+            self.post_loss_chain_lost = True
+        if (
+            failure_active
+            and chain_closed
+            and self.post_loss_chain_lost
+            and not self.post_loss_chain_reclosure_rewarded
+            and self.step_count >= self.config.post_loss_chain_reclosure_min_step
+        ):
+            self.post_loss_chain_reclosure_bonus = float(self.config.post_loss_chain_reclosure_reward_weight)
+            self.post_loss_chain_reclosure_rewarded = True
+
+        self.success = chain_closed and self.step_count >= self.config.min_success_step
         self.collision = self._has_collision()
         self.constraint_violation = self._has_constraint_violation()
         timeout = self.step_count >= self.config.max_steps
@@ -585,6 +606,7 @@ class UAVIntercept3DEnv:
         base = 0.25 * progress + 0.12 * tracking + 0.18 * window + 0.05 * connectivity - 0.03 * age_penalty
         base += 0.05 * max(0.0, tracking - prev_tracking) + 0.08 * max(0.0, window - prev_window)
         base += self.config.attack_geometry_reward_weight * self._attack_geometry_score()
+        base += self.post_loss_chain_reclosure_bonus
         base -= self.config.safety_proximity_penalty_weight * self._safety_proximity_penalty()
         if self.success:
             base += 2.0
@@ -670,6 +692,9 @@ class UAVIntercept3DEnv:
             "attack_window_rate": float(np.mean(self.attack_window)),
             "attack_geometry_score": self._attack_geometry_score(),
             "chain_closed": float(self.attack_hold >= self.config.attack_hold_steps),
+            "min_success_step": float(self.config.min_success_step),
+            "post_loss_chain_reclosure_bonus": float(self.post_loss_chain_reclosure_bonus),
+            "post_loss_chain_reclosure_rewarded": float(self.post_loss_chain_reclosure_rewarded),
             "comm_connectivity": self._comm_connectivity(),
             "mean_message_age": self._mean_message_age(),
             "safety_proximity_penalty": self._safety_proximity_penalty(),

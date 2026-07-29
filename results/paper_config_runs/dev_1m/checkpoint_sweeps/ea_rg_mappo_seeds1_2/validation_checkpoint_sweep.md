@@ -1,6 +1,6 @@
 # 3DOF Strict-Sensing Checkpoint Sweep
 
-Generated: 2026-07-27T12:28:31
+Generated: 2026-07-27T14:27:09
 
 Purpose:
 
@@ -33,7 +33,7 @@ max_selection_collision_rate = 0.0
 | Scenario | Graph | Seed | Update | Recovery | Recovery steps | Success | Checkpoint |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | relay_failure | multi_relation | 1 | 2200 | 0.34 | 9.41176 | 0.34 | `results/paper_config_runs/dev_1m/runs/ea_rg_mappo/bc_ppo_seed1/actor_critic_update_2200.pt` |
-| relay_failure | multi_relation | 2 | 600 | 0 | inf | 0 | `results/paper_config_runs/dev_1m/runs/ea_rg_mappo/bc_ppo_seed2/actor_critic_update_0600.pt` |
+| relay_failure | multi_relation | 2 | 3800 | 0.48 | 25.25 | 0.48 | `results/paper_config_runs/dev_1m/runs/ea_rg_mappo/bc_ppo_seed2/actor_critic_update_3800.pt` |
 
 ## Boundary
 
@@ -47,4 +47,4 @@ max_selection_collision_rate = 0.0
 - Episode rows: `results/paper_config_runs/dev_1m/checkpoint_sweeps/ea_rg_mappo_seeds1_2/validation_episode_metrics.csv`
 - Selected checkpoints: `results/paper_config_runs/dev_1m/checkpoint_sweeps/ea_rg_mappo_seeds1_2/validation_selected_checkpoints.csv`
 
-Evaluated checkpoint-scenario combinations: 60
+Evaluated checkpoint-scenario combinations: 100

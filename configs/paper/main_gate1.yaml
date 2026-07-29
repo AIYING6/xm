@@ -12,6 +12,19 @@
     "failed_blue_agent": 1,
     "node_failure_start_step": 40,
     "node_failure_duration_steps": 80,
+    "validation_scenarios": [
+      "dropout030_delay2_relay_failure_early",
+      "dropout030_delay2_relay_failure",
+      "dropout030_delay2_relay_failure_delayed",
+      "dropout030_delay2_relay_failure_late"
+    ],
+    "test_scenarios": [
+      "dropout030_delay2_relay_failure_early",
+      "dropout030_delay2_relay_failure",
+      "dropout030_delay2_relay_failure_delayed",
+      "dropout030_delay2_relay_failure_late"
+    ],
+    "scenario_suite_status": "frozen_for_next_fair_retraining; do_not_replace_with_single_favorable_scenario",
     "max_target_message_age_steps": 80,
     "min_target_confidence": 0.20,
     "safety_proximity_distance": 0.0,

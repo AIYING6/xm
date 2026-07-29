@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import shlex
 from collections import Counter, defaultdict
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CONFIG_DIR = ROOT / "configs" / "paper"
 DEFAULT_MANIFEST = ROOT / "results" / "paper_command_manifest.csv"
+DEFAULT_MAIN_CONFIG = CONFIG_DIR / "main_gate1.yaml"
 DEFAULT_METHODS = ("mappo", "single_graph", "ea_rg_mappo", "happo")
 DEFAULT_SEEDS = ("0", "1", "2")
 
@@ -31,12 +34,40 @@ def token_value(tokens: list[str], flag: str) -> str | None:
         return None
 
 
+def token_values(tokens: list[str], flag: str) -> list[str]:
+    try:
+        start = tokens.index(flag) + 1
+    except ValueError:
+        return []
+    values: list[str] = []
+    for token in tokens[start:]:
+        if token.startswith("--"):
+            break
+        values.append(token)
+    return values
+
+
 def require(condition: bool, message: str, errors: list[str]) -> None:
     if not condition:
         errors.append(message)
 
 
-def audit_manifest(rows: list[dict[str, str]], methods: tuple[str, ...], seeds: tuple[str, ...]) -> list[str]:
+def load_main_config(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def expected_scenarios(main_cfg: dict, split: str) -> list[str]:
+    scenario = main_cfg["scenario"]
+    return [str(name) for name in scenario.get(f"{split}_scenarios", ["relay_failure"])]
+
+
+def audit_manifest(
+    rows: list[dict[str, str]],
+    methods: tuple[str, ...],
+    seeds: tuple[str, ...],
+    validation_scenarios: list[str],
+    test_scenarios: list[str],
+) -> list[str]:
     errors: list[str] = []
     counts = Counter((row["kind"], row["method"], row["status"]) for row in rows)
     train_rows = [row for row in rows if row["kind"] == "train"]
@@ -71,11 +102,31 @@ def audit_manifest(rows: list[dict[str, str]], methods: tuple[str, ...], seeds: 
                 out_dirs.append(out_dir)
         if row["kind"] == "validation_sweep":
             require(row["status"] == "ready_after_training", f"validation row {row_index} unexpected status", errors)
-            require(token_value(tokens, "--scenarios") == "relay_failure", f"validation row {row_index} unexpected scenario", errors)
+            require(
+                token_values(tokens, "--scenarios") == validation_scenarios,
+                f"validation row {row_index} unexpected scenarios",
+                errors,
+            )
+            if len(validation_scenarios) > 1:
+                require(
+                    token_value(tokens, "--selection-group") == "suite",
+                    f"validation row {row_index} must use suite checkpoint selection",
+                    errors,
+                )
             require("--selection-csv" not in tokens, f"validation row {row_index} must not consume selection-csv", errors)
         if row["kind"] == "test_sweep":
             require(row["status"] == "ready_after_training", f"test row {row_index} unexpected status", errors)
-            require(token_value(tokens, "--scenarios") == "relay_failure", f"test row {row_index} unexpected scenario", errors)
+            require(
+                token_values(tokens, "--scenarios") == test_scenarios,
+                f"test row {row_index} unexpected scenarios",
+                errors,
+            )
+            if len(test_scenarios) > 1:
+                require(
+                    token_value(tokens, "--selection-group") == "suite",
+                    f"test row {row_index} must use suite checkpoint selection",
+                    errors,
+                )
             require("--selection-csv" in tokens, f"test row {row_index} missing validation selection-csv", errors)
             selection_csv = token_value(tokens, "--selection-csv")
             require(
@@ -102,11 +153,19 @@ def audit_manifest(rows: list[dict[str, str]], methods: tuple[str, ...], seeds: 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument("--main-config", type=Path, default=DEFAULT_MAIN_CONFIG)
     parser.add_argument("--methods", nargs="*", default=DEFAULT_METHODS)
     parser.add_argument("--seeds", nargs="*", default=DEFAULT_SEEDS)
     args = parser.parse_args()
 
-    errors = audit_manifest(load_rows(args.manifest), tuple(args.methods), tuple(args.seeds))
+    main_cfg = load_main_config(args.main_config)
+    errors = audit_manifest(
+        load_rows(args.manifest),
+        tuple(args.methods),
+        tuple(args.seeds),
+        expected_scenarios(main_cfg, "validation"),
+        expected_scenarios(main_cfg, "test"),
+    )
     if errors:
         for error in errors:
             print(f"ERROR: {error}")

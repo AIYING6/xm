@@ -123,12 +123,22 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         message_delay_steps=args.message_delay_steps,
         radar_dropout_prob=args.radar_dropout_prob,
         strict_target_sensing=args.strict_target_sensing,
+        agent_target_info_bottleneck=args.agent_target_info_bottleneck,
         max_target_message_age_steps=args.max_target_message_age_steps,
         min_target_confidence=args.min_target_confidence,
+        failed_blue_agent=args.failed_blue_agent,
+        node_failure_start_step=args.node_failure_start_step,
+        node_failure_start_random_min=args.node_failure_start_random_min,
+        node_failure_start_random_max=args.node_failure_start_random_max,
+        node_failure_duration_steps=args.node_failure_duration_steps,
+        node_failure_duration_random_min=args.node_failure_duration_random_min,
+        node_failure_duration_random_max=args.node_failure_duration_random_max,
+        min_success_step=args.min_success_step,
         graph_encoder=args.graph_encoder,
         graph_relation_ablation=args.graph_relation_ablation,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
         device=args.device,
     )
 
@@ -150,6 +160,7 @@ def build_agent(cfg: RIGMAPPOConfig, args: argparse.Namespace) -> RIGMAPPOAgent:
         graph_encoder=args.graph_encoder,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
         use_intent_context=False,
     )
 
@@ -157,8 +168,14 @@ def build_agent(cfg: RIGMAPPOConfig, args: argparse.Namespace) -> RIGMAPPOAgent:
 def collect_demonstrations(cfg: RIGMAPPOConfig, args: argparse.Namespace) -> dict[str, np.ndarray]:
     obs_rows, share_rows, node_rows, edge_rows, role_rows, adj_rows, relation_adj_rows, intent_rows, action_rows = [], [], [], [], [], [], [], [], []
     successes = 0
+    sample_failure_curriculum = (
+        args.node_failure_start_random_min is not None
+        or args.node_failure_start_random_max is not None
+        or args.node_failure_duration_random_min is not None
+        or args.node_failure_duration_random_max is not None
+    )
     for ep in range(args.episodes):
-        env = make_env(cfg, args.seed + ep, training=False)
+        env = make_env(cfg, args.seed + ep, training=sample_failure_curriculum)
         obs, share_obs, graph = env.reset()
         while True:
             actions = geometric_policy(env, args.geometric_policy_mode)
@@ -298,6 +315,7 @@ def main() -> None:
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
+    parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--max-grad-norm", type=float, default=1.0)
     parser.add_argument("--no-balanced-loss", dest="balanced_loss", action="store_false")
@@ -310,8 +328,17 @@ def main() -> None:
     parser.add_argument("--message-delay-steps", type=int, default=0)
     parser.add_argument("--radar-dropout-prob", type=float, default=0.0)
     parser.add_argument("--strict-target-sensing", action="store_true")
+    parser.add_argument("--agent-target-info-bottleneck", action="store_true")
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
+    parser.add_argument("--failed-blue-agent", type=int, default=-1)
+    parser.add_argument("--node-failure-start-step", type=int, default=0)
+    parser.add_argument("--node-failure-start-random-min", type=int, default=None)
+    parser.add_argument("--node-failure-start-random-max", type=int, default=None)
+    parser.add_argument("--node-failure-duration-steps", type=int, default=0)
+    parser.add_argument("--node-failure-duration-random-min", type=int, default=None)
+    parser.add_argument("--node-failure-duration-random-max", type=int, default=None)
+    parser.add_argument("--min-success-step", type=int, default=0)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--resume", type=Path, default=None)
     parser.add_argument("--out-dir", type=Path, default=ROOT / "results" / "ri_gmappo_3d_bc_straight")

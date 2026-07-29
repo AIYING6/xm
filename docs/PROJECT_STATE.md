@@ -1,6 +1,6 @@
 # Current Project State
 
-Last updated: 2026-07-26
+Last updated: 2026-07-29
 
 ## Current Milestone
 
@@ -15,6 +15,94 @@ Immediate execution is P0 scientific-validity hardening:
 - remove global attack-chain progress from actor graph inputs while keeping it available to critic/evaluation;
 - add actor information-boundary tests;
 - mark any violating pre-hardening results as development evidence only.
+
+Current algorithm-development status:
+
+- Chain auxiliary learning has been implemented and tested in 100-update
+  development runs, but both the direct auxiliary version and the warmup version
+  hurt short-run policy learning. It is not promoted to formal 1M training.
+- Role-graph diagnostics show that the original multi-relation structure is
+  active, but role-pair gates remain nearly neutral.
+- A `role_gate_prior_strength = 0.4` candidate was implemented and verified by
+  smoke tests, but its 100-update development run under strict sensing,
+  dropout 0.30, delay 2, and relay failure was worse than original EA-RG-MAPPO
+  in online 5-episode evaluation (`0.0000` mean final success vs `0.3333` for
+  original EA). A follow-up fixed validation sweep with 30 matched episodes per
+  checkpoint found both variants weak (`0.0778` selected success for original
+  EA vs `0.0889` for gate-prior EA), so the candidate is recorded as
+  non-promotable rather than as a robust improvement.
+- The current main method remains the original EA-RG-MAPPO. The next work should
+  focus on fixed validation checkpoint sweeps, PPO stability, reward/scale
+  inspection, and fair retraining rather than adding another unvalidated module.
+- Early relay-failure validation under
+  `dropout030_delay2_relay_failure_early` is in progress and documented in
+  `docs/dropout030_delay2_early_validation_progress.md` and
+  `docs/dropout030_delay2_early_validation_summary.md`. The regular
+  MAPPO-family sweep is complete: EA-RG-MAPPO beats no-graph (`0.4733` vs
+  `0.3667`) but does not beat Single-Graph (`0.5267`). Therefore the early
+  scenario must not be promoted to final held-out testing as the main result.
+  The next priority is diagnosing EA seed instability versus Single-Graph, not
+  searching for another hand-picked scenario.
+- A first mechanism diagnostic for the completed early validation is recorded in
+  `docs/early_validation_mechanism_diagnostics.md`. EA improves over no-graph
+  on recovery, tracking, connectivity, and message age, but Single-Graph still
+  has better tracking during failure and shorter recovery time. The current
+  bottleneck is EA seed stability and relation-routing effectiveness.
+- A selected-checkpoint mechanism ablation on the early stress scenario is
+  recorded in `docs/relation_bottleneck_dev_update.md`. Removing task-support
+  at evaluation time barely changes EA (`0.4733` to `0.4667` success), and
+  disabling role-pair gates slightly improves it (`0.4867` success). Therefore
+  task-support and role-pair gate cannot currently be claimed as strong causal
+  mechanisms.
+- Added a guarded relation-bottleneck candidate:
+  `multi_relation_global_residual_weight`. Default remains `1.0` for backward
+  compatibility; `configs/paper/ea_rg_mappo_relation_bottleneck.yaml` sets it
+  to `0.0` to prevent the union graph path from bypassing relation-specific
+  channels. A BC+20-update smoke and a stronger seed-0 BC+100-update
+  development run both completed, but online success stayed `0.0` throughout
+  the 100-update PPO run. Latest diagnostics confirmed the global channel was
+  disabled, but task-support/perception attention remained weak and role-pair
+  gates were still near neutral. Do not scale this candidate to 1M/2M in its
+  current form.
+- BC diagnostics under the same early stress setting found that geometric
+  oracle policies remain highly reachable (`direct` and `offset` success
+  `1.000`), but balanced BC produces weak learned policies. Switching direct BC
+  to `--no-balanced-loss` improved imitation accuracy from `0.2970` to `0.7253`
+  and BC-only success from `0.0000` to `0.3000`. This is a protocol improvement
+  candidate, not a method contribution. If used formally, it must be applied
+  identically to EA, Single-Graph, MAPPO, and HAPPO-compatible BC baselines.
+- A fair seed-0 no-balanced BC development run is documented in
+  `docs/no_balanced_bc_seed0_dev_summary.md`. Under the same strict early-stress
+  protocol, BC-only success was `0.3000` for EA, `0.3000` for Single-Graph, and
+  `0.4000` for MAPPO. After 100-update PPO with checkpoint-subset validation,
+  the best observed checkpoints were EA update 40 (`0.4400` success),
+  Single-Graph update 80 (`0.4000`), and MAPPO update 70 (`0.3400`). This is a
+  useful training-protocol improvement, but only seed 0 and a subset of
+  checkpoints were evaluated. EA mechanism ablation at update 40 still showed
+  no degradation when task-support or role-pair gate was disabled, so those
+  mechanisms remain unproven.
+- The no-balanced BC check has been extended to full seed 0/1/2 100-update PPO
+  validation for EA-RG-MAPPO, Single-Graph, and MAPPO/no-graph. The fixed
+  50-episode validation summary is documented in
+  `docs/no_balanced_bc_seed0_2_validation_summary.md`. Selected-checkpoint mean
+  success/recovery is EA-RG-MAPPO `0.3733`, Single-Graph `0.3533`, and
+  MAPPO/no-graph `0.3400`. This confirms no-balanced BC is a useful short-run
+  initialization protocol, but the EA margin is too small for a paper-level
+  graph-mechanism claim. Do not scale this branch directly to 1M/2M until the
+  role-conditioned communication mechanism or task dependence is strengthened.
+- A small strict delayed-recovery checkpoint diagnostic is documented in
+  `docs/delayed_recovery_candidate_sweep_small_summary.md`. The checkpoint
+  sweep tool now supports `--checkpoint-updates` and records the update filter
+  plus `selection_success_weight` in its report. Under fresh-message stress
+  (`max_target_message_age_steps=20`, dropout `0.30`, delay `2`, relay failure
+  at step `40`), `delayed_recovery_min_step=80` produced only one non-zero EA
+  candidate (`seed1/update3800`, delayed recovery `0.200`) and zero delayed
+  recovery for Single-Graph and MAPPO/no-graph in the sampled checkpoints.
+  Lower thresholds reintroduced fast geometric-intercept confounds, so this
+  branch remains development evidence. The next experiment-design step is to
+  freeze a small early/standard/delayed/late relay-failure scenario suite and
+  retrain all methods under one fair protocol, not to keep searching for a
+  single favorable stress condition.
 
 P0 first pass completed on 2026-07-24 and is documented in `docs/p0_scientific_validity_hardening_update.md`:
 
@@ -66,6 +154,16 @@ P1 training-protocol standardization has started and is documented in `docs/p1_t
 - added `scripts/gate_validation_readiness.py` so validation sweeps are gated by completed training outputs and log sanity checks.
 - added `scripts/run_manifest_training_chunk.py` for foreground, resumable training chunks when detached background jobs are not reliable in the Codex sandbox.
 - added full training-state checkpoint support for chunked MAPPO/Single-Graph/EA-RG-MAPPO and HAPPO training. Weight-only `actor_critic_latest.pt` and `happo_latest.pt` remain available for existing evaluation scripts, while `actor_critic_training_state_latest.pt` and `happo_training_state_latest.pt` preserve optimizer state for subsequent resume chunks. Resume-smoke verification passed for both RI-GMAPPO and HAPPO after the 1700-update chunks.
+- The next fair validation/test protocol now uses a frozen four-scenario relay-failure suite from `configs/paper/main_gate1.yaml`: `dropout030_delay2_relay_failure_early`, `dropout030_delay2_relay_failure`, `dropout030_delay2_relay_failure_delayed`, and `dropout030_delay2_relay_failure_late`. `scripts/generate_paper_commands.py` now reads validation/test scenario lists from config instead of hard-coding `relay_failure`. `scripts/evaluate_3d_checkpoint_sweep.py` and `scripts/evaluate_happo_checkpoint_sweep.py` now support `--selection-group suite`, so multi-scenario validation selects one checkpoint per method/seed by suite-average score instead of selecting a different checkpoint per scenario. `scripts/audit_paper_manifest.py` verifies both the configured scenario lists and suite-selection flag. Config audit, command generation, Python compile, manifest audit, and a multi-scenario suite-selection smoke passed after the change.
+- HAPPO evaluation compatibility was tightened for the frozen suite protocol: `scripts/evaluate_happo_3d.py` now uses the same matching-tensor checkpoint loader as RI-GMAPPO so older HAPPO checkpoints remain evaluable after auxiliary-head code changes; `scripts/evaluate_happo_checkpoint_sweep.py` now supports `--checkpoint-updates`, `--selection-group`, and `--selection-success-weight`. A HAPPO four-scenario suite-selection smoke over updates `3800` and `3907` passed and produced a single `scenario_suite` selected checkpoint row.
+- A low-cost frozen-suite candidate sweep is documented in `docs/frozen_suite_candidate_sweep_summary.md`. It used the four-scenario suite, `--selection-group suite`, 3 train seeds, candidate checkpoints around online-monitoring peaks, and 5 validation episodes per scenario/checkpoint. Safety-gated broad recovery selection gives EA-RG-MAPPO-S recovery/delayed/success `0.333/0.083/0.433`, Single-Graph `0.350/0.083/0.500`, MAPPO/no-graph `0.133/0.000/0.167`, and HAPPO `0.000/0.000/0.000`. Safety-gated strict delayed-recovery selection gives EA `0.217` delayed recovery, Single-Graph `0.100`, MAPPO/no-graph `0.000`, and HAPPO `0.000`. This means EA has the clearest delayed-recovery mechanism signal, while Single-Graph remains slightly better on broad success. This is development evidence only. Do not run held-out test yet; next priority is improving EA training stability and deciding whether formal checkpoint selection should prioritize delayed recovery.
+- The first training-stability implementation pass is documented in `docs/training_stability_implementation_update.md`. RI-GMAPPO training now supports fixed online monitor seeds (`eval_base_seed`), PPO diagnostics (`approx_kl`, `clip_fraction`, `grad_norm`, `explained_variance`, `ppo_epochs_ran`, `critic_warmup_active`), critic-only warm-up, actor/critic learning-rate parameter groups, `clip_coef`, `ppo_epochs`, `target_kl`, and `max_grad_norm` CLI controls. A one-update 3D EA-RG-MAPPO-S smoke with critic warm-up and conservative PPO settings passed. The next recommended run is EA-only 300 updates over seeds 0/1/2 with fixed monitor episodes before applying the same stable protocol fairly to Single-Graph, MAPPO/no-graph, and HAPPO.
+- An EA-only stability development run through 120 updates is documented in `docs/training_stability_dev120_summary.md`. A first seed-0 attempt was invalid because it used `hidden_dim=128` with `hidden_dim=64` BC checkpoints; the valid runs use `--hidden-dim 64` and load all 74 tensors exactly. Under critic warm-up and conservative PPO, fixed-monitor success is stable for seed 0 (`0.3`-`0.4`) and seed 1 (`0.3`), while seed 2 remains unsolved on the fixed monitor. Four-scenario suite evaluation over updates 60/80/100/120 gives mean recovery/success/collision `0.333/0.667/0.000`, but strict delayed recovery remains `0.000`. This means the stability controls improve broad success and seed consistency, but do not yet solve the delayed/late recovery mechanism. `scripts/evaluate_3d_checkpoint_sweep.py` now supports `--run-dir-template` for evaluating nonstandard experiment directory layouts.
+- The EA-only stability development run was extended to 180 updates and recorded in `docs/training_stability_dev180_and_random_failure_summary.md`. Fixed step-40 failure training peaks around update `160` on the four-scenario validation suite: success/recovery/delayed-recovery/collision `0.600/0.300/0.000/0.000`; update `180` degrades to `0.400/0.200/0.000/0.000`. A seed-0 random failure-start pilot over `[25,100]` reaches only success/recovery/delayed-recovery/collision `0.400/0.200/0.000/0.000`, so randomizing failure timing alone is not sufficient. The next development step is a targeted post-loss chain re-closure training objective or staged failure-time curriculum, not simply longer runs under the same objective.
+- Post-loss reclosure training controls and recovery-oriented BC support are implemented and documented in `docs/post_loss_reclosure_recovery_bc_seed0_summary.md`. The key route is balanced `offset` geometric recovery BC followed by conservative PPO with `min_success_step=80` and a post-loss reclosure reward. In seed 0, the selected update-40 checkpoint reaches four-scenario suite success/recovery/after-loss/delayed-recovery/collision `0.625/0.675/0.675/0.450/0.000`; delayed and late scenarios both reach `0.700` delayed recovery with zero collision. This is the first strong delayed/late recovery development signal. It is not formal paper evidence yet; the next step is matched expansion to EA seeds 1/2 and then Single-Graph under the identical recovery-oriented protocol.
+- The recovery-oriented route has been upgraded into a uniform three-seed EA-RG-MAPPO-S development protocol and recorded in `docs/post_loss_reclosure_strong_protocol_3seed_summary.md`. The protocol uses strong balanced offset BC (`120` episodes, `20` epochs), `min_success_step=80`, post-loss reclosure reward `0.5`, and safety PPO with proximity distance `2500` and penalty `0.5`. Selected validation checkpoints over the four-scenario suite give mean success/recovery/after-loss/delayed-recovery/collision `0.625/0.717/0.717/0.342/0.000`. Delayed and late scenarios average delayed recovery `0.633` and `0.667`, both with zero collision. This clears the development gate for matched baseline expansion; the next implementation step is to run Single-Graph MAPPO under the identical protocol before any formal test evaluation.
+- Single-Graph MAPPO has now been run under the same strong recovery protocol and summarized in `docs/single_graph_strong_protocol_comparison_summary.md`. Under unconstrained delayed-recovery selection, Single-Graph reaches mean success/recovery/delayed/collision `0.675/0.783/0.358/0.008`, but seed 0 has nonzero collision. A zero-collision diagnostic gives EA `0.625/0.717/0.342/0.000` versus Single `0.600/0.783/0.333/0.000`. This means Single-Graph is a strong baseline; current evidence supports a nuanced safety/delayed-recovery tradeoff rather than a broad EA dominance claim. The next step is MAPPO/no-graph under the same protocol to establish the value of graph structure itself.
+- MAPPO/no-graph has now been run under the same strong recovery protocol and summarized in `docs/no_graph_strong_protocol_comparison_summary.md`. Under zero-collision selection, EA/Single/no-graph reach success `0.625/0.600/0.367`, recovery `0.717/0.783/0.492`, delayed recovery `0.342/0.333/0.308`, and timeout `0.375/0.400/0.633`. This supports a graph-structure claim over no-graph MAPPO, while preserving the earlier conclusion that EA versus Single is a close safety/recovery tradeoff rather than a one-sided dominance result. The next baseline to run is HAPPO under the same recovery protocol if schedule allows.
 - launched dev_1m seed-0 training jobs for EA-RG-MAPPO, Single-Graph MAPPO, MAPPO/no-graph, and HAPPO through `scripts/start_paper_manifest_job.py`. Progress should be monitored with `scripts/check_training_progress.py --mode dev_1m --methods ea_rg_mappo single_graph mappo happo --seeds 0`.
 - current dev_1m seed-0 progress snapshot is recorded in `docs/dev1m_seed0_progress.md`; all four seed-0 jobs are active and should finish on an hours-level timescale if current throughput holds.
 - detached background jobs stopped updating before completion in the Codex sandbox, so seed-0 dev_1m training has moved to foreground resumable chunks via `scripts/run_manifest_training_chunk.py`.
@@ -87,6 +185,63 @@ P1 training-protocol standardization has started and is documented in `docs/p1_t
 - HAPPO hardening on 2026-07-26 replaced the earlier HAPPO-style sequential PPO loss with a HAPPO sequential joint-ratio-corrected surrogate. Formal HAPPO evidence must be generated from post-correction checkpoints; older HAPPO-style outputs remain historical diagnostics only.
 - Corrected HAPPO manifest commands now write to `results/paper_config_runs/<mode>/runs/happo_standard/` so they cannot accidentally resume from the older `runs/happo/` HAPPO-style checkpoint directory.
 - Added `docs/target_prior_ablation_protocol.md`; target-prior perturbation diagnostics are now a required post-validation robustness check, not a main contribution.
+- A dev-1M seed 0/1/2 target-prior sensitivity diagnostic is complete in
+  `docs/dev1m_seed0_2_target_prior_sensitivity_diag.md`. Perturbing the target
+  prior from `(10000, 0, 5000)` to `(10000, 8000, 5000)` and `(0, -20000,
+  5000)` does not reveal a simple target-prior leakage explanation. Mean
+  success/recovery changes versus the default prior are: EA-RG-MAPPO `-0.0889`
+  under lateral offset and `+0.1111` under far prior; Single-Graph `-0.1778`
+  under both perturbations; MAPPO/no-graph `0.0000` and `-0.0111`. This is a
+  useful credibility audit, but MAPPO/no-graph remains too competitive in some
+  seeds, so the next scientific step is still stronger communication-dependence
+  or causal mechanism evidence.
+- A fresh-message stress diagnostic is complete in
+  `docs/dev1m_fresh20_dropout030_delay2_stress_diag.md`. Using frozen dev-1M
+  validation-selected checkpoints with `max_target_message_age_steps=20`,
+  dropout `0.30`, and delay `2`, mean success/recovery is EA-RG-MAPPO `0.2222`,
+  Single-Graph `0.0778`, and MAPPO/no-graph `0.3222`. This condition suppresses
+  Single-Graph but does not solve the no-graph issue because MAPPO seed 1 remains
+  very strong (`0.9667`). Do not promote this stress condition as a final main
+  scenario. The next step should diagnose MAPPO/no-graph seed 1 behavior and
+  identify whether its success comes from geometric interception, target-cache
+  use, or an environment shortcut.
+- MAPPO/no-graph seed-1 anomaly analysis is complete in
+  `docs/dev1m_no_graph_seed1_anomaly_diagnostic.md`. Under the fresh20 stress,
+  successful no-graph seed-1 episodes end around `60` steps on average and form
+  the first attack window around step `57`, shortly after relay failure starts
+  at step `40`, while failure-window connectivity is only `0.1455`. This points
+  to fast geometric interception rather than communication-recovery behavior.
+  The next quality step is evaluation/task hardening: distinguish early
+  geometric closure from true post-failure chain recovery, for example by
+  requiring post-failure loss-and-recovery, sustained chain closure, or target
+  initial-condition randomization.
+- Strict recovery metric hardening is implemented as a post-processing script in
+  `scripts/analyze_strict_recovery_hardening.py` and documented in
+  `docs/dev1m_strict_recovery_metric_hardening.md`. On the fresh20 stress
+  diagnostic, raw legacy recovery is EA-RG-MAPPO `0.2222`, MAPPO/no-graph
+  `0.3222`, and Single-Graph `0.0778`. Requiring delayed recovery at step
+  `>=80` changes the result to EA-RG-MAPPO `0.0333`, MAPPO/no-graph `0.0000`,
+  and Single-Graph `0.0000`, filtering the no-graph seed-1 early-geometry
+  anomaly. Candidate final primary metric: `delayed_recovery_ge_80`. This
+  metric is scientifically cleaner but currently too sparse, so the next
+  protocol should retrain/evaluate with this metric in mind rather than using
+  raw success alone.
+- Checkpoint-sweep support for delayed-recovery selection is implemented and
+  documented in `docs/checkpoint_sweep_delayed_recovery_selection_update.md`.
+  `scripts/evaluate_3d_checkpoint_sweep.py` now supports
+  `--selection-metric delayed_recovery --delayed-recovery-min-step 80
+  --selection-success-weight 0`, while default legacy selection remains
+  unchanged. `configs/paper/checkpoint_selection_schema.yaml` was updated to v2
+  with delayed-recovery columns, schema audit passed, and a MAPPO/no-graph
+  seed-1 smoke showed legacy recovery `1.0` but delayed recovery `0.0`,
+  correctly penalizing early geometric closure. A focused MAPPO/no-graph seed-1
+  candidate sweep is recorded in
+  `docs/delayed_recovery_mappo_seed1_candidate_sweep.md`: update `2300` has
+  legacy recovery `0.8000` but delayed recovery `0.0000`. Future strict
+  relay-failure validation sweeps should use delayed-recovery selection with
+  success weight `0`; if all candidate checkpoints have zero delayed recovery,
+  treat that seed as a failed delayed-recovery run rather than as a meaningful
+  selected checkpoint.
 
 ## Stable Research Direction
 
@@ -420,8 +575,182 @@ summary is in `results/dev1m_seed1_seed2_3907update_summary.csv`. Next, run
 validation checkpoint selection for seeds 1/2, then held-out test evaluation
 before making multi-seed paper-level claims.
 
-EA-RG-MAPPO seed-1 validation selection is complete: update 2200 is selected
-with `0.34` success/recovery and zero collision. EA-RG-MAPPO seed-2 validation
-has started and has completed 10/50 checkpoints through update 600, with no
-nonzero success/recovery yet. Continue the full seed-2 sweep before interpreting
-the multi-seed stability of the main method.
+EA-RG-MAPPO seeds 1/2 validation checkpoint selection is complete. Seed 1
+selects update 2200 with `0.34` success/recovery, `9.41176` mean recovery steps,
+and zero collision. Seed 2 selects update 3800 with `0.48` success/recovery,
+`25.25` mean recovery steps, and zero collision. Both seeds are substantially
+weaker than seed 0, so this is a main-method stability warning. Do not interpret
+it in isolation: the next step is to run the identical seeds 1/2 validation
+selection for Single-Graph MAPPO, MAPPO/no-graph, and HAPPO before deciding
+whether the relative advantage holds or whether a controlled training-protocol
+adjustment is needed.
+
+Single-Graph MAPPO seeds 1/2 validation checkpoint selection is complete under
+the same protocol. Seed 1: the existing selection score chooses
+update 40 with `0.04` success/recovery and zero collision, while the highest
+observed validation success/recovery across its 50 checkpoints is `0.24`. Seed 2:
+the selection score chooses update 40 with `0.44` success/recovery, `23.4545`
+mean recovery steps, and zero collision, which is also its best observed
+success/recovery. After all validation sweeps are complete, review whether the
+current selection score is over-penalizing slow recovery relative to
+success/recovery probability before freezing held-out test checkpoints.
+
+MAPPO/no-graph and HAPPO seeds 1/2 validation checkpoint selection is complete.
+The consolidated 3-seed validation summary is in
+`docs/dev1m_validation_all_methods_seed0_2_summary.md`. Selected-checkpoint
+mean success/recovery over seeds 0/1/2 is: EA-RG-MAPPO `0.5867`, MAPPO/no-graph
+`0.5333`, Single-Graph MAPPO `0.4333`, and HAPPO `0.1200`. EA-RG-MAPPO remains
+the best mean method, but the margin over MAPPO/no-graph is only `+0.0534` and
+MAPPO/no-graph seed 1 reaches `0.98` success/recovery with zero collision. This
+is a major scientific warning. Before held-out test claims, audit the no-graph
+actor information boundary and reassess whether the current strict-sensing
+relay-failure task is too easy or too seed-sensitive for the planned graph-centric
+main claim.
+
+A first no-graph boundary audit found no obvious actor-side target-information
+leak in the inspected path: the no-graph actor branch zeros graph features and
+intent context, and target cache propagation is tied to direct sensing plus
+communication reachability. The existing Gate 1 information-boundary test also
+passed (`24 passed` in `tests/test_gate1_communication_feasibility.py`). Current
+interpretation: the no-graph seed-1 spike is more likely scenario solvability and
+seed sensitivity than an obvious implementation leak. The next evidence step is
+held-out testing of the already selected checkpoints, followed by a harder
+stress condition if no-graph remains competitive.
+
+Held-out testing for seeds 0/1/2 is complete and documented in
+`docs/dev1m_heldout_all_methods_seed0_2_summary.md`. Test mean success/recovery
+is: EA-RG-MAPPO `0.5233`, MAPPO/no-graph `0.5100`, Single-Graph MAPPO `0.4667`,
+and HAPPO `0.0933`. EA-RG-MAPPO remains the best mean method, but the advantage
+over MAPPO/no-graph is only `+0.0133`; MAPPO/no-graph seed 1 transfers to the
+test split with `0.93` success/recovery and zero collision. Decision: the current
+dev-1M strict-sensing relay-failure scenario is useful development evidence but
+is not strong enough as the final sole main experiment. Move the main evidence
+route to a harder stress condition, starting with `dropout030 + relay_failure +
+strict_target_sensing + bottleneck`, then adding message delay or earlier relay
+failure if needed.
+
+The first `dropout030_relay_failure` stress test using nominal validation-selected
+checkpoints is complete and documented in
+`docs/dev1m_dropout030_relay_failure_stress_test_seed0_2_summary.md`. Mean
+success/recovery over seeds 0/1/2 is: EA-RG-MAPPO `0.3000`, MAPPO/no-graph
+`0.1533`, Single-Graph MAPPO `0.1300`, and HAPPO `0.1133`. This is a better
+scenario candidate because the EA-vs-no-graph margin increases to `+0.1467` and
+the no-graph seed-1 spike drops from `0.93` to `0.38`. However, EA seed 2 remains
+weak (`0.04`) and has a small collision rate (`0.01`), so the next step is not
+final reporting. Run validation checkpoint selection directly under
+`dropout030_relay_failure`, then run held-out stress testing from those
+stress-selected checkpoints.
+
+Stress validation selection under `dropout030_relay_failure` is complete and
+documented in
+`docs/dev1m_dropout030_relay_failure_stress_validation_selection_summary.md`.
+The result reverses the earlier stress-test optimism: selected-checkpoint mean
+success/recovery is MAPPO/no-graph `0.4733`, Single-Graph MAPPO `0.4133`,
+EA-RG-MAPPO `0.3400`, and HAPPO `0.1400`. Therefore `dropout030_relay_failure`
+is not strong enough as the final main stress scenario. The next route should
+increase direct dependence on communication-mediated information recovery,
+preferably by adding `dropout030_delay2_relay_failure` and then, if needed,
+`dropout030_delay2_relay_failure_early`.
+
+`dropout030_delay2_relay_failure` scenario definitions were added to
+`scripts/evaluate_3d_topology_robustness.py` on 2026-07-28. The script now
+supports normal, early, late, and delayed relay-failure variants with 30%
+communication dropout and 2-step message delay. A direct import check confirmed
+all four scenarios are registered with the intended parameters. One-checkpoint
+smoke evaluations under `dropout030_delay2_relay_failure` passed for both the
+regular checkpoint-sweep path and the HAPPO checkpoint-sweep path, writing outputs
+under `results/paper_config_runs/dev_1m/checkpoint_sweeps/dropout030_delay2_relay_failure_smoke/`
+and `results/paper_config_runs/dev_1m/checkpoint_sweeps/dropout030_delay2_relay_failure_happo_smoke/`.
+Next, run validation checkpoint selection for MAPPO/no-graph, Single-Graph
+MAPPO, EA-RG-MAPPO, and HAPPO under `dropout030_delay2_relay_failure`. If
+no-graph still remains competitive, repeat the same selection under
+`dropout030_delay2_relay_failure_early`.
+
+Validation checkpoint selection under `dropout030_delay2_relay_failure` is
+complete and documented in
+`docs/dev1m_dropout030_delay2_relay_failure_validation_selection_summary.md`.
+Selected-checkpoint mean success/recovery over seeds 0/1/2 is: EA-RG-MAPPO
+`0.5600`, Single-Graph MAPPO `0.5600`, MAPPO/no-graph `0.4733`, and HAPPO
+`0.1867`, all with zero selected-checkpoint collision rate. This scenario is
+better than nominal for suppressing no-graph, but it still does not prove the
+multi-relation graph advantage over Single-Graph MAPPO. Do not promote it to the
+final main held-out scenario yet. Next, run identical validation selection under
+`dropout030_delay2_relay_failure_early`.
+
+Because repeated stress-scenario screening still does not give a stable
+EA-RG-MAPPO advantage over Single-Graph MAPPO, the project has shifted from
+further scenario search to method strengthening. An optional actor-side
+kill-chain auxiliary learning head was added and documented in
+`docs/chain_auxiliary_learning_update.md`. The new `--chain-aux-coef` argument
+defaults to `0.0`, so existing experiments are unchanged unless explicitly
+enabled. The auxiliary head predicts actor-visible graph states
+(`perception_active`, `communication_connected`, `task_support_active`,
+`attack_window_active`, and `fresh_message_available`) and does not use held-out
+test outcomes or global attack-hold progress. A 1-update 3DOF smoke training run
+passed, and Gate 1 actor information-boundary tests still pass (`24 passed`).
+Next, run a controlled development comparison between original EA-RG-MAPPO and
+EA-RG-MAPPO + Chain Auxiliary before deciding whether to launch another full
+1M/2M formal training batch.
+
+The first chain-auxiliary Stage-A development comparison is complete and
+documented in `docs/chain_aux_dev100_training_summary.md`. Both original
+EA-RG-MAPPO and EA-RG-MAPPO + Chain Auxiliary completed 100 updates for seeds
+0/1/2. The auxiliary head learned its graph labels well
+(`~0.934` mean final auxiliary accuracy), but `chain_aux_coef=0.05` hurt short
+policy learning: mean final online success was `0.3333` for original EA and
+`0.0000` for EA + Chain Auxiliary, using only 5 online eval episodes. Decision:
+do not launch 1M with `chain_aux_coef=0.05`. A safer candidate has been
+implemented: `chain_aux_coef=0.02` with `chain_aux_warmup_updates=20`, plus
+`chain_aux_effective_coef` logging. Help/config/smoke checks passed, and Gate 1
+information-boundary tests still pass (`24 passed`). Next, run a second 100-update
+comparison for this safer auxiliary candidate before any 1M launch.
+
+The second chain-auxiliary Stage-A comparison is complete and documented in
+`docs/chain_aux_dev100_warmup_training_summary.md`. The safer candidate
+(`chain_aux_coef=0.02`, `chain_aux_warmup_updates=20`) completed seeds 0/1/2
+without non-finite values, and the warm-up behaved correctly. However, online
+success remained weaker than original EA-RG-MAPPO: mean final success was
+`0.0000` for the warm-up auxiliary version versus `0.3333` for original EA in
+the 100-update diagnostic. Mean best online success improved from `0.0667` for
+the earlier auxiliary run to `0.1333`, but it remains below original EA's
+`0.4000`. Decision: do not launch 1M with the current chain auxiliary
+implementation. Keep original EA-RG-MAPPO as the main method for now. Next route
+is role-pair gate and task-support relation diagnostics/optimization.
+
+Role-graph mechanism diagnostics have been added and documented in
+`docs/role_graph_gate_diagnostics_update.md`. The new
+`scripts/diagnose_role_graph_usage.py` script writes relation-attention and
+role-pair-gate CSV/MD outputs. Diagnostics on dev-1M EA validation-selected
+checkpoints under `dropout030_delay2_relay_failure` show that the role-pair gates
+are effectively neutral: average gate deviation from 0.5 is only `0.000154`, and
+max deviation is about `0.002548`. This means the current model uses the
+multi-relation graph structure, but role-pair-conditioned message passing is not
+yet strongly learned. A default-off candidate fix was implemented:
+`--role-gate-prior-strength`, with a new config
+`configs/paper/ea_rg_mappo_gate_prior.yaml` using strength `0.4`. Smoke training,
+diagnostics, config audit, and Gate 1 information-boundary tests passed. Next,
+run a 100-update EA-RG-MAPPO + Role-Gate Prior development comparison before any
+1M/2M launch.
+
+HAPPO baseline protocol compatibility has been repaired for the current strong
+post-loss recovery experiments. `scripts/train_happo_baseline.py` now exposes
+the same critical knobs used by the EA/Single/MAPPO strong protocol: PPO clip,
+PPO epochs, max grad norm, fixed online eval seed, random node-failure start and
+duration windows, minimum success step, post-loss chain reclosure bonus, and
+safety proximity terms. `scripts/evaluate_happo_3d.py` and
+`scripts/evaluate_happo_checkpoint_sweep.py` now pass `min_success_step` through
+the evaluation path. HAPPO's action/value interface was also updated to return a
+dummy chain-auxiliary tensor so it remains compatible with the shared rollout
+collector. Py-compile, 1-update HAPPO training smoke, and one-checkpoint HAPPO
+sweep smoke all passed. Next, run HAPPO under the same strong recovery protocol
+for seeds 0/1/2, then compare it against EA, Single-Graph, and no-graph using
+the same checkpoint-selection rule.
+
+HAPPO behavior cloning has also been added and documented in
+`docs/happo_strong_protocol_bc_update.md`. The new
+`scripts/pretrain_happo_3d_bc.py` reuses the existing 3DOF geometric teacher and
+demonstration collection, then trains HAPPO's independent actors on the same
+balanced offset demonstrations used by the other methods. A HAPPO BC smoke and a
+BC-initialized 1-update PPO smoke both passed, with all 84 HAPPO tensors loaded
+from the BC checkpoint. The next HAPPO comparison should therefore use BC +
+PPO, not random initialization.

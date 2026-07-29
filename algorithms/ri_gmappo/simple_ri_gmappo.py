@@ -19,10 +19,28 @@ from envs import (
     NODE3D_ROLE_IDENTITY_SLICE,
     NUM_INTENTS,
     OBS3D_ROLE_IDENTITY_SLICE,
+    RELATION_COMMUNICATION,
+    RELATION_PERCEPTION,
+    RELATION_TASK_SUPPORT,
     UAVIntercept3DConfig,
     UAVIntercept3DEnv,
     UAVPursuitConfig,
     UAVPursuitEnv,
+)
+
+
+ROLE_SCOUT_ID = 0
+ROLE_RELAY_ID = 1
+ROLE_ATTACKER_ID = 2
+ROLE_INTERCEPTOR_ID = 3
+ROLE_TARGET_ID = 4
+
+CHAIN_AUX_LABEL_NAMES = (
+    "perception_active",
+    "communication_connected",
+    "task_support_active",
+    "attack_window_active",
+    "fresh_message_available",
 )
 
 
@@ -41,20 +59,29 @@ class RIGMAPPOConfig:
     graph_message_ablation: str = "none"
     graph_input_ablation: str = "none"
     lr: float = 3e-4
+    actor_lr: float | None = None
+    critic_lr: float | None = None
     gamma: float = 0.99
     gae_lambda: float = 0.95
     clip_coef: float = 0.2
     entropy_coef: float = 0.01
     value_coef: float = 0.5
     intent_coef: float = 0.1
+    chain_aux_coef: float = 0.0
+    chain_aux_warmup_updates: int = 0
+    role_gate_prior_strength: float = 0.0
+    multi_relation_global_residual_weight: float = 1.0
     intent_balanced_loss: bool = False
     detach_intent: bool = False
     oracle_intent: bool = False
     max_grad_norm: float = 0.5
+    target_kl: float | None = None
+    critic_warmup_updates: int = 0
     ppo_epochs: int = 4
     minibatch_graphs: int = 256
     eval_interval: int = 10
     eval_episodes: int = 20
+    eval_base_seed: int | None = None
     target_policy: str = "mixed"
     target_speed: float = 0.75
     communication_radius: float = 8.0
@@ -80,6 +107,9 @@ class RIGMAPPOConfig:
     safety_proximity_distance: float = 0.0
     safety_proximity_penalty_weight: float = 0.0
     attack_geometry_reward_weight: float = 0.0
+    min_success_step: int = 0
+    post_loss_chain_reclosure_reward_weight: float = 0.0
+    post_loss_chain_reclosure_min_step: int = 0
     failed_blue_agent: int = -1
     node_failure_random_prob: float = 0.0
     node_failure_start_step: int = 0
@@ -196,6 +226,16 @@ class RoleConditionedGraphAttentionLayer(nn.Module):
         out = torch.sum(weights.unsqueeze(-1) * hj * gate, dim=2)
         return torch.tanh(out), weights
 
+    def initialize_role_pair_prior(self, pairs: list[tuple[int, int]], strength: float) -> None:
+        if not self.use_role_pair_gate or strength <= 0.0:
+            return
+        with torch.no_grad():
+            for receiver_role, sender_role in pairs:
+                if receiver_role >= self.num_roles or sender_role >= self.num_roles:
+                    continue
+                pair_index = receiver_role * self.num_roles + sender_role
+                self.role_pair_gate.weight[pair_index].fill_(float(strength))
+
 
 class MultiRelationGraphEncoder(nn.Module):
     """Separate perception, communication, and task-support message channels."""
@@ -207,9 +247,14 @@ class MultiRelationGraphEncoder(nn.Module):
         num_roles: int,
         num_relations: int = 3,
         use_role_pair_gate: bool = True,
+        role_gate_prior_strength: float = 0.0,
+        global_residual_weight: float = 1.0,
     ):
         super().__init__()
+        if global_residual_weight < 0.0:
+            raise ValueError("global_residual_weight must be non-negative")
         self.num_relations = num_relations
+        self.global_residual_weight = float(global_residual_weight)
         self.layer1 = nn.ModuleList(
             [
                 RoleConditionedGraphAttentionLayer(
@@ -232,6 +277,41 @@ class MultiRelationGraphEncoder(nn.Module):
         self.global_layer2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim)
         self.fuse1 = nn.Sequential(nn.Linear(hidden_dim * (num_relations + 1), hidden_dim), nn.Tanh())
         self.fuse2 = nn.Sequential(nn.Linear(hidden_dim * (num_relations + 1), hidden_dim), nn.Tanh())
+        self._initialize_role_pair_priors(role_gate_prior_strength)
+
+    def _initialize_role_pair_priors(self, strength: float) -> None:
+        if strength <= 0.0:
+            return
+        relation_pairs = {
+            RELATION_PERCEPTION: [
+                (ROLE_SCOUT_ID, ROLE_TARGET_ID),
+                (ROLE_RELAY_ID, ROLE_TARGET_ID),
+                (ROLE_ATTACKER_ID, ROLE_TARGET_ID),
+                (ROLE_INTERCEPTOR_ID, ROLE_TARGET_ID),
+            ],
+            RELATION_COMMUNICATION: [
+                (ROLE_SCOUT_ID, ROLE_RELAY_ID),
+                (ROLE_RELAY_ID, ROLE_SCOUT_ID),
+                (ROLE_RELAY_ID, ROLE_ATTACKER_ID),
+                (ROLE_RELAY_ID, ROLE_INTERCEPTOR_ID),
+                (ROLE_ATTACKER_ID, ROLE_RELAY_ID),
+                (ROLE_INTERCEPTOR_ID, ROLE_RELAY_ID),
+            ],
+            RELATION_TASK_SUPPORT: [
+                (ROLE_ATTACKER_ID, ROLE_SCOUT_ID),
+                (ROLE_INTERCEPTOR_ID, ROLE_SCOUT_ID),
+                (ROLE_SCOUT_ID, ROLE_RELAY_ID),
+                (ROLE_ATTACKER_ID, ROLE_RELAY_ID),
+                (ROLE_INTERCEPTOR_ID, ROLE_RELAY_ID),
+                (ROLE_RELAY_ID, ROLE_ATTACKER_ID),
+                (ROLE_RELAY_ID, ROLE_INTERCEPTOR_ID),
+            ],
+        }
+        for relation_id, pairs in relation_pairs.items():
+            if relation_id >= len(self.layer1):
+                continue
+            self.layer1[relation_id].initialize_role_pair_prior(pairs, strength)
+            self.layer2[relation_id].initialize_role_pair_prior(pairs, strength)
 
     def _apply_layer(
         self,
@@ -250,8 +330,8 @@ class MultiRelationGraphEncoder(nn.Module):
             attentions.append(attention)
         global_layer = self.global_layer1 if layers is self.layer1 else self.global_layer2
         global_output, global_attention = global_layer(x, union_adj, edge_feat)
-        outputs.append(global_output)
-        attentions.append(global_attention)
+        outputs.append(global_output * self.global_residual_weight)
+        attentions.append(global_attention * self.global_residual_weight)
         return torch.tanh(fuse(torch.cat(outputs, dim=-1)) + x), torch.stack(attentions, dim=1)
 
     def forward(
@@ -300,6 +380,8 @@ class RIActor(nn.Module):
         graph_input_ablation: str = "none",
         num_intents: int = NUM_INTENTS,
         use_intent_context: bool = True,
+        role_gate_prior_strength: float = 0.0,
+        multi_relation_global_residual_weight: float = 1.0,
     ):
         super().__init__()
         if graph_encoder not in {"no_graph", "single", "multi_relation"}:
@@ -332,11 +414,18 @@ class RIActor(nn.Module):
                 edge_feat_dim,
                 num_roles,
                 use_role_pair_gate=graph_message_ablation != "no_role_pair_gate",
+                role_gate_prior_strength=role_gate_prior_strength,
+                global_residual_weight=multi_relation_global_residual_weight,
             )
         self.intent_head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.Tanh(),
             nn.Linear(hidden_dim, num_intents),
+        )
+        self.chain_aux_head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.Tanh(),
+            nn.Linear(hidden_dim, len(CHAIN_AUX_LABEL_NAMES)),
         )
         self.policy_head = nn.Sequential(
             nn.Linear(hidden_dim * 2 + intent_dim, hidden_dim),
@@ -356,6 +445,7 @@ class RIActor(nn.Module):
         intent_label: torch.Tensor | None = None,
         detach_intent: bool = False,
         oracle_intent: bool = False,
+        return_chain_aux: bool = False,
     ):
         if self.graph_input_ablation == "no_edge_features" and edge_feat is not None:
             edge_feat = torch.zeros_like(edge_feat)
@@ -397,6 +487,9 @@ class RIActor(nn.Module):
             )
             obs_feat = self.obs_encoder(obs)
             logits = self.policy_head(torch.cat([obs_feat, graph_feat, intent_context], dim=-1))
+            chain_aux_logits = self.chain_aux_head(graph_feat.mean(dim=1))
+            if return_chain_aux:
+                return logits, attn, intent_logits, chain_aux_logits
             return logits, attn, intent_logits
         if self.graph_encoder == "single":
             x, _ = self.gat1(x, adj, edge_feat)
@@ -431,6 +524,9 @@ class RIActor(nn.Module):
 
         obs_feat = self.obs_encoder(obs)
         logits = self.policy_head(torch.cat([obs_feat, graph_feat, intent_context], dim=-1))
+        chain_aux_logits = self.chain_aux_head(graph_feat.mean(dim=1))
+        if return_chain_aux:
+            return logits, attn, intent_logits, chain_aux_logits
         return logits, attn, intent_logits
 
 
@@ -451,6 +547,8 @@ class RIGMAPPOAgent(nn.Module):
         graph_message_ablation: str = "none",
         graph_input_ablation: str = "none",
         use_intent_context: bool = True,
+        role_gate_prior_strength: float = 0.0,
+        multi_relation_global_residual_weight: float = 1.0,
     ):
         super().__init__()
         self.num_agents = num_agents
@@ -468,6 +566,8 @@ class RIGMAPPOAgent(nn.Module):
             graph_message_ablation=graph_message_ablation,
             graph_input_ablation=graph_input_ablation,
             use_intent_context=use_intent_context,
+            role_gate_prior_strength=role_gate_prior_strength,
+            multi_relation_global_residual_weight=multi_relation_global_residual_weight,
         )
         self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
 
@@ -491,7 +591,7 @@ class RIGMAPPOAgent(nn.Module):
         detach_intent: bool = False,
         oracle_intent: bool = False,
     ):
-        logits, attn, intent_logits = self.actor(
+        logits, attn, intent_logits, chain_aux_logits = self.actor(
             obs,
             node_feat,
             edge_feat,
@@ -502,6 +602,7 @@ class RIGMAPPOAgent(nn.Module):
             intent_label=intent_label,
             detach_intent=detach_intent,
             oracle_intent=oracle_intent,
+            return_chain_aux=True,
         )
         dist = Categorical(logits=logits)
         if action is None:
@@ -509,7 +610,7 @@ class RIGMAPPOAgent(nn.Module):
         log_prob = dist.log_prob(action)
         entropy = dist.entropy()
         value = self.critic_value(share_obs, role)
-        return action, log_prob, entropy, value, attn, intent_logits
+        return action, log_prob, entropy, value, attn, intent_logits, chain_aux_logits
 
 
 def set_seed(seed: int) -> None:
@@ -564,6 +665,9 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 safety_proximity_distance=cfg.safety_proximity_distance,
                 safety_proximity_penalty_weight=cfg.safety_proximity_penalty_weight,
                 attack_geometry_reward_weight=cfg.attack_geometry_reward_weight,
+                min_success_step=cfg.min_success_step,
+                post_loss_chain_reclosure_reward_weight=cfg.post_loss_chain_reclosure_reward_weight,
+                post_loss_chain_reclosure_min_step=cfg.post_loss_chain_reclosure_min_step,
                 failed_blue_agent=sample_failed_blue_agent(cfg) if training else cfg.failed_blue_agent,
                 node_failure_start_step=sample_int_curriculum(
                     cfg.node_failure_start_step,
@@ -655,6 +759,28 @@ def stack_graphs(graphs: List[dict]) -> dict:
     }
 
 
+def make_optimizer(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig) -> optim.Optimizer:
+    actor_lr = cfg.actor_lr if cfg.actor_lr is not None else cfg.lr
+    critic_lr = cfg.critic_lr if cfg.critic_lr is not None else cfg.lr
+    if actor_lr == cfg.lr and critic_lr == cfg.lr:
+        return optim.Adam(agent.parameters(), lr=cfg.lr, eps=1e-5)
+
+    actor_param_ids = {id(param) for param in agent.actor.parameters()}
+    critic_param_ids = {id(param) for param in agent.critic.parameters()}
+    other_params = [
+        param
+        for param in agent.parameters()
+        if id(param) not in actor_param_ids and id(param) not in critic_param_ids
+    ]
+    param_groups = [
+        {"params": agent.actor.parameters(), "lr": actor_lr},
+        {"params": agent.critic.parameters(), "lr": critic_lr},
+    ]
+    if other_params:
+        param_groups.append({"params": other_params, "lr": actor_lr})
+    return optim.Adam(param_groups, eps=1e-5)
+
+
 def checkpoint_model_state(checkpoint: dict) -> dict:
     if "model_state" in checkpoint:
         return checkpoint["model_state"]
@@ -738,7 +864,7 @@ def eval_policy(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig, base_seed: int = 10_0
             obs, share_obs, graph = env.reset()
             while True:
                 g = stack_graphs([graph])
-                actions, _, _, _, _, intent_logits = agent.get_action_and_value(
+                actions, _, _, _, _, intent_logits, _ = agent.get_action_and_value(
                     torch.as_tensor(obs[None, ...], dtype=torch.float32, device=device),
                     torch.as_tensor(g["node_feat"], dtype=torch.float32, device=device),
                     torch.as_tensor(g["edge_feat"], dtype=torch.float32, device=device),
@@ -806,9 +932,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         graph_message_ablation=cfg.graph_message_ablation,
         graph_input_ablation=cfg.graph_input_ablation,
         use_intent_context=cfg.env_name != "3d_intercept",
+        role_gate_prior_strength=cfg.role_gate_prior_strength,
+        multi_relation_global_residual_weight=cfg.multi_relation_global_residual_weight,
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
-    optimizer = optim.Adam(agent.parameters(), lr=cfg.lr, eps=1e-5)
+    optimizer = make_optimizer(agent, cfg)
     if cfg.resume:
         load_training_checkpoint(agent, optimizer, cfg.resume, device)
 
@@ -821,6 +949,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "entropy",
         "intent_loss",
         "intent_acc",
+        "chain_aux_loss",
+        "chain_aux_acc",
+        "chain_aux_effective_coef",
+        "approx_kl",
+        "clip_fraction",
+        "grad_norm",
+        "explained_variance",
+        "ppo_epochs_ran",
+        "critic_warmup_active",
         "train_avg_reward",
         "eval_success_rate",
         "eval_collision_rate",
@@ -841,10 +978,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             update = cfg.update_offset + local_update
             batch = collect_rollout(agent, envs, obs, share_obs, graph_obs, cfg, device)
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
-            train_info = update_policy(agent, optimizer, batch, cfg, device)
+            train_info = update_policy(agent, optimizer, batch, cfg, device, update)
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
             if update % cfg.eval_interval == 0 or update == 1:
-                row.update(eval_policy(agent, cfg, base_seed=10_000 + update * 100))
+                eval_base_seed = cfg.eval_base_seed if cfg.eval_base_seed is not None else 10_000 + update * 100
+                row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))
                 print(row, flush=True)
                 eval_key = (
                     float(row["eval_success_rate"]),
@@ -904,7 +1042,7 @@ def collect_rollout(
 
     for _ in range(cfg.rollout_steps):
         with torch.no_grad():
-            actions, logp, _, values, _, _ = agent.get_action_and_value(
+            actions, logp, _, values, _, _, _ = agent.get_action_and_value(
                 torch.as_tensor(obs, dtype=torch.float32, device=device),
                 torch.as_tensor(graph_obs["node_feat"], dtype=torch.float32, device=device),
                 torch.as_tensor(graph_obs["edge_feat"], dtype=torch.float32, device=device),
@@ -1029,7 +1167,46 @@ def effective_intent_coef(cfg: RIGMAPPOConfig) -> float:
     return cfg.intent_coef if cfg.env_name == "2d_pursuit" else 0.0
 
 
-def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict, cfg: RIGMAPPOConfig, device):
+def effective_chain_aux_coef(cfg: RIGMAPPOConfig, update: int) -> float:
+    if cfg.env_name != "3d_intercept" or cfg.chain_aux_coef <= 0.0:
+        return 0.0
+    if cfg.chain_aux_warmup_updates > 0 and update <= cfg.chain_aux_warmup_updates:
+        return 0.0
+    return float(cfg.chain_aux_coef)
+
+
+def build_chain_aux_targets(node_feat: torch.Tensor, edge_feat: torch.Tensor, relation_adj: torch.Tensor, num_agents: int) -> torch.Tensor:
+    """Build actor-visible kill-chain state labels from current graph observations."""
+    blue_slice = slice(0, num_agents)
+    target_index = num_agents
+    perception_active = relation_adj[:, RELATION_PERCEPTION, blue_slice, target_index].amax(dim=1)
+
+    comm_adj = relation_adj[:, RELATION_COMMUNICATION, blue_slice, blue_slice]
+    if num_agents > 1:
+        eye = torch.eye(num_agents, dtype=torch.bool, device=comm_adj.device).unsqueeze(0)
+        off_diag = comm_adj.masked_select(~eye).reshape(comm_adj.shape[0], num_agents, num_agents - 1)
+        communication_connected = off_diag.mean(dim=(1, 2)).clamp(0.0, 1.0)
+    else:
+        communication_connected = torch.ones_like(perception_active)
+
+    task_support_active = relation_adj[:, RELATION_TASK_SUPPORT, blue_slice, blue_slice].amax(dim=(1, 2))
+    attack_window_active = node_feat[:, blue_slice, 17].amax(dim=1).clamp(0.0, 1.0)
+    message_age = edge_feat[:, blue_slice, blue_slice, 15]
+    fresh_message_available = (1.0 - message_age).clamp(0.0, 1.0).amax(dim=(1, 2))
+
+    return torch.stack(
+        (
+            perception_active,
+            communication_connected,
+            task_support_active,
+            attack_window_active,
+            fresh_message_available,
+        ),
+        dim=-1,
+    )
+
+
+def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict, cfg: RIGMAPPOConfig, device, update: int):
     t_steps, n_envs, num_agents = batch["actions"].shape
     num_graphs = t_steps * n_envs
     obs = torch.as_tensor(batch["obs"].reshape(num_graphs, num_agents, -1), dtype=torch.float32, device=device)
@@ -1047,14 +1224,21 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
     advantages = torch.as_tensor(batch["advantages"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+    chain_aux_coef = effective_chain_aux_coef(cfg, update)
+    critic_warmup_active = update <= cfg.critic_warmup_updates
 
     losses, policy_losses, value_losses, entropies, intent_losses, intent_accs = [], [], [], [], [], []
+    chain_aux_losses, chain_aux_accs = [], []
+    approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], []
     indices = np.arange(num_graphs)
+    epochs_ran = 0
+    stop_ppo = False
     for _ in range(cfg.ppo_epochs):
+        epochs_ran += 1
         np.random.shuffle(indices)
         for start in range(0, num_graphs, cfg.minibatch_graphs):
             mb = indices[start : start + cfg.minibatch_graphs]
-            _, new_logp, entropy, values, _, intent_logits = agent.get_action_and_value(
+            _, new_logp, entropy, values, _, intent_logits, chain_aux_logits = agent.get_action_and_value(
                 obs[mb],
                 node_feat[mb],
                 edge_feat[mb],
@@ -1067,7 +1251,15 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
                 detach_intent=cfg.detach_intent,
                 oracle_intent=cfg.oracle_intent,
             )
-            ratio = (new_logp - old_logp[mb]).exp()
+            log_ratio = new_logp - old_logp[mb]
+            ratio = log_ratio.exp()
+            with torch.no_grad():
+                approx_kl = ((ratio - 1.0) - log_ratio).mean()
+                clip_fraction = ((ratio - 1.0).abs() > cfg.clip_coef).float().mean()
+                returns_mb = returns[mb]
+                value_error_var = torch.var(returns_mb - values)
+                returns_var = torch.var(returns_mb)
+                explained_variance = 1.0 - value_error_var / (returns_var + 1e-8)
             pg_loss1 = -advantages[mb] * ratio
             pg_loss2 = -advantages[mb] * torch.clamp(ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef)
             policy_loss = torch.max(pg_loss1, pg_loss2).mean()
@@ -1091,16 +1283,28 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
             else:
                 intent_loss = torch.zeros((), device=device)
                 intent_acc = torch.zeros((), device=device)
-            loss = (
-                policy_loss
-                + cfg.value_coef * value_loss
-                - cfg.entropy_coef * entropy_loss
-                + effective_intent_coef(cfg) * intent_loss
-            )
+            if chain_aux_coef > 0.0:
+                chain_aux_target = build_chain_aux_targets(node_feat[mb], edge_feat[mb], relation_adj[mb], num_agents)
+                chain_aux_loss = F.binary_cross_entropy_with_logits(chain_aux_logits, chain_aux_target)
+                chain_aux_pred = (torch.sigmoid(chain_aux_logits) >= 0.5).to(chain_aux_target.dtype)
+                chain_aux_acc = (chain_aux_pred == (chain_aux_target >= 0.5).to(chain_aux_target.dtype)).float().mean()
+            else:
+                chain_aux_loss = torch.zeros((), device=device)
+                chain_aux_acc = torch.zeros((), device=device)
+            if critic_warmup_active:
+                loss = cfg.value_coef * value_loss
+            else:
+                loss = (
+                    policy_loss
+                    + cfg.value_coef * value_loss
+                    - cfg.entropy_coef * entropy_loss
+                    + effective_intent_coef(cfg) * intent_loss
+                    + chain_aux_coef * chain_aux_loss
+                )
 
             optimizer.zero_grad()
             loss.backward()
-            nn.utils.clip_grad_norm_(agent.parameters(), cfg.max_grad_norm)
+            grad_norm = nn.utils.clip_grad_norm_(agent.parameters(), cfg.max_grad_norm)
             optimizer.step()
 
             losses.append(float(loss.detach().cpu()))
@@ -1109,6 +1313,16 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
             entropies.append(float(entropy_loss.detach().cpu()))
             intent_losses.append(float(intent_loss.detach().cpu()))
             intent_accs.append(float(intent_acc.detach().cpu()))
+            chain_aux_losses.append(float(chain_aux_loss.detach().cpu()))
+            chain_aux_accs.append(float(chain_aux_acc.detach().cpu()))
+            approx_kls.append(float(approx_kl.detach().cpu()))
+            clip_fractions.append(float(clip_fraction.detach().cpu()))
+            grad_norms.append(float(grad_norm.detach().cpu()))
+            explained_variances.append(float(explained_variance.detach().cpu()))
+        if cfg.target_kl is not None and approx_kls and float(np.mean(approx_kls[-max(1, num_graphs // cfg.minibatch_graphs) :])) > cfg.target_kl:
+            stop_ppo = True
+        if stop_ppo:
+            break
     return {
         "loss": float(np.mean(losses)),
         "policy_loss": float(np.mean(policy_losses)),
@@ -1116,4 +1330,13 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
         "entropy": float(np.mean(entropies)),
         "intent_loss": float(np.mean(intent_losses)),
         "intent_acc": float(np.mean(intent_accs)),
+        "chain_aux_loss": float(np.mean(chain_aux_losses)),
+        "chain_aux_acc": float(np.mean(chain_aux_accs)),
+        "chain_aux_effective_coef": chain_aux_coef,
+        "approx_kl": float(np.mean(approx_kls)),
+        "clip_fraction": float(np.mean(clip_fractions)),
+        "grad_norm": float(np.mean(grad_norms)),
+        "explained_variance": float(np.mean(explained_variances)),
+        "ppo_epochs_ran": epochs_ran,
+        "critic_warmup_active": float(critic_warmup_active),
     }

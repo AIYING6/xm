@@ -21,6 +21,8 @@ from scripts.evaluate_3d_checkpoint_sweep import (  # noqa: E402
     completed_key,
     display_path,
     mean,
+    mean_delayed_recovery,
+    mean_delayed_recovery_steps,
     mean_recovery_steps,
     read_existing_csv,
     selection_score,
@@ -50,11 +52,16 @@ def checkpoint_update(path: Path) -> int:
 
 def discover_candidates(args: argparse.Namespace) -> list[Candidate]:
     candidates: list[Candidate] = []
+    allowed_updates = set(args.checkpoint_updates) if args.checkpoint_updates else None
     for seed in args.seeds:
-        run_dir = args.happo_root / f"bc_ppo_seed{seed}"
+        run_dir = args.happo_root / args.run_dir_template.format(seed=seed)
         paths = sorted(run_dir.glob(args.checkpoint_glob), key=checkpoint_update)
+        if allowed_updates is not None:
+            paths = [path for path in paths if checkpoint_update(path) in allowed_updates]
         if not paths:
             message = f"no HAPPO checkpoints matching {args.checkpoint_glob} under {run_dir}"
+            if allowed_updates is not None:
+                message += f" after filtering updates {sorted(allowed_updates)}"
             if args.allow_missing:
                 print(f"skip: {message}", flush=True)
                 continue
@@ -108,6 +115,7 @@ def make_eval_args(args: argparse.Namespace, candidate: Candidate, scenario_name
         failed_blue_agent=scenario.failed_blue_agent,
         node_failure_start_step=scenario.node_failure_start_step,
         node_failure_duration_steps=scenario.node_failure_duration_steps,
+        min_success_step=args.min_success_step,
         stochastic=False,
         allow_random_policy=False,
         hidden_dim=args.hidden_dim,
@@ -127,10 +135,22 @@ def summarize_rows(
     rows: list[dict[str, object]],
 ) -> dict[str, str]:
     recovery = mean(rows, "post_failure_chain_recovered")
+    recovered_after_loss = mean(rows, "post_failure_chain_recovered_after_loss")
+    delayed = mean_delayed_recovery(rows, args.delayed_recovery_min_step)
     recovery_steps = mean_recovery_steps(rows)
+    delayed_steps = mean_delayed_recovery_steps(rows, args.delayed_recovery_min_step)
     success = mean(rows, "success")
     collision = mean(rows, "collision")
-    score = selection_score(recovery, recovery_steps, success, collision, args.max_selection_collision_rate)
+    score_recovery = delayed if args.selection_metric == "delayed_recovery" else recovery
+    score_steps = delayed_steps if args.selection_metric == "delayed_recovery" else recovery_steps
+    score = selection_score(
+        score_recovery,
+        score_steps,
+        success,
+        collision,
+        args.max_selection_collision_rate,
+        args.selection_success_weight,
+    )
     return {
         "split": args.split,
         "scenario": scenario_name,
@@ -149,7 +169,11 @@ def summarize_rows(
         "episodes": str(args.episodes),
         "success_mean": f"{success:.6g}",
         "post_failure_chain_recovered_mean": f"{recovery:.6g}",
+        "post_failure_chain_recovered_after_loss_mean": f"{recovered_after_loss:.6g}",
+        "delayed_recovery_min_step": str(args.delayed_recovery_min_step),
+        "delayed_recovery_mean": f"{delayed:.6g}",
         "post_failure_chain_recovery_steps_mean": "inf" if not np.isfinite(recovery_steps) else f"{recovery_steps:.6g}",
+        "delayed_recovery_steps_mean": "inf" if not np.isfinite(delayed_steps) else f"{delayed_steps:.6g}",
         "chain_closed_during_failure_rate_mean": f"{mean(rows, 'chain_closed_during_failure_rate'):.6g}",
         "tracking_during_failure_rate_mean": f"{mean(rows, 'tracking_during_failure_rate'):.6g}",
         "connectivity_during_failure_mean": f"{mean(rows, 'connectivity_during_failure'):.6g}",
@@ -160,6 +184,8 @@ def summarize_rows(
         "collision_mean": f"{collision:.6g}",
         "constraint_violation_mean": f"{mean(rows, 'constraint_violation'):.6g}",
         "selection_score": f"{score:.6g}",
+        "selection_metric": args.selection_metric,
+        "selection_success_weight": f"{args.selection_success_weight:.6g}",
     }
 
 
@@ -175,6 +201,11 @@ def write_report(path: Path, args: argparse.Namespace, summary_rows: list[dict[s
         f"scenarios = {list(args.scenarios)}",
         f"episodes = {args.episodes}",
         f"base_seed = {args.base_seed}",
+        f"checkpoint_updates = {list(args.checkpoint_updates) if args.checkpoint_updates else 'all'}",
+        f"selection_group = {args.selection_group}",
+        f"selection_metric = {args.selection_metric}",
+        f"delayed_recovery_min_step = {args.delayed_recovery_min_step}",
+        f"selection_success_weight = {args.selection_success_weight}",
         f"selection_csv = {display_path(args.selection_csv) if args.selection_csv else 'none'}",
         "```",
         "",
@@ -217,8 +248,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-prior-position", type=float, nargs=3, default=(10_000.0, 0.0, 5_000.0))
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
+    parser.add_argument("--min-success-step", type=int, default=0)
     parser.add_argument("--happo-root", type=Path, default=ROOT / "results" / "paper_config_runs" / "smoke" / "runs" / "happo")
+    parser.add_argument(
+        "--run-dir-template",
+        type=str,
+        default="bc_ppo_seed{seed}",
+        help="Per-seed run directory template under --happo-root.",
+    )
     parser.add_argument("--checkpoint-glob", type=str, default="happo_update_*.pt")
+    parser.add_argument(
+        "--checkpoint-updates",
+        nargs="*",
+        type=int,
+        default=None,
+        help="Optional update numbers to keep after --checkpoint-glob discovery.",
+    )
     parser.add_argument("--selection-csv", type=Path, default=None)
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--role-dim", type=int, default=8)
@@ -228,12 +273,39 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-missing", action="store_true")
     parser.add_argument("--resume", action="store_true", help="Resume an interrupted sweep by skipping completed checkpoint/scenario rows.")
     parser.add_argument(
+        "--selection-group",
+        choices=("scenario", "suite"),
+        default="scenario",
+        help=(
+            "Checkpoint-selection grouping. scenario selects one checkpoint per scenario; "
+            "suite selects one checkpoint per seed using mean validation score across requested scenarios."
+        ),
+    )
+    parser.add_argument(
+        "--selection-metric",
+        choices=("legacy_recovery", "delayed_recovery"),
+        default="legacy_recovery",
+        help="Checkpoint-selection metric, matching the RI-GMAPPO checkpoint sweep.",
+    )
+    parser.add_argument(
+        "--delayed-recovery-min-step",
+        type=int,
+        default=80,
+        help="Absolute minimum post-failure first-chain step when --selection-metric=delayed_recovery.",
+    )
+    parser.add_argument(
         "--max-new-evals",
         type=int,
         default=None,
         help="Stop after this many newly evaluated checkpoint/scenario pairs. Useful for chunking long sweeps.",
     )
     parser.add_argument("--max-selection-collision-rate", type=float, default=None)
+    parser.add_argument(
+        "--selection-success-weight",
+        type=float,
+        default=100.0,
+        help="Weight applied to success_mean in checkpoint selection.",
+    )
     return parser.parse_args()
 
 
@@ -285,7 +357,7 @@ def main() -> None:
         if stop_requested:
             break
 
-    selected_rows = select_checkpoints(summary_rows)
+    selected_rows = select_checkpoints(args, summary_rows)
     write_csv(episode_path, episode_rows, (*extra_episode_columns, *CSV_COLUMNS))
     write_csv(summary_path, summary_rows, SUMMARY_COLUMNS)
     write_csv(selection_path, selected_rows, SELECTION_COLUMNS)

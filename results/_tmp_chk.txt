@@ -1,0 +1,20 @@
+MAPPO seed1: count=50
+  first=20 last=3907 max=3907
+   actor_critic_update_3800.pt
+   actor_critic_update_3900.pt
+   actor_critic_update_3907.pt
+MAPPO seed2: count=50
+  first=20 last=3907 max=3907
+   actor_critic_update_3800.pt
+   actor_critic_update_3900.pt
+   actor_critic_update_3907.pt
+HAPPO seed1: count=50
+  first=20 last=3907 max=3907
+   happo_update_3800.pt
+   happo_update_3900.pt
+   happo_update_3907.pt
+HAPPO seed2: count=50
+  first=20 last=3907 max=3907
+   happo_update_3800.pt
+   happo_update_3900.pt
+   happo_update_3907.pt

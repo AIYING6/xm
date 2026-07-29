@@ -13,7 +13,12 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from algorithms.ri_gmappo.simple_ri_gmappo import RIGMAPPOConfig, make_env, stack_graphs  # noqa: E402
+from algorithms.ri_gmappo.simple_ri_gmappo import (  # noqa: E402
+    RIGMAPPOConfig,
+    load_matching_state_dict,
+    make_env,
+    stack_graphs,
+)
 from scripts.evaluate_ri_gmappo_3d import (  # noqa: E402
     CSV_COLUMNS,
     build_episode_row,
@@ -54,6 +59,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         failed_blue_agent=args.failed_blue_agent,
         node_failure_start_step=args.node_failure_start_step,
         node_failure_duration_steps=args.node_failure_duration_steps,
+        min_success_step=args.min_success_step,
         graph_encoder="no_graph",
         graph_relation_ablation="none",
         graph_message_ablation="none",
@@ -91,7 +97,7 @@ def build_agent(args: argparse.Namespace, cfg: RIGMAPPOConfig) -> tuple[HAPPOBas
         intent_dim=intent_dim,
     )
     if checkpoint is not None:
-        agent.load_state_dict(checkpoint)
+        load_matching_state_dict(agent, str(args.checkpoint), torch.device(args.device))
     agent.to(torch.device(args.device))
     agent.eval()
     return agent, policy_source
@@ -125,7 +131,7 @@ def evaluate(args: argparse.Namespace) -> list[dict[str, float | int | str | boo
             while any(active):
                 active_indices = [i for i, is_active in enumerate(active) if is_active]
                 graph_batch = stack_graphs([graph_list[i] for i in active_indices])
-                actions, _, _, _, _, _ = agent.get_action_and_value(
+                actions, _, _, _, _, _, _ = agent.get_action_and_value(
                     torch.as_tensor(np.stack([obs_list[i] for i in active_indices], axis=0), dtype=torch.float32, device=device),
                     torch.as_tensor(graph_batch["node_feat"], dtype=torch.float32, device=device),
                     torch.as_tensor(graph_batch["edge_feat"], dtype=torch.float32, device=device),
@@ -245,6 +251,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
     parser.add_argument("--node-failure-start-step", type=int, default=0)
     parser.add_argument("--node-failure-duration-steps", type=int, default=0)
+    parser.add_argument("--min-success-step", type=int, default=0)
     parser.add_argument("--stochastic", action="store_true")
     parser.add_argument("--allow-random-policy", action="store_true")
     parser.add_argument("--hidden-dim", type=int, default=64)

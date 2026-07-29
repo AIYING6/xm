@@ -52,6 +52,45 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         self.assertGreater(float(weights[0, 1, 0]), 0.0)
         self.assertEqual(float(weights[0, 0, 1]), 0.0)
 
+    def test_multi_relation_global_residual_weight_controls_reported_global_channel(self) -> None:
+        torch.manual_seed(31)
+        env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=31))
+        obs, share_obs, graph = env.reset()
+        common_kwargs = dict(
+            obs_dim=env.obs_dim,
+            node_feat_dim=graph["node_feat"].shape[-1],
+            edge_feat_dim=graph["edge_feat"].shape[-1],
+            share_obs_dim=share_obs.shape[-1],
+            action_dim=env.action_dim,
+            num_agents=env.num_agents,
+            num_roles=max(5, int(np.max(graph["role"])) + 1),
+            hidden_dim=32,
+            role_dim=4,
+            intent_dim=4,
+            graph_encoder="multi_relation",
+            use_intent_context=False,
+        )
+        enabled = RIGMAPPOAgent(**common_kwargs, multi_relation_global_residual_weight=1.0)
+        disabled = RIGMAPPOAgent(**common_kwargs, multi_relation_global_residual_weight=0.0)
+
+        actor_inputs = (
+            torch.as_tensor(obs[None, ...], dtype=torch.float32),
+            torch.as_tensor(graph["node_feat"][None, ...], dtype=torch.float32),
+            torch.as_tensor(graph["edge_feat"][None, ...], dtype=torch.float32),
+            torch.as_tensor(graph["role"][None, ...], dtype=torch.long),
+            torch.as_tensor(graph["adj"][None, ...], dtype=torch.float32),
+            env.num_agents,
+        )
+        relation_adj = torch.as_tensor(graph["relation_adj"][None, ...], dtype=torch.float32)
+        with torch.no_grad():
+            logits_enabled, attn_enabled, _ = enabled.actor(*actor_inputs, relation_adj=relation_adj)
+            logits_disabled, attn_disabled, _ = disabled.actor(*actor_inputs, relation_adj=relation_adj)
+
+        self.assertEqual(tuple(logits_enabled.shape), tuple(logits_disabled.shape))
+        self.assertEqual(tuple(attn_enabled.shape), tuple(attn_disabled.shape))
+        self.assertGreater(float(attn_enabled[:, 3].sum()), 0.0)
+        torch.testing.assert_close(attn_disabled[:, 3], torch.zeros_like(attn_disabled[:, 3]))
+
     def test_task_support_relation_requires_delivered_communication(self) -> None:
         env = UAVIntercept3DEnv(
             UAVIntercept3DConfig(

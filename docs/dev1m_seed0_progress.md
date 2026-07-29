@@ -195,20 +195,59 @@ can be much stronger than the last online monitor.
 
 ## Seeds 1/2 Validation Sweep Progress
 
-EA-RG-MAPPO validation selection for seeds 1/2 has started. Each seed has 50
-saved checkpoint snapshots. Current status:
+EA-RG-MAPPO validation selection for seeds 1/2 is complete. Each seed has 50
+saved checkpoint snapshots and was evaluated with 50 matched validation
+episodes per checkpoint under the unchanged strict-sensing relay-failure
+protocol. Current status:
 
 | Method | Seed | Completed validation checkpoints | Total checkpoints | Current best success/recovery |
 |---|---:|---:|---:|---:|
 | EA-RG-MAPPO | 1 | 50 | 50 | 0.34 |
-| EA-RG-MAPPO | 2 | 10 | 50 | 0.00 |
+| EA-RG-MAPPO | 2 | 50 | 50 | 0.48 |
 
 Seed 1 validation selection is complete. The selected checkpoint is update 2200
 with `0.34` success/recovery, `9.41176` mean recovery steps, and zero collision.
-Seed 2 validation has started and has reached update 600; the first 10 evaluated
-checkpoints still have zero success/recovery. This is not yet a conclusion; seed
-2 must cover the full checkpoint range because seed 0's selected checkpoint
-appeared in mid-training and the final online monitor was misleading.
+Seed 2 validation selection is complete. The selected checkpoint is update 3800
+with `0.48` success/recovery, `25.25` mean recovery steps, and zero collision.
+
+The multi-seed EA-RG-MAPPO validation result is substantially weaker than seed 0
+(`0.94` validation success/recovery). This is a stability warning, not yet a
+paper conclusion. The next required step is to run the same seeds 1/2 validation
+selection for Single-Graph MAPPO, MAPPO/no-graph, and HAPPO before judging
+relative method quality or deciding whether the training protocol needs another
+controlled adjustment.
+
+Single-Graph MAPPO validation selection for seeds 1/2 is complete under the
+same protocol. Current status:
+
+| Method | Seed | Completed validation checkpoints | Total checkpoints | Current best success/recovery |
+|---|---:|---:|---:|---:|
+| Single-Graph MAPPO | 1 | 50 | 50 | 0.24 |
+| Single-Graph MAPPO | 2 | 50 | 50 | 0.44 |
+
+Seed 1 is complete and currently selects update 40 with `0.04` success/recovery,
+`78.5` mean recovery steps, and zero collision under the existing selection
+score. Its highest observed validation success/recovery is `0.24`, so the
+selection-score behavior should be reviewed after all methods are swept. Seed 2
+is complete and selects update 40 with `0.44` success/recovery, `23.4545` mean
+recovery steps, and zero collision.
+
+MAPPO/no-graph validation selection for seeds 1/2 has started under the same
+protocol. Current status:
+
+| Method | Seed | Completed validation checkpoints | Total checkpoints | Current best success/recovery | Best zero-collision success/recovery |
+|---|---:|---:|---:|---:|---:|
+| MAPPO/no-graph | 1 | 50 | 50 | 0.98 | 0.98 |
+| MAPPO/no-graph | 2 | 0 | 50 | n/a | n/a |
+
+MAPPO seed 1 is complete and selects update 2400 with `0.98` success/recovery,
+`20.1224` mean recovery steps, and zero collision. Earlier nonzero
+success/recovery checkpoints with nonzero collision were correctly excluded by
+the zero-collision checkpoint-selection rule, but the final seed-1 result is a
+major warning: the no-graph baseline can solve this validation split in at least
+one seed. Before making method claims, complete MAPPO seed 2 and then audit
+whether the no-graph actor path has any unintended information advantage or
+whether the current strict-sensing task is too easy for some initialized runs.
 
 ## Execution Note
 

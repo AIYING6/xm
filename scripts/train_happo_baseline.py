@@ -21,6 +21,7 @@ from algorithms.ri_gmappo.simple_ri_gmappo import (  # noqa: E402
     collect_rollout,
     compute_gae,
     eval_policy,
+    load_matching_state_dict,
     make_envs,
     set_seed,
     stack_graphs,
@@ -145,6 +146,7 @@ class HAPPOBaselineAgent(nn.Module):
             values.append(value)
         batch = obs.shape[0]
         intent_logits = torch.zeros(batch, 1, 5, dtype=obs.dtype, device=obs.device)
+        chain_aux_logits = torch.zeros(batch, 5, dtype=obs.dtype, device=obs.device)
         attention = torch.zeros(batch, adj.shape[-1], adj.shape[-1], dtype=obs.dtype, device=obs.device)
         return (
             torch.stack(actions, dim=1),
@@ -153,6 +155,7 @@ class HAPPOBaselineAgent(nn.Module):
             torch.stack(values, dim=1),
             attention,
             intent_logits,
+            chain_aux_logits,
         )
 
 
@@ -328,6 +331,9 @@ def train_happo(cfg: RIGMAPPOConfig) -> Path:
         intent_dim=cfg.intent_dim,
     ).to(device)
     optimizers = [optim.Adam(policy.parameters(), lr=cfg.lr, eps=1e-5) for policy in agent.policies]
+    init_checkpoint = getattr(cfg, "init_checkpoint", None)
+    if init_checkpoint:
+        load_matching_state_dict(agent, str(init_checkpoint), device)
     if cfg.resume:
         load_happo_training_checkpoint(agent, optimizers, cfg.resume, device)
 
@@ -362,7 +368,8 @@ def train_happo(cfg: RIGMAPPOConfig) -> Path:
             train_info = update_happo_policy(agent, optimizers, batch, cfg, device)
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
             if update % cfg.eval_interval == 0 or update == 1:
-                row.update(eval_policy(agent, cfg, base_seed=10_000 + update * 100))
+                eval_base_seed = cfg.eval_base_seed if cfg.eval_base_seed is not None else 10_000 + update * 100
+                row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))
                 print(row, flush=True)
             else:
                 row.update(
@@ -402,12 +409,17 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--intent-dim", type=int, default=8)
     parser.add_argument("--intent-coef", type=float, default=0.0)
     parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--clip-coef", type=float, default=0.2)
     parser.add_argument("--entropy-coef", type=float, default=0.001)
+    parser.add_argument("--max-grad-norm", type=float, default=0.5)
+    parser.add_argument("--ppo-epochs", type=int, default=4)
+    parser.add_argument("--eval-base-seed", type=int, default=None)
     parser.add_argument("--eval-episodes", type=int, default=1)
     parser.add_argument("--eval-interval", type=int, default=1)
     parser.add_argument("--save-interval", type=int, default=1)
     parser.add_argument("--save-snapshots", action="store_true")
     parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--init-checkpoint", type=str, default=None)
     parser.add_argument("--update-offset", type=int, default=0)
     parser.add_argument("--append-log", action="store_true")
     parser.add_argument("--target-policy", type=str, default="straight")
@@ -418,15 +430,22 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--message-delay-steps", type=int, default=0)
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
     parser.add_argument("--node-failure-start-step", type=int, default=0)
+    parser.add_argument("--node-failure-start-random-min", type=int, default=None)
+    parser.add_argument("--node-failure-start-random-max", type=int, default=None)
     parser.add_argument("--node-failure-duration-steps", type=int, default=0)
+    parser.add_argument("--node-failure-duration-random-min", type=int, default=None)
+    parser.add_argument("--node-failure-duration-random-max", type=int, default=None)
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--safety-proximity-distance", type=float, default=0.0)
     parser.add_argument("--safety-proximity-penalty-weight", type=float, default=0.0)
+    parser.add_argument("--min-success-step", type=int, default=0)
+    parser.add_argument("--post-loss-chain-reclosure-reward-weight", type=float, default=0.0)
+    parser.add_argument("--post-loss-chain-reclosure-min-step", type=int, default=0)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--out-dir", type=str, default=str(ROOT / "results" / "happo_baseline_smoke"))
     args = parser.parse_args()
-    return RIGMAPPOConfig(
+    cfg = RIGMAPPOConfig(
         env_name="3d_intercept",
         seed=args.seed,
         updates=args.updates,
@@ -437,7 +456,11 @@ def parse_args() -> RIGMAPPOConfig:
         intent_dim=args.intent_dim,
         graph_encoder="no_graph",
         lr=args.lr,
+        clip_coef=args.clip_coef,
         entropy_coef=args.entropy_coef,
+        max_grad_norm=args.max_grad_norm,
+        ppo_epochs=args.ppo_epochs,
+        eval_base_seed=args.eval_base_seed,
         intent_coef=args.intent_coef,
         eval_episodes=args.eval_episodes,
         eval_interval=args.eval_interval,
@@ -454,14 +477,23 @@ def parse_args() -> RIGMAPPOConfig:
         message_delay_steps=args.message_delay_steps,
         failed_blue_agent=args.failed_blue_agent,
         node_failure_start_step=args.node_failure_start_step,
+        node_failure_start_random_min=args.node_failure_start_random_min,
+        node_failure_start_random_max=args.node_failure_start_random_max,
         node_failure_duration_steps=args.node_failure_duration_steps,
+        node_failure_duration_random_min=args.node_failure_duration_random_min,
+        node_failure_duration_random_max=args.node_failure_duration_random_max,
         max_target_message_age_steps=args.max_target_message_age_steps,
         min_target_confidence=args.min_target_confidence,
         safety_proximity_distance=args.safety_proximity_distance,
         safety_proximity_penalty_weight=args.safety_proximity_penalty_weight,
+        min_success_step=args.min_success_step,
+        post_loss_chain_reclosure_reward_weight=args.post_loss_chain_reclosure_reward_weight,
+        post_loss_chain_reclosure_min_step=args.post_loss_chain_reclosure_min_step,
         device=args.device,
         out_dir=args.out_dir,
     )
+    setattr(cfg, "init_checkpoint", args.init_checkpoint)
+    return cfg
 
 
 def main() -> None:

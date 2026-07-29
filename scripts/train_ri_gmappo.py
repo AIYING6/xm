@@ -25,13 +25,25 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
     parser.add_argument("--lr", type=float, default=3e-4)
+    parser.add_argument("--actor-lr", type=float, default=None)
+    parser.add_argument("--critic-lr", type=float, default=None)
+    parser.add_argument("--clip-coef", type=float, default=0.2)
     parser.add_argument("--entropy-coef", type=float, default=0.01)
     parser.add_argument("--intent-coef", type=float, default=0.1)
+    parser.add_argument("--chain-aux-coef", type=float, default=0.0)
+    parser.add_argument("--chain-aux-warmup-updates", type=int, default=0)
+    parser.add_argument("--role-gate-prior-strength", type=float, default=0.0)
+    parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
     parser.add_argument("--intent-balanced-loss", action="store_true")
     parser.add_argument("--detach-intent", action="store_true")
     parser.add_argument("--oracle-intent", action="store_true")
+    parser.add_argument("--max-grad-norm", type=float, default=0.5)
+    parser.add_argument("--target-kl", type=float, default=None)
+    parser.add_argument("--critic-warmup-updates", type=int, default=0)
+    parser.add_argument("--ppo-epochs", type=int, default=4)
     parser.add_argument("--eval-interval", type=int, default=10)
     parser.add_argument("--eval-episodes", type=int, default=20)
+    parser.add_argument("--eval-base-seed", type=int, default=None)
     parser.add_argument("--target-policy", type=str, default="mixed")
     parser.add_argument("--target-speed", type=float, default=0.75)
     parser.add_argument("--communication-radius", type=float, default=8.0)
@@ -57,6 +69,9 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--safety-proximity-distance", type=float, default=0.0)
     parser.add_argument("--safety-proximity-penalty-weight", type=float, default=0.0)
     parser.add_argument("--attack-geometry-reward-weight", type=float, default=0.0)
+    parser.add_argument("--min-success-step", type=int, default=0)
+    parser.add_argument("--post-loss-chain-reclosure-reward-weight", type=float, default=0.0)
+    parser.add_argument("--post-loss-chain-reclosure-min-step", type=int, default=0)
     parser.add_argument("--failed-blue-agent", type=int, default=-1)
     parser.add_argument("--node-failure-random-prob", type=float, default=0.0)
     parser.add_argument("--node-failure-start-step", type=int, default=0)
@@ -87,13 +102,25 @@ def parse_args() -> RIGMAPPOConfig:
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
         lr=args.lr,
+        actor_lr=args.actor_lr,
+        critic_lr=args.critic_lr,
+        clip_coef=args.clip_coef,
         entropy_coef=args.entropy_coef,
         intent_coef=args.intent_coef,
+        chain_aux_coef=args.chain_aux_coef,
+        chain_aux_warmup_updates=args.chain_aux_warmup_updates,
+        role_gate_prior_strength=args.role_gate_prior_strength,
+        multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
         intent_balanced_loss=args.intent_balanced_loss,
         detach_intent=args.detach_intent,
         oracle_intent=args.oracle_intent,
+        max_grad_norm=args.max_grad_norm,
+        target_kl=args.target_kl,
+        critic_warmup_updates=args.critic_warmup_updates,
+        ppo_epochs=args.ppo_epochs,
         eval_interval=args.eval_interval,
         eval_episodes=args.eval_episodes,
+        eval_base_seed=args.eval_base_seed,
         target_policy=args.target_policy,
         target_speed=args.target_speed,
         communication_radius=args.communication_radius,
@@ -119,6 +146,9 @@ def parse_args() -> RIGMAPPOConfig:
         safety_proximity_distance=args.safety_proximity_distance,
         safety_proximity_penalty_weight=args.safety_proximity_penalty_weight,
         attack_geometry_reward_weight=args.attack_geometry_reward_weight,
+        min_success_step=args.min_success_step,
+        post_loss_chain_reclosure_reward_weight=args.post_loss_chain_reclosure_reward_weight,
+        post_loss_chain_reclosure_min_step=args.post_loss_chain_reclosure_min_step,
         failed_blue_agent=args.failed_blue_agent,
         node_failure_random_prob=args.node_failure_random_prob,
         node_failure_start_step=args.node_failure_start_step,

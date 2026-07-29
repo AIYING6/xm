@@ -37,7 +37,11 @@ SUMMARY_COLUMNS = (
     "episodes",
     "success_mean",
     "post_failure_chain_recovered_mean",
+    "post_failure_chain_recovered_after_loss_mean",
+    "delayed_recovery_min_step",
+    "delayed_recovery_mean",
     "post_failure_chain_recovery_steps_mean",
+    "delayed_recovery_steps_mean",
     "chain_closed_during_failure_rate_mean",
     "tracking_during_failure_rate_mean",
     "connectivity_during_failure_mean",
@@ -48,6 +52,8 @@ SUMMARY_COLUMNS = (
     "collision_mean",
     "constraint_violation_mean",
     "selection_score",
+    "selection_metric",
+    "selection_success_weight",
 )
 
 SELECTION_COLUMNS = (
@@ -66,8 +72,14 @@ SELECTION_COLUMNS = (
     "max_target_message_age_steps",
     "min_target_confidence",
     "selection_score",
+    "selection_metric",
+    "selection_success_weight",
     "post_failure_chain_recovered_mean",
+    "post_failure_chain_recovered_after_loss_mean",
+    "delayed_recovery_min_step",
+    "delayed_recovery_mean",
     "post_failure_chain_recovery_steps_mean",
+    "delayed_recovery_steps_mean",
     "success_mean",
     "collision_mean",
     "episode_min_blue_red_distance_mean",
@@ -109,12 +121,29 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
+    parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--single-root", type=Path, default=ROOT / "results" / "intercept_3d_strict_sensing_formal" / "runs" / "single")
     parser.add_argument("--multi-root", type=Path, default=ROOT / "results" / "intercept_3d_strict_sensing_formal" / "runs" / "multi_relation")
     parser.add_argument("--no-graph-root", type=Path, default=ROOT / "results" / "intercept_3d_strict_sensing_fair_baselines" / "runs" / "no_graph")
     parser.add_argument("--checkpoint-glob", type=str, default="actor_critic_update_*.pt")
+    parser.add_argument(
+        "--run-dir-template",
+        type=str,
+        default="bc_ppo_seed{seed}",
+        help="Run directory name template under each method root. The template may reference {seed}.",
+    )
+    parser.add_argument(
+        "--checkpoint-updates",
+        nargs="*",
+        type=int,
+        default=None,
+        help=(
+            "Optional update numbers to keep after --checkpoint-glob discovery. "
+            "Use this to evaluate a small set of candidate snapshots without changing run directories."
+        ),
+    )
     parser.add_argument("--selection-csv", type=Path, default=None)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "results" / "intercept_3d_strict_sensing_checkpoint_sweep")
@@ -134,6 +163,47 @@ def parse_args() -> argparse.Namespace:
             "If set, validation checkpoints with collision_mean above this threshold "
             "receive an invalid selection score. Use 0.0 for safety-critical formal runs."
         ),
+    )
+    parser.add_argument(
+        "--selection-metric",
+        choices=("legacy_recovery", "delayed_recovery"),
+        default="legacy_recovery",
+        help=(
+            "Checkpoint-selection metric. legacy_recovery preserves the original "
+            "score; delayed_recovery selects using first post-failure chain closure "
+            "at or after --delayed-recovery-min-step."
+        ),
+    )
+    parser.add_argument(
+        "--selection-group",
+        choices=("scenario", "suite"),
+        default="scenario",
+        help=(
+            "Checkpoint-selection grouping. scenario preserves the legacy behavior "
+            "of selecting one checkpoint per scenario. suite selects one checkpoint "
+            "per method/seed using the mean validation score across all requested scenarios."
+        ),
+    )
+    parser.add_argument(
+        "--delayed-recovery-min-step",
+        type=int,
+        default=80,
+        help="Absolute minimum post-failure first-chain step used when --selection-metric=delayed_recovery.",
+    )
+    parser.add_argument(
+        "--selection-success-weight",
+        type=float,
+        default=100.0,
+        help=(
+            "Weight applied to success_mean in checkpoint selection. "
+            "Use 0.0 for strict delayed-recovery selection when early success should not break ties."
+        ),
+    )
+    parser.add_argument(
+        "--min-success-step",
+        type=int,
+        default=0,
+        help="Optional minimum environment step before chain closure can terminate an episode as success.",
     )
     return parser.parse_args()
 
@@ -168,13 +238,18 @@ def root_for(args: argparse.Namespace, graph_encoder: str) -> Path:
 
 def discover_candidates(args: argparse.Namespace) -> list[Candidate]:
     candidates: list[Candidate] = []
+    allowed_updates = set(args.checkpoint_updates) if args.checkpoint_updates else None
     for graph_encoder in args.graph_encoders:
         root = root_for(args, graph_encoder)
         for seed in args.seeds:
-            run_dir = root / f"bc_ppo_seed{seed}"
+            run_dir = root / args.run_dir_template.format(seed=seed)
             paths = sorted(run_dir.glob(args.checkpoint_glob), key=checkpoint_update)
+            if allowed_updates is not None:
+                paths = [path for path in paths if checkpoint_update(path) in allowed_updates]
             if not paths:
                 message = f"no checkpoints matching {args.checkpoint_glob} under {run_dir}"
+                if allowed_updates is not None:
+                    message += f" after filtering updates {sorted(allowed_updates)}"
                 if args.allow_missing:
                     print(f"skip: {message}", flush=True)
                     continue
@@ -240,6 +315,7 @@ def make_eval_args(
         failed_blue_agent=scenario.failed_blue_agent,
         node_failure_start_step=scenario.node_failure_start_step,
         node_failure_duration_steps=scenario.node_failure_duration_steps,
+        min_success_step=args.min_success_step,
         stochastic=False,
         allow_random_policy=False,
         hidden_dim=64,
@@ -249,6 +325,7 @@ def make_eval_args(
         graph_relation_ablation=args.graph_relation_ablation,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
         device=args.device,
     )
 
@@ -263,17 +340,38 @@ def mean_recovery_steps(rows: list[dict[str, object]]) -> float:
     return float(np.mean(values)) if values else float("inf")
 
 
+def delayed_recovery(row: dict[str, object], min_step: int) -> float:
+    if float(row.get("post_failure_chain_recovered_after_loss", row["post_failure_chain_recovered"])) <= 0.5:
+        return 0.0
+    return float(float(row.get("post_failure_first_chain_step", -1.0)) >= min_step)
+
+
+def mean_delayed_recovery(rows: list[dict[str, object]], min_step: int) -> float:
+    values = [delayed_recovery(row, min_step) for row in rows]
+    return float(np.mean(values)) if values else float("nan")
+
+
+def mean_delayed_recovery_steps(rows: list[dict[str, object]], min_step: int) -> float:
+    values = [
+        float(row.get("post_failure_first_chain_step", row["post_failure_chain_recovery_steps"]))
+        for row in rows
+        if delayed_recovery(row, min_step) > 0.5
+    ]
+    return float(np.mean(values)) if values else float("inf")
+
+
 def selection_score(
     recovery: float,
     recovery_steps: float,
     success: float,
     collision: float,
     max_collision_rate: float | None,
+    success_weight: float,
 ) -> float:
     if max_collision_rate is not None and collision > max_collision_rate:
         return -1_000_000_000.0
     finite_steps = recovery_steps if np.isfinite(recovery_steps) else 1_000.0
-    return 1_000.0 * recovery + 100.0 * success - finite_steps
+    return 1_000.0 * recovery + success_weight * success - finite_steps
 
 
 def summarize_rows(
@@ -283,15 +381,21 @@ def summarize_rows(
     rows: list[dict[str, object]],
 ) -> dict[str, str]:
     recovery = mean(rows, "post_failure_chain_recovered")
+    recovered_after_loss = mean(rows, "post_failure_chain_recovered_after_loss")
+    delayed = mean_delayed_recovery(rows, args.delayed_recovery_min_step)
     recovery_steps = mean_recovery_steps(rows)
+    delayed_steps = mean_delayed_recovery_steps(rows, args.delayed_recovery_min_step)
     success = mean(rows, "success")
     collision = mean(rows, "collision")
+    score_recovery = delayed if args.selection_metric == "delayed_recovery" else recovery
+    score_steps = delayed_steps if args.selection_metric == "delayed_recovery" else recovery_steps
     score = selection_score(
-        recovery=recovery,
-        recovery_steps=recovery_steps,
+        recovery=score_recovery,
+        recovery_steps=score_steps,
         success=success,
         collision=collision,
         max_collision_rate=args.max_selection_collision_rate,
+        success_weight=args.selection_success_weight,
     )
     return {
         "split": args.split,
@@ -311,7 +415,11 @@ def summarize_rows(
         "episodes": str(args.episodes),
         "success_mean": f"{success:.6g}",
         "post_failure_chain_recovered_mean": f"{recovery:.6g}",
+        "post_failure_chain_recovered_after_loss_mean": f"{recovered_after_loss:.6g}",
+        "delayed_recovery_min_step": str(args.delayed_recovery_min_step),
+        "delayed_recovery_mean": f"{delayed:.6g}",
         "post_failure_chain_recovery_steps_mean": "inf" if not np.isfinite(recovery_steps) else f"{recovery_steps:.6g}",
+        "delayed_recovery_steps_mean": "inf" if not np.isfinite(delayed_steps) else f"{delayed_steps:.6g}",
         "chain_closed_during_failure_rate_mean": f"{mean(rows, 'chain_closed_during_failure_rate'):.6g}",
         "tracking_during_failure_rate_mean": f"{mean(rows, 'tracking_during_failure_rate'):.6g}",
         "connectivity_during_failure_mean": f"{mean(rows, 'connectivity_during_failure'):.6g}",
@@ -322,6 +430,8 @@ def summarize_rows(
         "collision_mean": f"{collision:.6g}",
         "constraint_violation_mean": f"{mean(rows, 'constraint_violation'):.6g}",
         "selection_score": f"{score:.6g}",
+        "selection_metric": args.selection_metric,
+        "selection_success_weight": f"{args.selection_success_weight:.6g}",
     }
 
 
@@ -353,9 +463,87 @@ def completed_key(row: dict[str, object]) -> tuple[str, str, str, str, str, str,
     )
 
 
-def select_checkpoints(summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
+def parse_score(value: str) -> float:
+    try:
+        return float(value)
+    except ValueError:
+        return -1_000_000_000.0
+
+
+def mean_numeric(rows: list[dict[str, str]], key: str) -> str:
+    values: list[float] = []
+    for row in rows:
+        value = row.get(key, "")
+        if value == "":
+            return ""
+        try:
+            values.append(float(value))
+        except ValueError:
+            return row.get(key, "")
+    if not values:
+        return ""
+    result = float(np.mean(values))
+    return "inf" if not np.isfinite(result) else f"{result:.6g}"
+
+
+def aggregate_suite_rows(args: argparse.Namespace, summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    expected_scenarios = set(args.scenarios)
     grouped: dict[tuple[str, str, str, str, str, str, str], list[dict[str, str]]] = defaultdict(list)
     for row in summary_rows:
+        key = (
+            row["split"],
+            row["graph_encoder"],
+            row.get("graph_relation_ablation", "none"),
+            row.get("graph_message_ablation", "none"),
+            row.get("graph_input_ablation", "none"),
+            row["train_seed"],
+            row["checkpoint_update"],
+        )
+        grouped[key].append(row)
+
+    aggregate_rows: list[dict[str, str]] = []
+    for rows in grouped.values():
+        scenario_set = {row["scenario"] for row in rows}
+        if scenario_set != expected_scenarios:
+            continue
+        base = dict(rows[0])
+        base["scenario"] = "scenario_suite"
+        scores = [parse_score(row["selection_score"]) for row in rows]
+        base["selection_score"] = (
+            "-1000000000" if any(score <= -1_000_000_000.0 for score in scores) else f"{float(np.mean(scores)):.6g}"
+        )
+        for key in (
+            "post_failure_chain_recovered_mean",
+            "post_failure_chain_recovered_after_loss_mean",
+            "delayed_recovery_mean",
+            "post_failure_chain_recovery_steps_mean",
+            "delayed_recovery_steps_mean",
+            "success_mean",
+            "chain_closed_mean",
+            "attack_window_formed_mean",
+            "tracking_rate_mean",
+            "comm_connectivity_mean",
+            "mean_message_age_mean",
+            "chain_closed_during_failure_rate_mean",
+            "tracking_during_failure_rate_mean",
+            "connectivity_during_failure_mean",
+            "episode_min_blue_red_distance_mean",
+            "episode_min_blue_blue_distance_mean",
+            "steps_mean",
+            "timeout_mean",
+            "collision_mean",
+            "constraint_violation_mean",
+        ):
+            if key in base:
+                base[key] = mean_numeric(rows, key)
+        aggregate_rows.append(base)
+    return aggregate_rows
+
+
+def select_checkpoints(args: argparse.Namespace, summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    rows_for_selection = aggregate_suite_rows(args, summary_rows) if args.selection_group == "suite" else summary_rows
+    grouped: dict[tuple[str, str, str, str, str, str, str], list[dict[str, str]]] = defaultdict(list)
+    for row in rows_for_selection:
         key = (
             row["split"],
             row["scenario"],
@@ -368,7 +556,7 @@ def select_checkpoints(summary_rows: list[dict[str, str]]) -> list[dict[str, str
         grouped[key].append(row)
     selected: list[dict[str, str]] = []
     for key, rows in sorted(grouped.items()):
-        eligible_rows = [row for row in rows if float(row["selection_score"]) > -1_000_000_000.0]
+        eligible_rows = [row for row in rows if parse_score(row["selection_score"]) > -1_000_000_000.0]
         if not eligible_rows:
             split, scenario, graph_encoder, graph_relation_ablation, graph_message_ablation, graph_input_ablation, train_seed = key
             raise RuntimeError(
@@ -381,7 +569,7 @@ def select_checkpoints(summary_rows: list[dict[str, str]]) -> list[dict[str, str
         best = max(
             eligible_rows,
             key=lambda row: (
-                float(row["selection_score"]),
+                parse_score(row["selection_score"]),
                 int(row["checkpoint_update"]),
             ),
         )
@@ -402,8 +590,16 @@ def select_checkpoints(summary_rows: list[dict[str, str]]) -> list[dict[str, str
                 "max_target_message_age_steps": best.get("max_target_message_age_steps", ""),
                 "min_target_confidence": best.get("min_target_confidence", ""),
                 "selection_score": best["selection_score"],
+                "selection_metric": best.get("selection_metric", "legacy_recovery"),
+                "selection_success_weight": best.get("selection_success_weight", "100"),
                 "post_failure_chain_recovered_mean": best["post_failure_chain_recovered_mean"],
+                "post_failure_chain_recovered_after_loss_mean": best.get(
+                    "post_failure_chain_recovered_after_loss_mean", ""
+                ),
+                "delayed_recovery_min_step": best.get("delayed_recovery_min_step", ""),
+                "delayed_recovery_mean": best.get("delayed_recovery_mean", ""),
                 "post_failure_chain_recovery_steps_mean": best["post_failure_chain_recovery_steps_mean"],
+                "delayed_recovery_steps_mean": best.get("delayed_recovery_steps_mean", ""),
                 "success_mean": best["success_mean"],
                 "collision_mean": best.get("collision_mean", ""),
                 "episode_min_blue_red_distance_mean": best.get("episode_min_blue_red_distance_mean", ""),
@@ -430,7 +626,8 @@ def write_report(
         "",
         "```text",
         "Evaluate checkpoint snapshots on a fixed matched split and select checkpoints before final testing.",
-        "Selection score = 1000 * recovery_rate + 100 * success_rate - mean_recovery_steps.",
+        "Default selection score = 1000 * recovery_rate + 100 * success_rate - mean_recovery_steps.",
+        "When selection_metric=delayed_recovery, recovery_rate and recovery_steps use delayed recovery.",
         "Final test evaluation should use the selected validation checkpoints and a disjoint base seed.",
         "```",
         "",
@@ -443,25 +640,33 @@ def write_report(
         f"scenarios = {list(args.scenarios)}",
         f"episodes = {args.episodes}",
         f"base_seed = {args.base_seed}",
+        f"checkpoint_updates = {list(args.checkpoint_updates) if args.checkpoint_updates else 'all'}",
         f"strict_target_sensing = {args.strict_target_sensing}",
         f"agent_target_info_bottleneck = {args.agent_target_info_bottleneck}",
         f"target_prior_position = {tuple(args.target_prior_position)}",
         f"max_target_message_age_steps = {args.max_target_message_age_steps}",
         f"min_target_confidence = {args.min_target_confidence}",
+        f"multi_relation_global_residual_weight = {args.multi_relation_global_residual_weight}",
+        f"selection_metric = {args.selection_metric}",
+        f"selection_group = {args.selection_group}",
+        f"delayed_recovery_min_step = {args.delayed_recovery_min_step}",
+        f"selection_success_weight = {args.selection_success_weight}",
         f"selection_csv = {display_path(args.selection_csv) if args.selection_csv else 'none'}",
         f"max_selection_collision_rate = {args.max_selection_collision_rate}",
         "```",
         "",
         "## Selected Checkpoints",
         "",
-        "| Scenario | Graph | Seed | Update | Recovery | Recovery steps | Success | Checkpoint |",
-        "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |",
+        "| Scenario | Graph | Seed | Update | Metric | Recovery | Delayed recovery | Recovery steps | Delayed steps | Success | Checkpoint |",
+        "| --- | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for row in selected_rows:
         lines.append(
             f"| {row['scenario']} | {row['graph_encoder']} | {row['train_seed']} | "
-            f"{row['selected_checkpoint_update']} | {row['post_failure_chain_recovered_mean']} | "
-            f"{row['post_failure_chain_recovery_steps_mean']} | {row['success_mean']} | "
+            f"{row['selected_checkpoint_update']} | {row.get('selection_metric', 'legacy_recovery')} | "
+            f"{row['post_failure_chain_recovered_mean']} | {row.get('delayed_recovery_mean', '')} | "
+            f"{row['post_failure_chain_recovery_steps_mean']} | {row.get('delayed_recovery_steps_mean', '')} | "
+            f"{row['success_mean']} | "
             f"`{row['selected_checkpoint']}` |"
         )
     lines.extend(
@@ -546,7 +751,7 @@ def main() -> None:
         if stop_requested:
             break
 
-    selected_rows = select_checkpoints(summary_rows)
+    selected_rows = select_checkpoints(args, summary_rows)
     write_csv(episode_path, episode_rows, (*extra_episode_columns, *CSV_COLUMNS))
     write_csv(summary_path, summary_rows, SUMMARY_COLUMNS)
     write_csv(selection_path, selected_rows, SELECTION_COLUMNS)
