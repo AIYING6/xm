@@ -3,12 +3,17 @@ from __future__ import annotations
 import argparse
 import csv
 import re
+import sys
 from pathlib import Path
 
 import torch
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.verify_bc_checkpoint import bc_is_valid, verify_bc  # noqa: E402
 METHODS = (
     "no_graph",
     "single_graph",
@@ -106,15 +111,21 @@ def model_state_exists(run_dir: Path, method: str) -> bool:
     return latest_actor_path(run_dir, method).exists()
 
 
-def bc_exists(run_dir: Path, method: str) -> bool:
+def inspect_bc(run_dir: Path, method: str, *, check_architecture: bool = True) -> dict:
+    """Full BC integrity check, not a bare existence test.
+
+    A FRESH run is only allowed to launch when its BC init is present, loadable,
+    carries a non-empty state dict, and matches the method's own architecture
+    exactly. File existence alone previously let truncated/empty/wrong-method
+    checkpoints be reported as FRESH.
+    """
     # run_dir name pattern: ppo_seed<seed>_1m ; method is the parent dir name.
-    seed = "0"
+    seed = 0
     m = re.search(r"seed(\d+)", run_dir.name)
     if m:
-        seed = m.group(1)
-    bc_name = "happo_bc_latest.pt" if method == "happo" else "actor_critic_latest.pt"
-    bc_path = run_dir.parent.parent / method / f"bc_seed{seed}" / bc_name
-    return bc_path.exists()
+        seed = int(m.group(1))
+    root = run_dir.parent.parent
+    return verify_bc(root, method, seed, check_architecture=check_architecture)
 
 
 def snapshot_exists(run_dir: Path, method: str) -> bool:
@@ -130,19 +141,22 @@ def decide_status(
     ckpt: dict,
     target_updates: int,
     bc_exists: bool = False,
+    bc_valid: bool = False,
     snapshot_exists: bool = False,
 ) -> str:
     if log_max_update >= target_updates:
         return "COMPLETE"
-    # FRESH: no training state, no log, no PPO snapshot, but a valid BC init exists.
-    # This is the intended pre-PPO state; gating allows FRESH before launch.
-    if (
-        not ckpt["training_state_exists"]
-        and log_max_update == 0
-        and not snapshot_exists
-        and bc_exists
-    ):
+    no_ppo_artifacts = (
+        not ckpt["training_state_exists"] and log_max_update == 0 and not snapshot_exists
+    )
+    # FRESH: no training state, no log, no PPO snapshot, and a BC init that is
+    # actually loadable and architecture-compatible. This is the intended
+    # pre-PPO state; gating allows FRESH before launch.
+    if no_ppo_artifacts and bc_valid:
         return "FRESH"
+    # A present-but-unusable BC must never be reported as launchable.
+    if no_ppo_artifacts and bc_exists:
+        return "BC_INVALID"
     # PARTIAL_FRESH_STATE-like: no training state but partial artifacts exist.
     if not ckpt["training_state_exists"] and (log_max_update > 0 or snapshot_exists):
         return "PARTIAL_FRESH_STATE"
@@ -175,6 +189,16 @@ def main() -> None:
         default=ROOT / "results" / "paper_config_runs" / "formal_budget_post_sixth_freeze_v1",
     )
     parser.add_argument("--target-updates", type=int, default=TARGET_UPDATES)
+    parser.add_argument(
+        "--expected-commit",
+        default="",
+        help="required freeze commit SHA recorded in each bc_manifest.json",
+    )
+    parser.add_argument(
+        "--skip-bc-architecture",
+        action="store_true",
+        help="skip the BC exact-architecture check (faster; does not build the env)",
+    )
     args = parser.parse_args()
 
     rows_out: list[dict[str, str]] = []
@@ -189,7 +213,13 @@ def main() -> None:
             eval_row = latest_eval(rows)
             ckpt = inspect_training_checkpoint(run_dir, method)
             ckpt["model_state_exists"] = model_state_exists(run_dir, method)
-            has_bc = bc_exists(run_dir, method)
+            bc = inspect_bc(
+                run_dir, method, check_architecture=not args.skip_bc_architecture
+            )
+            has_bc = bool(bc["bc_exists"])
+            bc_ok = bc_is_valid(bc) if not args.skip_bc_architecture else bool(
+                bc["bc_loadable"] and bc["bc_nonempty_state"]
+            )
             has_snapshot = snapshot_exists(run_dir, method)
 
             status = decide_status(
@@ -199,6 +229,7 @@ def main() -> None:
                 ckpt=ckpt,
                 target_updates=args.target_updates,
                 bc_exists=has_bc,
+                bc_valid=bc_ok,
                 snapshot_exists=has_snapshot,
             )
             resume_start_update = (
@@ -218,6 +249,13 @@ def main() -> None:
                     "model_state_exists": "yes" if ckpt["model_state_exists"] else "no",
                     "optimizer_state_exists": "yes" if ckpt["optimizer_state_exists"] else "no",
                     "checkpoint_loadable": "yes" if ckpt["checkpoint_loadable"] else "no",
+                    "bc_exists": "yes" if bc["bc_exists"] else "no",
+                    "bc_loadable": "yes" if bc["bc_loadable"] else "no",
+                    "bc_nonempty_state": "yes" if bc["bc_nonempty_state"] else "no",
+                    "bc_method_compatible": "yes" if bc["bc_method_compatible"] else "no",
+                    "bc_sha256": str(bc["bc_sha256"]),
+                    "bc_freeze_commit": str(bc["bc_freeze_commit"]),
+                    "bc_detail": str(bc["detail"]),
                     "status": status,
                     "percent": f"{pct:.1f}",
                     "last_eval_success": "" if eval_row is None else eval_row.get("eval_success_rate", ""),
@@ -237,6 +275,18 @@ def main() -> None:
         if r["status"] in ("READY", "LOG_BEHIND_CHECKPOINT", "LOG_AHEAD_OF_CHECKPOINT")
         and r["log_max_update"] != r["training_checkpoint_update"]
     ]
+    bc_ok_count = sum(
+        1
+        for r in rows_out
+        if r["bc_loadable"] == "yes"
+        and r["bc_nonempty_state"] == "yes"
+        and (args.skip_bc_architecture or r["bc_method_compatible"] == "yes")
+    )
+    commit_mismatch = (
+        [r for r in rows_out if r["bc_freeze_commit"] != args.expected_commit]
+        if args.expected_commit
+        else []
+    )
 
     print(f"target_updates: {args.target_updates}")
     print(f"total_runs: {total}")
@@ -244,6 +294,12 @@ def main() -> None:
     print(f"READY: {ready}")
     print(f"COMPLETE: {complete}")
     print(f"BLOCKED: {blocked}")
+    print(f"BC loadable: {bc_ok_count}/{total}")
+    if args.expected_commit:
+        print(
+            f"freeze commit match: {total - len(commit_mismatch)}/{total} "
+            f"(expected {args.expected_commit})"
+        )
     print(f"inconsistent_log_vs_ckpt: {len(inconsistent)}")
     print()
     print(
@@ -258,6 +314,15 @@ def main() -> None:
             f"{r['duplicate_count']} | {r['out_of_order_count']} | "
             f"{r['training_state_exists']} | {r['model_state_exists']} | "
             f"{r['optimizer_state_exists']} | {r['checkpoint_loadable']} | {r['status']} |"
+        )
+
+    print("\n| Method | Seed | BC? | BC loadable | BC state | BC arch exact | BC sha256[:12] | BC commit[:12] | Detail |")
+    print("|---|---:|---|---|---|---|---|---|---|")
+    for r in rows_out:
+        print(
+            f"| {r['method']} | {r['seed']} | {r['bc_exists']} | {r['bc_loadable']} | "
+            f"{r['bc_nonempty_state']} | {r['bc_method_compatible']} | "
+            f"{r['bc_sha256'][:12]} | {r['bc_freeze_commit'][:12]} | {r['bc_detail']} |"
         )
 
     print("\n| Method | Seed | Checkpoint | Last eval success | Collision | Timeout |")
@@ -285,11 +350,21 @@ def main() -> None:
     # Two-stage gate:
     #  - pre-PPO (after BC): allow FRESH=15, BLOCKED=0
     #  - post-launch: require READY+COMPLETE=15, FRESH=0, BLOCKED=0
+    if commit_mismatch:
+        print("\nFREEZE COMMIT MISMATCH (BC manifest != expected commit):")
+        for r in commit_mismatch:
+            print(
+                f"- {r['method']} seed{r['seed']}: "
+                f"manifest={r['bc_freeze_commit'] or '(none)'}"
+            )
+
     print(
         f"\nGATE: FRESH={fresh} READY+COMPLETE={ready + complete}/{total}, "
-        f"BLOCKED={blocked}, inconsistent={len(inconsistent)}"
+        f"BLOCKED={blocked}, BC_loadable={bc_ok_count}/{total}, "
+        f"freeze_commit_match={total - len(commit_mismatch)}/{total}, "
+        f"inconsistent={len(inconsistent)}"
     )
-    if blocked or inconsistent:
+    if blocked or inconsistent or commit_mismatch:
         raise SystemExit(1)
 
 

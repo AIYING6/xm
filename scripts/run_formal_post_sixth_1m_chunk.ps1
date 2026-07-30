@@ -10,10 +10,18 @@ param(
     [string]$Python = "python",
     [string]$Device = "cpu",
     [int]$TotalUpdates = 977,
-    [int]$ChunkUpdates = 100
+    [int]$ChunkUpdates = 100,
+    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.1",
+    # Escape hatch for development smoke runs. Outputs are NOT formal evidence.
+    [switch]$AllowUnfrozen
 )
 
 $ErrorActionPreference = "Stop"
+
+. "$PSScriptRoot/formal_freeze_gate.ps1"
+
+# Formal protocol: terminate when HEAD != freeze commit or tracked source is dirty.
+$FreezeCommit = Assert-FrozenWorkspace -ExpectedTag $ExpectedTag -AllowUnfrozen:$AllowUnfrozen
 
 $Root = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1"
 $OutDir = "$Root/$Method/ppo_seed${Seed}_1m"
@@ -117,6 +125,15 @@ if ($IsFreshStart) {
     # Fresh start from BC init: no resume, no log consistency required.
     if (-not (Test-Path $InitCheckpoint)) {
         Write-Error "BLOCKED: fresh start requires BC init checkpoint: $InitCheckpoint"
+        exit 2
+    }
+    # Existence is not enough: the BC init must load on CPU, carry a non-empty
+    # state dict, match this method's architecture exactly, and be stamped with
+    # the freeze commit. Otherwise a truncated/empty/wrong-method checkpoint
+    # would silently seed a "formal" run.
+    & $Python "scripts/verify_bc_checkpoint.py" --root $Root --method $Method --seed $Seed --expected-commit $FreezeCommit
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "BLOCKED: BC init failed verification (method=$Method seed=$Seed)."
         exit 2
     }
     $ResumeStartUpdate = 0

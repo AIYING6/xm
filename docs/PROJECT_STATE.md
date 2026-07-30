@@ -6,20 +6,22 @@ Last updated: 2026-07-30
 
 The formal 1M PPO study now runs against a frozen source baseline:
 
-- **git tag**: `formal-post-sixth-freeze-v1`
-- **freeze commit SHA**: `8b13e26ed4944340d803dc0f5f628fb3521a0424`
+- **git tag**: `formal-post-sixth-freeze-v1.1` (supersedes `formal-post-sixth-freeze-v1`, SHA `8b13e26ed4944340d803dc0f5f628fb3521a0424`, which is retained and NOT moved)
 - **branch**: `main`
-- **protocol version**: `post-sixth-freeze-v1`
+- **protocol version**: `post-sixth-freeze-v1.1`
 - **python**: 3.8.20; **torch**: 2.4.1+cu124; **cuda**: 12.4; **host**: AIYING
 - **P0 actor/info-boundary fix** (in `envs/uav_intercept_3d_env.py`):
   - target prior in shared graph is zero-masked (no public prior leak);
   - under strict target sensing + agent-target-info-bottleneck, actor obs `rel`/`red_vel` are zeroed when target not visible;
   - union-graph hidden `attack` edge removed (no fourth channel).
 - **Resume authority**: training-state checkpoint `update` is authoritative; `train_log.csv` is audit-only. Gate: `FRESH / READY / COMPLETE / BLOCKED` with two-stage check.
+- **Enforced launch gates** (`scripts/formal_freeze_gate.ps1`, used by both launchers): abort with exit `2` unless `HEAD` == tag commit, `git diff --quiet`, and `git diff --cached --quiet`; untracked `results/` is ignored, tracked source/config changes are not.
+- **BC integrity**: BC init must be loadable on CPU, carry a non-empty state dict, and match the method architecture exactly (`scripts/verify_bc_checkpoint.py`); every BC directory carries `bc_manifest.json` with the freeze commit and SHA256. Existence alone no longer qualifies as `FRESH`; an unusable BC reports `BC_INVALID`.
 - **Evidence separation**:
   - `results/paper_config_runs/formal_budget_pre_sixth_freeze_development/` = pre-freeze 20-29 update runs (DEVELOPMENT EVIDENCE ONLY).
+  - `results/paper_config_runs/formal_budget_post_sixth_freeze/` = retired pre-P0-fix root (DEVELOPMENT/PRE-FREEZE EVIDENCE ONLY; its BC `15/15` and PPO update-20 records are void).
   - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1_preflight/` = pre-tag BC + 0→2 runs (PREFLIGHT EVIDENCE ONLY).
-  - Formal runs must start fresh from the frozen BC under `formal_budget_post_sixth_freeze_v1/` after tag.
+  - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/` = the only formal root; currently `BC = 0/15`, `PPO = 0/15`, formal training not started.
 
 ## Current Milestone
 
@@ -1016,29 +1018,66 @@ smokes passed for all five formal method families: MAPPO/no-graph, Single-Graph
 MAPPO, Parameter-Matched Single-Graph MAPPO, EA-RG-MAPPO-S, and HAPPO. The
 preflight outputs live under
 `results/paper_config_runs/formal_budget_post_sixth_freeze_preflight/` and are
-not paper evidence. The clean formal budget root is now
-`results/paper_config_runs/formal_budget_post_sixth_freeze/`. Next step is to
-run BC for seeds `0 1 2`, then run the 1M budget study (`977` updates) for all
-five methods under the frozen protocol.
+not paper evidence. The formal budget root named here
+(`results/paper_config_runs/formal_budget_post_sixth_freeze/`) has since been
+retired; see the superseded notice below. The current formal root is
+`results/paper_config_runs/formal_budget_post_sixth_freeze_v1/`.
 
-Formal post-sixth seed0/seed1/seed2 BC is complete and recorded in
-`docs/formal_budget_post_sixth_seed0_bc_progress.md`. All five formal methods
-completed 20 BC epochs for seeds `0`, `1`, and `2` under the clean
-`results/paper_config_runs/formal_budget_post_sixth_freeze/` root and produced
-the expected latest/best BC checkpoints. The formal BC stage is `15/15`
-complete. The next stage is the 1M PPO budget study (`977` updates) for all five
-methods and seeds `0 1 2`. The preferred maintained launcher is the resumable
-`scripts/run_formal_post_sixth_1m_chunk.ps1`; the older all-in-one
-`scripts/run_formal_post_sixth_1m.ps1` remains available for sequential runs.
+**SUPERSEDED (development/pre-freeze evidence only).** The two paragraphs below
+describe the *old* `results/paper_config_runs/formal_budget_post_sixth_freeze/`
+root. That root was retired under Decision A after a P0 environment fix
+(target-prior zero/mask + removal of the hidden union-graph attack edge)
+invalidated every checkpoint produced before the fix. Its BC `15/15` and PPO
+`15/15`-at-update-20 records are **not** formal evidence and must never be cited
+as such. The runs were relocated to
+`results/paper_config_runs/formal_budget_pre_sixth_freeze_development/`.
+Retained verbatim for provenance:
 
-Formal post-sixth 1M PPO training has started and is tracked in
-`docs/formal_budget_post_sixth_1m_progress.md`. The resumable chunk launcher
-`scripts/run_formal_post_sixth_1m_chunk.ps1` and progress checker
-`scripts/check_formal_post_sixth_1m_progress.py` are now available. All `15/15`
-method/seed tasks have valid PPO logs and latest training-state checkpoints.
-Current progress: all `15/15` tasks have reached at least update `20` with
-checkpoint status `ok`. Some tasks are slightly beyond the floor due to a tool
-timeout while training continued (`no_graph seed2=29`, `happo seed1=26`, several
-seed2 runs `=24`). Next execution target is balanced advancement of all runs to
-update `100`, followed by a health check before continuing to
-`200/400/600/800/977`.
+> Formal post-sixth seed0/seed1/seed2 BC is complete and recorded in
+> `docs/formal_budget_post_sixth_seed0_bc_progress.md`. All five formal methods
+> completed 20 BC epochs for seeds `0`, `1`, and `2` under the clean
+> `results/paper_config_runs/formal_budget_post_sixth_freeze/` root and produced
+> the expected latest/best BC checkpoints. The formal BC stage is `15/15`
+> complete.
+>
+> Formal post-sixth 1M PPO training has started and is tracked in
+> `docs/formal_budget_post_sixth_1m_progress.md`. All `15/15` method/seed tasks
+> have valid PPO logs and latest training-state checkpoints, and all reached at
+> least update `20` with checkpoint status `ok` (`no_graph seed2=29`,
+> `happo seed1=26`, several seed2 runs `=24`).
+
+### Current formal status (authoritative)
+
+The only valid formal root is
+`results/paper_config_runs/formal_budget_post_sixth_freeze_v1/`:
+
+```text
+formal_budget_post_sixth_freeze_v1:
+BC  = 0/15
+PPO = 0/15
+Formal training not started
+```
+
+Formal artifacts may only be produced from the freeze tag
+`formal-post-sixth-freeze-v1.1`. Both launchers now enforce this: they abort
+with exit code `2` unless `HEAD` equals the tag commit and the tracked working
+tree is clean (untracked `results/` is ignored). The BC launcher additionally
+refuses to overwrite existing BC outputs without `-Force`, writes a
+`bc_manifest.json` recording the freeze commit and architecture into every BC
+directory, and verifies each checkpoint afterwards. The progress checker
+reports `bc_loadable`, `bc_method_compatible`, `bc_sha256`, and
+`bc_freeze_commit`, and only classifies a run as `FRESH` when its BC init is
+loadable, non-empty, and an exact architecture match; a present-but-unusable BC
+is reported as `BC_INVALID`.
+
+The maintained launchers remain the resumable
+`scripts/run_formal_post_sixth_1m_chunk.ps1` and
+`scripts/run_formal_post_sixth_1m_bc.ps1`; the older all-in-one
+`scripts/run_formal_post_sixth_1m.ps1` predates these gates and must not be used
+for formal runs.
+
+Next execution steps, in order: regenerate one BC
+(`ea_rg_mappo_s_gate_prior` seed `0`) and verify it, regenerate the remaining
+`15/15` BC until the gate reports `FRESH=15 / BC loadable=15/15 / freeze commit
+match=15/15`, run the `0→2→4` resume validation, then advance all runs to
+update `100` and on to `200/400/600/800/977`.

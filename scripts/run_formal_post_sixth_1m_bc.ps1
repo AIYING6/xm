@@ -2,16 +2,81 @@
 # Must run AFTER the env P0 fix (zero/mask on target prior + union-graph attack-edge removal)
 # and BEFORE any PPO training. Same demonstration protocol as the frozen BC rule:
 #   teacher=geometric offset, episodes=120, epochs=20, batch=256, balanced loss, attacker weight=2.0.
+#
+# Formal protocol gates enforced here:
+#   1. HEAD must equal the freeze tag commit and the tracked tree must be clean.
+#   2. Existing BC outputs are never silently overwritten (use -Force to override).
+#   3. Every BC directory gets a bc_manifest.json recording the freeze commit.
 param(
     [string]$Python = "python",
     [string]$Root = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1",
     [ValidateSet("all", "no_graph", "single_graph", "param_matched_single", "ea_rg_mappo_s_gate_prior", "happo")]
     [string]$Method = "all",
     [ValidateSet(0, 1, 2, 99)]
-    [int]$Seed = 99
+    [int]$Seed = 99,
+    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.1",
+    # Overwrite existing BC outputs. Produces non-formal evidence unless the
+    # previous outputs were deliberately discarded first.
+    [switch]$Force,
+    # Escape hatch for development smoke runs. Outputs are NOT formal evidence.
+    [switch]$AllowUnfrozen
 )
 
 $ErrorActionPreference = "Stop"
+
+. "$PSScriptRoot/formal_freeze_gate.ps1"
+
+# ---- Gate 1: git freeze -----------------------------------------------------
+$FreezeCommit = Assert-FrozenWorkspace -ExpectedTag $ExpectedTag -AllowUnfrozen:$AllowUnfrozen
+
+function Test-BCOutputExists {
+    param([string]$OutDir)
+    return (
+        (Test-Path "$OutDir/bc_train_log.csv") -or
+        (Test-Path "$OutDir/actor_critic_latest.pt") -or
+        (Test-Path "$OutDir/happo_bc_latest.pt")
+    )
+}
+
+function Write-BCManifest {
+    param(
+        [string]$OutDir,
+        [string]$MethodName,
+        [int]$SeedValue,
+        [string]$Graph,
+        [int]$Hidden,
+        [string]$GatePrior,
+        [string]$FreezeCommit,
+        [string]$ExpectedTag
+    )
+    $ckpt = if ($MethodName -eq "happo") { "happo_bc_latest.pt" } else { "actor_critic_latest.pt" }
+    $ckptPath = Join-Path $OutDir $ckpt
+    $sha = ""
+    if (Test-Path $ckptPath) {
+        $sha = (Get-FileHash -Algorithm SHA256 -Path $ckptPath).Hash.ToLower()
+    }
+    $manifest = [ordered]@{
+        method                   = $MethodName
+        seed                     = $SeedValue
+        freeze_tag               = $ExpectedTag
+        freeze_commit            = $FreezeCommit
+        graph_encoder            = $Graph
+        hidden_dim               = $Hidden
+        role_gate_prior_strength = [double]$GatePrior
+        role_dim                 = 8
+        intent_dim               = 8
+        episodes                 = 120
+        epochs                   = 20
+        batch_size               = 256
+        teacher                  = "geometric_offset"
+        attacker_action_weight   = 2.0
+        checkpoint               = $ckpt
+        checkpoint_sha256        = $sha
+        generated_at_utc         = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+    }
+    $manifest | ConvertTo-Json -Depth 4 |
+        Set-Content -Path (Join-Path $OutDir "bc_manifest.json") -Encoding UTF8
+}
 
 function Invoke-BC {
     param(
@@ -20,6 +85,7 @@ function Invoke-BC {
         [string]$Graph,
         [int]$Hidden,
         [string]$GatePrior,
+        [int]$SeedValue,
         [string]$OutDir
     )
     & $Python $Script `
@@ -28,7 +94,7 @@ function Invoke-BC {
         --graph-encoder $Graph `
         --role-gate-prior-strength $GatePrior `
         --geometric-policy-mode offset --attacker-action-weight 2.0 `
-        --seed $Seed --target-policy straight `
+        --seed $SeedValue --target-policy straight `
         --strict-target-sensing --agent-target-info-bottleneck `
         --communication-dropout-prob 0.30 --message-delay-steps 2 `
         --failed-blue-agent 1 `
@@ -52,13 +118,45 @@ $jobs = @(
     @{ Method = "happo"; Script = "scripts/pretrain_happo_3d_bc.py"; Graph = "no_graph"; Hidden = 64; GatePrior = "0.0" }
 )
 
+# ---- Gate 2: refuse to overwrite existing BC outputs (pre-flight, all jobs) --
+$planned = @()
 foreach ($j in $jobs) {
     if ($Method -ne "all" -and $Method -ne $j.Method) { continue }
     foreach ($s in $seeds) {
-        $out = "$Root/$($j.Method)/bc_seed$s"
-        Write-Host "==> BC: method=$($j.Method) seed=$s out=$out"
-        Invoke-BC -Python $Python -Script $j.Script -Graph $j.Graph -Hidden $j.Hidden -GatePrior $j.GatePrior -OutDir $out
+        $planned += @{ Job = $j; SeedValue = $s; OutDir = "$Root/$($j.Method)/bc_seed$s" }
     }
+}
+if ($planned.Count -eq 0) {
+    Write-Error "BLOCKED: no BC jobs selected (method=$Method seed=$Seed)"
+    exit 2
+}
+
+$collisions = @($planned | Where-Object { Test-BCOutputExists -OutDir $_.OutDir })
+if ($collisions.Count -gt 0 -and -not $Force) {
+    foreach ($c in $collisions) {
+        Write-Error "BLOCKED: BC output already exists: $($c.OutDir)"
+    }
+    Write-Error "Refusing to overwrite $($collisions.Count) existing BC output(s). Remove them or pass -Force."
+    exit 2
+}
+
+foreach ($p in $planned) {
+    $j = $p.Job
+    $out = $p.OutDir
+    Write-Host "==> BC: method=$($j.Method) seed=$($p.SeedValue) out=$out"
+    Invoke-BC -Python $Python -Script $j.Script -Graph $j.Graph -Hidden $j.Hidden `
+        -GatePrior $j.GatePrior -SeedValue $p.SeedValue -OutDir $out
+    Write-BCManifest -OutDir $out -MethodName $j.Method -SeedValue $p.SeedValue `
+        -Graph $j.Graph -Hidden $j.Hidden -GatePrior $j.GatePrior `
+        -FreezeCommit $FreezeCommit -ExpectedTag $ExpectedTag
+}
+
+# ---- Post-check: every produced BC must be loadable and architecture-exact ---
+Write-Host "==> Verifying BC checkpoints"
+& $Python "scripts/verify_bc_checkpoint.py" --root $Root --expected-commit $FreezeCommit
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "BLOCKED: BC verification failed (exit $LASTEXITCODE)"
+    exit 2
 }
 
 Write-Host "ALL_BC_DONE"
