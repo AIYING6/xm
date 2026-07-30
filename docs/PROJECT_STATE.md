@@ -6,17 +6,24 @@ Last updated: 2026-07-30
 
 The formal 1M PPO study now runs against a frozen source baseline:
 
-- **git tag**: `formal-post-sixth-freeze-v1.1` (supersedes `formal-post-sixth-freeze-v1`, SHA `8b13e26ed4944340d803dc0f5f628fb3521a0424`, which is retained and NOT moved)
+- **current tag**: `formal-post-sixth-freeze-v1.3` (current authority; SHA `<<will be updated after commit>>`)
+- **historical tags** (retained, NOT moved):
+  - `formal-post-sixth-freeze-v1` (SHA `8b13e26`): first frozen baseline; no formal artifacts produced; retained for source audit.
+  - `formal-post-sixth-freeze-v1.1` (SHA `e30359b`): added freeze gates, coverage block, bc_manifest, BC verification, BC_INVALID classification, seed-passing fix; no formal artifacts produced; retained for source audit.
+  - `formal-post-sixth-freeze-v1.2` (SHA `446aad7`): added BOM encoding fix for bc_manifest.json writer/reader; retained for source audit.
 - **branch**: `main`
-- **protocol version**: `post-sixth-freeze-v1.1`
 - **python**: 3.8.20; **torch**: 2.4.1+cu124; **cuda**: 12.4; **host**: AIYING
 - **P0 actor/info-boundary fix** (in `envs/uav_intercept_3d_env.py`):
   - target prior in shared graph is zero-masked (no public prior leak);
   - under strict target sensing + agent-target-info-bottleneck, actor obs `rel`/`red_vel` are zeroed when target not visible;
   - union-graph hidden `attack` edge removed (no fourth channel).
 - **Resume authority**: training-state checkpoint `update` is authoritative; `train_log.csv` is audit-only. Gate: `FRESH / READY / COMPLETE / BLOCKED` with two-stage check.
-- **Enforced launch gates** (`scripts/formal_freeze_gate.ps1`, used by both launchers): abort with exit `2` unless `HEAD` == tag commit, `git diff --quiet`, and `git diff --cached --quiet`; untracked `results/` is ignored, tracked source/config changes are not.
-- **BC integrity**: BC init must be loadable on CPU, carry a non-empty state dict, and match the method architecture exactly (`scripts/verify_bc_checkpoint.py`); every BC directory carries `bc_manifest.json` with the freeze commit and SHA256. Existence alone no longer qualifies as `FRESH`; an unusable BC reports `BC_INVALID`.
+- **Enforced launch gates** (`scripts/formal_freeze_gate.ps1`, used by both launchers): abort with exit `2` unless:
+  - `HEAD` == tag commit,
+  - `git diff --quiet` and `git diff --cached --quiet` (no tracked/staged changes),
+  - **all untracked files** are inside `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/**` (no stray `.py`, `.ps1`, `.txt` outside the formal root).
+- **BC integrity** (`scripts/verify_bc_checkpoint.py`): BC init must be loadable on CPU, carry a non-empty state dict, match the method architecture exactly, and pass full manifest validation (method, seed, freeze_tag, freeze_commit, checkpoint name, graph_encoder, hidden_dim, role_gate_prior_strength, checkpoint_sha256). Existence alone no longer qualifies as `FRESH`; an unusable BC reports `BC_INVALID`.
+- **Batch safety**: the BC launcher supports `-ResumeValid` for safe interruption recovery; `--skip-bc-architecture` in the progress checker forces `BC_UNVERIFIED` and non-zero exit (diagnostic only).
 - **Evidence separation**:
   - `results/paper_config_runs/formal_budget_pre_sixth_freeze_development/` = pre-freeze 20-29 update runs (DEVELOPMENT EVIDENCE ONLY).
   - `results/paper_config_runs/formal_budget_post_sixth_freeze/` = retired pre-P0-fix root (DEVELOPMENT/PRE-FREEZE EVIDENCE ONLY; its BC `15/15` and PPO update-20 records are void).

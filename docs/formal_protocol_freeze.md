@@ -250,11 +250,10 @@ Only after `B*` is chosen should five-seed formal training begin.
 The formal 1M budget study runs against a frozen source baseline (not just a
 frozen protocol). Any training artifact is valid only if produced by this commit.
 
-- **git tag**: `formal-post-sixth-freeze-v1.1` (current). The earlier tag
-  `formal-post-sixth-freeze-v1` (SHA `8b13e26ed4944340d803dc0f5f628fb3521a0424`)
-  is retained unmoved for provenance, but produced no formal artifacts: it
-  froze the source before the launch gates below were actually implemented in
-  the scripts, so nothing may be attributed to it.
+- **git tag**: `formal-post-sixth-freeze-v1.3` (current authority). Historical tags retained unmoved:
+  - `formal-post-sixth-freeze-v1` (SHA `8b13e26`): first freeze; no formal artifacts; source audit only.
+  - `formal-post-sixth-freeze-v1.1` (SHA `e30359b`): freeze gates, coverage block, bc_manifest, BC verification, BC_INVALID, seed-passing fix; no formal artifacts.
+  - `formal-post-sixth-freeze-v1.2` (SHA `446aad7`): BOM encoding fix for bc_manifest.json writer/reader; no formal artifacts.
 - **branch**: `main`
 - **python**: 3.8.20; **torch**: 2.4.1+cu124; **cuda**: 12.4
 - **P0 actor/info-boundary fix** (committed in `envs/uav_intercept_3d_env.py`):
@@ -264,17 +263,14 @@ frozen protocol). Any training artifact is valid only if produced by this commit
 - **Resume authority**: training-state checkpoint `update` is authoritative; `train_log.csv` is audit-only.
 - **Gate**: `FRESH / READY / COMPLETE / BLOCKED` with two-stage check (pre-PPO: FRESH=15 allowed; post-launch: READY+COMPLETE=15, FRESH=0).
 
-### Enforced launch gates (v1.1)
+### Enforced launch gates (v1.3)
 
-The protocol previously *stated* that training must terminate on an unfrozen or
-dirty tree, but no script enforced it. This is now implemented in
-`scripts/formal_freeze_gate.ps1` and dot-sourced by both
-`scripts/run_formal_post_sixth_1m_bc.ps1` and
-`scripts/run_formal_post_sixth_1m_chunk.ps1`. Each launcher exits `2` when:
+Each launcher dot-sources `scripts/formal_freeze_gate.ps1` and exits `2` when:
 
-- `git rev-parse HEAD` != `git rev-list -n 1 formal-post-sixth-freeze-v1.1`;
+- `git rev-parse HEAD` != `git rev-list -n 1 formal-post-sixth-freeze-v1.3`;
 - `git diff --quiet` fails (tracked working-tree changes);
-- `git diff --cached --quiet` fails (staged but uncommitted changes).
+- `git diff --cached --quiet` fails (staged but uncommitted changes);
+- any untracked file exists outside `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/**`.
 
 Untracked files under `results/` are intentionally ignored, since formal
 outputs are produced by the run itself. Tracked source and config changes are
@@ -286,20 +282,30 @@ contains `bc_train_log.csv`, `actor_critic_latest.pt`, or `happo_bc_latest.pt`
 unless `-Force` is given, and writes `bc_manifest.json` (freeze commit, tag,
 architecture, teacher settings, checkpoint SHA256) into every BC directory.
 
-### BC integrity gate (v1.1)
+### BC integrity gate (v1.3)
 
 `FRESH` previously required only that the BC file exist, so a truncated write,
 an empty file, a wrong hidden dim, or a checkpoint from another method could
-seed a "formal" run. `scripts/verify_bc_checkpoint.py` now checks
-`bc_exists`, `bc_nonempty_file`, `bc_loadable`, `bc_nonempty_state`,
-`bc_method_compatible`, `bc_sha256`, and `bc_freeze_commit`. Compatibility is
-an *exact* match: a reference agent is built with the method's own encoder and
-hidden dim, and every key and shape must correspond with no missing, extra, or
-mismatched tensors. HAPPO is checked through its own agent class.
+seed a "formal" run. The full integrity check now covers:
 
-`scripts/check_formal_post_sixth_1m_progress.py` reports these fields, accepts
-`--expected-commit`, classifies an unusable BC as `BC_INVALID` rather than
-`FRESH`, and fails on any freeze-commit mismatch.
+- **File checks**: `bc_exists`, `bc_nonempty_file`, `bc_loadable`
+- **State checks**: `bc_nonempty_state`, `bc_method_compatible` (exact architecture match)
+- **Manifest checks**: `bc_manifest_valid` (all fields: method, seed, freeze_tag,
+  freeze_commit, checkpoint name, graph_encoder, hidden_dim, role_gate_prior_strength
+  match expectations), `bc_sha256_match` (manifest SHA256 == actual file SHA256),
+  `bc_method_metadata_match` (manifest method == requested method)
+- **Provenance**: `bc_sha256` (computed), `bc_freeze_commit` (from manifest)
+
+Compatibility is an *exact* match: a reference agent is built with the method's
+own encoder and hidden dim, and every key and shape must correspond. HAPPO is
+checked through its own agent class.
+
+`scripts/check_formal_post_sixth_1m_progress.py` accepts `--expected-tag` (which
+auto-resolves the freeze commit via `git rev-list`), classifies an unusable BC
+as `BC_INVALID`, and requires `--skip-bc-architecture` to force all BC-aware
+tasks into `BC_UNVERIFIED` with non-zero exit (diagnostic only, never a
+formal-gate escape). `-ResumeValid` in the BC launcher allows safe batch
+interruption recovery.
 
 Pre-PPO acceptance requires:
 
@@ -308,7 +314,11 @@ FRESH = 15
 READY = 0
 COMPLETE = 0
 BLOCKED = 0
+
 BC loadable = 15/15
+BC architecture exact = 15/15
+BC manifest valid = 15/15
+BC SHA256 match = 15/15
 freeze commit match = 15/15
 ```
 - **Evidence separation**:

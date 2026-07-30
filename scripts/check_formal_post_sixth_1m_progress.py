@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.verify_bc_checkpoint import bc_is_valid, verify_bc  # noqa: E402
+from scripts.verify_bc_checkpoint import bc_is_valid, verify_bc, _resolve_tag_commit  # noqa: E402
 METHODS = (
     "no_graph",
     "single_graph",
@@ -195,11 +195,34 @@ def main() -> None:
         help="required freeze commit SHA recorded in each bc_manifest.json",
     )
     parser.add_argument(
+        "--expected-tag",
+        default="",
+        help="freeze tag whose commit every BC manifest must reference; auto-resolves via git",
+    )
+    parser.add_argument(
         "--skip-bc-architecture",
         action="store_true",
-        help="skip the BC exact-architecture check (faster; does not build the env)",
+        help=(
+            "skip the BC exact-architecture check. "
+            "WARNING: formal gate forbids this flag — when used, all BC-valid tasks "
+            "become BC_UNVERIFIED and the script exits non-zero."
+        ),
     )
     args = parser.parse_args()
+
+    # Resolve expected commit from tag if not explicitly provided.
+    expected_commit = args.expected_commit
+    expected_tag = args.expected_tag
+    if expected_tag and not expected_commit:
+        expected_commit = _resolve_tag_commit(expected_tag)
+        if not expected_commit:
+            print(f"BLOCKED: cannot resolve expected-tag '{expected_tag}' via git rev-list.")
+            raise SystemExit(2)
+
+    # --skip-bc-architecture is a diagnostic tool, not a formal-gate escape.
+    # When used, every task whose BC would otherwise be reportable as FRESH
+    # must be downgraded to BC_UNVERIFIED and the exit code must be non-zero.
+    gate_skip_architecture = args.skip_bc_architecture
 
     rows_out: list[dict[str, str]] = []
     for method in METHODS:
@@ -214,24 +237,48 @@ def main() -> None:
             ckpt = inspect_training_checkpoint(run_dir, method)
             ckpt["model_state_exists"] = model_state_exists(run_dir, method)
             bc = inspect_bc(
-                run_dir, method, check_architecture=not args.skip_bc_architecture
+                run_dir, method, check_architecture=not gate_skip_architecture
             )
             has_bc = bool(bc["bc_exists"])
-            bc_ok = bc_is_valid(bc) if not args.skip_bc_architecture else bool(
+            bc_ok = bc_is_valid(bc) if not gate_skip_architecture else bool(
                 bc["bc_loadable"] and bc["bc_nonempty_state"]
             )
             has_snapshot = snapshot_exists(run_dir, method)
 
-            status = decide_status(
-                log_max_update=log_max_update,
-                dup=dup,
-                ooo=ooo,
-                ckpt=ckpt,
-                target_updates=args.target_updates,
-                bc_exists=has_bc,
-                bc_valid=bc_ok,
-                snapshot_exists=has_snapshot,
-            )
+            # ---- skip-bc-architecture gate ----
+            # When the diagnostic fast path is active, architectural and manifest
+            # checks are skipped. A BC that would be `FRESH` in full mode must
+            # NOT be reported as launchable — it becomes `BC_UNVERIFIED`.
+            if gate_skip_architecture:
+                no_ppo = (
+                    not ckpt["training_state_exists"]
+                    and log_max_update == 0
+                    and not has_snapshot
+                )
+                if no_ppo and bc_ok:
+                    status = "BC_UNVERIFIED"
+                else:
+                    status = decide_status(
+                        log_max_update=log_max_update,
+                        dup=dup,
+                        ooo=ooo,
+                        ckpt=ckpt,
+                        target_updates=args.target_updates,
+                        bc_exists=has_bc,
+                        bc_valid=bc_ok,
+                        snapshot_exists=has_snapshot,
+                    )
+            else:
+                status = decide_status(
+                    log_max_update=log_max_update,
+                    dup=dup,
+                    ooo=ooo,
+                    ckpt=ckpt,
+                    target_updates=args.target_updates,
+                    bc_exists=has_bc,
+                    bc_valid=bc_ok,
+                    snapshot_exists=has_snapshot,
+                )
             resume_start_update = (
                 ckpt["training_checkpoint_update"] if status in ("READY", "LOG_BEHIND_CHECKPOINT") else 0
             )
@@ -253,6 +300,8 @@ def main() -> None:
                     "bc_loadable": "yes" if bc["bc_loadable"] else "no",
                     "bc_nonempty_state": "yes" if bc["bc_nonempty_state"] else "no",
                     "bc_method_compatible": "yes" if bc["bc_method_compatible"] else "no",
+                    "bc_manifest_valid": "yes" if bc.get("bc_manifest_valid") else "no",
+                    "bc_sha256_match": "yes" if bc.get("bc_sha256_match") else "no",
                     "bc_sha256": str(bc["bc_sha256"]),
                     "bc_freeze_commit": str(bc["bc_freeze_commit"]),
                     "bc_detail": str(bc["detail"]),
@@ -270,6 +319,7 @@ def main() -> None:
     ready = sum(1 for r in rows_out if r["status"] == "READY")
     complete = sum(1 for r in rows_out if r["status"] == "COMPLETE")
     blocked = sum(1 for r in rows_out if r["status"] not in ("FRESH", "READY", "COMPLETE"))
+    bc_unverified = sum(1 for r in rows_out if r["status"] == "BC_UNVERIFIED")
     inconsistent = [
         r for r in rows_out
         if r["status"] in ("READY", "LOG_BEHIND_CHECKPOINT", "LOG_AHEAD_OF_CHECKPOINT")
@@ -280,11 +330,21 @@ def main() -> None:
         for r in rows_out
         if r["bc_loadable"] == "yes"
         and r["bc_nonempty_state"] == "yes"
-        and (args.skip_bc_architecture or r["bc_method_compatible"] == "yes")
+        and (gate_skip_architecture or r["bc_method_compatible"] == "yes")
+    )
+    manifest_ok_count = sum(
+        1 for r in rows_out if r.get("bc_manifest_valid") == "yes"
+    )
+    sha256_ok_count = sum(
+        1 for r in rows_out if r.get("bc_sha256_match") == "yes"
+    )
+    arch_ok_count = sum(
+        1 for r in rows_out
+        if r["bc_method_compatible"] == "yes" or r["bc_exists"] == "no"
     )
     commit_mismatch = (
-        [r for r in rows_out if r["bc_freeze_commit"] != args.expected_commit]
-        if args.expected_commit
+        [r for r in rows_out if r["bc_freeze_commit"] and r["bc_freeze_commit"] != expected_commit]
+        if expected_commit
         else []
     )
 
@@ -295,11 +355,16 @@ def main() -> None:
     print(f"COMPLETE: {complete}")
     print(f"BLOCKED: {blocked}")
     print(f"BC loadable: {bc_ok_count}/{total}")
-    if args.expected_commit:
+    print(f"BC architecture exact: {arch_ok_count}/{total}")
+    print(f"BC manifest valid: {manifest_ok_count}/{total}")
+    print(f"BC SHA256 match: {sha256_ok_count}/{total}")
+    if expected_commit:
         print(
             f"freeze commit match: {total - len(commit_mismatch)}/{total} "
-            f"(expected {args.expected_commit})"
+            f"(expected {expected_commit})"
         )
+    if bc_unverified > 0:
+        print(f"BC_UNVERIFIED (skip-bc-architecture active): {bc_unverified}")
     print(f"inconsistent_log_vs_ckpt: {len(inconsistent)}")
     print()
     print(
@@ -316,12 +381,13 @@ def main() -> None:
             f"{r['optimizer_state_exists']} | {r['checkpoint_loadable']} | {r['status']} |"
         )
 
-    print("\n| Method | Seed | BC? | BC loadable | BC state | BC arch exact | BC sha256[:12] | BC commit[:12] | Detail |")
-    print("|---|---:|---|---|---|---|---|---|---|")
+    print("\n| Method | Seed | BC? | Loadable | Nonempty | ArchExact | ManifestOK | SHA256OK | SHA256[:12] | Commit[:12] | Detail |")
+    print("|---|---:|---|---|---|---|---|---|---|---|---|---|")
     for r in rows_out:
         print(
             f"| {r['method']} | {r['seed']} | {r['bc_exists']} | {r['bc_loadable']} | "
             f"{r['bc_nonempty_state']} | {r['bc_method_compatible']} | "
+            f"{r.get('bc_manifest_valid', 'no')} | {r.get('bc_sha256_match', 'no')} | "
             f"{r['bc_sha256'][:12]} | {r['bc_freeze_commit'][:12]} | {r['bc_detail']} |"
         )
 
@@ -358,13 +424,24 @@ def main() -> None:
                 f"manifest={r['bc_freeze_commit'] or '(none)'}"
             )
 
+    # --skip-bc-architecture makes every BC task BC_UNVERIFIED; formal gate MUST fail.
+    if gate_skip_architecture and bc_unverified > 0:
+        print(
+            f"\nGATE FAILED: --skip-bc-architecture is active; "
+            f"{bc_unverified} BC task(s) are BC_UNVERIFIED. "
+            f"Re-run without --skip-bc-architecture for formal evidence."
+        )
+
     print(
         f"\nGATE: FRESH={fresh} READY+COMPLETE={ready + complete}/{total}, "
         f"BLOCKED={blocked}, BC_loadable={bc_ok_count}/{total}, "
+        f"BC_arch_exact={arch_ok_count}/{total}, "
+        f"BC_manifest_valid={manifest_ok_count}/{total}, "
+        f"BC_sha256_match={sha256_ok_count}/{total}, "
         f"freeze_commit_match={total - len(commit_mismatch)}/{total}, "
         f"inconsistent={len(inconsistent)}"
     )
-    if blocked or inconsistent or commit_mismatch:
+    if blocked or inconsistent or commit_mismatch or (gate_skip_architecture and bc_unverified > 0):
         raise SystemExit(1)
 
 

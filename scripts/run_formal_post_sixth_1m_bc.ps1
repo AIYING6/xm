@@ -14,12 +14,16 @@ param(
     [string]$Method = "all",
     [ValidateSet(0, 1, 2, 99)]
     [int]$Seed = 99,
-    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.2",
+    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.3",
     # Overwrite existing BC outputs. Produces non-formal evidence unless the
     # previous outputs were deliberately discarded first.
     [switch]$Force,
     # Escape hatch for development smoke runs. Outputs are NOT formal evidence.
-    [switch]$AllowUnfrozen
+    [switch]$AllowUnfrozen,
+    # Safe resume after interruption: skip BCs whose directory already exists AND
+    # passes the full verification gate (manifest + SHA256 + architecture).
+    # BCs that exist but fail verification still BLOCK.
+    [switch]$ResumeValid
 )
 
 $ErrorActionPreference = "Stop"
@@ -136,7 +140,7 @@ if ($planned.Count -eq 0) {
 }
 
 $collisions = @($planned | Where-Object { Test-BCOutputExists -OutDir $_.OutDir })
-if ($collisions.Count -gt 0 -and -not $Force) {
+if ($collisions.Count -gt 0 -and -not $Force -and -not $ResumeValid) {
     foreach ($c in $collisions) {
         Write-Error "BLOCKED: BC output already exists: $($c.OutDir)"
     }
@@ -144,7 +148,28 @@ if ($collisions.Count -gt 0 -and -not $Force) {
     exit 2
 }
 
-foreach ($p in $planned) {
+# When -ResumeValid: verify each existing BC; skip if fully valid, BLOCK if invalid.
+$skipList = @()
+if ($ResumeValid -and $collisions.Count -gt 0) {
+    foreach ($c in $collisions) {
+        Write-Host "ResumeValid check: $($c.OutDir)"
+        & $Python "scripts/verify_bc_checkpoint.py" `
+            --root $Root `
+            --method $($c.Job.Method) `
+            --seed $($c.SeedValue) `
+            --expected-tag $ExpectedTag
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "BLOCKED: existing BC at $($c.OutDir) failed verification; remove it or inspect manually."
+            exit 2
+        }
+        $skipList += $c
+        Write-Host "  -> SKIP (already valid)"
+    }
+}
+
+$toRun = @($planned | Where-Object { $skipList -notcontains $_ })
+
+foreach ($p in $toRun) {
     $j = $p.Job
     $out = $p.OutDir
     Write-Host "==> BC: method=$($j.Method) seed=$($p.SeedValue) out=$out"
@@ -155,12 +180,22 @@ foreach ($p in $planned) {
         -FreezeCommit $FreezeCommit -ExpectedTag $ExpectedTag
 }
 
-# ---- Post-check: every produced BC must be loadable and architecture-exact ---
-Write-Host "==> Verifying BC checkpoints"
-& $Python "scripts/verify_bc_checkpoint.py" --root $Root --expected-commit $FreezeCommit
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "BLOCKED: BC verification failed (exit $LASTEXITCODE)"
-    exit 2
+# ---- Post-check: verify ONLY the tasks just produced (not all 15) -------------
+if ($toRun.Count -gt 0) {
+    Write-Host "==> Verifying BC checkpoints ($($toRun.Count) task(s))"
+    foreach ($p in $toRun) {
+        & $Python "scripts/verify_bc_checkpoint.py" `
+            --root $Root `
+            --method $($p.Job.Method) `
+            --seed $($p.SeedValue) `
+            --expected-tag $ExpectedTag
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "BLOCKED: BC verification failed for $($p.Job.Method) seed$($p.SeedValue)"
+            exit 2
+        }
+    }
+} else {
+    Write-Host "==> No new BC tasks to verify (all already valid)."
 }
 
 Write-Host "ALL_BC_DONE"

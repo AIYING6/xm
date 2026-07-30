@@ -200,15 +200,75 @@ def read_manifest_commit(bc_dir: Path) -> str:
     return str(data.get("freeze_commit", ""))
 
 
+def read_full_manifest(bc_dir: Path) -> dict:
+    """Return every field from a bc_manifest.json, or an empty dict."""
+    manifest = bc_dir / "bc_manifest.json"
+    if not manifest.exists():
+        return {}
+    try:
+        return json.loads(manifest.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return {}
+
+
+def _str_eq(lhs, rhs) -> bool:
+    """Compare two scalars as case-folded strings after stripping."""
+    return str(lhs).strip().casefold() == str(rhs).strip().casefold()
+
+
+def validate_manifest(
+    data: dict,
+    *,
+    method: str,
+    seed: int,
+    expected_tag: str,
+    expected_commit: str,
+    expected_checkpoint: str,
+    expected_graph: str,
+    expected_hidden: int,
+    expected_gate_prior: float,
+    actual_sha256: str,
+) -> tuple[bool, list[str]]:
+    """Check that every relevant manifest field matches expectations.
+
+    Returns (all_ok, failure_messages)."""
+    failures: list[str] = []
+    expect = [
+        ("method", method, data.get("method")),
+        ("seed", seed, data.get("seed")),
+        ("freeze_tag", expected_tag, data.get("freeze_tag")),
+        ("freeze_commit", expected_commit, data.get("freeze_commit")),
+        ("checkpoint", expected_checkpoint, data.get("checkpoint")),
+        ("graph_encoder", expected_graph, data.get("graph_encoder")),
+        ("hidden_dim", expected_hidden, data.get("hidden_dim")),
+        ("role_gate_prior_strength", expected_gate_prior, data.get("role_gate_prior_strength")),
+        ("checkpoint_sha256", actual_sha256, data.get("checkpoint_sha256")),
+    ]
+    for field_name, expected, actual in expect:
+        if expected is None or actual is None:
+            if expected != actual:
+                failures.append(f"{field_name}:expected={expected},got={actual}")
+            continue
+        if isinstance(expected, float):
+            if abs(float(actual) - expected) > 1e-6:
+                failures.append(f"{field_name}:expected={expected},got={actual}")
+        elif not _str_eq(expected, actual):
+            failures.append(f"{field_name}:expected={expected},got={actual}")
+    return len(failures) == 0, failures
+
+
 def verify_bc(
     root: Path,
     method: str,
     seed: int,
     *,
     check_architecture: bool = True,
+    expected_commit: str = "",
+    expected_tag: str = "",
 ) -> dict:
     """Run all BC integrity checks for one method/seed."""
     path = bc_checkpoint_path(root, method, seed)
+    spec = METHOD_SPECS[method]
     result = {
         "method": method,
         "seed": seed,
@@ -218,6 +278,9 @@ def verify_bc(
         "bc_loadable": False,
         "bc_nonempty_state": False,
         "bc_method_compatible": False,
+        "bc_manifest_valid": False,
+        "bc_sha256_match": False,
+        "bc_method_metadata_match": False,
         "bc_sha256": "",
         "bc_freeze_commit": "",
         "bc_tensor_count": 0,
@@ -234,6 +297,30 @@ def verify_bc(
     result["bc_nonempty_file"] = True
     result["bc_sha256"] = sha256_of(path)
     result["bc_freeze_commit"] = read_manifest_commit(path.parent)
+
+    # ---- Full manifest cross-check (does not depend on checkpoint loading) ----
+    manifest = read_full_manifest(path.parent)
+    if manifest and expected_tag:
+        manifest_ok, manifest_failures = validate_manifest(
+            manifest,
+            method=method,
+            seed=seed,
+            expected_tag=expected_tag,
+            expected_commit=expected_commit or result["bc_freeze_commit"],
+            expected_checkpoint=spec["checkpoint_name"],
+            expected_graph=spec["graph_encoder"],
+            expected_hidden=spec["hidden_dim"],
+            expected_gate_prior=spec["role_gate_prior_strength"],
+            actual_sha256=result["bc_sha256"],
+        )
+        result["bc_manifest_valid"] = manifest_ok
+        result["bc_sha256_match"] = (
+            _str_eq(manifest.get("checkpoint_sha256", ""), result["bc_sha256"])
+        )
+        result["bc_method_metadata_match"] = _str_eq(manifest.get("method", ""), method)
+        if not manifest_ok:
+            result["detail"] = "manifest:" + "|".join(manifest_failures)
+            return result
 
     try:
         payload = torch.load(path, map_location="cpu", weights_only=False)
@@ -266,7 +353,24 @@ def bc_is_valid(result: dict) -> bool:
         and result["bc_loadable"]
         and result["bc_nonempty_state"]
         and result["bc_method_compatible"]
+        and result.get("bc_sha256_match", False) is not False  # None=not checked, False=failed
+        and result.get("bc_manifest_valid", False) is not False
     )
+
+
+def _resolve_tag_commit(tag: str) -> str:
+    """Run ``git rev-list -n 1 <tag>`` and return the commit SHA or empty string."""
+    import subprocess
+    try:
+        out = subprocess.check_output(
+            ["git", "rev-list", "-n", "1", tag],
+            cwd=str(ROOT),
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        return out.strip()
+    except Exception:
+        return ""
 
 
 def main() -> None:
@@ -280,6 +384,11 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=-1, help="-1 means all of 0 1 2")
     parser.add_argument("--expected-commit", default="", help="required freeze commit SHA")
     parser.add_argument(
+        "--expected-tag",
+        default="",
+        help="freeze tag whose commit every manifest must reference; auto-resolves via git",
+    )
+    parser.add_argument(
         "--skip-architecture",
         action="store_true",
         help="only check file/loadability (fast path, does not build the env)",
@@ -287,26 +396,47 @@ def main() -> None:
     parser.add_argument("--json", action="store_true", help="emit JSON instead of a table")
     args = parser.parse_args()
 
+    # Resolve expected commit from tag if not explicitly provided.
+    expected_commit = args.expected_commit
+    expected_tag = args.expected_tag
+    if expected_tag and not expected_commit:
+        expected_commit = _resolve_tag_commit(expected_tag)
+        if not expected_commit:
+            print(f"BLOCKED: cannot resolve expected-tag '{expected_tag}' via git rev-list.")
+            raise SystemExit(2)
+
     methods = list(METHOD_SPECS) if args.method == "all" else [args.method]
     seeds = [0, 1, 2] if args.seed < 0 else [args.seed]
 
     results = [
-        verify_bc(args.root, m, s, check_architecture=not args.skip_architecture)
+        verify_bc(
+            args.root,
+            m,
+            s,
+            check_architecture=not args.skip_architecture,
+            expected_commit=expected_commit,
+            expected_tag=expected_tag,
+        )
         for m in methods
         for s in seeds
     ]
 
     commit_mismatch = []
-    if args.expected_commit:
+    if expected_commit:
         commit_mismatch = [
-            r for r in results if r["bc_freeze_commit"] != args.expected_commit
+            r for r in results if r["bc_freeze_commit"] and r["bc_freeze_commit"] != expected_commit
         ]
 
     if args.json:
         print(json.dumps(results, indent=2))
     else:
-        print("| Method | Seed | Exists | Loadable | NonemptyState | ArchExact | Tensors | SHA256[:12] | Detail |")
-        print("|---|---:|---|---|---|---|---:|---|---|")
+        hdr = (
+            "| Method | Seed | Exists | Loadable | Nonempty | ArchExact | "
+            "ManifestOK | SHA256Match | Tensors | SHA256[:12] | Detail |"
+        )
+        sep = "|---|---:|---|---|---|---|---|---:|---|---|"
+        print(hdr)
+        print(sep)
         for r in results:
             print(
                 f"| {r['method']} | {r['seed']} | "
@@ -314,16 +444,24 @@ def main() -> None:
                 f"{'yes' if r['bc_loadable'] else 'no'} | "
                 f"{'yes' if r['bc_nonempty_state'] else 'no'} | "
                 f"{'yes' if r['bc_method_compatible'] else 'no'} | "
+                f"{'yes' if r.get('bc_manifest_valid') else 'no'} | "
+                f"{'yes' if r.get('bc_sha256_match') else 'no'} | "
                 f"{r['bc_tensor_count']} | {r['bc_sha256'][:12]} | {r['detail']} |"
             )
 
     valid = sum(1 for r in results if bc_is_valid(r))
     total = len(results)
+    manifest_ok = sum(1 for r in results if r.get("bc_manifest_valid"))
+    sha256_ok = sum(1 for r in results if r.get("bc_sha256_match"))
+    arch_ok = sum(1 for r in results if r["bc_method_compatible"] or not r["bc_exists"])
     print(f"\nBC loadable/compatible = {valid}/{total}")
-    if args.expected_commit:
+    print(f"BC manifest valid = {manifest_ok}/{total}")
+    print(f"BC SHA256 match = {sha256_ok}/{total}")
+    print(f"BC architecture exact = {arch_ok}/{total}")
+    if expected_commit:
         print(
             f"freeze commit match = {total - len(commit_mismatch)}/{total} "
-            f"(expected {args.expected_commit})"
+            f"(expected {expected_commit})"
         )
 
     if valid != total or commit_mismatch:

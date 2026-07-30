@@ -1,14 +1,14 @@
 # Shared Git freeze gate for formal post-sixth-freeze training launchers.
 #
 # The formal protocol requires that any training script terminate when HEAD is
-# not the frozen commit, or when tracked source changes are uncommitted. This
-# file centralizes that check so the BC launcher and the PPO chunk launcher
-# cannot drift apart.
-#
-# Untracked files (notably results/) are intentionally ignored: formal outputs
-# are produced by the run itself. Tracked source/config changes are NOT ignored.
+# not the frozen commit, when tracked source changes are uncommitted, or when
+# untracked files exist outside the approved formal-results root. Only
+# ``results/paper_config_runs/formal_budget_post_sixth_freeze_v1/**`` untracked
+# files are tolerated; any other untracked file (e.g. sitecustomize.py, stray
+# scripts) could silently alter runtime behaviour and is a BLOCKED condition.
 
-$FormalFreezeTag = "formal-post-sixth-freeze-v1.2"
+$FormalFreezeTag = "formal-post-sixth-freeze-v1.3"
+$FormalResultsRoot = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1"
 
 function Get-FreezeCommit {
     param([string]$Tag = $FormalFreezeTag)
@@ -69,6 +69,23 @@ function Assert-FrozenWorkspace {
         exit 2
     }
 
-    Write-Host "Freeze gate OK: HEAD=$head tag=$ExpectedTag tracked tree clean"
+    # ---- Untracked-file whitelist ----
+    # Only untracked files under the approved formal-results root are tolerated.
+    # Any other untracked file (e.g. a stray Python module, a temp script) could
+    # silently change runtime behaviour and voids the formal-evidence claim.
+    $untracked = @(& git ls-files --others --exclude-standard)
+    $badUntracked = @(
+        $untracked | Where-Object {
+            $_ -notlike "$FormalResultsRoot/*"
+        }
+    )
+    if ($badUntracked.Count -gt 0) {
+        Write-Error "BLOCKED: untracked files outside the approved formal results root ($FormalResultsRoot):"
+        $badUntracked | ForEach-Object { Write-Error "  $_" }
+        Write-Error "Remove or .gitignore those files before formal runs."
+        exit 2
+    }
+
+    Write-Host "Freeze gate OK: HEAD=$head tag=$ExpectedTag tracked tree clean, untracked whitelist OK"
     return $tagCommit
 }
