@@ -28,7 +28,11 @@ The formal 1M PPO study now runs against a frozen source baseline:
   - `results/paper_config_runs/formal_budget_pre_sixth_freeze_development/` = pre-freeze 20-29 update runs (DEVELOPMENT EVIDENCE ONLY).
   - `results/paper_config_runs/formal_budget_post_sixth_freeze/` = retired pre-P0-fix root (DEVELOPMENT/PRE-FREEZE EVIDENCE ONLY; its BC `15/15` and PPO update-20 records are void).
   - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1_preflight/` = pre-tag BC + 0→2 runs (PREFLIGHT EVIDENCE ONLY).
-  - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/` = the only formal root; currently `BC = 0/15`, `PPO = 0/15`, formal training not started.
+  - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/` = the only formal root; currently:
+    - **BC = 15/15** (all generated, loadable, architecture exact, manifest valid, SHA256 match, freeze commit match)
+    - **PPO = 1/15** started (ea_rg_mappo_s_gate_prior seed0 at update 4; 0→2→4 chain verified)
+    - **ops tag** `formal-post-sixth-ops-v1.3.2` (ee99263) for launcher tooling; algorithm frozen at `formal-post-sixth-freeze-v1.3` (bdcb600)
+    - Archive evidence moved to `../ri_gmappo_uav_artifacts/` outside repo
 
 ## Current Milestone
 
