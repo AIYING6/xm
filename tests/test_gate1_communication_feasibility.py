@@ -212,9 +212,12 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         )
         env.local_attack_window[attacker] = float(env._in_local_attack_window(attacker, typ))
         obs = env._get_obs()
+        graph = env._get_graph_obs()
+        target_node = env.config.num_blue
 
         self.assertEqual(float(env.local_attack_window[attacker]), 1.0)
         self.assertEqual(float(obs[attacker, local_window_idx]), 1.0)
+        self.assertEqual(float(graph["adj"][attacker, target_node]), 0.0)
 
     def test_union_graph_does_not_use_potential_task_support_without_delivery(self) -> None:
         env = UAVIntercept3DEnv(
@@ -353,7 +356,7 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         step_infos = [
             {
                 "step": float(step),
-                "chain_closed": float(step >= 23),
+                "chain_closed": float(6 <= step < 10 or step >= 23),
                 "node_failure_active": float(10 <= step < 50),
                 "tracking_rate": 1.0,
                 "comm_connectivity": 1.0,
@@ -377,7 +380,7 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         base_infos = [
             {
                 "step": float(step),
-                "chain_closed": float(step >= 23),
+                "chain_closed": float(6 <= step < 10 or step >= 23),
                 "node_failure_active": float(10 <= step < 50),
                 "tracking_rate": 1.0,
                 "comm_connectivity": 1.0,
@@ -421,11 +424,31 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
                 info["attacker_window_cache_delivery_step_max"] = 21.0
 
         fresh = post_failure_recovery_metrics(fresh_infos, args)
+        self.assertEqual(float(fresh["pre_failure_chain_established"]), 1.0)
+        self.assertEqual(float(fresh["pre_failure_chain_recovered_after_loss"]), 1.0)
+        self.assertEqual(float(fresh["post_failure_chain_first_established"]), 0.0)
         self.assertEqual(float(fresh["post_failure_chain_recovered"]), 1.0)
         self.assertEqual(float(fresh["post_failure_fresh_info_recovered"]), 1.0)
         self.assertEqual(float(fresh["post_failure_stale_cache_recovered"]), 0.0)
         self.assertEqual(float(fresh["post_failure_fresh_info_recovery_steps"]), 10.0)
         self.assertEqual(float(fresh["post_failure_fresh_comm_recovered"]), 1.0)
+
+        first_established_infos = [dict(info) for info in fresh_infos]
+        for info in first_established_infos:
+            if float(info["step"]) < 10.0:
+                info["chain_closed"] = 0.0
+        first_established = post_failure_recovery_metrics(first_established_infos, args)
+        self.assertEqual(float(first_established["pre_failure_chain_established"]), 0.0)
+        self.assertEqual(float(first_established["post_failure_chain_first_established"]), 1.0)
+        self.assertEqual(float(first_established["post_failure_fresh_info_recovered"]), 0.0)
+        self.assertEqual(float(first_established["post_failure_fresh_info_first_established"]), 1.0)
+
+        tracking_gap_infos = [dict(info) for info in fresh_infos]
+        for info in tracking_gap_infos:
+            if float(info["step"]) >= 20.0:
+                info["tracking_rate"] = 0.0
+        tracking_gap = post_failure_recovery_metrics(tracking_gap_infos, args)
+        self.assertEqual(float(tracking_gap["post_failure_fresh_info_recovered"]), 0.0)
 
         maintained_infos = [dict(info) for info in fresh_infos]
         for info in maintained_infos:
@@ -704,18 +727,26 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
 
         np.testing.assert_allclose(graph_a["node_feat"], graph_b["node_feat"], atol=1e-6, rtol=0.0)
         np.testing.assert_allclose(graph_a["edge_feat"], graph_b["edge_feat"], atol=1e-6, rtol=0.0)
-        prior = np.asarray(env.config.target_prior_position, dtype=np.float32)
         target_node = env.config.num_blue
         np.testing.assert_allclose(
             graph_a["node_feat"][target_node, :3],
-            np.array(
-                [
-                    prior[0] / env.config.world_radius,
-                    prior[1] / env.config.world_radius,
-                    prior[2] / env.config.max_altitude,
-                ],
-                dtype=np.float32,
-            ),
+            np.zeros(3, dtype=np.float32),
+            atol=1e-6,
+            rtol=0.0,
+        )
+        obs_hidden = env._get_obs()
+        target_field_indices = [
+            OBS3D_FIELD_NAMES.index("target_rel_x_norm"),
+            OBS3D_FIELD_NAMES.index("target_rel_y_norm"),
+            OBS3D_FIELD_NAMES.index("target_rel_z_norm"),
+            OBS3D_FIELD_NAMES.index("target_range_norm"),
+            OBS3D_FIELD_NAMES.index("target_vel_x_norm"),
+            OBS3D_FIELD_NAMES.index("target_vel_y_norm"),
+            OBS3D_FIELD_NAMES.index("target_vel_z_norm"),
+        ]
+        np.testing.assert_allclose(
+            obs_hidden[:, target_field_indices],
+            np.zeros((env.config.num_blue, len(target_field_indices)), dtype=np.float32),
             atol=1e-6,
             rtol=0.0,
         )
@@ -812,11 +843,13 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
             node_failure_duration_steps=2,
         )
         base_infos = [
-            {"step": 1.0, "node_failure_active": 0.0, "chain_closed": 0.0, "tracking_rate": 1.0, "comm_connectivity": 1.0},
+            {"step": 1.0, "node_failure_active": 0.0, "chain_closed": 1.0, "tracking_rate": 1.0, "comm_connectivity": 1.0},
             {"step": 2.0, "node_failure_active": 1.0, "chain_closed": 1.0, "tracking_rate": 1.0, "comm_connectivity": 1.0},
             {"step": 3.0, "node_failure_active": 1.0, "chain_closed": 1.0, "tracking_rate": 1.0, "comm_connectivity": 1.0},
         ]
         maintained = post_failure_recovery_metrics(base_infos, args)
+        self.assertEqual(float(maintained["pre_failure_chain_established"]), 1.0)
+        self.assertEqual(float(maintained["pre_failure_chain_maintained"]), 1.0)
         self.assertEqual(float(maintained["post_failure_chain_maintained"]), 1.0)
         self.assertEqual(float(maintained["post_failure_chain_recovered_after_loss"]), 0.0)
         self.assertEqual(float(maintained["post_failure_chain_unrecovered"]), 0.0)
@@ -828,6 +861,23 @@ class Gate1CommunicationFeasibilityTest(unittest.TestCase):
         self.assertEqual(float(recovered["post_failure_chain_recovered_after_loss"]), 1.0)
         self.assertEqual(float(recovered["post_failure_chain_unrecovered"]), 0.0)
         self.assertEqual(float(recovered["post_failure_chain_recovery_steps"]), 1.0)
+
+        dropped_after_start_infos = [
+            {"step": 1.0, "node_failure_active": 0.0, "chain_closed": 1.0, "tracking_rate": 1.0, "comm_connectivity": 1.0},
+            {"step": 2.0, "node_failure_active": 1.0, "chain_closed": 1.0, "tracking_rate": 1.0, "comm_connectivity": 1.0},
+            {"step": 3.0, "node_failure_active": 1.0, "chain_closed": 0.0, "tracking_rate": 1.0, "comm_connectivity": 1.0},
+            {"step": 4.0, "node_failure_active": 0.0, "chain_closed": 1.0, "tracking_rate": 1.0, "comm_connectivity": 1.0},
+        ]
+        dropped_after_start = post_failure_recovery_metrics(dropped_after_start_infos, args)
+        self.assertEqual(float(dropped_after_start["post_failure_chain_maintained"]), 0.0)
+        self.assertEqual(float(dropped_after_start["post_failure_chain_recovered_after_loss"]), 1.0)
+
+        dropped_without_recovery_infos = [dict(info) for info in dropped_after_start_infos]
+        dropped_without_recovery_infos[3]["chain_closed"] = 0.0
+        dropped_without_recovery = post_failure_recovery_metrics(dropped_without_recovery_infos, args)
+        self.assertEqual(float(dropped_without_recovery["post_failure_chain_maintained"]), 0.0)
+        self.assertEqual(float(dropped_without_recovery["post_failure_chain_recovered_after_loss"]), 0.0)
+        self.assertEqual(float(dropped_without_recovery["post_failure_chain_unrecovered"]), 1.0)
 
         unrecovered_infos = [dict(info) for info in base_infos]
         unrecovered_infos[1]["chain_closed"] = 0.0

@@ -37,7 +37,7 @@ and visible_support_evidence(src)
 | 自身本地攻击窗口标志 | 本地目标估计 + 本机几何条件 | 否 | 否 | 是 | `local_attack_window` |
 | 目标相对状态 | 直接感知或缓存估计 | 视情况 | 否 | 条件可用 | strict sensing + target cache |
 | 未感知目标真实位置 | 环境全局状态 | 否 | 是 | 否 | 使用 target prior 或无效缓存 |
-| 共享 graph 目标节点 | 公共先验 | 否 | 否 | 是 | strict bottleneck 下固定 prior + zero velocity |
+| 共享 graph 目标节点 | zero mask | 否 | 否 | 是 | strict bottleneck 下固定 zero position + zero velocity |
 | 邻居平台状态 | 通信图/消息 | 是 | 否 | 条件可用 | 受通信 mask 约束 |
 | 未通信邻居隐藏状态 | 环境全局状态 | 否 | 是 | 否 | 不应影响 actor logits |
 | 消息年龄 | 已接收消息缓存 | 是 | 否 | 是 | actor-visible cache metadata |
@@ -99,27 +99,15 @@ Attacker -> Relay 的任务支援边可由 `local_attack_window[src]` 激活。�
 
 该风险已由 `test_local_attack_window_requires_actor_visible_target_information` 覆盖。
 
-### 4.3 `adj` 中的 attack 边语义
+### 4.3 `adj` 中不再存在 attack 辅助边
 
-图构建中存在：
-
-```text
-adj[i, j] = max(adj[i, j], sensing, comm, active_support, attack)
-```
-
-其中 `attack` 表示本地攻击窗口辅助边。当前定义为：
+图构建中 union adjacency 只由感知、通信和已投递通信支撑的动态任务支援边打开：
 
 ```text
-attack(i, target) = 1 iff local_attack_window[i] = 1
+adj[i, j] = max(adj[i, j], sensing, comm, active_support)
 ```
 
-该边界已明确：
-
-- `attack` 不是第四类 relation，不进入 `relation_adj`；
-- `attack` 只进入 union adjacency，用于本机本地攻击窗口下的辅助连接；
-- `attack` 由 `local_attack_window` 生成，不读取 evaluation-only `attack_window`；
-- strict bottleneck 下共享 graph 目标节点固定为公共 prior + zero velocity，因此该边不会把真实目标节点泄漏给其他 actor；
-- 对任务支援关系的消融不能把该辅助边写成主创新。
+`local_attack_window` 仍作为 actor 可见的本地节点特征，并可参与蓝方平台之间的任务支援语义判断，但它不再直接连接攻击机与目标节点，也不作为第四类 relation 或隐藏 union-graph 通道。该处理避免多关系方法在论文声称的三类关系之外获得额外结构输入。
 
 ## 5 必须补充的测试
 
@@ -171,7 +159,7 @@ tests/test_gate1_communication_feasibility.py
    - 修改真实目标状态；
    - actor logits 不变。
    - 当前已有覆盖：`test_disconnected_attacker_logits_do_not_change_with_hidden_target` 和 `test_strict_bottleneck_graph_hides_stale_global_target_state`。
-   - 当前强化覆盖：即便某一平台直接探测目标，strict bottleneck 下共享 graph 的 target node 仍保持公共 prior/zero velocity；真实目标信息只进入检测者自己的 local observation。
+   - 当前强化覆盖：即便某一平台直接探测目标，strict bottleneck 下共享 graph 的 target node 仍保持 zero position/zero velocity；真实目标信息只进入检测者自己的 local observation。
 
 5. **Union graph residual no bypass**
    - communication relation 和 task-support relation 都关闭；
@@ -183,6 +171,7 @@ tests/test_gate1_communication_feasibility.py
    - attacker 无直接探测、无有效缓存、无有效通信；
    - actor observation 中 `local_attack_window` 必须为 0，task-support edge 不得激活；
    - 写入合法目标缓存后 `local_attack_window` 才允许变为 1。
+   - 即使 `local_attack_window=1`，也不得单独打开攻击机到目标节点的 union adjacency。
    - 当前新增覆盖：`test_local_attack_window_requires_actor_visible_target_information`。
 
 7. **Relay support no teammate-private-state shortcut**
@@ -199,7 +188,7 @@ tests/test_gate1_communication_feasibility.py
 
 9. **Fresh-information recovery vs stale-cache recovery**
    - 失效后重新闭合任务链时，区分攻击平台依赖失效前旧缓存维持闭合、故障后投递的故障前旧消息闭合，还是获得了故障后生成的新鲜目标信息；
-   - 主协议选点使用连续 `attack_hold_steps` 步、after-loss、generation-based 的 `post_failure_fresh_info_recovered`；旧缓存恢复和故障后投递旧消息仅作为辅助诊断；
+   - 主协议选点使用连续 `attack_hold_steps` 步、after-loss、generation-based 且含当前直接跟踪条件的 `post_failure_fresh_info_recovered`；旧缓存恢复、故障后投递旧消息和故障后首次建立仅作为辅助诊断；
    - 当前新增覆盖：`test_post_failure_fresh_info_recovery_separates_stale_cache`。
 
 ## 6 论文 Methods 推荐写法
@@ -218,7 +207,7 @@ tests/test_gate1_communication_feasibility.py
 
 - 文档和代码中已有“task-support edges require delivered physical communication”的设计；
 - `_active_support_edge` 确实检查 `comm_adj[dst, src]`；
-- 新增测试已经确认 task-support adjacency 不依赖隐藏目标状态，union graph 不使用未投递的潜在支援边，Relay 不读取队友当前私有目标信息，actor 侧本地攻击窗口不读取隐藏目标真值，恢复指标与连续闭合窗口一致，且新鲜信息恢复与旧缓存维持恢复被区分统计；
+- 新增测试已经确认 task-support adjacency 不依赖隐藏目标状态，union graph 不使用未投递的潜在支援边或本地攻击窗口辅助边，Relay 不读取队友当前私有目标信息，actor 侧本地攻击窗口不读取隐藏目标真值，恢复指标与连续闭合窗口一致，且新鲜信息恢复、故障后首次建立与旧缓存维持恢复被区分统计；
 - relay failure 下的 task-support 专项行为已由 `test_relay_failure_blocks_relay_originated_task_support` 覆盖；
 - 论文初稿原表述容易被审稿人理解为全局阶段泄漏，已经修正。
 

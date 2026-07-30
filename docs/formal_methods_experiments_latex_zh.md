@@ -44,13 +44,13 @@ Last updated: 2026-07-29
 
 ### 1.3 任务链闭合与恢复指标
 
-设 \(F_{k}^{t}\in\{0,1\}\) 表示攻击平台 \(k\) 在时刻 \(t\) 持有合法有效目标信息，\(w_k^t\in\{0,1\}\) 表示该攻击平台处于真实攻击窗口。通信可达性通过消息生成、投递、缓存更新、TTL 和置信度共同约束 \(F_k^t\)，但不作为瞬时闭合的额外必要条件。任务链瞬时闭合定义为
+设 \(F_{k}^{t}\in\{0,1\}\) 表示攻击平台 \(k\) 在时刻 \(t\) 持有合法有效目标信息，\(w_k^t\in\{0,1\}\) 表示该攻击平台处于真实攻击窗口，\(q^t\in\{0,1\}\) 表示当前至少一个蓝方平台直接跟踪目标。通信可达性通过消息生成、投递、缓存更新、TTL 和置信度共同约束 \(F_k^t\)，但不作为瞬时闭合的额外必要条件。任务链瞬时闭合定义为
 
 \[
 z_t =
 \mathbb{I}\left[
 \exists k\in\mathcal{A}_{\mathrm{atk}},
-F_k^t=1,\;w_k^t=1
+F_k^t=1,\;w_k^t=1,\;q^t=1
 \right].
 \]
 
@@ -72,7 +72,7 @@ t\mid t\ge t_f+H-1,\
 T_{\mathrm{rec}}=t_{\mathrm{rec}}-t_f-H+1 .
 \]
 
-若回合结束前未恢复，则记录为未恢复样本，并在统计中同时报告恢复概率和受限平均恢复时间。进一步区分三类恢复：故障后生成的新鲜信息支持恢复、故障后投递的故障前旧信息支持恢复、以及故障前旧缓存维持恢复。新鲜信息恢复只由缓存生成时间判定，投递时间单独作为通信机制诊断，不能替代生成时间。
+若回合结束前未恢复，则记录为未恢复样本，并在统计中同时报告恢复概率和受限平均恢复时间。严格意义上的 recovery 要求故障前任务链已经建立；若故障前从未闭合而故障后首次闭合，则记为 post-failure first establishment，不并入 recovery。进一步区分三类恢复：故障后生成的新鲜信息支持恢复、故障后投递的故障前旧信息支持恢复、以及故障前旧缓存维持恢复。新鲜信息恢复只由缓存生成时间判定，投递时间单独作为通信机制诊断，不能替代生成时间。
 
 定义故障后新鲜有效信息标志：
 
@@ -88,7 +88,7 @@ F_k^t\cdot
 z_{t,\mathrm{fresh}}=
 \mathbb{I}\left[
 \exists k\in\mathcal{A}_{\mathrm{atk}},
-F_{k,\mathrm{fresh}}^t=1,\;w_k^t=1
+F_{k,\mathrm{fresh}}^t=1,\;w_k^t=1,\;q^t=1
 \right].
 \]
 
@@ -103,7 +103,7 @@ t\ge t_f+H-1
 \right\}.
 \]
 
-若在恢复窗口起点之前未发生任务链丢失，则该样本记为 `fresh_info_acquired_without_prior_loss`，不计入主指标 `post_failure_fresh_info_recovered`。正式选点和主比较优先使用 after-loss 的故障后新鲜信息恢复率，旧缓存恢复、故障后投递旧信息恢复、direct/communicated fresh recovery 和 delayed recovery 作为机制诊断指标。最终实验不应只报告累计奖励，还应报告成功率、任务链闭合率、失效后新鲜信息恢复率、旧缓存恢复率、恢复时间、目标跟踪率、通信连通率、消息年龄、碰撞率和超时率。
+若在恢复窗口起点之前未发生任务链丢失，则该样本记为 `fresh_info_acquired_without_prior_loss`，不计入主指标 `post_failure_fresh_info_recovered`。若故障前从未建立任务链而故障后首次形成新鲜信息闭合，则记为 `post_failure_fresh_info_first_established`。正式选点和主比较优先使用 after-loss 的故障后新鲜信息恢复率，旧缓存恢复、故障后投递旧信息恢复、direct/communicated fresh recovery 和 delayed recovery 作为机制诊断指标。最终实验不应只报告累计奖励，还应报告成功率、任务链闭合率、失效后新鲜信息恢复率、旧缓存恢复率、恢复时间、目标跟踪率、通信连通率、消息年龄、碰撞率和超时率。
 
 ## 2 三自由度异构无人机任务链恢复环境
 
@@ -182,7 +182,7 @@ p_i^{t+1}=p_i^t+\dot{p}_i^{t+1}\Delta t .
 
 该设计使“看见目标”和“知道目标信息”成为两个不同概念。平台可以通过雷达直接获得目标信息，也可以通过通信获得带有年龄和置信度衰减的间接目标信息。论文实验应特别报告平均消息年龄和目标持续跟踪率，因为它们能解释任务链恢复失败的原因。
 
-在严格感知和 actor 目标信息瓶颈下，actor 侧共享 graph 的目标节点不携带真实目标状态，也不携带“任一平台已探测目标”的全局标志。该节点固定为公共先验位置和零速度；合法目标信息只进入具备直接探测或有效缓存的单个智能体局部观测。该规则用于避免共享 graph 将侦察机私有探测结果旁路泄漏给未收到消息的攻击机。
+在严格感知和 actor 目标信息瓶颈下，actor 侧共享 graph 的目标节点不携带真实目标状态，也不携带“任一平台已探测目标”的全局标志。该节点固定为 zero position 和 zero velocity；无合法目标信息智能体的局部目标相对位置、距离和目标速度字段同样置零。合法目标信息只进入具备直接探测或有效缓存的单个智能体局部观测。该规则用于避免共享 graph 将侦察机私有探测结果旁路泄漏给未收到消息的攻击机。
 
 ### 2.5 通信模型
 
@@ -283,7 +283,7 @@ A_{ij}^{\mathrm{sup}} =
 
 Relay 的 \(E_j^{\mathrm{vis}}\) 只由其自身已经更新后的本地目标信息决定。若 Scout 消息成功投递给 Relay，则先写入 Relay 目标缓存，再计算 Relay 的 \(F_j^t\)；未投递消息或发送方当前私有目标状态不能直接激活 Relay-originated task-support edge。
 
-实现中另有本地攻击窗口辅助边 \(A_{ij}^{\mathrm{atk}}\)，仅用于 union adjacency 中让攻击平台在自身具备合法本地攻击窗口时读取公共目标先验节点。该边不属于 \(\mathcal{G}_t\) 的三类主关系，也不参与任务支援关系消融；其定义为 \(A_{ij}^{\mathrm{atk}}=\mathbb{I}[i\in\mathcal{N}_{\mathrm{blue}},j=T,\ell_i^t=1]\)，其中 \(\ell_i^t\) 由智能体 \(i\) 的本地目标估计计算。真实攻击窗口 \(\omega_i^t\) 只用于奖励、终止和评价，不能生成 actor 侧攻击窗口辅助边。
+实现中不再设置本地攻击窗口到目标节点的辅助边。`local_attack_window` 仅作为 actor 可见的本地节点特征，并可参与蓝方平台之间的任务支援语义判断；union adjacency 只由感知、通信和已投递通信支撑的任务支援边打开。真实攻击窗口 \(\omega_i^t\) 只用于奖励、终止和评价，不能生成 actor 侧图连接。
 
 ### 3.3 角色对条件消息传播
 
@@ -352,23 +352,23 @@ g_{\rho_i,\rho_j}^{r}=
 \pi_{\theta}(a_i^t|o_i^t,\mathcal{G}_{i,t}),
 \]
 
-其中 \(\mathcal{G}_{t}^{\mathrm{act}}\) 为经过信息边界 mask 的 actor-visible graph，局部目标信息由各智能体 \(o_i^t\) 和本地缓存承载。联合动作概率由各智能体策略相乘得到。代码采用最小化形式的 MAPPO 裁剪损失：
+其中 \(\mathcal{G}_{t}^{\mathrm{act}}\) 为经过信息边界 mask 的 actor-visible graph，局部目标信息由各智能体 \(o_i^t\) 和本地缓存承载。代码按智能体维度分别计算 PPO ratio 并对时间、batch 和智能体维度求平均，而不是显式构造联合动作概率乘积。代码采用最小化形式的 MAPPO 裁剪损失：
 
 \[
 \mathcal{L}_{\pi}(\theta)=
-\mathbb{E}_t
+\mathbb{E}_{i,t}
 \left[
 \max \left(
--r_t(\theta)\hat{A}_t,
--\mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t
+-r_{i,t}(\theta)\hat{A}_{i,t},
+-\mathrm{clip}(r_{i,t}(\theta),1-\epsilon,1+\epsilon)\hat{A}_{i,t}
 \right)
 \right],
 \]
 
 \[
-r_t(\theta)=
-\frac{\pi_{\theta}(a_t|o_t,\mathcal{G}_t^{\mathrm{act}})}
-{\pi_{\theta_{\mathrm{old}}}(a_t|o_t,\mathcal{G}_t^{\mathrm{act}})} .
+r_{i,t}(\theta)=
+\frac{\pi_{\theta}(a_i^t|o_i^t,\mathcal{G}_{i,t}^{\mathrm{act}})}
+{\pi_{\theta_{\mathrm{old}}}(a_i^t|o_i^t,\mathcal{G}_{i,t}^{\mathrm{act}})} .
 \]
 
 critic 使用集中状态训练价值函数：

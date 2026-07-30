@@ -1,6 +1,6 @@
 # Current Project State
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 ## Current Milestone
 
@@ -832,9 +832,10 @@ environment now separates evaluation-only `attack_window`, computed from true
 target state, from actor-visible `local_attack_window`, computed only from
 legal target estimates and forced to zero when an attacker lacks direct sensing
 or a valid target cache under strict sensing. Actor observations, graph node
-features, attack edges, and attacker-originated task-support edges now use
+features, and attacker-originated task-support edges now use
 `local_attack_window`; reward, critic, termination, and evaluation may still use
-the true `attack_window`. A new regression test,
+the true `attack_window`. The earlier local-attack union edge has since been
+removed by the sixth-review consistency hardening. A new regression test,
 `test_local_attack_window_requires_actor_visible_target_information`, was added.
 `D:/Anaconda/envs/.conda/envs/cac/python.exe -m pytest
 tests/test_gate1_communication_feasibility.py -q` passes with `29 passed`.
@@ -921,12 +922,15 @@ equations, and align PPO/HAPPO losses with code.
 
 Fourth-review hardening continued by freezing actor graph target masking:
 under `strict_target_sensing + agent_target_info_bottleneck`, the shared actor
-graph target node is now always the public target prior with zero velocity and
-does not expose the true target state or an `any_detected` flag. Legal target
-information remains in the detecting/receiving agent's local observation and
-target cache. The local attack-window union edge is documented as an auxiliary
-edge derived from `local_attack_window`, not as a fourth relation or a
-contribution. The 3DOF gamma update notation was also corrected in the methods
+graph target node is masked and does not expose the true target state or an
+`any_detected` flag. Sixth-review consistency hardening later tightened this
+from public prior + zero velocity to zero position + zero velocity, and also
+zeros local target relative-position/range/velocity observation fields for
+agents without legal target information. Legal target information remains only
+in the detecting/receiving agent's local observation and target cache. This
+fourth-review state still documented a local attack-window union edge; that edge
+was later removed by the sixth-review consistency hardening and is no longer
+part of the actor graph. The 3DOF gamma update notation was also corrected in the methods
 draft by defining \(k_\gamma=0.35\,s^{-1}\). Gate 1 tests pass with `33
 passed` after this stricter mask update. Remaining fourth-review items before
 formal multi-seed evidence are now narrowed to: complete communication
@@ -953,7 +957,8 @@ information. Evaluation now defines `post_failure_fresh_info_recovered` as
 after-loss, generation-based, continuous-window recovery: for every step in the
 `attack_hold_steps` recovery window, an attacking platform must be in the true
 attack window and its currently effective target cache must have
-`generation_step >= node_failure_start_step`. Post-failure delivery of
+`generation_step >= node_failure_start_step`, while the target is also currently
+directly tracked by at least one blue platform. Post-failure delivery of
 pre-failure information is logged separately as
 `post_failure_post_delivered_old_info_recovered`; maintained episodes with
 fresh information but no prior loss are logged as
@@ -966,3 +971,55 @@ time, higher success, earlier checkpoint. Gate 1 tests pass with `33 passed`
 after this metric change. Formal budget training must restart after this
 hardening; pre-Fifth-review validation selections are development evidence
 only.
+
+Sixth-review consistency hardening is complete on 2026-07-30. FreshRec now
+uses the same current tracking condition as environment chain closure. Recovery
+classification now requires pre-failure chain establishment and splits
+pre-established maintained, pre-established recovered-after-loss, post-failure
+first establishment, and never-established cases. The ordinary
+`post_failure_chain_recovered_after_loss` metric now detects actual loss after
+failure, rather than relying only on whether the chain was closed at the failure
+start step. The checkpoint sweep defaults are locked to the formal protocol:
+`selection_metric=fresh_info_recovery`, `selection_group=suite`, and
+`selection_success_weight=0`. The hidden local-attack-window union-graph edge
+has been removed; `local_attack_window` remains a node feature and task-support
+cue but no longer opens a fourth graph channel.
+
+The remaining target-invisible public-prior P0 was also closed in this pass:
+under `strict_target_sensing + agent_target_info_bottleneck`, shared graph target
+nodes are zero-masked and agents without legal target information receive zeroed
+target relative-position/range/velocity observation fields. This is a formal
+protocol change, so all formal budget runs must start after this commit.
+
+Post-sixth-freeze formal preflight is complete and recorded in
+`docs/formal_post_sixth_freeze_preflight.md`. Minimal BC plus one-update PPO
+smokes passed for all five formal method families: MAPPO/no-graph, Single-Graph
+MAPPO, Parameter-Matched Single-Graph MAPPO, EA-RG-MAPPO-S, and HAPPO. The
+preflight outputs live under
+`results/paper_config_runs/formal_budget_post_sixth_freeze_preflight/` and are
+not paper evidence. The clean formal budget root is now
+`results/paper_config_runs/formal_budget_post_sixth_freeze/`. Next step is to
+run BC for seeds `0 1 2`, then run the 1M budget study (`977` updates) for all
+five methods under the frozen protocol.
+
+Formal post-sixth seed0/seed1/seed2 BC is complete and recorded in
+`docs/formal_budget_post_sixth_seed0_bc_progress.md`. All five formal methods
+completed 20 BC epochs for seeds `0`, `1`, and `2` under the clean
+`results/paper_config_runs/formal_budget_post_sixth_freeze/` root and produced
+the expected latest/best BC checkpoints. The formal BC stage is `15/15`
+complete. The next stage is the 1M PPO budget study (`977` updates) for all five
+methods and seeds `0 1 2`. The preferred maintained launcher is the resumable
+`scripts/run_formal_post_sixth_1m_chunk.ps1`; the older all-in-one
+`scripts/run_formal_post_sixth_1m.ps1` remains available for sequential runs.
+
+Formal post-sixth 1M PPO training has started and is tracked in
+`docs/formal_budget_post_sixth_1m_progress.md`. The resumable chunk launcher
+`scripts/run_formal_post_sixth_1m_chunk.ps1` and progress checker
+`scripts/check_formal_post_sixth_1m_progress.py` are now available. All `15/15`
+method/seed tasks have valid PPO logs and latest training-state checkpoints.
+Current progress: all `15/15` tasks have reached at least update `20` with
+checkpoint status `ok`. Some tasks are slightly beyond the floor due to a tool
+timeout while training continued (`no_graph seed2=29`, `happo seed1=26`, several
+seed2 runs `=24`). Next execution target is balanced advancement of all runs to
+update `100`, followed by a health check before continuing to
+`200/400/600/800/977`.

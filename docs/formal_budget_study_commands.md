@@ -1,6 +1,6 @@
 # Formal Budget Study Commands
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 ## Purpose
 
@@ -48,17 +48,19 @@ Final held-out test base seed:
 
 ## Output Root
 
-After the 2026-07-29 shared actor-graph target-mask audit, clean formal-budget runs should
+After the 2026-07-30 sixth-review information-boundary and FreshRec consistency
+freeze, clean formal-budget runs should
 write to:
 
 ```text
-results/paper_config_runs/formal_budget_post_graph_mask/
+results/paper_config_runs/formal_budget_post_sixth_freeze/
 ```
 
 The older `results/paper_config_runs/formal_budget/` and
-`results/paper_config_runs/formal_budget_post_audit/` directories are preserved
-as development/continuity evidence only because their checkpoints were produced
-before the final graph-mask protocol.
+`results/paper_config_runs/formal_budget_post_audit/` and
+`results/paper_config_runs/formal_budget_post_graph_mask/` directories are
+preserved as development/continuity evidence only because their checkpoints were
+produced before the final zero-mask, hidden-edge removal, and FreshRec protocol.
 
 ## Common BC Settings
 
@@ -79,7 +81,7 @@ and EA-RG-MAPPO-S:
   --node-failure-start-random-min 25 --node-failure-start-random-max 70 `
   --node-failure-duration-steps 80 --attack-hold-steps 4 --min-success-step 80 `
   --device cpu `
-  --out-dir results/paper_config_runs/formal_budget_post_graph_mask/<METHOD>/bc_seed<SEED>
+  --out-dir results/paper_config_runs/formal_budget_post_sixth_freeze/<METHOD>/bc_seed<SEED>
 ```
 
 For HAPPO:
@@ -96,10 +98,38 @@ For HAPPO:
   --node-failure-start-random-min 25 --node-failure-start-random-max 70 `
   --node-failure-duration-steps 80 --attack-hold-steps 4 --min-success-step 80 `
   --device cpu `
-  --out-dir results/paper_config_runs/formal_budget_post_graph_mask/happo/bc_seed<SEED>
+  --out-dir results/paper_config_runs/formal_budget_post_sixth_freeze/happo/bc_seed<SEED>
 ```
 
 ## Common PPO Settings
+
+After the BC stage is complete, the maintained resumable launcher for the 1M
+budget study is:
+
+```powershell
+.\scripts\run_formal_post_sixth_1m_chunk.ps1 -Method ea_rg_mappo_s_gate_prior -Seed 0
+```
+
+It runs one method/seed pair for up to `100` updates by default, resumes from
+the latest training-state checkpoint when the run directory already has a log,
+and stops automatically at `977` updates. Use multiple terminals to run different
+method/seed pairs in parallel if hardware allows.
+
+Progress check:
+
+```powershell
+& "D:/Anaconda/envs/.conda/envs/cac/python.exe" scripts/check_formal_post_sixth_1m_progress.py
+```
+
+The older all-in-one sequential launcher is available as:
+
+```powershell
+.\scripts\run_formal_post_sixth_1m.ps1
+```
+
+It runs all five formal methods over seeds `0 1 2`, uses `977` updates by
+default, and refuses to overwrite an existing formal PPO output directory. The
+resumable chunk launcher is preferred for long formal training.
 
 For MAPPO/no-graph, Single-Graph MAPPO, Parameter-Matched Single-Graph MAPPO,
 and EA-RG-MAPPO-S:
@@ -111,7 +141,7 @@ and EA-RG-MAPPO-S:
   --hidden-dim <HIDDEN_DIM> --role-dim 8 --intent-dim 8 `
   --graph-encoder <GRAPH_ENCODER> `
   --role-gate-prior-strength <ROLE_GATE_PRIOR_STRENGTH> `
-  --init-checkpoint results/paper_config_runs/formal_budget_post_graph_mask/<METHOD>/bc_seed<SEED>/actor_critic_latest.pt `
+  --init-checkpoint results/paper_config_runs/formal_budget_post_sixth_freeze/<METHOD>/bc_seed<SEED>/actor_critic_latest.pt `
   --actor-lr 5e-5 --critic-lr 1e-4 `
   --clip-coef 0.1 --ppo-epochs 2 --target-kl 0.01 `
   --entropy-coef 0.003 --max-grad-norm 0.5 --critic-warmup-updates 20 `
@@ -128,7 +158,7 @@ and EA-RG-MAPPO-S:
   --safety-proximity-distance 2500 `
   --safety-proximity-penalty-weight 0.5 `
   --device cpu `
-  --out-dir results/paper_config_runs/formal_budget_post_graph_mask/<METHOD>/ppo_seed<SEED>_<BUDGET>
+  --out-dir results/paper_config_runs/formal_budget_post_sixth_freeze/<METHOD>/ppo_seed<SEED>_<BUDGET>
 ```
 
 For HAPPO:
@@ -137,7 +167,7 @@ For HAPPO:
 & "D:/Anaconda/envs/.conda/envs/cac/python.exe" scripts/train_happo_baseline.py `
   --seed <SEED> --num-envs 8 --rollout-steps 128 --updates <UPDATES> `
   --hidden-dim 64 --role-dim 8 --intent-dim 8 `
-  --init-checkpoint results/paper_config_runs/formal_budget_post_graph_mask/happo/bc_seed<SEED>/happo_bc_latest.pt `
+  --init-checkpoint results/paper_config_runs/formal_budget_post_sixth_freeze/happo/bc_seed<SEED>/happo_bc_latest.pt `
   --lr 5e-5 --clip-coef 0.1 --ppo-epochs 2 `
   --entropy-coef 0.003 --max-grad-norm 0.5 `
   --eval-interval 100 --eval-episodes 5 --eval-base-seed 391000 `
@@ -153,7 +183,7 @@ For HAPPO:
   --safety-proximity-distance 2500 `
   --safety-proximity-penalty-weight 0.5 `
   --device cpu `
-  --out-dir results/paper_config_runs/formal_budget_post_graph_mask/happo/ppo_seed<SEED>_<BUDGET>
+  --out-dir results/paper_config_runs/formal_budget_post_sixth_freeze/happo/ppo_seed<SEED>_<BUDGET>
 ```
 
 ## Method Substitutions
@@ -170,9 +200,12 @@ For HAPPO:
 
 `--selection-metric fresh_info_recovery` means generation-based, after-loss,
 continuous-window FreshRec. It does not count a pre-failure target observation
-that is merely delivered after relay failure. Tie-break order is higher
-FreshRec, lower collision, shorter fresh recovery time, higher success, and
-earlier checkpoint update.
+that is merely delivered after relay failure, and it requires the same current
+direct-tracking condition used by environment chain closure. Recovery is counted
+only for episodes where the chain was established before failure; post-failure
+first establishment is logged separately. Tie-break order is higher FreshRec,
+lower collision, shorter fresh recovery time, higher success, and earlier
+checkpoint update.
 
 For MAPPO-style methods:
 
@@ -188,8 +221,8 @@ For MAPPO-style methods:
   --min-success-step 80 --attack-hold-steps 4 `
   --run-dir-template "ppo_seed{seed}_<BUDGET>" `
   --checkpoint-updates <CHECKPOINT_UPDATES> `
-  --<ROOT_ARG> results/paper_config_runs/formal_budget_post_graph_mask/<METHOD> `
-  --out-dir results/paper_config_runs/formal_budget_post_graph_mask/checkpoint_sweeps/<METHOD>_<BUDGET> `
+  --<ROOT_ARG> results/paper_config_runs/formal_budget_post_sixth_freeze/<METHOD> `
+  --out-dir results/paper_config_runs/formal_budget_post_sixth_freeze/checkpoint_sweeps/<METHOD>_<BUDGET> `
   --selection-group suite `
   --selection-metric fresh_info_recovery `
   --selection-success-weight 0 `
@@ -216,8 +249,8 @@ For HAPPO:
   --min-success-step 80 --attack-hold-steps 4 `
   --run-dir-template "ppo_seed{seed}_<BUDGET>" `
   --checkpoint-updates <CHECKPOINT_UPDATES> `
-  --happo-root results/paper_config_runs/formal_budget_post_graph_mask/happo `
-  --out-dir results/paper_config_runs/formal_budget_post_graph_mask/checkpoint_sweeps/happo_<BUDGET> `
+  --happo-root results/paper_config_runs/formal_budget_post_sixth_freeze/happo `
+  --out-dir results/paper_config_runs/formal_budget_post_sixth_freeze/checkpoint_sweeps/happo_<BUDGET> `
   --selection-group suite `
   --selection-metric fresh_info_recovery `
   --selection-success-weight 0 `

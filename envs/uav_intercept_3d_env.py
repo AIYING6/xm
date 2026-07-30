@@ -795,12 +795,12 @@ class UAVIntercept3DEnv:
         if not (self.config.strict_target_sensing and self.config.agent_target_info_bottleneck):
             return self._target_state_for_observation()
         # Actor graph observations are shared by all blue actors. Under the
-        # strict target-information bottleneck, putting a detected target state
-        # into the shared graph would leak a scout's private detection to agents
-        # that have not received a delivered message. Target information is
-        # therefore carried only by per-agent observations/caches, while the
-        # graph target node remains a public prior with zero velocity.
-        pos = np.asarray(self.config.target_prior_position, dtype=np.float32)
+        # strict target-information bottleneck, any target state in the shared
+        # graph would leak a scout's private detection to agents that have not
+        # received a delivered message. Target information is therefore carried
+        # only by per-agent observations/caches, while the graph target node is
+        # zero-masked.
+        pos = np.zeros(3, dtype=np.float32)
         vel = np.zeros(3, dtype=np.float32)
         return pos, 0.0, 0.0, 0.0, vel
 
@@ -824,7 +824,7 @@ class UAVIntercept3DEnv:
             or self._has_target_information(agent_id)
         ):
             return self._target_state_for_observation()
-        pos = np.asarray(self.config.target_prior_position, dtype=np.float32)
+        pos = np.zeros(3, dtype=np.float32)
         vel = np.zeros(3, dtype=np.float32)
         return pos, 0.0, 0.0, 0.0, vel
 
@@ -844,8 +844,19 @@ class UAVIntercept3DEnv:
     def _get_obs(self) -> np.ndarray:
         obs = np.zeros((self.config.num_blue, self.obs_dim), dtype=np.float32)
         for i, typ in enumerate(self.config.blue_types):
+            target_visible = (
+                not self.config.strict_target_sensing
+                or not self.config.agent_target_info_bottleneck
+                or self._has_target_information(i)
+            )
             target_est, _, _, _, red_vel = self._target_state_for_agent_observation(i)
-            rel = target_est - self.blue_pos[i]
+            if target_visible:
+                rel = target_est - self.blue_pos[i]
+                target_range_norm = float(np.linalg.norm(rel)) / self.config.world_radius
+            else:
+                rel = np.zeros(3, dtype=np.float32)
+                red_vel = np.zeros(3, dtype=np.float32)
+                target_range_norm = 0.0
             vel = velocity_from_state(self.blue_speed[i], self.blue_heading[i], self.blue_gamma[i])
             obs[i] = np.asarray(
                 [
@@ -860,7 +871,7 @@ class UAVIntercept3DEnv:
                     rel[0] / self.config.world_radius,
                     rel[1] / self.config.world_radius,
                     rel[2] / self.config.max_altitude,
-                    float(np.linalg.norm(rel)) / self.config.world_radius,
+                    target_range_norm,
                     red_vel[0] / typ.max_speed,
                     red_vel[1] / typ.max_speed,
                     red_vel[2] / typ.max_speed,
@@ -1001,16 +1012,15 @@ class UAVIntercept3DEnv:
                 if self.config.graph_relation_ablation == "no_task_support":
                     support = 0.0
                     active_support = 0.0
-                # Local attack-window edge for the union graph only. It is not
-                # a fourth relation and is derived from actor-visible target
-                # estimates, so it cannot expose the evaluation-only true
-                # attack window under strict sensing.
-                attack = float(i < n_blue and j >= n_blue and self.local_attack_window[i] > 0.5)
+                # Local attack-window is exposed as a node feature and may
+                # activate task-support between blue agents; it must not open a
+                # hidden fourth channel in the union graph.
+                attack = 0.0
                 age = 0.0
                 if i < n_blue and j < n_blue:
                     age = self.message_age[i, j] / self.config.max_steps
                 confidence = max(sensing, max(0.0, 1.0 - age))
-                adj[i, j] = max(adj[i, j], sensing, comm, active_support, attack)
+                adj[i, j] = max(adj[i, j], sensing, comm, active_support)
                 relation_adj[RELATION_PERCEPTION, i, j] = sensing
                 relation_adj[RELATION_COMMUNICATION, i, j] = comm
                 relation_adj[RELATION_TASK_SUPPORT, i, j] = active_support

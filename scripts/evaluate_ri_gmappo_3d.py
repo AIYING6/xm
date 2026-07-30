@@ -65,10 +65,16 @@ CSV_COLUMNS = (
     "post_failure_chain_recovered_only_steps",
     "post_failure_chain_maintained",
     "post_failure_chain_recovered_after_loss",
+    "pre_failure_chain_established",
+    "pre_failure_chain_maintained",
+    "pre_failure_chain_recovered_after_loss",
+    "post_failure_chain_first_established",
+    "post_failure_chain_never_established",
     "post_failure_chain_unrecovered",
     "post_failure_fresh_info_recovered",
     "post_failure_fresh_info_recovery_steps",
     "post_failure_fresh_info_acquired_without_prior_loss",
+    "post_failure_fresh_info_first_established",
     "post_failure_fresh_direct_recovered",
     "post_failure_fresh_comm_recovered",
     "post_failure_post_delivered_old_info_recovered",
@@ -199,10 +205,16 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
             "post_failure_chain_recovered_only_steps": -1.0,
             "post_failure_chain_maintained": -1.0,
             "post_failure_chain_recovered_after_loss": -1.0,
+            "pre_failure_chain_established": -1.0,
+            "pre_failure_chain_maintained": -1.0,
+            "pre_failure_chain_recovered_after_loss": -1.0,
+            "post_failure_chain_first_established": -1.0,
+            "post_failure_chain_never_established": -1.0,
             "post_failure_chain_unrecovered": -1.0,
             "post_failure_fresh_info_recovered": -1.0,
             "post_failure_fresh_info_recovery_steps": -1.0,
             "post_failure_fresh_info_acquired_without_prior_loss": -1.0,
+            "post_failure_fresh_info_first_established": -1.0,
             "post_failure_fresh_direct_recovered": -1.0,
             "post_failure_fresh_comm_recovered": -1.0,
             "post_failure_post_delivered_old_info_recovered": -1.0,
@@ -214,24 +226,53 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
         }
     start = float(args.node_failure_start_step)
     first_chain_step = -1.0
+    first_recovery_after_loss_step = -1.0
     chain_at_failure_start = False
+    pre_failure_chain_established = False
+    loss_seen_after_failure = False
+    any_loss_after_failure = False
     for info in step_infos:
         step = float(info["step"])
         chain_closed = float(info.get("chain_closed", 0.0)) > 0.5
+        if step < start and chain_closed:
+            pre_failure_chain_established = True
+        if step < start:
+            continue
         if step == start and chain_closed:
             chain_at_failure_start = True
-        if step >= start and chain_closed:
+        if not chain_closed:
+            loss_seen_after_failure = True
+            any_loss_after_failure = True
+            continue
+        if first_chain_step < 0.0:
             first_chain_step = step
-            break
+        if loss_seen_after_failure and first_recovery_after_loss_step < 0.0:
+            first_recovery_after_loss_step = step
     final_step = float(step_infos[-1]["step"]) if step_infos else start
     hold_steps = max(1.0, float(getattr(args, "attack_hold_steps", 1)))
     stable_window_start = max(start, first_chain_step - hold_steps + 1.0) if first_chain_step >= 0.0 else -1.0
     recovered = float(first_chain_step >= 0.0)
     recovery_steps = stable_window_start - start if recovered > 0.5 else max(0.0, final_step - start)
     recovered_only_steps = recovery_steps if recovered > 0.5 else -1.0
-    maintained = float(chain_at_failure_start)
-    recovered_after_loss = float(recovered > 0.5 and not chain_at_failure_start)
-    unrecovered = float(recovered <= 0.5)
+    maintained = float(
+        pre_failure_chain_established
+        and chain_at_failure_start
+        and recovered > 0.5
+        and not any_loss_after_failure
+    )
+    recovered_after_loss = float(
+        pre_failure_chain_established and first_recovery_after_loss_step >= 0.0
+    )
+    first_established = float((not pre_failure_chain_established) and recovered > 0.5)
+    never_established = float((not pre_failure_chain_established) and recovered <= 0.5)
+    unrecovered = float(
+        never_established > 0.5
+        or (
+            pre_failure_chain_established
+            and maintained <= 0.5
+            and recovered_after_loss <= 0.5
+        )
+    )
 
     def has_chain_loss_before(window_start: float) -> bool:
         for item in step_infos:
@@ -243,12 +284,14 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
     def fresh_closure(item: dict[str, float]) -> bool:
         return (
             float(item.get("attacker_info_attack_window", 0.0)) > 0.5
+            and float(item.get("tracking_rate", 0.0)) > 0.0
             and float(item.get("attacker_window_cache_generation_step_max", -1.0)) >= start
         )
 
     def post_delivered_old_closure(item: dict[str, float]) -> bool:
         return (
             float(item.get("attacker_info_attack_window", 0.0)) > 0.5
+            and float(item.get("tracking_rate", 0.0)) > 0.0
             and 0.0 <= float(item.get("attacker_window_cache_generation_step_max", -1.0)) < start
             and float(item.get("attacker_window_cache_delivery_step_max", -1.0)) >= start
         )
@@ -275,8 +318,14 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
             break
 
     fresh_window_start = fresh_rec_end - hold_steps + 1.0 if fresh_rec_end >= 0.0 else -1.0
-    fresh_after_loss = float(fresh_rec_end >= 0.0 and has_chain_loss_before(fresh_window_start))
-    fresh_without_prior_loss = float(fresh_rec_end >= 0.0 and not has_chain_loss_before(fresh_window_start))
+    fresh_loss_before_window = has_chain_loss_before(fresh_window_start) if fresh_rec_end >= 0.0 else False
+    fresh_after_loss = float(
+        fresh_rec_end >= 0.0 and pre_failure_chain_established and fresh_loss_before_window
+    )
+    fresh_first_established = float(fresh_rec_end >= 0.0 and not pre_failure_chain_established)
+    fresh_without_prior_loss = float(
+        fresh_rec_end >= 0.0 and pre_failure_chain_established and not fresh_loss_before_window
+    )
     fresh_info_recovery_steps = fresh_window_start - start if fresh_after_loss > 0.5 else -1.0
     fresh_direct = float(
         fresh_after_loss > 0.5
@@ -297,7 +346,9 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
     )
     old_delivered_window_start = old_delivered_rec_end - hold_steps + 1.0 if old_delivered_rec_end >= 0.0 else -1.0
     old_delivered_recovered = float(
-        old_delivered_rec_end >= 0.0 and has_chain_loss_before(old_delivered_window_start)
+        old_delivered_rec_end >= 0.0
+        and pre_failure_chain_established
+        and has_chain_loss_before(old_delivered_window_start)
     )
     stale_cache_recovered = float(
         recovered_after_loss > 0.5
@@ -311,10 +362,16 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
         "post_failure_chain_recovered_only_steps": float(recovered_only_steps),
         "post_failure_chain_maintained": maintained,
         "post_failure_chain_recovered_after_loss": recovered_after_loss,
+        "pre_failure_chain_established": float(pre_failure_chain_established),
+        "pre_failure_chain_maintained": maintained,
+        "pre_failure_chain_recovered_after_loss": recovered_after_loss,
+        "post_failure_chain_first_established": first_established,
+        "post_failure_chain_never_established": never_established,
         "post_failure_chain_unrecovered": unrecovered,
         "post_failure_fresh_info_recovered": fresh_after_loss,
         "post_failure_fresh_info_recovery_steps": float(fresh_info_recovery_steps),
         "post_failure_fresh_info_acquired_without_prior_loss": fresh_without_prior_loss,
+        "post_failure_fresh_info_first_established": fresh_first_established,
         "post_failure_fresh_direct_recovered": fresh_direct,
         "post_failure_fresh_comm_recovered": fresh_comm,
         "post_failure_post_delivered_old_info_recovered": old_delivered_recovered,

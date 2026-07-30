@@ -1,6 +1,6 @@
 # Formal Protocol Freeze
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 ## Purpose
 
@@ -77,8 +77,11 @@ Formal training and evaluation must use the hardened actor information boundary:
   forced to `0` when the attacker has no actor-visible target information.
 - True `attack_window` may be used by reward, centralized critic, termination,
   chain-closure metrics, and evaluation logs, but must not enter decentralized
-  actor observations, actor graph node features, attack edges, or
+  actor observations, actor graph node features, graph edges, or
   attacker-originated task-support edges.
+- Under strict target sensing and the target-information bottleneck, shared graph
+  target nodes are zero-masked and agents without legal target information
+  receive zeroed target relative-position/range/velocity observation fields.
 - Task-support relation edges must satisfy role compatibility, delivered
   communication, and actor-visible support evidence. Static role compatibility
   alone cannot open an actor graph edge.
@@ -162,8 +165,13 @@ Budget study checkpoint candidates:
   (`selection_metric=fresh_info_recovery`).
 - Fresh-information recovery requires a continuous `attack_hold_steps` window
   in which the attacking platform's current effective target cache was generated
-  no earlier than the relay-failure start. A message generated before failure
-  but delivered after failure is reported separately and is not FreshRec.
+  no earlier than the relay-failure start, the attacker is in the true attack
+  window, and the target is currently directly tracked by at least one blue
+  platform. A message generated before failure but delivered after failure is
+  reported separately and is not FreshRec.
+- Recovery requires pre-failure chain establishment. Episodes where the chain
+  is first established only after failure are reported as post-failure first
+  establishment and are not counted as recovered-after-loss.
 - `delayed_recovery_min_step=80` remains an auxiliary reporting threshold, not
   the primary selection metric.
 - Success weight: `0`.

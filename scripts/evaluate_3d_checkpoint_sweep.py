@@ -38,8 +38,14 @@ SUMMARY_COLUMNS = (
     "success_mean",
     "post_failure_chain_recovered_mean",
     "post_failure_chain_recovered_after_loss_mean",
+    "pre_failure_chain_established_mean",
+    "pre_failure_chain_maintained_mean",
+    "pre_failure_chain_recovered_after_loss_mean",
+    "post_failure_chain_first_established_mean",
+    "post_failure_chain_never_established_mean",
     "post_failure_fresh_info_recovered_mean",
     "post_failure_fresh_info_acquired_without_prior_loss_mean",
+    "post_failure_fresh_info_first_established_mean",
     "post_failure_fresh_direct_recovered_mean",
     "post_failure_fresh_comm_recovered_mean",
     "post_failure_post_delivered_old_info_recovered_mean",
@@ -83,8 +89,14 @@ SELECTION_COLUMNS = (
     "selection_success_weight",
     "post_failure_chain_recovered_mean",
     "post_failure_chain_recovered_after_loss_mean",
+    "pre_failure_chain_established_mean",
+    "pre_failure_chain_maintained_mean",
+    "pre_failure_chain_recovered_after_loss_mean",
+    "post_failure_chain_first_established_mean",
+    "post_failure_chain_never_established_mean",
     "post_failure_fresh_info_recovered_mean",
     "post_failure_fresh_info_acquired_without_prior_loss_mean",
+    "post_failure_fresh_info_first_established_mean",
     "post_failure_fresh_direct_recovered_mean",
     "post_failure_fresh_comm_recovered_mean",
     "post_failure_post_delivered_old_info_recovered_mean",
@@ -181,7 +193,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--selection-metric",
         choices=("legacy_recovery", "delayed_recovery", "fresh_info_recovery"),
-        default="legacy_recovery",
+        default="fresh_info_recovery",
         help=(
             "Checkpoint-selection metric. legacy_recovery preserves the original "
             "score; delayed_recovery selects using first post-failure chain closure "
@@ -192,7 +204,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--selection-group",
         choices=("scenario", "suite"),
-        default="scenario",
+        default="suite",
         help=(
             "Checkpoint-selection grouping. scenario preserves the legacy behavior "
             "of selecting one checkpoint per scenario. suite selects one checkpoint "
@@ -208,7 +220,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--selection-success-weight",
         type=float,
-        default=100.0,
+        default=0.0,
         help=(
             "Weight applied to success_mean in checkpoint selection. "
             "Use 0.0 for strict delayed-recovery selection when early success should not break ties."
@@ -413,8 +425,14 @@ def summarize_rows(
 ) -> dict[str, str]:
     recovery = mean(rows, "post_failure_chain_recovered")
     recovered_after_loss = mean(rows, "post_failure_chain_recovered_after_loss")
+    pre_established = mean(rows, "pre_failure_chain_established")
+    pre_maintained = mean(rows, "pre_failure_chain_maintained")
+    pre_recovered_after_loss = mean(rows, "pre_failure_chain_recovered_after_loss")
+    first_established = mean(rows, "post_failure_chain_first_established")
+    never_established = mean(rows, "post_failure_chain_never_established")
     fresh_info_recovered = mean(rows, "post_failure_fresh_info_recovered")
     fresh_without_prior_loss = mean(rows, "post_failure_fresh_info_acquired_without_prior_loss")
+    fresh_first_established = mean(rows, "post_failure_fresh_info_first_established")
     fresh_direct_recovered = mean(rows, "post_failure_fresh_direct_recovered")
     fresh_comm_recovered = mean(rows, "post_failure_fresh_comm_recovered")
     post_delivered_old_recovered = mean(rows, "post_failure_post_delivered_old_info_recovered")
@@ -461,8 +479,14 @@ def summarize_rows(
         "success_mean": f"{success:.6g}",
         "post_failure_chain_recovered_mean": f"{recovery:.6g}",
         "post_failure_chain_recovered_after_loss_mean": f"{recovered_after_loss:.6g}",
+        "pre_failure_chain_established_mean": f"{pre_established:.6g}",
+        "pre_failure_chain_maintained_mean": f"{pre_maintained:.6g}",
+        "pre_failure_chain_recovered_after_loss_mean": f"{pre_recovered_after_loss:.6g}",
+        "post_failure_chain_first_established_mean": f"{first_established:.6g}",
+        "post_failure_chain_never_established_mean": f"{never_established:.6g}",
         "post_failure_fresh_info_recovered_mean": f"{fresh_info_recovered:.6g}",
         "post_failure_fresh_info_acquired_without_prior_loss_mean": f"{fresh_without_prior_loss:.6g}",
+        "post_failure_fresh_info_first_established_mean": f"{fresh_first_established:.6g}",
         "post_failure_fresh_direct_recovered_mean": f"{fresh_direct_recovered:.6g}",
         "post_failure_fresh_comm_recovered_mean": f"{fresh_comm_recovered:.6g}",
         "post_failure_post_delivered_old_info_recovered_mean": f"{post_delivered_old_recovered:.6g}",
@@ -567,8 +591,14 @@ def aggregate_suite_rows(args: argparse.Namespace, summary_rows: list[dict[str, 
         for key in (
             "post_failure_chain_recovered_mean",
             "post_failure_chain_recovered_after_loss_mean",
+            "pre_failure_chain_established_mean",
+            "pre_failure_chain_maintained_mean",
+            "pre_failure_chain_recovered_after_loss_mean",
+            "post_failure_chain_first_established_mean",
+            "post_failure_chain_never_established_mean",
             "post_failure_fresh_info_recovered_mean",
             "post_failure_fresh_info_acquired_without_prior_loss_mean",
+            "post_failure_fresh_info_first_established_mean",
             "post_failure_fresh_direct_recovered_mean",
             "post_failure_fresh_comm_recovered_mean",
             "post_failure_post_delivered_old_info_recovered_mean",
@@ -676,11 +706,25 @@ def select_checkpoints(args: argparse.Namespace, summary_rows: list[dict[str, st
                 "post_failure_chain_recovered_after_loss_mean": best.get(
                     "post_failure_chain_recovered_after_loss_mean", ""
                 ),
+                "pre_failure_chain_established_mean": best.get("pre_failure_chain_established_mean", ""),
+                "pre_failure_chain_maintained_mean": best.get("pre_failure_chain_maintained_mean", ""),
+                "pre_failure_chain_recovered_after_loss_mean": best.get(
+                    "pre_failure_chain_recovered_after_loss_mean", ""
+                ),
+                "post_failure_chain_first_established_mean": best.get(
+                    "post_failure_chain_first_established_mean", ""
+                ),
+                "post_failure_chain_never_established_mean": best.get(
+                    "post_failure_chain_never_established_mean", ""
+                ),
                 "post_failure_fresh_info_recovered_mean": best.get(
                     "post_failure_fresh_info_recovered_mean", ""
                 ),
                 "post_failure_fresh_info_acquired_without_prior_loss_mean": best.get(
                     "post_failure_fresh_info_acquired_without_prior_loss_mean", ""
+                ),
+                "post_failure_fresh_info_first_established_mean": best.get(
+                    "post_failure_fresh_info_first_established_mean", ""
                 ),
                 "post_failure_fresh_direct_recovered_mean": best.get(
                     "post_failure_fresh_direct_recovered_mean", ""

@@ -135,12 +135,12 @@ c_i^t \ge c_{\min}
 
 其中 \(d_i^t\) 为直接目标探测标志，\(v_i^t\) 为本地目标缓存有效标志，\(g_i^t\) 为缓存生成时刻，\(A_{\max}\) 为最大消息年龄，\(c_i^t\) 为缓存置信度，\(c_{\min}\) 为最小置信度阈值。
 
-任务链闭合评价由目标信息、通信可达和真实攻击窗口共同决定。设攻击平台集合为 \(\mathcal{A}_{\mathrm{atk}}\)，攻击平台 \(k\) 在时刻 \(t\) 具备有效目标信息 \(F_k^t=1\)，且真实攻击窗口 \(\omega_k^t=1\)，则瞬时闭合标志为
+任务链闭合评价由目标信息、持续跟踪和真实攻击窗口共同决定。设攻击平台集合为 \(\mathcal{A}_{\mathrm{atk}}\)，攻击平台 \(k\) 在时刻 \(t\) 具备有效目标信息 \(F_k^t=1\)，真实攻击窗口 \(\omega_k^t=1\)，且当前至少一个蓝方平台直接跟踪目标 \(q^t=1\)，则瞬时闭合标志为
 
 \[
 z_t=\mathbb{I}\left[
 \exists k\in \mathcal{A}_{\mathrm{atk}},\
-F_k^t=1,\ \omega_k^t=1
+F_k^t=1,\ \omega_k^t=1,\ q^t=1
 \right].
 \]
 
@@ -170,7 +170,7 @@ t\mid t\ge t_f+H-1,\
 T_{\mathrm{rec}}=t_{\mathrm{rec}}-t_f-H+1 .
 \]
 
-若回合结束前不存在 \(t_{\mathrm{rec}}\)，则该回合记为未恢复。若失效开始时任务链已经保持闭合，则记为 maintained case；若失效后曾丢失再恢复，则记为 recovered-after-loss case。为避免将失效前旧缓存或“故障后投递的故障前旧观测”误判为真正恢复，本文进一步定义故障后生成的新鲜信息标志：
+若回合结束前不存在 \(t_{\mathrm{rec}}\)，则该回合记为未恢复。严格 recovery 要求故障前任务链曾经建立；若故障前从未闭合而故障后首次闭合，则记为 post-failure first establishment，而不是 recovered-after-loss。若故障前已建立且故障后一直保持闭合，则记为 maintained case；若故障后曾丢失再恢复，则记为 recovered-after-loss case。为避免将失效前旧缓存或“故障后投递的故障前旧观测”误判为真正恢复，本文进一步定义故障后生成的新鲜信息标志：
 
 \[
 F_{k,\mathrm{fresh}}^t=
@@ -189,11 +189,12 @@ z_{t,\mathrm{fresh}}=
 \left[
 \exists k\in\mathcal{A}_{\mathrm{atk}},
 F_{k,\mathrm{fresh}}^t=1,\;
-\omega_k^t=1
+\omega_k^t=1,\;
+q^t=1
 \right].
 \]
 
-主指标要求连续 \(H\) 步均满足 \(z_{t,\mathrm{fresh}}=1\)，并且在恢复窗口之前任务链确实发生过丢失。若任务链始终保持闭合，只计入 `fresh_info_acquired_without_prior_loss`，不计入 `post_failure_fresh_info_recovered`。若任务链闭合依赖失效前缓存，则计入 stale-cache recovered；若信息在故障前生成但故障后投递，则计入 post-delivered old-information recovery。正式主指标采用 after-loss 的故障后新鲜信息恢复率；delayed recovery 仅作为辅助指标。未恢复样本按删失样本处理，论文统计中必须同时报告恢复概率和恢复时间，不能只在已恢复样本上计算平均恢复时间。
+主指标要求故障前任务链已建立、恢复窗口之前任务链确实发生过丢失，且连续 \(H\) 步均满足 \(z_{t,\mathrm{fresh}}=1\)。若任务链始终保持闭合，只计入 `fresh_info_acquired_without_prior_loss`，不计入 `post_failure_fresh_info_recovered`。若故障前未建立而故障后首次闭合，则计入 `post_failure_fresh_info_first_established`。若任务链闭合依赖失效前缓存，则计入 stale-cache recovered；若信息在故障前生成但故障后投递，则计入 post-delivered old-information recovery。正式主指标采用 after-loss 的故障后新鲜信息恢复率；delayed recovery 仅作为辅助指标。未恢复样本按删失样本处理，论文统计中必须同时报告恢复概率和恢复时间，不能只在已恢复样本上计算平均恢复时间。
 
 ## 4 三自由度异构无人机任务链恢复环境
 
@@ -343,7 +344,7 @@ EA-RG-MAPPO 在 MAPPO 的集中训练、分散执行框架上引入 actor 侧多
 A_{\mathrm{per},iT}^t=d_i^t .
 \]
 
-目标节点角色记为 \(\rho_T=\mathrm{Target}\)。若 strict sensing 和 target-information bottleneck 开启，actor 共享图中的目标节点固定为公共先验位置和零速度，不携带真实目标状态，也不携带“任一平台已探测目标”的全局标志。合法目标信息只进入直接探测或收到有效消息的平台局部观测和本地缓存。实现中保留的本地攻击窗口辅助边不属于三类主关系，也不作为方法贡献；它仅由 actor 可见的 \(\ell_i^t\) 生成，不能由真实攻击窗口 \(\omega_i^t\) 生成。
+目标节点角色记为 \(\rho_T=\mathrm{Target}\)。若 strict sensing 和 target-information bottleneck 开启，actor 共享图中的目标节点固定为 zero position 和 zero velocity，不携带真实目标状态，也不携带“任一平台已探测目标”的全局标志；无合法目标信息智能体的局部目标相对位置、距离和目标速度字段同样置零。合法目标信息只进入直接探测或收到有效消息的平台局部观测和本地缓存。实现中不再保留本地攻击窗口到目标节点的辅助边；`local_attack_window` 仅作为 actor 可见的本地节点特征和任务支援语义线索，不能由真实攻击窗口 \(\omega_i^t\) 生成。
 
 通信关系表示实际投递的智能体间消息：
 
@@ -416,23 +417,23 @@ m_{ij}^{r,t}
 \pi_{\theta}(a_i^t|o_i^t,\mathcal{G}_i^t),
 \]
 
-联合动作概率按智能体策略相乘。MAPPO 裁剪目标为
+实现中按智能体维度分别计算 PPO ratio，并对时间、batch 和智能体维度求平均；不显式使用联合动作概率乘积。MAPPO 裁剪目标为
 
 \[
 \mathcal{L}_{\pi}(\theta)=
-\mathbb{E}_t
+\mathbb{E}_{i,t}
 \left[
 \min\left(
-r_t(\theta)\hat{A}_t,
-\mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t
+r_{i,t}(\theta)\hat{A}_{i,t},
+\mathrm{clip}(r_{i,t}(\theta),1-\epsilon,1+\epsilon)\hat{A}_{i,t}
 \right)
 \right],
 \]
 
 \[
-r_t(\theta)=
-\frac{\pi_{\theta}(a_t|o_t,\mathcal{G}_t)}
-{\pi_{\theta_{\mathrm{old}}}(a_t|o_t,\mathcal{G}_t)} .
+r_{i,t}(\theta)=
+\frac{\pi_{\theta}(a_i^t|o_i^t,\mathcal{G}_{i,t})}
+{\pi_{\theta_{\mathrm{old}}}(a_i^t|o_i^t,\mathcal{G}_{i,t})} .
 \]
 
 集中式 critic 通过
@@ -476,7 +477,7 @@ r_{i,t}=r_t^{\mathrm{team}}
 
 ### 5.6 信息边界审计
 
-当前代码已将 actor 侧 `local_attack_window` 与评价侧 `attack_window` 分离，并增加自动化信息边界测试。测试覆盖任务支援边必须依赖已投递通信、未投递静态支援不能进入 union graph、中继失效阻断中继发出的支援边、Relay 不能读取队友当前私有目标信息、隐藏目标状态变化不能改变断联攻击机 logits、本地攻击窗口必须依赖 actor 可见目标信息，以及失效后恢复时间必须与连续闭合窗口一致。该测试属于可复现性证据，正式论文可在实现细节或补充材料中报告。
+当前代码已将 actor 侧 `local_attack_window` 与评价侧 `attack_window` 分离，并增加自动化信息边界测试。测试覆盖任务支援边必须依赖已投递通信、未投递静态支援不能进入 union graph、本地攻击窗口不能单独打开攻击机到目标节点的 union adjacency、中继失效阻断中继发出的支援边、Relay 不能读取队友当前私有目标信息、隐藏目标状态变化不能改变断联攻击机 logits、本地攻击窗口必须依赖 actor 可见目标信息，以及失效后恢复时间必须与连续闭合窗口一致。该测试属于可复现性证据，正式论文可在实现细节或补充材料中报告。
 
 ## 6 实验协议
 
