@@ -9,6 +9,16 @@
 
 $FormalFreezeTag = "formal-post-sixth-freeze-v1.3"
 $FormalResultsRoot = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1"
+# Allow legacy archive/preflight evidence directories that share the formal_budget_ prefix.
+# Only the v1 root is an active formal target; other dirs are read-only archival evidence.
+$AllowedUntrackedPatterns = @(
+    "$FormalResultsRoot/*",
+    "results/paper_config_runs/formal_budget_post_sixth_freeze_v1.2_single_bc_preflight/*",
+    "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_dev_archive/*",
+    "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_preflight/*",
+    "results/paper_config_runs/formal_budget_post_sixth_freeze_preflight/*",
+    "results/paper_config_runs/formal_budget_pre_sixth_freeze_development/*"
+)
 
 function Get-FreezeCommit {
     param([string]$Tag = $FormalFreezeTag)
@@ -70,17 +80,22 @@ function Assert-FrozenWorkspace {
     }
 
     # ---- Untracked-file whitelist ----
-    # Only untracked files under the approved formal-results root are tolerated.
-    # Any other untracked file (e.g. a stray Python module, a temp script) could
-    # silently change runtime behaviour and voids the formal-evidence claim.
+    # Only untracked files under the approved formal-results root (and its
+    # recognized archive siblings) are tolerated. Any other untracked file
+    # (e.g. a stray Python module, a temp script) could silently change
+    # runtime behaviour and voids the formal-evidence claim.
     $untracked = @(& git ls-files --others --exclude-standard)
     $badUntracked = @(
         $untracked | Where-Object {
-            $_ -notlike "$FormalResultsRoot/*"
+            $ok = $false
+            foreach ($pat in $AllowedUntrackedPatterns) {
+                if ($_ -like $pat) { $ok = $true; break }
+            }
+            -not $ok
         }
     )
     if ($badUntracked.Count -gt 0) {
-        Write-Error "BLOCKED: untracked files outside the approved formal results root ($FormalResultsRoot):"
+        Write-Error "BLOCKED: untracked files outside the approved formal results root ($FormalResultsRoot) and its archive siblings:"
         $badUntracked | ForEach-Object { Write-Error "  $_" }
         Write-Error "Remove or .gitignore those files before formal runs."
         exit 2
