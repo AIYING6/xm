@@ -244,3 +244,26 @@ Start the budget study with reduced seeds before five-seed formal training:
 - Budgets: 1M and, if needed, 2M.
 
 Only after `B*` is chosen should five-seed formal training begin.
+
+## Frozen Source Baseline
+
+The formal 1M budget study runs against a frozen source baseline (not just a
+frozen protocol). Any training artifact is valid only if produced by this commit.
+
+- **git tag**: `formal-post-sixth-freeze-v1`
+- **freeze commit SHA**: `8b13e26ed4944340d803dc0f5f628fb3521a0424`
+- **branch**: `main`
+- **python**: 3.8.20; **torch**: 2.4.1+cu124; **cuda**: 12.4
+- **P0 actor/info-boundary fix** (committed in `envs/uav_intercept_3d_env.py`):
+  - target prior in shared graph is zero-masked;
+  - under strict sensing + bottleneck, actor obs `rel`/`red_vel` are zeroed when target not visible;
+  - union-graph hidden `attack` edge removed.
+- **Resume authority**: training-state checkpoint `update` is authoritative; `train_log.csv` is audit-only.
+- **Gate**: `FRESH / READY / COMPLETE / BLOCKED` with two-stage check (pre-PPO: FRESH=15 allowed; post-launch: READY+COMPLETE=15, FRESH=0).
+- **Evidence separation**:
+  - `formal_budget_pre_sixth_freeze_development/` = DEVELOPMENT EVIDENCE ONLY (pre-freeze 20-29 updates).
+  - `formal_budget_post_sixth_freeze_v1_preflight/` = PREFLIGHT EVIDENCE ONLY (pre-tag BC + 0→2).
+  - Formal results live only in `formal_budget_post_sixth_freeze_v1/`, started fresh after the tag.
+
+Training scripts must abort if `git rev-parse HEAD != freeze_commit_sha` or the
+working tree has uncommitted source changes.

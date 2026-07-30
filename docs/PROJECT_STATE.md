@@ -2,6 +2,25 @@
 
 Last updated: 2026-07-30
 
+## Frozen Baseline (post-sixth-freeze-v1)
+
+The formal 1M PPO study now runs against a frozen source baseline:
+
+- **git tag**: `formal-post-sixth-freeze-v1`
+- **freeze commit SHA**: `8b13e26ed4944340d803dc0f5f628fb3521a0424`
+- **branch**: `main`
+- **protocol version**: `post-sixth-freeze-v1`
+- **python**: 3.8.20; **torch**: 2.4.1+cu124; **cuda**: 12.4; **host**: AIYING
+- **P0 actor/info-boundary fix** (in `envs/uav_intercept_3d_env.py`):
+  - target prior in shared graph is zero-masked (no public prior leak);
+  - under strict target sensing + agent-target-info-bottleneck, actor obs `rel`/`red_vel` are zeroed when target not visible;
+  - union-graph hidden `attack` edge removed (no fourth channel).
+- **Resume authority**: training-state checkpoint `update` is authoritative; `train_log.csv` is audit-only. Gate: `FRESH / READY / COMPLETE / BLOCKED` with two-stage check.
+- **Evidence separation**:
+  - `results/paper_config_runs/formal_budget_pre_sixth_freeze_development/` = pre-freeze 20-29 update runs (DEVELOPMENT EVIDENCE ONLY).
+  - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1_preflight/` = pre-tag BC + 0→2 runs (PREFLIGHT EVIDENCE ONLY).
+  - Formal runs must start fresh from the frozen BC under `formal_budget_post_sixth_freeze_v1/` after tag.
+
 ## Current Milestone
 
 Execute the final single-paper Q1 plan recorded in `docs/FINAL_Q1_SINGLE_PAPER_PLAN.md`.
