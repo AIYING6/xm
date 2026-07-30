@@ -11,7 +11,8 @@ param(
     [string]$Device = "cpu",
     [int]$TotalUpdates = 977,
     [int]$ChunkUpdates = 100,
-    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.3",
+    [string]$ExpectedTag = "formal-post-sixth-ops-v1.3.1",
+    [string]$ExpectedBCTag = "formal-post-sixth-freeze-v1.3",
     # Escape hatch for development smoke runs. Outputs are NOT formal evidence.
     [switch]$AllowUnfrozen
 )
@@ -20,8 +21,8 @@ $ErrorActionPreference = "Stop"
 
 . "$PSScriptRoot/formal_freeze_gate.ps1"
 
-# Formal protocol: terminate when HEAD != freeze commit or tracked source is dirty.
-$FreezeCommit = Assert-FrozenWorkspace -ExpectedTag $ExpectedTag -AllowUnfrozen:$AllowUnfrozen
+# Formal protocol: terminate when HEAD != ops freeze commit or tracked source is dirty.
+$OpsCommit = Assert-FrozenWorkspace -ExpectedTag $ExpectedTag -AllowUnfrozen:$AllowUnfrozen
 
 $Root = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1"
 $OutDir = "$Root/$Method/ppo_seed${Seed}_1m"
@@ -131,7 +132,7 @@ if ($IsFreshStart) {
     # state dict, match this method's architecture exactly, and be stamped with
     # the freeze commit. Otherwise a truncated/empty/wrong-method checkpoint
     # would silently seed a "formal" run.
-    & $Python "scripts/verify_bc_checkpoint.py" --root $Root --method $Method --seed $Seed --expected-commit $FreezeCommit
+    & $Python "scripts/verify_bc_checkpoint.py" --root $Root --method $Method --seed $Seed --expected-tag $ExpectedBCTag
     if ($LASTEXITCODE -ne 0) {
         Write-Error "BLOCKED: BC init failed verification (method=$Method seed=$Seed)."
         exit 2
@@ -140,6 +141,11 @@ if ($IsFreshStart) {
     $LastUpdate = 0
     $RunUpdates = [Math]::Min($ChunkUpdates, $TotalUpdates)
     $Resume = $false
+    Write-Host (
+        "Formal provenance: " +
+        "ops_tag=$ExpectedTag ops_commit=$OpsCommit " +
+        "bc_algorithm_tag=$ExpectedBCTag"
+    )
     Write-Host "Formal 1M chunk (FRESH from BC): method=$Method seed=$Seed run=$RunUpdates target=$TotalUpdates"
 } else {
     # Authoritative resume update is the training-state checkpoint update.
