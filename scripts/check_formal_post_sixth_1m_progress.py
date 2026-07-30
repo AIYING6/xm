@@ -111,7 +111,14 @@ def model_state_exists(run_dir: Path, method: str) -> bool:
     return latest_actor_path(run_dir, method).exists()
 
 
-def inspect_bc(run_dir: Path, method: str, *, check_architecture: bool = True) -> dict:
+def inspect_bc(
+    run_dir: Path,
+    method: str,
+    *,
+    check_architecture: bool = True,
+    expected_commit: str = "",
+    expected_tag: str = "",
+) -> dict:
     """Full BC integrity check, not a bare existence test.
 
     A FRESH run is only allowed to launch when its BC init is present, loadable,
@@ -125,7 +132,12 @@ def inspect_bc(run_dir: Path, method: str, *, check_architecture: bool = True) -
     if m:
         seed = int(m.group(1))
     root = run_dir.parent.parent
-    return verify_bc(root, method, seed, check_architecture=check_architecture)
+    return verify_bc(
+        root, method, seed,
+        check_architecture=check_architecture,
+        expected_commit=expected_commit,
+        expected_tag=expected_tag,
+    )
 
 
 def snapshot_exists(run_dir: Path, method: str) -> bool:
@@ -237,7 +249,10 @@ def main() -> None:
             ckpt = inspect_training_checkpoint(run_dir, method)
             ckpt["model_state_exists"] = model_state_exists(run_dir, method)
             bc = inspect_bc(
-                run_dir, method, check_architecture=not gate_skip_architecture
+                run_dir, method,
+                check_architecture=not gate_skip_architecture,
+                expected_commit=expected_commit,
+                expected_tag=expected_tag,
             )
             has_bc = bool(bc["bc_exists"])
             bc_ok = bc_is_valid(bc) if not gate_skip_architecture else bool(
