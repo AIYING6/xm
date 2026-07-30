@@ -6,7 +6,7 @@ Last updated: 2026-07-30
 
 The formal 1M PPO study now runs against a frozen source baseline:
 
-- **current tag**: `formal-post-sixth-freeze-v1.3` (current authority; SHA `<<will be updated after commit>>`)
+- **current tag**: `formal-post-sixth-freeze-v1.3` (current authority; SHA `bdcb600`)
 - **historical tags** (retained, NOT moved):
   - `formal-post-sixth-freeze-v1` (SHA `8b13e26`): first frozen baseline; no formal artifacts produced; retained for source audit.
   - `formal-post-sixth-freeze-v1.1` (SHA `e30359b`): added freeze gates, coverage block, bc_manifest, BC verification, BC_INVALID classification, seed-passing fix; no formal artifacts produced; retained for source audit.
