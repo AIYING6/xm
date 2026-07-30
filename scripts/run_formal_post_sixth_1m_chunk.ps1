@@ -67,18 +67,8 @@ function Get-CheckpointInfo {
     if (-not (Test-Path $StatePath)) {
         return $info
     }
-    $code = @'
-import sys, torch
-p = sys.argv[1]
-try:
-    payload = torch.load(p, map_location="cpu", weights_only=False)
-    update = int(payload.get("update", 0))
-    opt = bool(payload.get("optimizer_state") or payload.get("optimizer_states"))
-    print(f"{update} {int(opt)} 1")
-except Exception as e:
-    print(f"0 0 0")
-'@
-    $out = & $Python -c $code $StatePath 2>$null
+    $helper = "$PSScriptRoot/_ckpt_info.py"
+    $out = & $Python $helper $StatePath 2>$null
     if ($out -match "^(?<u>-?\d+) (?<o>[01]) (?<l>[01])$") {
         $info.Update = [int]$Matches.u
         $info.OptimizerExists = ($Matches.o -eq "1")
