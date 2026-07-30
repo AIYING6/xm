@@ -61,6 +61,23 @@ HTTPS_PROXY=http://127.0.0.1:7897 git push -u origin main
 
 - Prefer committing a clean, reviewable task before pushing.
 
+## Auto-Commit Policy (user directive, effective 2026-07-30)
+
+At the end of every chat session, automatically commit and push all changes produced
+during that session to the remote `main` branch. Operational rules:
+
+- Scope: stage tracked-file modifications plus explicitly created new source files
+  (`scripts/`, `configs/`, `docs/`, `algorithms/`, `envs/`, `paper_latex*/`, etc.).
+  Do **NOT** auto-stage the `results/` experiment-output directories unless the user
+  explicitly asks; they are large artifacts, not maintained evidence-chain objects.
+- Commit message: concise Chinese summary of what changed in the session.
+- Push through the local proxy:
+  `HTTPS_PROXY=http://127.0.0.1:7897 git push -u origin main`
+- Freeze-gate guard: if `HEAD` sits on a freeze tag and the launch gate would block a
+  source change, do NOT force the commit/push — surface the conflict to the user first.
+- If a session produced zero tracked-source changes, skip commit/push (nothing to do).
+- This directive overrides the default "only commit when explicitly asked" guidance.
+
 ## Completion Standard
 
 A task is complete only when:
