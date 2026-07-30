@@ -8,7 +8,7 @@
 # Untracked files (notably results/) are intentionally ignored: formal outputs
 # are produced by the run itself. Tracked source/config changes are NOT ignored.
 
-$FormalFreezeTag = "formal-post-sixth-freeze-v1.1"
+$FormalFreezeTag = "formal-post-sixth-freeze-v1.2"
 
 function Get-FreezeCommit {
     param([string]$Tag = $FormalFreezeTag)

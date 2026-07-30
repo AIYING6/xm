@@ -194,7 +194,7 @@ def read_manifest_commit(bc_dir: Path) -> str:
     if not manifest.exists():
         return ""
     try:
-        data = json.loads(manifest.read_text(encoding="utf-8"))
+        data = json.loads(manifest.read_text(encoding="utf-8-sig"))
     except Exception:
         return ""
     return str(data.get("freeze_commit", ""))

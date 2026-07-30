@@ -11,7 +11,7 @@ param(
     [string]$Device = "cpu",
     [int]$TotalUpdates = 977,
     [int]$ChunkUpdates = 100,
-    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.1",
+    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.2",
     # Escape hatch for development smoke runs. Outputs are NOT formal evidence.
     [switch]$AllowUnfrozen
 )

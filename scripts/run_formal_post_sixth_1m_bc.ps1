@@ -14,7 +14,7 @@ param(
     [string]$Method = "all",
     [ValidateSet(0, 1, 2, 99)]
     [int]$Seed = 99,
-    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.1",
+    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.2",
     # Overwrite existing BC outputs. Produces non-formal evidence unless the
     # previous outputs were deliberately discarded first.
     [switch]$Force,
@@ -74,8 +74,12 @@ function Write-BCManifest {
         checkpoint_sha256        = $sha
         generated_at_utc         = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
     }
-    $manifest | ConvertTo-Json -Depth 4 |
-        Set-Content -Path (Join-Path $OutDir "bc_manifest.json") -Encoding UTF8
+    $json = $manifest | ConvertTo-Json -Depth 4
+    [System.IO.File]::WriteAllText(
+        (Join-Path $OutDir "bc_manifest.json"),
+        $json,
+        [System.Text.UTF8Encoding]::new($false)
+    )
 }
 
 function Invoke-BC {
