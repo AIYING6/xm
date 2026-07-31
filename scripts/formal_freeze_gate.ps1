@@ -7,12 +7,12 @@
 # files are tolerated; any other untracked file (e.g. sitecustomize.py, stray
 # scripts) could silently alter runtime behaviour and is a BLOCKED condition.
 
-$FormalFreezeTag = "formal-post-sixth-freeze-v1.3"
-$FormalResultsRoot = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1"
-# Allow legacy archive/preflight evidence directories that share the formal_budget_ prefix.
-# Only the v1 root is an active formal target; other dirs are read-only archival evidence.
+$FormalFreezeTag = "formal-post-sixth-ops-v1.3.3"
+$FormalResultsRoot = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_evidence_rerun_20260801"
+# Allow legacy archive/preflight and corrupted-forensic directories.
 $AllowedUntrackedPatterns = @(
     "$FormalResultsRoot/*",
+    "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_corrupted_forensic/*",
     "results/paper_config_runs/formal_budget_post_sixth_freeze_v1.2_single_bc_preflight/*",
     "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_dev_archive/*",
     "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_preflight/*",

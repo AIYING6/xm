@@ -9,12 +9,12 @@
 #   3. Every BC directory gets a bc_manifest.json recording the freeze commit.
 param(
     [string]$Python = "python",
-    [string]$Root = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1",
+    [string]$Root = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_evidence_rerun_20260801",
     [ValidateSet("all", "no_graph", "single_graph", "param_matched_single", "ea_rg_mappo_s_gate_prior", "happo")]
     [string]$Method = "all",
     [ValidateSet(0, 1, 2, 99)]
     [int]$Seed = 99,
-    [string]$ExpectedTag = "formal-post-sixth-freeze-v1.3",
+    [string]$ExpectedTag = "formal-post-sixth-ops-v1.3.3",
     # Overwrite existing BC outputs. Produces non-formal evidence unless the
     # previous outputs were deliberately discarded first.
     [switch]$Force,
