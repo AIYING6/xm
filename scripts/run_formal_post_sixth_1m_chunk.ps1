@@ -11,6 +11,7 @@ param(
     [string]$Device = "cpu",
     [int]$TotalUpdates = 977,
     [int]$ChunkUpdates = 100,
+    [string]$Root = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_evidence_rerun_20260801",
     [string]$ExpectedTag = "formal-post-sixth-ops-v1.3.3",
     [string]$ExpectedBCTag = "formal-post-sixth-freeze-v1.3",
     # Escape hatch for development smoke runs. Outputs are NOT formal evidence.
@@ -23,8 +24,6 @@ $ErrorActionPreference = "Stop"
 
 # Formal protocol: terminate when HEAD != ops freeze commit or tracked source is dirty.
 $OpsCommit = Assert-FrozenWorkspace -ExpectedTag $ExpectedTag -AllowUnfrozen:$AllowUnfrozen
-
-$Root = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1"
 $OutDir = "$Root/$Method/ppo_seed${Seed}_1m"
 $LogPath = "$OutDir/train_log.csv"
 
