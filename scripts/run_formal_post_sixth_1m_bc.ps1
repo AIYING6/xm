@@ -15,6 +15,7 @@ param(
     [ValidateSet(0, 1, 2, 99)]
     [int]$Seed = 99,
     [string]$ExpectedTag = "formal-post-sixth-ops-v1.3.3",
+    [string]$ExpectedBCTag = "formal-post-sixth-freeze-v1.3",
     # Overwrite existing BC outputs. Produces non-formal evidence unless the
     # previous outputs were deliberately discarded first.
     [switch]$Force,
@@ -30,8 +31,15 @@ $ErrorActionPreference = "Stop"
 
 . "$PSScriptRoot/formal_freeze_gate.ps1"
 
-# ---- Gate 1: git freeze -----------------------------------------------------
-$FreezeCommit = Assert-FrozenWorkspace -ExpectedTag $ExpectedTag -AllowUnfrozen:$AllowUnfrozen
+# ---- Gate 1: git freeze (ops tag) --------------------------------------------
+$null = Assert-FrozenWorkspace -ExpectedTag $ExpectedTag -AllowUnfrozen:$AllowUnfrozen
+
+# ---- BC provenance commit (algorithm tag) ------------------------------------
+$BCFreezeCommit = (& git rev-list -n 1 $ExpectedBCTag 2>$null).Trim()
+if (-not $BCFreezeCommit) {
+    Write-Error "BLOCKED: cannot resolve BC provenance tag '$ExpectedBCTag'"
+    exit 2
+}
 
 function Test-BCOutputExists {
     param([string]$OutDir)
@@ -157,7 +165,7 @@ if ($ResumeValid -and $collisions.Count -gt 0) {
             --root $Root `
             --method $($c.Job.Method) `
             --seed $($c.SeedValue) `
-            --expected-tag $ExpectedTag
+            --expected-tag $ExpectedBCTag
         if ($LASTEXITCODE -ne 0) {
             Write-Error "BLOCKED: existing BC at $($c.OutDir) failed verification; remove it or inspect manually."
             exit 2
@@ -177,7 +185,7 @@ foreach ($p in $toRun) {
         -GatePrior $j.GatePrior -SeedValue $p.SeedValue -OutDir $out
     Write-BCManifest -OutDir $out -MethodName $j.Method -SeedValue $p.SeedValue `
         -Graph $j.Graph -Hidden $j.Hidden -GatePrior $j.GatePrior `
-        -FreezeCommit $FreezeCommit -ExpectedTag $ExpectedTag
+        -FreezeCommit $BCFreezeCommit -ExpectedTag $ExpectedBCTag
 }
 
 # ---- Post-check: verify ONLY the tasks just produced (not all 15) -------------
@@ -188,7 +196,7 @@ if ($toRun.Count -gt 0) {
             --root $Root `
             --method $($p.Job.Method) `
             --seed $($p.SeedValue) `
-            --expected-tag $ExpectedTag
+            --expected-tag $ExpectedBCTag
         if ($LASTEXITCODE -ne 0) {
             Write-Error "BLOCKED: BC verification failed for $($p.Job.Method) seed$($p.SeedValue)"
             exit 2
