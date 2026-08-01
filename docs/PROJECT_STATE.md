@@ -68,6 +68,9 @@ Latest implementation check on 2026-08-02:
   - `scripts/audit_checkpoint_selection_schema.py` passed after updating `configs/paper/checkpoint_selection_schema.yaml` to match the current 47-column summary schema, 42-column selection schema, and 73-column episode schema;
   - `python -m pytest tests/test_gate1_communication_feasibility.py -q` passed with 33 tests;
   - `scripts/check_reproducibility_artifacts.py` passed.
+- Freeze-preparation gate entry point added:
+  - `scripts/run_freeze_precheck.py` runs the protocol document checks, paper config audit, checkpoint-selection schema audit, Gate 1 information-boundary tests, reproducibility artifact gate, and Git status review;
+  - latest run produced `docs/FREEZE_PRECHECK_REPORT.md` and `results/freeze_precheck_audit.csv` with 8 checks, 0 failures, and 1 expected warning for uncommitted local changes.
 - Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:
