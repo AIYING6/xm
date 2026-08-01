@@ -132,10 +132,22 @@ Completed checks:
   - test consumed only the validation selection CSV;
   - checkpoint-selection schema audit passed;
   - reproducibility artifact gate passed.
+- EA-RG-MAPPO seed 0 train row completed:
+  - 200 updates;
+  - 10 policy snapshots from update 20 to update 200;
+  - training output audit passed;
+  - training log summary was updated in
+    `results/freeze_rehearsal_training_summary.csv`.
+- EA-RG-MAPPO validation sweep completed:
+  - validation selected update 100;
+  - checkpoint-selection schema audit passed.
+- EA-RG-MAPPO test sweep completed:
+  - test consumed only the validation selection CSV;
+  - checkpoint-selection schema audit passed;
+  - reproducibility artifact gate passed.
 
 Remaining rehearsal execution:
 
-- `ea_rg_mappo` seed 0 train, validation sweep, and test sweep;
 - `happo` seed 0 train, validation sweep, and test sweep;
 - final all-method training-output audit;
 - final schema and reproducibility gates.
