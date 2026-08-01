@@ -1,6 +1,6 @@
 # Reproducibility Checksum Manifest
 
-Generated: 2026-07-16T22:22:49
+Generated: 2026-08-02T01:41:05
 
 Purpose:
 
@@ -28,11 +28,11 @@ script = 50
 |---|---:|---:|
 | checkpoint | 10 | 2.926 |
 | documentation | 39 | 0.227 |
-| environment_adapter | 3 | 0.041 |
-| figure | 19 | 1.656 |
+| environment_adapter | 3 | 0.062 |
+| figure | 19 | 1.675 |
 | latex | 13 | 0.054 |
-| result | 50 | 0.206 |
-| script | 50 | 0.406 |
+| result | 50 | 0.239 |
+| script | 50 | 0.423 |
 
 ## Excluded Dynamic Artifacts
 

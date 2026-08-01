@@ -1,6 +1,6 @@
 # 3DOF Manuscript Figure Assets
 
-Generated: 2026-07-16T22:22:38
+Generated: 2026-08-02T01:40:47
 
 These figures are generated from existing 3DOF result files and schematic task definitions. They do not retrain or re-evaluate policies.
 

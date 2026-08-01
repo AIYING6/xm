@@ -177,7 +177,7 @@ def replay_one(
     with torch.no_grad():
         while True:
             g = stack_graphs([graph])
-            actions, _, _, _, _, _ = agent.get_action_and_value(
+            actions, _, _, _, _, _, _ = agent.get_action_and_value(
                 torch.as_tensor(obs[None, ...], dtype=torch.float32, device=device),
                 torch.as_tensor(g["node_feat"], dtype=torch.float32, device=device),
                 torch.as_tensor(g["edge_feat"], dtype=torch.float32, device=device),

@@ -1,6 +1,6 @@
 # Paper Asset Build Report
 
-Generated: 2026-07-16T22:22:52
+Generated: 2026-08-02T01:41:07
 
 Purpose:
 
@@ -37,7 +37,6 @@ This script does not retrain policies or rerun long evaluation jobs.
 | Speed robustness figures | OK |
 | Communication dropout figures | OK |
 | Radius interpolation figures | OK |
-| Figure asset audit | OK |
 | Evaluation budget audit | OK |
 | Method naming audit | OK |
 | LAG graph synthetic smoke | OK |
@@ -53,6 +52,7 @@ This script does not retrain policies or rerun long evaluation jobs.
 | 3DOF task-support ablation pilot summary | OK |
 | 3DOF formal task-support ablation summary | OK |
 | 3DOF formal role-pair gate ablation summary | OK |
+| Figure asset audit | OK |
 | Reproducibility checksum manifest | OK |
 | Reproducibility checksum verification | OK |
 | Supplemental CSV schema audit | OK |
@@ -498,25 +498,6 @@ results\figures\radius_interpolation_success_rate.png
 results\figures\radius_interpolation_collision_rate.png
 ```
 
-### Figure asset audit
-
-Status: `OK`
-
-Command:
-
-```text
-D:\Anaconda\envs\.conda\envs\cac\python.exe scripts/audit_figure_assets.py
-```
-
-stdout:
-
-```text
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\figure_asset_audit.csv
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\docs\figure_asset_audit.md
-figures checked: 27
-warnings: 0
-```
-
 ### Evaluation budget audit
 
 Status: `OK`
@@ -654,7 +635,7 @@ D:\Anaconda\envs\.conda\envs\cac\python.exe scripts/evaluate_ri_gmappo_3d.py
 stdout:
 
 ```text
-loaded 30 matching tensors and 0 partial tensors from C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_3d_smoke\actor_critic_latest.pt; skipped 0
+loaded 27 matching tensors and 1 partial tensors from C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_3d_smoke\actor_critic_latest.pt; skipped 2
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\intercept_3d_policy_eval.csv
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\docs\intercept_3d_policy_eval.md
 episodes: 3
@@ -728,8 +709,8 @@ D:\Anaconda\envs\.conda\envs\cac\python.exe scripts/replay_3d_relay_failure_case
 stdout:
 
 ```text
-loaded 30 matching tensors and 0 partial tensors from C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\intercept_3d_node_failure_curriculum_pilot_seed0\runs\single\bc_ppo_seed0\actor_critic_best.pt; skipped 0
-loaded 70 matching tensors and 0 partial tensors from C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\intercept_3d_node_failure_curriculum_pilot_seed0\runs\multi_relation\bc_ppo_seed0\actor_critic_best.pt; skipped 0
+loaded 27 matching tensors and 1 partial tensors from C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\intercept_3d_node_failure_curriculum_pilot_seed0\runs\single\bc_ppo_seed0\actor_critic_best.pt; skipped 2
+loaded 61 matching tensors and 1 partial tensors from C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\intercept_3d_node_failure_curriculum_pilot_seed0\runs\multi_relation\bc_ppo_seed0\actor_critic_best.pt; skipped 8
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\intercept_3d_relay_failure_case_replay.csv
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\docs\intercept_3d_relay_failure_case_replay.md
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\figures\intercept_3d_relay_failure_case_replay.png
@@ -784,6 +765,25 @@ stdout:
 ```text
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\intercept_3d_role_pair_gate_ablation_formal_scale_matched_summary.csv
 C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\docs\intercept_3d_role_pair_gate_ablation_formal_scale_matched_summary.md
+```
+
+### Figure asset audit
+
+Status: `OK`
+
+Command:
+
+```text
+D:\Anaconda\envs\.conda\envs\cac\python.exe scripts/audit_figure_assets.py
+```
+
+stdout:
+
+```text
+C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\figure_asset_audit.csv
+C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\docs\figure_asset_audit.md
+figures checked: 29
+warnings: 0
 ```
 
 ### Reproducibility checksum manifest
@@ -905,8 +905,8 @@ D:\Anaconda\envs\.conda\envs\cac\python.exe scripts/check_latex_project.py
 stdout:
 
 ```text
-checked tex files: 47
-bib keys: 14, 14, 5
+checked tex files: 51
+bib keys: 14, 14, 10
 OK
 ```
 

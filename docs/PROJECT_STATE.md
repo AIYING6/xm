@@ -1,6 +1,6 @@
 # Current Project State
 
-Last updated: 2026-07-30
+Last updated: 2026-08-02
 
 ## Frozen Baseline (post-sixth-freeze-v1)
 
@@ -47,6 +47,18 @@ Immediate execution is P0 scientific-validity hardening:
 - remove global attack-chain progress from actor graph inputs while keeping it available to critic/evaluation;
 - add actor information-boundary tests;
 - mark any violating pre-hardening results as development evidence only.
+
+Latest implementation check on 2026-08-02:
+
+- The maintained 3DOF evidence-chain build is operational end-to-end: 3DOF environment smoke, 3DOF checkpoint evaluation, paper-facing 3DOF table generation, manuscript figure generation, relay-failure case candidate selection, relay-failure replay, task-support/role-pair ablation summaries, checksum verification, CSV schema audit, provenance audit, LaTeX/text checks, and the final reproducibility artifact gate all pass through `scripts/build_paper_assets.py`.
+- `scripts/replay_3d_relay_failure_case.py` was updated for the current 7-value `get_action_and_value()` API.
+- `scripts/evaluate_ri_gmappo_3d.py` now provides default values for optional 3DOF evaluation fields when reused by helper scripts.
+- `scripts/build_paper_assets.py` now runs figure asset auditing after all 3DOF figures are generated, so the audit covers the complete figure directory.
+- `scripts/audit_supplemental_csv_schema.py` tracks the expanded 68-column 3DOF policy-evaluation schema.
+- `scripts/check_reproducibility_artifacts.py` keeps fixed row checks for stable tables but treats relay-failure replay as a variable-length trajectory CSV with a minimum-row gate.
+- Current verification command: `D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/build_paper_assets.py` passed with final `Reproducibility artifact gate: OK`.
+- Cleanup pass: stale untracked/ignored training artifacts and cache directories were moved out of the Git repository to `C:/Users/96251/Documents/Codex/2026-07-12/ni/artifacts_archive/cleanup_20260802/`; tracked CSV/MD summaries were restored in place. See `C:/Users/96251/Documents/Codex/2026-07-12/ni/artifacts_archive/cleanup_20260802/CLEANUP_MANIFEST.md`.
+- Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:
 

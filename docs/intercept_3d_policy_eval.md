@@ -1,6 +1,6 @@
 # 3DOF RI-GMAPPO Policy Evaluation
 
-Generated: 2026-07-22T20:51:30
+Generated: 2026-08-02T01:40:44
 
 Purpose:
 
@@ -12,9 +12,9 @@ This is a diagnostic artifact until multi-seed 3DOF training is completed.
 ## Configuration
 
 ```text
-checkpoint = results/gate1_oracle_bc_ppo_weaving_mild_no_graph_seed2_cont30/actor_critic_best.pt
-episodes = 30
-target_policy = weaving_mild
+checkpoint = results/ri_gmappo_3d_smoke/actor_critic_latest.pt
+episodes = 3
+target_policy = evasive
 communication_range_scale = 1.0
 communication_dropout_prob = 0.0
 message_delay_steps = 0
@@ -25,6 +25,7 @@ node_failure_duration_steps = 0
 graph_relation_ablation = none
 graph_message_ablation = none
 graph_input_ablation = none
+multi_relation_global_residual_weight = 1.0
 deterministic = True
 ```
 
@@ -36,9 +37,9 @@ deterministic = True
 | `chain_closed` | 0 |
 | `attack_window_formed` | 0 |
 | `attack_window_rate` | 0 |
-| `tracking_rate` | 0.0230342 |
-| `comm_connectivity` | 0.383333 |
-| `mean_message_age` | 62.774 |
+| `tracking_rate` | 0.0290598 |
+| `comm_connectivity` | 0.62265 |
+| `mean_message_age` | 66.8919 |
 | `collision` | 0 |
 | `timeout` | 1 |
 | `constraint_violation` | 0 |
@@ -49,14 +50,21 @@ deterministic = True
 | `post_failure_chain_recovery_steps` | -1 |
 | `post_failure_chain_recovery_steps_censored` | -1 |
 | `post_failure_chain_recovered_only_steps` | -1 |
+| `post_failure_fresh_info_recovered` | -1 |
+| `post_failure_fresh_info_recovery_steps` | -1 |
+| `post_failure_fresh_info_acquired_without_prior_loss` | -1 |
+| `post_failure_fresh_direct_recovered` | -1 |
+| `post_failure_fresh_comm_recovered` | -1 |
+| `post_failure_post_delivered_old_info_recovered` | -1 |
+| `post_failure_stale_cache_recovered` | -1 |
 | `chain_closed_during_failure_rate` | -1 |
 | `tracking_during_failure_rate` | -1 |
 | `connectivity_during_failure` | -1 |
-| `avg_mean_range` | 37243.8 |
-| `episode_min_blue_red_distance` | 13054.7 |
-| `episode_min_blue_blue_distance` | 1608.65 |
-| `final_min_blue_red_distance` | 55921.6 |
-| `final_min_blue_blue_distance` | 11245.2 |
+| `avg_mean_range` | 39355.6 |
+| `episode_min_blue_red_distance` | 15811.3 |
+| `episode_min_blue_blue_distance` | 3443.7 |
+| `final_min_blue_red_distance` | 49647.2 |
+| `final_min_blue_blue_distance` | 6489.79 |
 
 ## Boundary
 

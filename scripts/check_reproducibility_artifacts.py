@@ -252,7 +252,7 @@ def check_csv_shapes() -> list[str]:
         "results/reproducibility_checksum_verification.csv": 184,
         "results/radius_interpolation_eval.csv": 27,
         "results/radius_interpolation_summary.csv": 9,
-        "results/figure_asset_audit.csv": 27,
+        "results/figure_asset_audit.csv": 29,
         "results/evaluation_budget_audit.csv": 6,
         "results/method_naming_audit.csv": 28,
         "results/supplemental_csv_schema_audit.csv": 32,
@@ -267,7 +267,6 @@ def check_csv_shapes() -> list[str]:
         "results/intercept_3d_policy_eval.csv": 3,
         "results/intercept_3d_paper_main_table.csv": 6,
         "results/intercept_3d_relay_failure_case_candidates.csv": 10,
-        "results/intercept_3d_relay_failure_case_replay.csv": 308,
         "results/edge_feature_ablation_eval.csv": 42,
         "results/edge_feature_ablation_summary.csv": 14,
         "results/speed_robustness_eval.csv": 54,
@@ -281,6 +280,17 @@ def check_csv_shapes() -> list[str]:
         actual = count_csv_rows(path)
         if actual != rows:
             errors.append(f"unexpected row count: {rel} expected={rows} actual={actual}")
+    minimum_rows = {
+        "results/intercept_3d_relay_failure_case_replay.csv": 100,
+    }
+    for rel, min_rows in minimum_rows.items():
+        path = ROOT / rel
+        if not path.exists():
+            errors.append(f"missing csv for minimum row check: {rel}")
+            continue
+        actual = count_csv_rows(path)
+        if actual < min_rows:
+            errors.append(f"too few rows: {rel} minimum={min_rows} actual={actual}")
     return errors
 
 

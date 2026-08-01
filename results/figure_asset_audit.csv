@@ -6,11 +6,13 @@ results/figures/comm_success_rate.png,1120,672,59.743,36.149,1174,ok,ok
 results/figures/edge_feature_ablation_delta.png,2396,951,110.403,47.425,284,ok,ok
 results/figures/final_300_collision_rate.png,1296,774,50.143,32.795,705,ok,ok
 results/figures/final_300_success_rate.png,1296,774,53.905,33.299,643,ok,ok
+results/figures/gate1_safety_fx60_mechanism_curves.png,1800,1188,151.930,38.738,713,ok,ok
+results/figures/gate1_safety_fx60_representative_case_timeline.png,1710,756,80.516,33.256,626,ok,ok
 results/figures/intent_confusion_ri_balanced_seed1_r8.png,1116,936,84.223,46.539,819,ok,ok
 results/figures/intent_confusion_ri_staged_r8.png,1116,936,73.864,68.544,609,ok,ok
 results/figures/intercept_3d_multi_relation_graph.png,1837,1079,177.939,44.827,930,ok,ok
 results/figures/intercept_3d_recovery_evidence_summary.png,2855,1000,136.545,63.635,343,ok,ok
-results/figures/intercept_3d_relay_failure_case_replay.png,1890,1224,199.742,36.028,777,ok,ok
+results/figures/intercept_3d_relay_failure_case_replay.png,1890,1224,218.925,36.496,952,ok,ok
 results/figures/intercept_3d_strict_sensing_summary.png,2183,1071,116.061,67.741,268,ok,ok
 results/figures/intercept_3d_task_scene.png,1141,1086,231.801,39.225,903,ok,ok
 results/figures/method_overview_ea_rg_mappo_s.png,2500,1440,233.627,38.615,825,ok,ok

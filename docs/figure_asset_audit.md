@@ -1,6 +1,6 @@
 # Figure Asset Audit
 
-Generated: 2026-07-16T22:22:03
+Generated: 2026-08-02T01:41:04
 
 Purpose:
 
@@ -13,7 +13,7 @@ This is a technical asset audit, not a visual-design or scientific-content revie
 
 | Item | Value |
 |---|---:|
-| PNG figures checked | 27 |
+| PNG figures checked | 29 |
 | Warnings | 0 |
 
 ## Audit Rows
@@ -27,11 +27,13 @@ This is a technical asset audit, not a visual-design or scientific-content revie
 | `results/figures/edge_feature_ablation_delta.png` | 2396x951 | 110.4 | 47.4 | 284 | ok | ok |
 | `results/figures/final_300_collision_rate.png` | 1296x774 | 50.1 | 32.8 | 705 | ok | ok |
 | `results/figures/final_300_success_rate.png` | 1296x774 | 53.9 | 33.3 | 643 | ok | ok |
+| `results/figures/gate1_safety_fx60_mechanism_curves.png` | 1800x1188 | 151.9 | 38.7 | 713 | ok | ok |
+| `results/figures/gate1_safety_fx60_representative_case_timeline.png` | 1710x756 | 80.5 | 33.3 | 626 | ok | ok |
 | `results/figures/intent_confusion_ri_balanced_seed1_r8.png` | 1116x936 | 84.2 | 46.5 | 819 | ok | ok |
 | `results/figures/intent_confusion_ri_staged_r8.png` | 1116x936 | 73.9 | 68.5 | 609 | ok | ok |
 | `results/figures/intercept_3d_multi_relation_graph.png` | 1837x1079 | 177.9 | 44.8 | 930 | ok | ok |
 | `results/figures/intercept_3d_recovery_evidence_summary.png` | 2855x1000 | 136.5 | 63.6 | 343 | ok | ok |
-| `results/figures/intercept_3d_relay_failure_case_replay.png` | 1890x1224 | 199.7 | 36.0 | 777 | ok | ok |
+| `results/figures/intercept_3d_relay_failure_case_replay.png` | 1890x1224 | 218.9 | 36.5 | 952 | ok | ok |
 | `results/figures/intercept_3d_strict_sensing_summary.png` | 2183x1071 | 116.1 | 67.7 | 268 | ok | ok |
 | `results/figures/intercept_3d_task_scene.png` | 1141x1086 | 231.8 | 39.2 | 903 | ok | ok |
 | `results/figures/method_overview_ea_rg_mappo_s.png` | 2500x1440 | 233.6 | 38.6 | 825 | ok | ok |

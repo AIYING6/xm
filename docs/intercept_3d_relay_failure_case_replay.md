@@ -1,6 +1,6 @@
 # Relay-Failure Case Replay
 
-Generated: 2026-07-16T22:22:46
+Generated: 2026-08-02T01:40:59
 
 This is a matched qualitative case replay selected from the formal relay-failure evaluation candidates. It is meant to support interpretation of the quantitative table, not replace aggregate statistics.
 
@@ -18,8 +18,8 @@ node_failure = agent 1, steps 40--119
 
 | Graph encoder | Success | Steps | First chain close step | Tracking during failure | Connectivity during failure |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `single` | 0 | 260 | -1 | 0.158 | 0.329 |
-| `multi_relation` | 1 | 48 | 48 | 1.000 | 0.407 |
+| `single` | 0 | 260 | -1 | 0.100 | 0.154 |
+| `multi_relation` | 0 | 260 | -1 | 0.146 | 0.333 |
 
 ## Figure
 

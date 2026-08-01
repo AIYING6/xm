@@ -1,6 +1,6 @@
 # Supplemental CSV Schema Audit
 
-Generated: 2026-07-16T22:22:50
+Generated: 2026-08-02T01:41:05
 
 Purpose:
 
@@ -44,14 +44,14 @@ failures = 0
 | `speed_robustness_summary` | 18 / 18 | 13 / 13 | ok | Aggregated target-speed robustness rows. |
 | `edge_feature_ablation_raw` | 42 / 42 | 16 / 16 | ok | Raw evaluation-time edge-feature masking rows. |
 | `edge_feature_ablation_summary` | 14 / 14 | 14 / 14 | ok | Aggregated evaluation-time edge-feature masking rows. |
-| `figure_asset_audit` | 27 / 27 | 8 / 8 | ok | Generated figure technical audit. |
+| `figure_asset_audit` | 29 / 29 | 8 / 8 | ok | Generated figure technical audit. |
 | `evaluation_budget_audit` | 6 / 6 | 10 / 10 | ok | Generated evaluation-budget audit. |
 | `method_naming_audit` | 28 / 28 | 6 / 6 | ok | Generated method-name consistency audit. |
 | `lag_jsbsim_migration_probe` | 29 / 29 | 4 / 4 | ok | LAG/JSBSim migration-readiness probe. |
 | `lag_role_graph_adapter_test` | 26 / 26 | 3 / 3 | ok | LAG-like state-to-role-graph adapter test. |
 | `lag_role_graph_wrapper_test` | 11 / 11 | 3 / 3 | ok | LAG-like reset/step graph wrapper test. |
 | `intercept_3d_smoke_test` | 15 / 15 | 13 / 13 | ok | 3DOF heterogeneous interception environment smoke test. |
-| `intercept_3d_policy_eval` | 3 / 3 | 39 / 39 | ok | 3DOF checkpoint evaluation smoke diagnostic; not a paper learning result. |
+| `intercept_3d_policy_eval` | 3 / 3 | 68 / 68 | ok | 3DOF checkpoint evaluation smoke diagnostic; not a paper learning result. |
 
 ## Use Boundary
 

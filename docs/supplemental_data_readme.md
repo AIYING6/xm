@@ -1,6 +1,6 @@
 # Supplemental Data README
 
-Generated: 2026-07-16T22:22:50
+Generated: 2026-08-02T01:41:06
 
 Purpose:
 
@@ -37,7 +37,7 @@ The main claim should rely on the 300-episode final evaluation; lower-budget fil
 | `results/speed_robustness_summary.csv` | 18 | Target-speed robustness summary. | 100 episodes per seed. | Appendix robustness table and figures. |
 | `results/edge_feature_ablation_eval.csv` | 42 | Raw evaluation-time edge-feature masking rows. | 30 episodes per seed. | Mechanism diagnostic only. |
 | `results/edge_feature_ablation_summary.csv` | 14 | Edge-feature masking summary. | 30 episodes per seed. | Mechanism diagnostic table and figure. |
-| `results/figure_asset_audit.csv` | 27 | Generated figure-asset quality checks. | Asset audit. | Technical reproducibility audit. |
+| `results/figure_asset_audit.csv` | 29 | Generated figure-asset quality checks. | Asset audit. | Technical reproducibility audit. |
 | `results/evaluation_budget_audit.csv` | 6 | Episode-budget consistency checks. | Asset audit. | Prevents mixing main and appendix budgets. |
 | `results/method_naming_audit.csv` | 28 | Method-name consistency checks. | Asset audit. | Prevents stale method names in publishable text. |
 | `results/supplemental_csv_schema_audit.csv` | 32 | Supplemental CSV schema checks. | Asset audit. | Prevents schema, row-count, and key-domain drift. |

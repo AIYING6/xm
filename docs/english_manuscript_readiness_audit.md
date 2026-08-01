@@ -1,6 +1,6 @@
 # English Manuscript Readiness Audit
 
-Generated: 2026-07-22T22:53:28
+Generated: 2026-08-02T01:40:09
 
 Purpose:
 
