@@ -1,6 +1,6 @@
 # Freeze Precheck Report
 
-Generated: 2026-08-02T02:39:07
+Generated: 2026-08-02T02:52:25
 
 Purpose:
 
@@ -46,9 +46,11 @@ stdout:
 
 ```text
 M docs/PROJECT_STATE.md
-?? docs/FREEZE_PRECHECK_REPORT.md
-?? results/freeze_precheck_audit.csv
-?? scripts/run_freeze_precheck.py
+ M docs/TRAINING_EVALUATION_PROTOCOL.md
+ M scripts/generate_paper_commands.py
+?? docs/FREEZE_REHEARSAL_COMMAND_MANIFEST.md
+?? docs/FREEZE_REHEARSAL_PLAN.md
+?? results/freeze_rehearsal_command_manifest.csv
 ```
 
 stderr:

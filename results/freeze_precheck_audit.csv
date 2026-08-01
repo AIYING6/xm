@@ -9,11 +9,13 @@ summary columns: 47
 selection columns: 42
 episode columns: 73",,ok
 information boundary tests,test,D:\Anaconda\envs\.conda\envs\cac\python.exe -m pytest tests/test_gate1_communication_feasibility.py -q,PASS,0,".................................                                        [100%]
-33 passed in 3.52s",,ok
+33 passed in 3.10s",,ok
 reproducibility artifact gate,artifact,D:\Anaconda\envs\.conda\envs\cac\python.exe scripts/check_reproducibility_artifacts.py,PASS,0,"required files checked: 144
 required scripts checked: 50
 OK",,ok
 git status clean,git,git status --short,WARN,0,"M docs/PROJECT_STATE.md
-?? docs/FREEZE_PRECHECK_REPORT.md
-?? results/freeze_precheck_audit.csv
-?? scripts/run_freeze_precheck.py",,working tree has local changes; commit before formal freeze
+ M docs/TRAINING_EVALUATION_PROTOCOL.md
+ M scripts/generate_paper_commands.py
+?? docs/FREEZE_REHEARSAL_COMMAND_MANIFEST.md
+?? docs/FREEZE_REHEARSAL_PLAN.md
+?? results/freeze_rehearsal_command_manifest.csv",,working tree has local changes; commit before formal freeze

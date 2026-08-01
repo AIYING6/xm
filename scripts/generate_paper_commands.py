@@ -39,11 +39,22 @@ def mode_budget(main_cfg: dict, mode: str) -> tuple[int, int, int, int, int]:
         return 1, 1, 8, 1, 1
     if mode == "probe_20":
         return 20, 1, 16, 2, 10
+    if mode == "freeze_rehearsal":
+        updates_1m = int(rollout["updates_for_1m_steps"])
+        rehearsal_updates = max(20, int(round((updates_1m * 0.05) / 20.0)) * 20)
+        return rehearsal_updates, int(rollout["num_envs"]), int(rollout["rollout_steps"]), 5, 20
     if mode == "dev_1m":
         return int(rollout["updates_for_1m_steps"]), int(rollout["num_envs"]), int(rollout["rollout_steps"]), 5, 100
     if mode == "formal_bstar":
         return int(rollout["updates_for_1m_steps"]), int(rollout["num_envs"]), int(rollout["rollout_steps"]), int(seeds["validation_episodes_per_seed"]), 100
     raise ValueError(f"unsupported mode: {mode}")
+
+
+def sweep_episode_count(main_cfg: dict, mode: str, split: str) -> int:
+    if mode in {"smoke", "probe_20", "freeze_rehearsal"}:
+        return 5
+    seed_cfg = main_cfg["seeds"]
+    return int(seed_cfg["validation_episodes_per_seed"] if split == "validation" else seed_cfg["test_episodes_per_seed"])
 
 
 def command_quote(parts: list[str]) -> str:
@@ -175,7 +186,7 @@ def method_sweep_command(
     scenario = main_cfg["scenario"]
     scenarios = sweep_scenarios(main_cfg, split)
     seed_cfg = main_cfg["seeds"]
-    episodes = seed_cfg["validation_episodes_per_seed"] if split == "validation" else seed_cfg["test_episodes_per_seed"]
+    episodes = sweep_episode_count(main_cfg, mode, split)
     base_seed = seed_cfg["validation_base_seed"] if split == "validation" else seed_cfg["test_base_seed"]
     out_dir = out_root / mode / "checkpoint_sweeps" / method_name
     method_root = out_root / mode / "runs" / method_name
@@ -254,7 +265,7 @@ def happo_sweep_command(
     scenario = main_cfg["scenario"]
     scenarios = sweep_scenarios(main_cfg, split)
     seed_cfg = main_cfg["seeds"]
-    episodes = seed_cfg["validation_episodes_per_seed"] if split == "validation" else seed_cfg["test_episodes_per_seed"]
+    episodes = sweep_episode_count(main_cfg, mode, split)
     base_seed = seed_cfg["validation_base_seed"] if split == "validation" else seed_cfg["test_base_seed"]
     out_dir = out_root / mode / "checkpoint_sweeps" / method_name
     run_method_name = output_method_name or method_name
@@ -326,7 +337,11 @@ def write_outputs(rows: list[dict], out_csv: Path, out_md: Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate config-driven paper training commands.")
-    parser.add_argument("--mode", choices=("smoke", "probe_20", "dev_1m", "formal_bstar"), default="smoke")
+    parser.add_argument(
+        "--mode",
+        choices=("smoke", "probe_20", "freeze_rehearsal", "dev_1m", "formal_bstar"),
+        default="smoke",
+    )
     parser.add_argument("--methods", nargs="+", default=DEFAULT_METHODS)
     parser.add_argument("--seeds", nargs="+", type=int, default=(0,))
     parser.add_argument("--include-sweeps", action="store_true")

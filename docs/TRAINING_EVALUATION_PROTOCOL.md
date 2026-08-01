@@ -60,6 +60,18 @@ Minimum rehearsal:
 
 Rehearsal evidence is not a paper result.
 
+Maintained command-generation mode:
+
+```text
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode freeze_rehearsal --methods mappo single_graph ea_rg_mappo happo --seeds 0 --include-sweeps --out-csv results/freeze_rehearsal_command_manifest.csv --out-md docs/FREEZE_REHEARSAL_COMMAND_MANIFEST.md
+```
+
+Execution and pass/fail criteria are recorded in:
+
+```text
+docs/FREEZE_REHEARSAL_PLAN.md
+```
+
 ## Formal Freeze Stage
 
 Freeze requires:
@@ -212,4 +224,3 @@ Stop and redesign if:
 - failure recovery depends on stale target cache rather than fresh sensing or
   delivered communication;
 - HAPPO or parameter-matched baselines expose an unfair capacity advantage.
-

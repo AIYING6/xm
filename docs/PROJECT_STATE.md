@@ -71,6 +71,11 @@ Latest implementation check on 2026-08-02:
 - Freeze-preparation gate entry point added:
   - `scripts/run_freeze_precheck.py` runs the protocol document checks, paper config audit, checkpoint-selection schema audit, Gate 1 information-boundary tests, reproducibility artifact gate, and Git status review;
   - latest run produced `docs/FREEZE_PRECHECK_REPORT.md` and `results/freeze_precheck_audit.csv` with 8 checks, 0 failures, and 1 expected warning for uncommitted local changes.
+- Freeze rehearsal preparation added:
+  - `scripts/generate_paper_commands.py` now supports `--mode freeze_rehearsal`, which uses seed 0, about 5% of the 1M-step training budget, 20-update checkpoint intervals, and low-cost validation/test sweeps;
+  - generated `results/freeze_rehearsal_command_manifest.csv` and `docs/FREEZE_REHEARSAL_COMMAND_MANIFEST.md` for MAPPO, Single-Graph, EA-RG-MAPPO, and HAPPO;
+  - `scripts/audit_paper_manifest.py --manifest results/freeze_rehearsal_command_manifest.csv --methods mappo single_graph ea_rg_mappo happo --seeds 0` passed, and `scripts/run_paper_manifest.py` dry-run passed for both training rows and validation/test sweep rows;
+  - execution order and pass/fail criteria are recorded in `docs/FREEZE_REHEARSAL_PLAN.md`.
 - Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:
