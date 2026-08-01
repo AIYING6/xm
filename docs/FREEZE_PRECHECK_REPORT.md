@@ -1,6 +1,6 @@
 # Freeze Precheck Report
 
-Generated: 2026-08-02T02:52:25
+Generated: 2026-08-02T04:13:44
 
 Purpose:
 
@@ -45,12 +45,10 @@ git status --short
 stdout:
 
 ```text
-M docs/PROJECT_STATE.md
- M docs/TRAINING_EVALUATION_PROTOCOL.md
- M scripts/generate_paper_commands.py
-?? docs/FREEZE_REHEARSAL_COMMAND_MANIFEST.md
-?? docs/FREEZE_REHEARSAL_PLAN.md
-?? results/freeze_rehearsal_command_manifest.csv
+M docs/FREEZE_REHEARSAL_PLAN.md
+ M docs/PROJECT_STATE.md
+ M results/freeze_rehearsal_training_summary.csv
+ M results/paper_manifest_run_status.csv
 ```
 
 stderr:

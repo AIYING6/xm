@@ -98,7 +98,7 @@ The rehearsal passes only if:
 
 ## Current Status
 
-Partially executed.
+Completed.
 
 Completed checks:
 
@@ -145,9 +145,29 @@ Completed checks:
   - test consumed only the validation selection CSV;
   - checkpoint-selection schema audit passed;
   - reproducibility artifact gate passed.
+- HAPPO seed 0 train row completed:
+  - 200 updates;
+  - 10 policy snapshots from update 20 to update 200;
+  - training output audit passed;
+  - training log summary was updated in
+    `results/freeze_rehearsal_training_summary.csv`.
+- HAPPO validation sweep completed:
+  - validation selected update 20;
+  - checkpoint-selection schema audit passed.
+- HAPPO test sweep completed:
+  - test consumed only the validation selection CSV;
+  - checkpoint-selection schema audit passed.
+- Final all-method gates passed:
+  - `scripts/audit_training_outputs.py --mode freeze_rehearsal --methods mappo single_graph ea_rg_mappo happo --seeds 0`;
+  - `scripts/audit_checkpoint_selection_schema.py`;
+  - `scripts/check_reproducibility_artifacts.py`.
 
-Remaining rehearsal execution:
+Rehearsal outcome:
 
-- `happo` seed 0 train, validation sweep, and test sweep;
-- final all-method training-output audit;
-- final schema and reproducibility gates.
+- The four-method train -> validation selection -> test evaluation pipeline runs
+  end to end under strict sensing, target-info bottleneck, relay failure, and
+  the frozen four-scenario suite.
+- Validation/test separation is enforced by the command manifest: test sweeps
+  consume only validation-produced `validation_selected_checkpoints.csv`.
+- This remains low-episode rehearsal evidence and must not be used as a paper
+  method comparison.
