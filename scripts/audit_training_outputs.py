@@ -31,6 +31,9 @@ def expected_updates(mode: str) -> int:
         return 1
     if mode == "probe_20":
         return 20
+    if mode == "freeze_rehearsal":
+        updates_1m = int(load_main_config()["rollout"]["updates_for_1m_steps"])
+        return max(20, int(round((updates_1m * 0.05) / 20.0)) * 20)
     if mode in {"dev_1m", "formal_bstar"}:
         return int(load_main_config()["rollout"]["updates_for_1m_steps"])
     raise ValueError(f"unsupported mode: {mode}")
@@ -81,7 +84,11 @@ def audit_method_seed(run_root: Path, mode: str, method: str, seed: int, min_upd
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", required=True, choices=("smoke", "probe_20", "dev_1m", "formal_bstar"))
+    parser.add_argument(
+        "--mode",
+        required=True,
+        choices=("smoke", "probe_20", "freeze_rehearsal", "dev_1m", "formal_bstar"),
+    )
     parser.add_argument("--methods", nargs="+", default=DEFAULT_METHODS)
     parser.add_argument("--seeds", nargs="+", type=int, default=(0,))
     parser.add_argument("--run-root", type=Path, default=DEFAULT_RUN_ROOT)

@@ -76,6 +76,11 @@ Latest implementation check on 2026-08-02:
   - generated `results/freeze_rehearsal_command_manifest.csv` and `docs/FREEZE_REHEARSAL_COMMAND_MANIFEST.md` for MAPPO, Single-Graph, EA-RG-MAPPO, and HAPPO;
   - `scripts/audit_paper_manifest.py --manifest results/freeze_rehearsal_command_manifest.csv --methods mappo single_graph ea_rg_mappo happo --seeds 0` passed, and `scripts/run_paper_manifest.py` dry-run passed for both training rows and validation/test sweep rows;
   - execution order and pass/fail criteria are recorded in `docs/FREEZE_REHEARSAL_PLAN.md`.
+- Freeze rehearsal execution has started:
+  - MAPPO seed 0 completed 200 updates and produced 10 policy snapshots;
+  - MAPPO training-output audit and training-log summary passed;
+  - MAPPO validation sweep selected update 40, MAPPO test sweep consumed the validation selection CSV, checkpoint-selection schema audit passed, and the reproducibility artifact gate passed;
+  - remaining rehearsal methods are Single-Graph, EA-RG-MAPPO, and HAPPO.
 - Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:
