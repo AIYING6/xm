@@ -80,7 +80,9 @@ Latest implementation check on 2026-08-02:
   - MAPPO seed 0 completed 200 updates and produced 10 policy snapshots;
   - MAPPO training-output audit and training-log summary passed;
   - MAPPO validation sweep selected update 40, MAPPO test sweep consumed the validation selection CSV, checkpoint-selection schema audit passed, and the reproducibility artifact gate passed;
-  - remaining rehearsal methods are Single-Graph, EA-RG-MAPPO, and HAPPO.
+  - Single-Graph seed 0 completed 200 updates and produced 10 policy snapshots;
+  - Single-Graph training-output audit passed, validation sweep selected update 180, test sweep consumed the validation selection CSV, checkpoint-selection schema audit passed, and the reproducibility artifact gate passed;
+  - remaining rehearsal methods are EA-RG-MAPPO and HAPPO.
 - Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:
