@@ -58,6 +58,16 @@ Latest implementation check on 2026-08-02:
 - `scripts/check_reproducibility_artifacts.py` keeps fixed row checks for stable tables but treats relay-failure replay as a variable-length trajectory CSV with a minimum-row gate.
 - Current verification command: `D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/build_paper_assets.py` passed with final `Reproducibility artifact gate: OK`.
 - Cleanup pass: stale untracked/ignored training artifacts and cache directories were moved out of the Git repository to `C:/Users/96251/Documents/Codex/2026-07-12/ni/artifacts_archive/cleanup_20260802/`; tracked CSV/MD summaries were restored in place. See `C:/Users/96251/Documents/Codex/2026-07-12/ni/artifacts_archive/cleanup_20260802/CLEANUP_MANIFEST.md`.
+- Freeze-preparation protocols added:
+  - `docs/INFORMATION_BOUNDARY_AUDIT.md`;
+  - `docs/BASELINE_FAIRNESS_PROTOCOL.md`;
+  - `docs/TRAINING_EVALUATION_PROTOCOL.md`.
+  These documents define the next formal-experiment gate: information-boundary checks, baseline fairness requirements, validation/test checkpoint-selection rules, change-control criteria, and go/no-go rules before expensive formal training.
+- Freeze-preparation validation:
+  - `scripts/audit_paper_configs.py` passed with 14 configs and 1,000,192 environment-step 1M approximation;
+  - `scripts/audit_checkpoint_selection_schema.py` passed after updating `configs/paper/checkpoint_selection_schema.yaml` to match the current 47-column summary schema, 42-column selection schema, and 73-column episode schema;
+  - `python -m pytest tests/test_gate1_communication_feasibility.py -q` passed with 33 tests;
+  - `scripts/check_reproducibility_artifacts.py` passed.
 - Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:
