@@ -23,6 +23,25 @@ DEFAULT_MANIFEST = REPO_ROOT / "results" / "paper_command_manifest.csv"
 DEFAULT_STATUS_CSV = REPO_ROOT / "results" / "paper_manifest_run_status.csv"
 DEFAULT_LOG_DIR = REPO_ROOT / "results" / "paper_manifest_logs"
 
+STATUS_FIELDNAMES = [
+    "run_id",
+    "manifest_id",
+    "row_index",
+    "kind",
+    "mode",
+    "method",
+    "seed",
+    "manifest_status",
+    "command",
+    "started_utc",
+    "finished_utc",
+    "duration_sec",
+    "return_code",
+    "outcome",
+    "stdout_log",
+    "stderr_log",
+]
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -67,15 +86,16 @@ def row_matches(
     return True
 
 
-def read_completed_keys(status_csv: Path) -> set[tuple[str, str, str, str, str]]:
+def read_completed_keys(status_csv: Path) -> set[tuple[str, str, str, str, str, str]]:
     if not status_csv.exists():
         return set()
-    completed: set[tuple[str, str, str, str, str]] = set()
+    completed: set[tuple[str, str, str, str, str, str]] = set()
     with status_csv.open("r", encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
             if row.get("outcome") == "completed":
                 completed.add(
                     (
+                        row.get("manifest_id", ""),
                         row.get("row_index", ""),
                         row.get("kind", ""),
                         row.get("mode", ""),
@@ -86,28 +106,40 @@ def read_completed_keys(status_csv: Path) -> set[tuple[str, str, str, str, str]]
     return completed
 
 
+def infer_manifest_id(row: dict[str, str]) -> str:
+    manifest_id = row.get("manifest_id", "")
+    if manifest_id:
+        return manifest_id
+    command = row.get("command", "")
+    if "freeze_rehearsal_formal_main" in command:
+        return "freeze_rehearsal_formal_main_command_manifest"
+    if "freeze_rehearsal" in command:
+        return "freeze_rehearsal_command_manifest"
+    return ""
+
+
+def ensure_status_schema(status_csv: Path) -> None:
+    if not status_csv.exists():
+        return
+    with status_csv.open("r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames == STATUS_FIELDNAMES:
+            return
+        rows = list(reader)
+    with status_csv.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=STATUS_FIELDNAMES, lineterminator="\n")
+        writer.writeheader()
+        for row in rows:
+            row["manifest_id"] = infer_manifest_id(row)
+            writer.writerow({field: row.get(field, "") for field in STATUS_FIELDNAMES})
+
+
 def append_status(status_csv: Path, row: dict[str, str]) -> None:
     status_csv.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = [
-        "run_id",
-        "row_index",
-        "kind",
-        "mode",
-        "method",
-        "seed",
-        "manifest_status",
-        "command",
-        "started_utc",
-        "finished_utc",
-        "duration_sec",
-        "return_code",
-        "outcome",
-        "stdout_log",
-        "stderr_log",
-    ]
+    ensure_status_schema(status_csv)
     write_header = not status_csv.exists()
     with status_csv.open("a", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=STATUS_FIELDNAMES, lineterminator="\n")
         if write_header:
             writer.writeheader()
         writer.writerow(row)
@@ -122,13 +154,14 @@ def run_row(
     status_csv: Path,
     timeout_sec: int | None,
     dry_run: bool,
+    manifest_id: str,
 ) -> int:
     command = row.get("command", "").strip()
     if not command:
         raise ValueError(f"manifest row {row_index} has no command")
     args = split_command(command, python_exe)
     run_id = (
-        f"{row.get('mode','unknown')}_{row_index:04d}_"
+        f"{manifest_id}_{row.get('mode','unknown')}_{row_index:04d}_"
         f"{row.get('kind','unknown')}_{row.get('method','unknown')}_seed{row.get('seed','na')}"
     )
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -151,6 +184,7 @@ def run_row(
         status_csv,
         {
             "run_id": run_id,
+            "manifest_id": manifest_id,
             "row_index": str(row_index),
             "kind": row.get("kind", ""),
             "mode": row.get("mode", ""),
@@ -193,7 +227,10 @@ def main() -> None:
     methods = parse_csv_list(args.method)
     seeds = parse_csv_list(args.seed)
     statuses = parse_csv_list(args.status)
+    if args.skip_completed:
+        ensure_status_schema(args.status_csv)
     completed = read_completed_keys(args.status_csv) if args.skip_completed else set()
+    manifest_id = args.manifest.stem
 
     selected: list[tuple[int, dict[str, str]]] = []
     for row_index, row in enumerate(manifest):
@@ -201,7 +238,14 @@ def main() -> None:
             continue
         if not row_matches(row, kinds=kinds, methods=methods, seeds=seeds, statuses=statuses):
             continue
-        key = (str(row_index), row.get("kind", ""), row.get("mode", ""), row.get("method", ""), row.get("seed", ""))
+        key = (
+            manifest_id,
+            str(row_index),
+            row.get("kind", ""),
+            row.get("mode", ""),
+            row.get("method", ""),
+            row.get("seed", ""),
+        )
         if key in completed:
             continue
         selected.append((row_index, row))
@@ -219,6 +263,7 @@ def main() -> None:
             status_csv=args.status_csv,
             timeout_sec=args.timeout_sec,
             dry_run=args.dry_run,
+            manifest_id=manifest_id,
         )
         if rc != 0:
             failures += 1

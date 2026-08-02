@@ -93,7 +93,13 @@ Latest implementation check on 2026-08-02:
   - `param_matched_single` now explicitly inherits PPO hyperparameters from `single_graph`, while retaining `hidden_dim=96`;
   - `ea_rg_mappo_gate_prior.yaml` now writes outputs under `ea_rg_mappo_s_gate_prior` for consistency with EA-RG-MAPPO-S naming and existing formal scripts;
   - command generation, paper-config audit, manifest audit, training-output audit, and progress checking now default to the formal main method set;
-  - generated and audited `results/freeze_rehearsal_formal_main_command_manifest.csv` / `docs/FREEZE_REHEARSAL_FORMAL_MAIN_COMMAND_MANIFEST.md`; dry-run passed for train and validation/test sweep rows.
+  - generated and audited `results/freeze_rehearsal_formal_main_command_manifest.csv` / `docs/FREEZE_REHEARSAL_FORMAL_MAIN_COMMAND_MANIFEST.md`; dry-run passed for train and validation/test sweep rows;
+  - formal-main freeze rehearsal completed under `results/paper_config_runs/freeze_rehearsal_formal_main/` for all five main methods: `mappo`, `single_graph`, `param_matched_single`, `ea_rg_mappo_gate_prior`, and `happo`;
+  - each method completed seed-0 200-update training and produced 10 snapshots, for 50 snapshots total;
+  - validation sweeps produced selected checkpoint CSVs for all five methods, and test sweeps consumed only those validation selections;
+  - final gates passed: 15-row manifest audit, five-method training-output audit, checkpoint-selection schema audit, and reproducibility artifact gate;
+  - tracked rehearsal records are `results/freeze_rehearsal_formal_main_training_summary.csv` and `results/paper_manifest_run_status.csv`; heavy run outputs remain ignored;
+  - `scripts/run_paper_manifest.py` now records `manifest_id` in the run ledger so old four-method rehearsal rows and corrected formal-main rehearsal rows cannot collide under the same `freeze_rehearsal` mode.
 - Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:

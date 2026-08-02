@@ -55,3 +55,25 @@ D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py -
 - Earlier four-method `freeze_rehearsal` runs are pipeline evidence only because
   they used `ea_rg_mappo` rather than `ea_rg_mappo_gate_prior` and omitted
   `param_matched_single`.
+
+## Current Rehearsal Status
+
+Completed on 2026-08-02.
+
+The corrected five-method formal-main rehearsal has run end to end under
+`results/freeze_rehearsal_formal_main_command_manifest.csv` and
+`results/paper_config_runs/freeze_rehearsal_formal_main/`.
+
+Final checks passed:
+
+- 15-row manifest audit;
+- five seed-0 training rows at 200 updates;
+- 50 total policy snapshots;
+- five validation checkpoint-selection sweeps;
+- five test sweeps that consume only validation selections;
+- training-output audit;
+- checkpoint-selection schema audit;
+- reproducibility artifact gate.
+
+This clears the pipeline-readiness check for launching the formal-budget stage,
+subject to the freeze precheck and a clean tracked working tree.

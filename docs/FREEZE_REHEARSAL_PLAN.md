@@ -184,3 +184,44 @@ Formal-main correction:
 - Formal-main rehearsal outputs must go to
   `results/paper_config_runs/freeze_rehearsal_formal_main/` to avoid mixing
   them with the completed four-method pipeline rehearsal.
+
+## Formal-Main Rehearsal Outcome
+
+Completed on 2026-08-02.
+
+This corrected rehearsal used the five-method formal-main set in
+`results/freeze_rehearsal_formal_main_command_manifest.csv`:
+
+- `mappo`;
+- `single_graph`;
+- `param_matched_single`;
+- `ea_rg_mappo_gate_prior`;
+- `happo`.
+
+Completed checks:
+
+- manifest audit passed with 15 rows: 5 training rows, 5 validation-sweep rows,
+  and 5 test-sweep rows;
+- all five seed-0 training rows completed 200 updates;
+- all five methods produced 10 policy snapshots each, 50 snapshots total;
+- all five validation sweeps produced `validation_selected_checkpoints.csv`;
+- all five test sweeps consumed the corresponding validation selection CSV;
+- final training-output audit passed for all five methods;
+- final checkpoint-selection schema audit passed;
+- final reproducibility artifact gate passed.
+
+Lightweight tracked records:
+
+- `results/freeze_rehearsal_formal_main_training_summary.csv`;
+- `results/paper_manifest_run_status.csv`.
+
+Run-ledger note:
+
+- `scripts/run_paper_manifest.py` records `manifest_id` in
+  `results/paper_manifest_run_status.csv`, so the older four-method rehearsal
+  and the corrected formal-main rehearsal cannot share the same `run_id` or
+  `--skip-completed` key.
+
+The formal-main rehearsal is pipeline evidence only. It verifies the experiment
+machinery and information-boundary workflow, but its 200-update, 5-episode
+settings must not be cited as paper-level method-comparison evidence.
