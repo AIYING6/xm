@@ -3,12 +3,12 @@
 # The formal protocol requires that any training script terminate when HEAD is
 # not the frozen commit, when tracked source changes are uncommitted, or when
 # untracked files exist outside the approved formal-results root. Only
-# ``results/paper_config_runs/formal_budget_post_sixth_freeze_v1/**`` untracked
+# ``results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/**`` untracked
 # files are tolerated; any other untracked file (e.g. sitecustomize.py, stray
 # scripts) could silently alter runtime behaviour and is a BLOCKED condition.
 
-$FormalFreezeTag = "formal-post-sixth-ops-v1.3.3"
-$FormalResultsRoot = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1_evidence_rerun_20260801"
+$FormalFreezeTag = "formal-post-sixth-ops-v1.4.0"
+$FormalResultsRoot = "results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802"
 # Allow legacy archive/preflight and corrupted-forensic directories.
 $AllowedUntrackedPatterns = @(
     "$FormalResultsRoot/*",

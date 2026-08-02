@@ -96,10 +96,26 @@ formal-experiment-freeze-vN
 
 ## Formal Training Stage
 
-Formal training must use generated command manifests rather than ad hoc shell
-commands.
+Formal training must use frozen launch plans and audited scripts rather than ad
+hoc shell commands.
 
-Primary generator:
+For the v1.4 formal-main cycle, the authoritative launch plan is:
+
+```text
+docs/FORMAL_V1_4_LAUNCH_PLAN.md
+```
+
+The v1.4 route uses the BC-gated launchers:
+
+```text
+scripts/run_formal_post_sixth_1m_bc.ps1
+scripts/run_formal_post_sixth_1m_chunk.ps1
+scripts/check_formal_post_sixth_1m_progress.py
+```
+
+The direct-PPO command generator remains available for a separate protocol, but
+it is not the v1.4 formal-evidence launch authority unless the protocol is
+explicitly changed and re-frozen:
 
 ```text
 D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode formal_bstar --method-set formal_main --seeds 0 1 2 3 4 --include-sweeps

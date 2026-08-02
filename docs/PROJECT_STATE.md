@@ -6,11 +6,12 @@ Last updated: 2026-08-02
 
 The formal 1M PPO study now runs against a frozen source baseline:
 
-- **current tag**: `formal-post-sixth-freeze-v1.3` (current authority; SHA `bdcb600`)
+- **current freeze candidate**: `formal-post-sixth-freeze-v1.4` / `formal-post-sixth-ops-v1.4.0` (created after the clean 2026-08-02 formal-main precheck)
 - **historical tags** (retained, NOT moved):
   - `formal-post-sixth-freeze-v1` (SHA `8b13e26`): first frozen baseline; no formal artifacts produced; retained for source audit.
   - `formal-post-sixth-freeze-v1.1` (SHA `e30359b`): added freeze gates, coverage block, bc_manifest, BC verification, BC_INVALID classification, seed-passing fix; no formal artifacts produced; retained for source audit.
   - `formal-post-sixth-freeze-v1.2` (SHA `446aad7`): added BOM encoding fix for bc_manifest.json writer/reader; retained for source audit.
+  - `formal-post-sixth-freeze-v1.3` (SHA `bdcb600`): earlier post-sixth source freeze before the corrected formal-main rehearsal and ledger hardening; retained for source audit.
 - **branch**: `main`
 - **python**: 3.8.20; **torch**: 2.4.1+cu124; **cuda**: 12.4; **host**: AIYING
 - **P0 actor/info-boundary fix** (in `envs/uav_intercept_3d_env.py`):
@@ -21,17 +22,18 @@ The formal 1M PPO study now runs against a frozen source baseline:
 - **Enforced launch gates** (`scripts/formal_freeze_gate.ps1`, used by both launchers): abort with exit `2` unless:
   - `HEAD` == tag commit,
   - `git diff --quiet` and `git diff --cached --quiet` (no tracked/staged changes),
-  - **all untracked files** are inside `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/**` (no stray `.py`, `.ps1`, `.txt` outside the formal root).
+  - **all untracked files** are inside `results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/**` (no stray `.py`, `.ps1`, `.txt` outside the formal root).
 - **BC integrity** (`scripts/verify_bc_checkpoint.py`): BC init must be loadable on CPU, carry a non-empty state dict, match the method architecture exactly, and pass full manifest validation (method, seed, freeze_tag, freeze_commit, checkpoint name, graph_encoder, hidden_dim, role_gate_prior_strength, checkpoint_sha256). Existence alone no longer qualifies as `FRESH`; an unusable BC reports `BC_INVALID`.
 - **Batch safety**: the BC launcher supports `-ResumeValid` for safe interruption recovery; `--skip-bc-architecture` in the progress checker forces `BC_UNVERIFIED` and non-zero exit (diagnostic only).
 - **Evidence separation**:
   - `results/paper_config_runs/formal_budget_pre_sixth_freeze_development/` = pre-freeze 20-29 update runs (DEVELOPMENT EVIDENCE ONLY).
   - `results/paper_config_runs/formal_budget_post_sixth_freeze/` = retired pre-P0-fix root (DEVELOPMENT/PRE-FREEZE EVIDENCE ONLY; its BC `15/15` and PPO update-20 records are void).
   - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1_preflight/` = pre-tag BC + 0→2 runs (PREFLIGHT EVIDENCE ONLY).
-  - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/` = the only formal root; currently:
-    - **BC = 15/15** (all generated, loadable, architecture exact, manifest valid, SHA256 match, freeze commit match)
-    - **PPO = 1/15** started (ea_rg_mappo_s_gate_prior seed0 at update 4; 0→2→4 chain verified)
-    - **ops tag** `formal-post-sixth-ops-v1.3.2` (ee99263) for launcher tooling; algorithm frozen at `formal-post-sixth-freeze-v1.3` (bdcb600)
+  - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/` and earlier rerun roots are historical/development roots.
+  - `results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/` = the next formal root; currently:
+    - **BC = 0/15**
+    - **PPO = 0/15**
+    - **ops tag** `formal-post-sixth-ops-v1.4.0` for launcher tooling; algorithm/protocol frozen at `formal-post-sixth-freeze-v1.4`
     - Archive evidence moved to `../ri_gmappo_uav_artifacts/` outside repo
 
 ## Current Milestone
@@ -71,6 +73,7 @@ Latest implementation check on 2026-08-02:
 - Freeze-preparation gate entry point added:
   - `scripts/run_freeze_precheck.py` runs the protocol document checks, paper config audit, checkpoint-selection schema audit, Gate 1 information-boundary tests, reproducibility artifact gate, and Git status review;
   - latest run produced `docs/FREEZE_PRECHECK_REPORT.md` and `results/freeze_precheck_audit.csv` with 8 checks, 0 failures, and 1 expected warning for uncommitted local changes.
+  - latest clean run after formal-main rehearsal produced 8 checks, 0 failures, and 0 warnings.
 - Freeze rehearsal preparation added:
   - `scripts/generate_paper_commands.py` now supports `--mode freeze_rehearsal`, which uses seed 0, about 5% of the 1M-step training budget, 20-update checkpoint intervals, and low-cost validation/test sweeps;
   - generated `results/freeze_rehearsal_command_manifest.csv` and `docs/FREEZE_REHEARSAL_COMMAND_MANIFEST.md` for MAPPO, Single-Graph, EA-RG-MAPPO, and HAPPO;
@@ -100,6 +103,10 @@ Latest implementation check on 2026-08-02:
   - final gates passed: 15-row manifest audit, five-method training-output audit, checkpoint-selection schema audit, and reproducibility artifact gate;
   - tracked rehearsal records are `results/freeze_rehearsal_formal_main_training_summary.csv` and `results/paper_manifest_run_status.csv`; heavy run outputs remain ignored;
   - `scripts/run_paper_manifest.py` now records `manifest_id` in the run ledger so old four-method rehearsal rows and corrected formal-main rehearsal rows cannot collide under the same `freeze_rehearsal` mode.
+- Formal v1.4 launch preparation:
+  - `docs/FORMAL_V1_4_LAUNCH_PLAN.md` freezes the next execution sequence;
+  - `scripts/formal_freeze_gate.ps1`, `scripts/run_formal_post_sixth_1m_bc.ps1`, `scripts/run_formal_post_sixth_1m_chunk.ps1`, `scripts/check_formal_post_sixth_1m_progress.py`, and `scripts/verify_bc_checkpoint.py` now default to `formal-post-sixth-freeze-v1.4` / `formal-post-sixth-ops-v1.4.0` and `results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/`;
+  - `docs/TRAINING_EVALUATION_PROTOCOL.md` now treats the BC-gated launchers as the v1.4 formal-evidence authority; direct-PPO `formal_bstar` commands are not v1.4 formal evidence unless separately re-frozen.
 - Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:
@@ -1086,7 +1093,7 @@ preflight outputs live under
 not paper evidence. The formal budget root named here
 (`results/paper_config_runs/formal_budget_post_sixth_freeze/`) has since been
 retired; see the superseded notice below. The current formal root is
-`results/paper_config_runs/formal_budget_post_sixth_freeze_v1/`.
+`results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/`.
 
 **SUPERSEDED (development/pre-freeze evidence only).** The two paragraphs below
 describe the *old* `results/paper_config_runs/formal_budget_post_sixth_freeze/`
@@ -1113,18 +1120,19 @@ Retained verbatim for provenance:
 
 ### Current formal status (authoritative)
 
-The only valid formal root is
-`results/paper_config_runs/formal_budget_post_sixth_freeze_v1/`:
+The only valid formal root for the next formal-main cycle is
+`results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/`:
 
 ```text
-formal_budget_post_sixth_freeze_v1:
+formal_budget_post_sixth_freeze_v1.4_formal_main_20260802:
 BC  = 0/15
 PPO = 0/15
 Formal training not started
 ```
 
 Formal artifacts may only be produced from the freeze tag
-`formal-post-sixth-freeze-v1.1`. Both launchers now enforce this: they abort
+`formal-post-sixth-freeze-v1.4` and ops tag
+`formal-post-sixth-ops-v1.4.0`. Both launchers now enforce this: they abort
 with exit code `2` unless `HEAD` equals the tag commit and the tracked working
 tree is clean (untracked `results/` is ignored). The BC launcher additionally
 refuses to overwrite existing BC outputs without `-Force`, writes a

@@ -198,7 +198,10 @@ def main() -> None:
     parser.add_argument(
         "--root",
         type=Path,
-        default=ROOT / "results" / "paper_config_runs" / "formal_budget_post_sixth_freeze_v1",
+        default=ROOT
+        / "results"
+        / "paper_config_runs"
+        / "formal_budget_post_sixth_freeze_v1.4_formal_main_20260802",
     )
     parser.add_argument("--target-updates", type=int, default=TARGET_UPDATES)
     parser.add_argument(

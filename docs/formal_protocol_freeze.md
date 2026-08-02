@@ -250,10 +250,11 @@ Only after `B*` is chosen should five-seed formal training begin.
 The formal 1M budget study runs against a frozen source baseline (not just a
 frozen protocol). Any training artifact is valid only if produced by this commit.
 
-- **git tag**: `formal-post-sixth-freeze-v1.3` (current authority). Historical tags retained unmoved:
+- **git tag**: `formal-post-sixth-freeze-v1.4` (current authority for the next formal-main cycle). Historical tags retained unmoved:
   - `formal-post-sixth-freeze-v1` (SHA `8b13e26`): first freeze; no formal artifacts; source audit only.
   - `formal-post-sixth-freeze-v1.1` (SHA `e30359b`): freeze gates, coverage block, bc_manifest, BC verification, BC_INVALID, seed-passing fix; no formal artifacts.
   - `formal-post-sixth-freeze-v1.2` (SHA `446aad7`): BOM encoding fix for bc_manifest.json writer/reader; no formal artifacts.
+  - `formal-post-sixth-freeze-v1.3` (SHA `bdcb600`): earlier post-sixth source freeze before the corrected formal-main rehearsal and run-ledger hardening; source audit only.
 - **branch**: `main`
 - **python**: 3.8.20; **torch**: 2.4.1+cu124; **cuda**: 12.4
 - **P0 actor/info-boundary fix** (committed in `envs/uav_intercept_3d_env.py`):
@@ -263,14 +264,14 @@ frozen protocol). Any training artifact is valid only if produced by this commit
 - **Resume authority**: training-state checkpoint `update` is authoritative; `train_log.csv` is audit-only.
 - **Gate**: `FRESH / READY / COMPLETE / BLOCKED` with two-stage check (pre-PPO: FRESH=15 allowed; post-launch: READY+COMPLETE=15, FRESH=0).
 
-### Enforced launch gates (v1.3)
+### Enforced launch gates (v1.4)
 
 Each launcher dot-sources `scripts/formal_freeze_gate.ps1` and exits `2` when:
 
-- `git rev-parse HEAD` != `git rev-list -n 1 formal-post-sixth-freeze-v1.3`;
+- `git rev-parse HEAD` != `git rev-list -n 1 formal-post-sixth-ops-v1.4.0`;
 - `git diff --quiet` fails (tracked working-tree changes);
 - `git diff --cached --quiet` fails (staged but uncommitted changes);
-- any untracked file exists outside `results/paper_config_runs/formal_budget_post_sixth_freeze_v1/**`.
+- any untracked file exists outside `results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/**`.
 
 Untracked files under `results/` are intentionally ignored, since formal
 outputs are produced by the run itself. Tracked source and config changes are
@@ -282,7 +283,7 @@ contains `bc_train_log.csv`, `actor_critic_latest.pt`, or `happo_bc_latest.pt`
 unless `-Force` is given, and writes `bc_manifest.json` (freeze commit, tag,
 architecture, teacher settings, checkpoint SHA256) into every BC directory.
 
-### BC integrity gate (v1.3)
+### BC integrity gate (v1.4)
 
 `FRESH` previously required only that the BC file exist, so a truncated write,
 an empty file, a wrong hidden dim, or a checkpoint from another method could
@@ -324,7 +325,7 @@ freeze commit match = 15/15
 - **Evidence separation**:
   - `formal_budget_pre_sixth_freeze_development/` = DEVELOPMENT EVIDENCE ONLY (pre-freeze 20-29 updates).
   - `formal_budget_post_sixth_freeze_v1_preflight/` = PREFLIGHT EVIDENCE ONLY (pre-tag BC + 0→2).
-  - Formal results live only in `formal_budget_post_sixth_freeze_v1/`, started fresh after the tag.
+  - Formal results live only in `formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/`, started fresh after the tag.
 
 Training scripts must abort if `git rev-parse HEAD != freeze_commit_sha` or the
 working tree has uncommitted source changes.

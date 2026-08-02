@@ -378,7 +378,10 @@ def main() -> None:
     parser.add_argument(
         "--root",
         type=Path,
-        default=ROOT / "results" / "paper_config_runs" / "formal_budget_post_sixth_freeze_v1",
+        default=ROOT
+        / "results"
+        / "paper_config_runs"
+        / "formal_budget_post_sixth_freeze_v1.4_formal_main_20260802",
     )
     parser.add_argument("--method", default="all", choices=("all", *METHOD_SPECS))
     parser.add_argument("--seed", type=int, default=-1, help="-1 means all of 0 1 2")
