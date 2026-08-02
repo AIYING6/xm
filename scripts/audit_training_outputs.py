@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = ROOT / "configs" / "paper"
 DEFAULT_RUN_ROOT = ROOT / "results" / "paper_config_runs"
-DEFAULT_METHODS = ("mappo", "single_graph", "ea_rg_mappo", "happo")
+DEFAULT_METHODS = ("mappo", "single_graph", "param_matched_single", "ea_rg_mappo_gate_prior", "happo")
 
 
 def load_main_config() -> dict:

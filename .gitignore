@@ -27,6 +27,7 @@ env/
 
 # Local rehearsal run outputs
 results/paper_config_runs/freeze_rehearsal/
+results/paper_config_runs/freeze_rehearsal_formal_main/
 results/paper_manifest_logs/freeze_rehearsal_*.txt
 
 # OS files

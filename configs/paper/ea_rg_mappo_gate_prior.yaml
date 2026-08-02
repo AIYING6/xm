@@ -1,7 +1,7 @@
 {
   "method": "EA-RG-MAPPO + Role-Gate Prior",
   "paper_role": "proposed method with role-compatible gate initialization diagnostic",
-  "output_method_name": "ea_rg_mappo_gate_prior",
+  "output_method_name": "ea_rg_mappo_s_gate_prior",
   "graph_encoder": "multi_relation",
   "graph_relation_ablation": "none",
   "graph_message_ablation": "none",

@@ -88,6 +88,12 @@ Latest implementation check on 2026-08-02:
   - HAPPO training-output audit passed, validation sweep selected update 20, test sweep consumed the validation selection CSV, and checkpoint-selection schema audit passed;
   - final all-method `scripts/audit_training_outputs.py --mode freeze_rehearsal --methods mappo single_graph ea_rg_mappo happo --seeds 0`, `scripts/audit_checkpoint_selection_schema.py`, and `scripts/check_reproducibility_artifacts.py` passed.
   - rehearsal is complete as pipeline evidence only; the low-episode rehearsal results must not be used as paper method-comparison evidence.
+- Formal-main method-set correction:
+  - the formal main set is now fixed in `docs/FORMAL_MAIN_METHOD_SET.md` as `mappo`, `single_graph`, `param_matched_single`, `ea_rg_mappo_gate_prior`, and `happo`;
+  - `param_matched_single` now explicitly inherits PPO hyperparameters from `single_graph`, while retaining `hidden_dim=96`;
+  - `ea_rg_mappo_gate_prior.yaml` now writes outputs under `ea_rg_mappo_s_gate_prior` for consistency with EA-RG-MAPPO-S naming and existing formal scripts;
+  - command generation, paper-config audit, manifest audit, training-output audit, and progress checking now default to the formal main method set;
+  - generated and audited `results/freeze_rehearsal_formal_main_command_manifest.csv` / `docs/FREEZE_REHEARSAL_FORMAL_MAIN_COMMAND_MANIFEST.md`; dry-run passed for train and validation/test sweep rows.
 - Current caution: this confirms reproducible asset construction and diagnostics, not that the scientific contribution is already strong enough. The next research step remains improving formal experiment quality and mechanism evidence for Q2/Q1-level claims.
 
 Current algorithm-development status:

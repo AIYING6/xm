@@ -171,3 +171,16 @@ Rehearsal outcome:
   consume only validation-produced `validation_selected_checkpoints.csv`.
 - This remains low-episode rehearsal evidence and must not be used as a paper
   method comparison.
+
+Formal-main correction:
+
+- The completed four-method rehearsal used the earlier method list:
+  `mappo`, `single_graph`, `ea_rg_mappo`, and `happo`.
+- The next formal-main rehearsal must use
+  `mappo`, `single_graph`, `param_matched_single`,
+  `ea_rg_mappo_gate_prior`, and `happo`.
+- The corrected formal-main manifest has been generated and audited:
+  `results/freeze_rehearsal_formal_main_command_manifest.csv`.
+- Formal-main rehearsal outputs must go to
+  `results/paper_config_runs/freeze_rehearsal_formal_main/` to avoid mixing
+  them with the completed four-method pipeline rehearsal.

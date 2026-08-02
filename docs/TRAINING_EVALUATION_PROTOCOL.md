@@ -63,7 +63,7 @@ Rehearsal evidence is not a paper result.
 Maintained command-generation mode:
 
 ```text
-D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode freeze_rehearsal --methods mappo single_graph ea_rg_mappo happo --seeds 0 --include-sweeps --out-csv results/freeze_rehearsal_command_manifest.csv --out-md docs/FREEZE_REHEARSAL_COMMAND_MANIFEST.md
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode freeze_rehearsal --method-set formal_main --seeds 0 --include-sweeps --out-root results/paper_config_runs/freeze_rehearsal_formal_main --out-csv results/freeze_rehearsal_formal_main_command_manifest.csv --out-md docs/FREEZE_REHEARSAL_FORMAL_MAIN_COMMAND_MANIFEST.md
 ```
 
 Execution and pass/fail criteria are recorded in:
@@ -102,16 +102,22 @@ commands.
 Primary generator:
 
 ```text
-D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode formal_bstar --methods mappo single_graph ea_rg_mappo happo --seeds 0 1 2 3 4 --include-sweeps
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode formal_bstar --method-set formal_main --seeds 0 1 2 3 4 --include-sweeps
 ```
 
 If starting with a lower-cost development-budget cycle:
 
 ```text
-D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode dev_1m --methods mappo single_graph ea_rg_mappo happo --seeds 0 1 2 --include-sweeps
+D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/generate_paper_commands.py --mode dev_1m --method-set formal_main --seeds 0 1 2 --include-sweeps
 ```
 
 Training must be launched through the audited manifest runner where possible.
+
+The formal main method set is defined in:
+
+```text
+docs/FORMAL_MAIN_METHOD_SET.md
+```
 
 ## Checkpoint Selection
 

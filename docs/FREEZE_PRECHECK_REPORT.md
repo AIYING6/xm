@@ -1,6 +1,6 @@
 # Freeze Precheck Report
 
-Generated: 2026-08-02T04:13:44
+Generated: 2026-08-02T10:16:40
 
 Purpose:
 
@@ -45,10 +45,22 @@ git status --short
 stdout:
 
 ```text
-M docs/FREEZE_REHEARSAL_PLAN.md
+M .gitignore
+ M configs/paper/ea_rg_mappo_gate_prior.yaml
+ M configs/paper/param_matched_single.yaml
+ M docs/FREEZE_PRECHECK_REPORT.md
+ M docs/FREEZE_REHEARSAL_PLAN.md
  M docs/PROJECT_STATE.md
- M results/freeze_rehearsal_training_summary.csv
- M results/paper_manifest_run_status.csv
+ M docs/TRAINING_EVALUATION_PROTOCOL.md
+ M results/freeze_precheck_audit.csv
+ M scripts/audit_paper_configs.py
+ M scripts/audit_paper_manifest.py
+ M scripts/audit_training_outputs.py
+ M scripts/check_training_progress.py
+ M scripts/generate_paper_commands.py
+?? docs/FORMAL_MAIN_METHOD_SET.md
+?? docs/FREEZE_REHEARSAL_FORMAL_MAIN_COMMAND_MANIFEST.md
+?? results/freeze_rehearsal_formal_main_command_manifest.csv
 ```
 
 stderr:

@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = ROOT / "configs" / "paper"
 DEFAULT_RUN_ROOT = ROOT / "results" / "paper_config_runs"
-DEFAULT_METHODS = ("mappo", "single_graph", "ea_rg_mappo", "happo")
+DEFAULT_METHODS = ("mappo", "single_graph", "param_matched_single", "ea_rg_mappo_gate_prior", "happo")
 
 
 def expected_updates(mode: str) -> int:
@@ -22,6 +22,10 @@ def expected_updates(mode: str) -> int:
         return 1
     if mode == "probe_20":
         return 20
+    if mode == "freeze_rehearsal":
+        cfg = json.loads((CONFIG_DIR / "main_gate1.yaml").read_text(encoding="utf-8"))
+        updates_1m = int(cfg["rollout"]["updates_for_1m_steps"])
+        return max(20, int(round((updates_1m * 0.05) / 20.0)) * 20)
     if mode in {"dev_1m", "formal_bstar"}:
         cfg = json.loads((CONFIG_DIR / "main_gate1.yaml").read_text(encoding="utf-8"))
         return int(cfg["rollout"]["updates_for_1m_steps"])
@@ -60,7 +64,11 @@ def parse_update(row: dict[str, str] | None) -> int | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", required=True, choices=("smoke", "probe_20", "dev_1m", "formal_bstar"))
+    parser.add_argument(
+        "--mode",
+        required=True,
+        choices=("smoke", "probe_20", "freeze_rehearsal", "dev_1m", "formal_bstar"),
+    )
     parser.add_argument("--methods", nargs="+", default=DEFAULT_METHODS)
     parser.add_argument("--seeds", nargs="+", type=int, default=(0,))
     parser.add_argument("--run-root", type=Path, default=DEFAULT_RUN_ROOT)

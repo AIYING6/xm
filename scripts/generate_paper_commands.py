@@ -9,7 +9,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = ROOT / "configs" / "paper"
-DEFAULT_METHODS = (
+FORMAL_MAIN_METHODS = (
+    "mappo",
+    "single_graph",
+    "param_matched_single",
+    "ea_rg_mappo_gate_prior",
+    "happo",
+)
+DEVELOPMENT_METHODS = (
     "mappo",
     "single_graph",
     "ea_rg_mappo",
@@ -18,6 +25,7 @@ DEFAULT_METHODS = (
     "ablation_no_task_support",
     "ablation_no_role_identity",
 )
+DEFAULT_METHODS = FORMAL_MAIN_METHODS
 EXTERNAL_OR_PENDING = {"ippo"}
 
 
@@ -25,7 +33,13 @@ def load_config(name: str) -> dict:
     path = CONFIG_DIR / f"{name}.yaml"
     if not path.exists():
         raise FileNotFoundError(f"missing config: {path}")
-    return json.loads(path.read_text(encoding="utf-8"))
+    cfg = json.loads(path.read_text(encoding="utf-8"))
+    inherit_from = cfg.get("inherit_hyperparameters_from")
+    if "ppo" not in cfg and inherit_from:
+        parent = json.loads((CONFIG_DIR / f"{inherit_from}.yaml").read_text(encoding="utf-8"))
+        if "ppo" in parent:
+            cfg["ppo"] = parent["ppo"]
+    return cfg
 
 
 def bool_flag(enabled: bool, flag: str) -> list[str]:
@@ -189,7 +203,7 @@ def method_sweep_command(
     episodes = sweep_episode_count(main_cfg, mode, split)
     base_seed = seed_cfg["validation_base_seed"] if split == "validation" else seed_cfg["test_base_seed"]
     out_dir = out_root / mode / "checkpoint_sweeps" / method_name
-    method_root = out_root / mode / "runs" / method_name
+    method_root = out_root / mode / "runs" / method_cfg.get("output_method_name", method_name)
     graph_encoder = method_cfg["graph_encoder"]
     root_arg = {
         "no_graph": "--no-graph-root",
@@ -342,7 +356,8 @@ def parse_args() -> argparse.Namespace:
         choices=("smoke", "probe_20", "freeze_rehearsal", "dev_1m", "formal_bstar"),
         default="smoke",
     )
-    parser.add_argument("--methods", nargs="+", default=DEFAULT_METHODS)
+    parser.add_argument("--method-set", choices=("formal_main", "development"), default="formal_main")
+    parser.add_argument("--methods", nargs="+", default=None)
     parser.add_argument("--seeds", nargs="+", type=int, default=(0,))
     parser.add_argument("--include-sweeps", action="store_true")
     parser.add_argument("--device", default="cpu")
@@ -354,6 +369,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.methods is None:
+        args.methods = list(FORMAL_MAIN_METHODS if args.method_set == "formal_main" else DEVELOPMENT_METHODS)
     main_cfg = load_config("main_gate1")
     rows: list[dict] = []
     for method_name in args.methods:

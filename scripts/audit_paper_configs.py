@@ -11,6 +11,7 @@ REQUIRED = {
     "mappo.yaml",
     "single_graph.yaml",
     "ea_rg_mappo.yaml",
+    "ea_rg_mappo_gate_prior.yaml",
     "param_matched_single.yaml",
     "happo.yaml",
     "ippo.yaml",
@@ -23,6 +24,7 @@ GRAPH_METHOD_CONFIGS = {
     "mappo.yaml",
     "single_graph.yaml",
     "ea_rg_mappo.yaml",
+    "ea_rg_mappo_gate_prior.yaml",
     "param_matched_single.yaml",
     "ablation_no_role_pair.yaml",
     "ablation_no_task_support.yaml",
@@ -51,7 +53,13 @@ def main() -> None:
     if computed < 1_000_000:
         raise SystemExit(f"updates_for_1m_steps under-runs 1M environment steps: {computed}")
 
-    required_methods = {"MAPPO", "Single-Graph GAT-MAPPO", "EA-RG-MAPPO", "HAPPO"}
+    required_methods = {
+        "MAPPO",
+        "Single-Graph GAT-MAPPO",
+        "Parameter-Matched Single Graph",
+        "EA-RG-MAPPO + Role-Gate Prior",
+        "HAPPO",
+    }
     present_methods = {cfg.get("method") for cfg in loaded.values()}
     missing_methods = sorted(required_methods - present_methods)
     if missing_methods:
@@ -62,6 +70,10 @@ def main() -> None:
         for key in ("graph_encoder", "graph_relation_ablation", "graph_message_ablation", "graph_input_ablation"):
             if key not in cfg:
                 raise SystemExit(f"{name} missing required graph key: {key}")
+    if loaded["param_matched_single.yaml"].get("inherit_hyperparameters_from") != "single_graph":
+        raise SystemExit("param_matched_single must inherit PPO hyperparameters from single_graph")
+    if float(loaded["ea_rg_mappo_gate_prior.yaml"].get("role_gate_prior_strength", 0.0)) <= 0.0:
+        raise SystemExit("ea_rg_mappo_gate_prior must enable a positive role_gate_prior_strength")
     schema = loaded["checkpoint_selection_schema.yaml"]
     if schema.get("selection_policy", {}).get("test_must_use_selection_csv") is not True:
         raise SystemExit("checkpoint selection schema must require test split to use validation selection CSV")

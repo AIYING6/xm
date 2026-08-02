@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = ROOT / "configs" / "paper"
 DEFAULT_MANIFEST = ROOT / "results" / "paper_command_manifest.csv"
 DEFAULT_MAIN_CONFIG = CONFIG_DIR / "main_gate1.yaml"
-DEFAULT_METHODS = ("mappo", "single_graph", "ea_rg_mappo", "happo")
+DEFAULT_METHODS = ("mappo", "single_graph", "param_matched_single", "ea_rg_mappo_gate_prior", "happo")
 DEFAULT_SEEDS = ("0", "1", "2")
 
 
@@ -84,6 +84,13 @@ def audit_manifest(
             require((method, seed) in by_method_seed, f"missing training row: method={method} seed={seed}", errors)
 
     out_dirs: list[str] = []
+    train_roots_by_method: dict[str, set[str]] = defaultdict(set)
+    for row in train_rows:
+        tokens = command_tokens(row.get("command", ""))
+        out_dir = token_value(tokens, "--out-dir")
+        if out_dir is not None:
+            train_roots_by_method[row["method"]].add(str(Path(out_dir).parent).replace("\\", "/"))
+
     for row_index, row in enumerate(rows):
         command = row.get("command", "")
         tokens = command_tokens(command)
@@ -100,6 +107,18 @@ def audit_manifest(
             require(out_dir is not None, f"training row {row_index} missing out-dir", errors)
             if out_dir is not None:
                 out_dirs.append(out_dir)
+        if row["kind"] in {"validation_sweep", "test_sweep"}:
+            root_flags = ["--no-graph-root", "--single-root", "--multi-root", "--happo-root"]
+            root_values = [token_value(tokens, flag) for flag in root_flags if token_value(tokens, flag) is not None]
+            require(len(root_values) == 1, f"sweep row {row_index} must contain exactly one method root", errors)
+            if root_values:
+                expected_roots = train_roots_by_method.get(row["method"], set())
+                actual_root = str(Path(root_values[0]).as_posix())
+                require(
+                    actual_root in expected_roots,
+                    f"sweep row {row_index} root {actual_root} does not match training roots {sorted(expected_roots)}",
+                    errors,
+                )
         if row["kind"] == "validation_sweep":
             require(row["status"] == "ready_after_training", f"validation row {row_index} unexpected status", errors)
             require(

@@ -9,5 +9,6 @@
   "role_dim": 8,
   "intent_dim": 8,
   "use_bc_initialization": true,
+  "inherit_hyperparameters_from": "single_graph",
   "hyperparameter_policy": "inherit_single_graph_after_capacity_match"
 }
