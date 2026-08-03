@@ -213,6 +213,26 @@ def test_collision_above_threshold_excluded() -> None:
     assert best["selected_checkpoint_update"] == "200"
 
 
+def test_all_candidates_collide_hard_fail() -> None:
+    # Every eligible checkpoint violates the collision gate: the selector must
+    # raise instead of silently picking one of the -1e9 rows.
+    rows = [
+        make_row(0, 900, -1_000_000_000.0, collision="0.05"),
+        make_row(0, 977, -1_000_000_000.0, collision="0.08"),
+    ]
+    with pytest.raises(RuntimeError, match="no collision-eligible checkpoint"):
+        select_checkpoints(make_args("scenario"), rows)
+
+
+def test_all_candidates_collide_hard_fail_suite() -> None:
+    rows = [
+        make_row(0, 900, -1_000_000_000.0, collision="0.05"),
+        make_row(0, 977, -1_000_000_000.0, collision="0.08"),
+    ]
+    with pytest.raises(RuntimeError, match="no collision-eligible checkpoint"):
+        select_checkpoints(make_args("suite"), rows)
+
+
 def test_success_weight_is_100() -> None:
     assert selection_score(0.5, 10.0, 0.8, 0.0, 0.0, 100.0) == pytest.approx(570.0)
     # with weight 0 the score would be 490, proving 100 is actually applied
