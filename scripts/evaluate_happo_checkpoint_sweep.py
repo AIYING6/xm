@@ -320,8 +320,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--selection-metric",
         choices=("legacy_recovery", "delayed_recovery", "fresh_info_recovery"),
-        default="fresh_info_recovery",
-        help="Checkpoint-selection metric, matching the RI-GMAPPO checkpoint sweep.",
+        default="legacy_recovery",
+        help="Checkpoint-selection metric, matching the RI-GMAPPO checkpoint sweep (v1.4 adjudication default legacy_recovery).",
     )
     parser.add_argument(
         "--delayed-recovery-min-step",
@@ -339,8 +339,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--selection-success-weight",
         type=float,
-        default=0.0,
-        help="Weight applied to success_mean in checkpoint selection.",
+        default=100.0,
+        help="Weight applied to success_mean in checkpoint selection (v1.4 adjudication default 100).",
     )
     return parser.parse_args()
 

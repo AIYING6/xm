@@ -1,5 +1,5 @@
 {
-  "schema_version": "checkpoint_selection_v2_2026_07_29",
+  "schema_version": "checkpoint_selection_v3_2026_08_04",
   "summary_columns": [
     "split",
     "scenario",
@@ -59,6 +59,7 @@
     "train_seed",
     "selected_checkpoint_update",
     "selected_checkpoint",
+    "checkpoint_sha256",
     "strict_target_sensing",
     "agent_target_info_bottleneck",
     "target_prior_position",
@@ -103,10 +104,19 @@
   "selection_policy": {
     "validation_split": "select_checkpoint",
     "test_split": "evaluate_selected_validation_checkpoint_only",
-    "score": "default legacy_recovery: 1000 * post_failure_chain_recovered_mean + selection_success_weight * success_mean - post_failure_chain_recovery_steps_mean; optional delayed_recovery: 1000 * delayed_recovery_mean + selection_success_weight * success_mean - delayed_recovery_steps_mean",
-    "delayed_recovery_metric": "post_failure_chain_recovered_after_loss == 1 and post_failure_first_chain_step >= delayed_recovery_min_step",
+    "selection_metric": "legacy_recovery",
+    "score": "legacy_recovery: 1000 * post_failure_chain_recovered_mean + 100 * success_mean - post_failure_chain_recovery_steps_mean",
+    "selection_success_weight": 100,
+    "ranking": "maximise selection_score; on an exact tie prefer larger checkpoint_update",
     "tie_breaker": "larger checkpoint_update",
+    "collision_threshold": 0.0,
+    "collision_above_threshold_is_ineligible": true,
+    "eligible_snapshots": [100, 200, 300, 400, 500, 600, 700, 800, 900, 977],
+    "selection_per_train_seed": true,
+    "happo_same_rule": true,
+    "checkpoint_sha256_recorded": true,
     "test_must_use_selection_csv": true,
-    "validation_must_not_use_test_results": true
+    "validation_must_not_use_test_results": true,
+    "adjudication_note": "v1.4 Case-C adjudication 2026-08-04: unified to a single weighted-score algorithm; eval-ops-v1.4.1. Frozen before any formal validation result."
   }
 }

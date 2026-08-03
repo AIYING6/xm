@@ -252,6 +252,10 @@ def method_sweep_command(
         out_dir.as_posix(),
         "--max-selection-collision-rate",
         "0.0",
+        "--selection-metric",
+        "legacy_recovery",
+        "--selection-success-weight",
+        "100",
     ]
     if len(scenarios) > 1:
         command.extend(["--selection-group", "suite"])
@@ -317,6 +321,10 @@ def happo_sweep_command(
         out_dir.as_posix(),
         "--max-selection-collision-rate",
         "0.0",
+        "--selection-metric",
+        "legacy_recovery",
+        "--selection-success-weight",
+        "100",
     ]
     if len(scenarios) > 1:
         command.extend(["--selection-group", "suite"])

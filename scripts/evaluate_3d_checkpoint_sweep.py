@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import re
 import sys
 from collections import defaultdict
@@ -79,6 +80,7 @@ SELECTION_COLUMNS = (
     "train_seed",
     "selected_checkpoint_update",
     "selected_checkpoint",
+    "checkpoint_sha256",
     "strict_target_sensing",
     "agent_target_info_bottleneck",
     "target_prior_position",
@@ -193,12 +195,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--selection-metric",
         choices=("legacy_recovery", "delayed_recovery", "fresh_info_recovery"),
-        default="fresh_info_recovery",
+        default="legacy_recovery",
         help=(
             "Checkpoint-selection metric. legacy_recovery preserves the original "
-            "score; delayed_recovery selects using first post-failure chain closure "
-            "at or after --delayed-recovery-min-step; fresh_info_recovery selects "
-            "stable post-failure recovery with attacker fresh target information."
+            "score (v1.4 adjudication default); delayed_recovery selects using first "
+            "post-failure chain closure at or after --delayed-recovery-min-step; "
+            "fresh_info_recovery selects stable post-failure recovery with attacker "
+            "fresh target information."
         ),
     )
     parser.add_argument(
@@ -220,10 +223,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--selection-success-weight",
         type=float,
-        default=0.0,
+        default=100.0,
         help=(
-            "Weight applied to success_mean in checkpoint selection. "
-            "Use 0.0 for strict delayed-recovery selection when early success should not break ties."
+            "Weight applied to success_mean in checkpoint selection "
+            "(v1.4 adjudication default 100, per schema score formula)."
         ),
     )
     parser.add_argument(
@@ -246,6 +249,20 @@ def display_path(path: Path) -> str:
         return path.resolve().relative_to(ROOT).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+def checkpoint_sha256(rel_or_abs: str) -> str:
+    """SHA256 of a checkpoint file given a display path (relative to ROOT)."""
+    path = Path(rel_or_abs)
+    if not path.is_absolute():
+        path = ROOT / path
+    if not path.exists():
+        return ""
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest().upper()
 
 
 def checkpoint_update(path: Path) -> int:
@@ -655,32 +672,15 @@ def select_checkpoints(args: argparse.Namespace, summary_rows: list[dict[str, st
                 f"graph_message_ablation={graph_message_ablation}, "
                 f"graph_input_ablation={graph_input_ablation}, train_seed={train_seed}"
             )
+        # v1.4 selection adjudication (Case C, eval-ops-v1.4.1):
+        # rank solely by selection_score (weighted formula, computed in
+        # summarize_rows/selection_score), then by larger checkpoint_update on
+        # exact ties. No recovery/steps/success lexicographic ordering is used.
         best = max(
             eligible_rows,
             key=lambda row: (
-                parse_score(
-                    row.get(
-                        "post_failure_fresh_info_recovered_mean"
-                        if row.get("selection_metric") == "fresh_info_recovery"
-                        else "delayed_recovery_mean"
-                        if row.get("selection_metric") == "delayed_recovery"
-                        else "post_failure_chain_recovered_mean",
-                        "0",
-                    )
-                ),
-                -parse_score(row.get("collision_mean", "0")),
-                -parse_score(
-                    row.get(
-                        "post_failure_fresh_info_recovery_steps_mean"
-                        if row.get("selection_metric") == "fresh_info_recovery"
-                        else "delayed_recovery_steps_mean"
-                        if row.get("selection_metric") == "delayed_recovery"
-                        else "post_failure_chain_recovery_steps_mean",
-                        "inf",
-                    )
-                ),
-                parse_score(row.get("success_mean", "0")),
-                -int(row["checkpoint_update"]),
+                parse_score(row.get("selection_score", "-1000000000")),
+                int(row["checkpoint_update"]),
             ),
         )
         selected.append(
@@ -694,6 +694,7 @@ def select_checkpoints(args: argparse.Namespace, summary_rows: list[dict[str, st
                 "train_seed": best["train_seed"],
                 "selected_checkpoint_update": best["checkpoint_update"],
                 "selected_checkpoint": best["checkpoint"],
+                "checkpoint_sha256": checkpoint_sha256(best["checkpoint"]),
                 "strict_target_sensing": best.get("strict_target_sensing", ""),
                 "agent_target_info_bottleneck": best.get("agent_target_info_bottleneck", ""),
                 "target_prior_position": best.get("target_prior_position", ""),
