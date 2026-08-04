@@ -34,6 +34,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--chain-aux-warmup-updates", type=int, default=0)
     parser.add_argument("--role-gate-prior-strength", type=float, default=0.0)
     parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
+    parser.add_argument("--role-pair-gate-fixed-value", type=float, default=0.5)
     parser.add_argument("--intent-balanced-loss", action="store_true")
     parser.add_argument("--detach-intent", action="store_true")
     parser.add_argument("--oracle-intent", action="store_true")
@@ -113,6 +114,7 @@ def parse_args() -> RIGMAPPOConfig:
         chain_aux_warmup_updates=args.chain_aux_warmup_updates,
         role_gate_prior_strength=args.role_gate_prior_strength,
         multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
+        role_pair_gate_fixed_value=args.role_pair_gate_fixed_value,
         intent_balanced_loss=args.intent_balanced_loss,
         detach_intent=args.detach_intent,
         oracle_intent=args.oracle_intent,

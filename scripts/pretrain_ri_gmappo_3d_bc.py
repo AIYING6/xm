@@ -141,6 +141,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         graph_input_ablation=args.graph_input_ablation,
         role_gate_prior_strength=args.role_gate_prior_strength,
         multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
+        role_pair_gate_fixed_value=args.role_pair_gate_fixed_value,
         device=args.device,
     )
 
@@ -160,10 +161,12 @@ def build_agent(cfg: RIGMAPPOConfig, args: argparse.Namespace) -> RIGMAPPOAgent:
         role_dim=args.role_dim,
         intent_dim=args.intent_dim,
         graph_encoder=args.graph_encoder,
+        graph_relation_ablation=args.graph_relation_ablation,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
         role_gate_prior_strength=args.role_gate_prior_strength,
         multi_relation_global_residual_weight=args.multi_relation_global_residual_weight,
+        role_pair_gate_fixed_value=args.role_pair_gate_fixed_value,
         use_intent_context=False,
     )
 
@@ -320,6 +323,7 @@ def main() -> None:
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
     parser.add_argument("--role-gate-prior-strength", type=float, default=0.0)
     parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
+    parser.add_argument("--role-pair-gate-fixed-value", type=float, default=0.5)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--max-grad-norm", type=float, default=1.0)
     parser.add_argument("--no-balanced-loss", dest="balanced_loss", action="store_false")

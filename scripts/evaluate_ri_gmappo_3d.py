@@ -163,9 +163,12 @@ def build_agent(args: argparse.Namespace, cfg: RIGMAPPOConfig) -> tuple[RIGMAPPO
         role_dim=role_dim,
         intent_dim=intent_dim,
         graph_encoder=args.graph_encoder,
+        graph_relation_ablation=cfg.graph_relation_ablation,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        role_gate_prior_strength=getattr(cfg, "role_gate_prior_strength", 0.0),
         multi_relation_global_residual_weight=getattr(args, "multi_relation_global_residual_weight", 1.0),
+        role_pair_gate_fixed_value=getattr(cfg, "role_pair_gate_fixed_value", 0.5),
         use_intent_context=False,
     )
     if checkpoint is not None:
