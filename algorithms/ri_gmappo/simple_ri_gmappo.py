@@ -58,6 +58,7 @@ class RIGMAPPOConfig:
     graph_relation_ablation: str = "none"
     graph_message_ablation: str = "none"
     graph_input_ablation: str = "none"
+    role_pair_gate_fixed_value: float = 0.5
     lr: float = 3e-4
     actor_lr: float | None = None
     critic_lr: float | None = None
@@ -184,10 +185,11 @@ class GraphAttentionLayer(nn.Module):
 class RoleConditionedGraphAttentionLayer(nn.Module):
     """Graph attention with receiver-sender role-conditioned message gates."""
 
-    def __init__(self, in_dim: int, out_dim: int, num_roles: int, edge_dim: int = 0, use_role_pair_gate: bool = True):
+    def __init__(self, in_dim: int, out_dim: int, num_roles: int, edge_dim: int = 0, use_role_pair_gate: bool = True, fixed_gate_value: float = 0.5):
         super().__init__()
         self.num_roles = num_roles
         self.use_role_pair_gate = use_role_pair_gate
+        self.fixed_gate_value = float(fixed_gate_value)
         self.proj = nn.Linear(in_dim, out_dim, bias=False)
         self.attn = nn.Linear(out_dim * 2, 1, bias=False)
         self.edge_score = None
@@ -224,7 +226,7 @@ class RoleConditionedGraphAttentionLayer(nn.Module):
         receiver_role = role.long().unsqueeze(2)
         sender_role = role.long().unsqueeze(1)
         pair_index = receiver_role * self.num_roles + sender_role
-        gate = torch.sigmoid(self.role_pair_gate(pair_index)) if self.use_role_pair_gate else torch.full_like(hj, 0.5)
+        gate = torch.sigmoid(self.role_pair_gate(pair_index)) if self.use_role_pair_gate else torch.full_like(hj, self.fixed_gate_value)
         out = torch.sum(weights.unsqueeze(-1) * hj * gate, dim=2)
         return torch.tanh(out), weights
 
@@ -251,16 +253,22 @@ class MultiRelationGraphEncoder(nn.Module):
         use_role_pair_gate: bool = True,
         role_gate_prior_strength: float = 0.0,
         global_residual_weight: float = 1.0,
+        disable_task_support: bool = False,
+        role_pair_gate_fixed_value: float = 0.5,
     ):
         super().__init__()
         if global_residual_weight < 0.0:
             raise ValueError("global_residual_weight must be non-negative")
         self.num_relations = num_relations
         self.global_residual_weight = float(global_residual_weight)
+        self.disable_task_support = bool(disable_task_support)
+        self._task_support_relation_id = 2  # RELATION_TASK_SUPPORT
         self.layer1 = nn.ModuleList(
             [
                 RoleConditionedGraphAttentionLayer(
-                    hidden_dim, hidden_dim, num_roles, edge_dim, use_role_pair_gate=use_role_pair_gate
+                    hidden_dim, hidden_dim, num_roles, edge_dim,
+                    use_role_pair_gate=use_role_pair_gate,
+                    fixed_gate_value=role_pair_gate_fixed_value,
                 )
                 for _ in range(num_relations)
             ]
@@ -268,7 +276,9 @@ class MultiRelationGraphEncoder(nn.Module):
         self.layer2 = nn.ModuleList(
             [
                 RoleConditionedGraphAttentionLayer(
-                    hidden_dim, hidden_dim, num_roles, edge_dim, use_role_pair_gate=use_role_pair_gate
+                    hidden_dim, hidden_dim, num_roles, edge_dim,
+                    use_role_pair_gate=use_role_pair_gate,
+                    fixed_gate_value=role_pair_gate_fixed_value,
                 )
                 for _ in range(num_relations)
             ]
@@ -328,6 +338,8 @@ class MultiRelationGraphEncoder(nn.Module):
         outputs, attentions = [], []
         for relation_id, layer in enumerate(layers):
             output, attention = layer(x, relation_adj[:, relation_id], edge_feat, role)
+            if self.disable_task_support and relation_id == self._task_support_relation_id:
+                output = torch.zeros_like(output)
             outputs.append(output)
             attentions.append(attention)
         global_layer = self.global_layer1 if layers is self.layer1 else self.global_layer2
@@ -378,21 +390,26 @@ class RIActor(nn.Module):
         hidden_dim: int,
         action_dim: int,
         graph_encoder: str = "single",
+        graph_relation_ablation: str = "none",
         graph_message_ablation: str = "none",
         graph_input_ablation: str = "none",
         num_intents: int = NUM_INTENTS,
         use_intent_context: bool = True,
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
+        role_pair_gate_fixed_value: float = 0.5,
     ):
         super().__init__()
         if graph_encoder not in {"no_graph", "single", "multi_relation"}:
             raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
+        if graph_relation_ablation not in {"none", "no_task_support"}:
+            raise ValueError(f"Unsupported graph_relation_ablation: {graph_relation_ablation}")
         if graph_message_ablation not in {"none", "no_role_pair_gate"}:
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
         if graph_input_ablation not in {"none", "no_edge_features", "no_role_identity"}:
             raise ValueError(f"Unsupported graph_input_ablation: {graph_input_ablation}")
         self.graph_encoder = graph_encoder
+        self.graph_relation_ablation = graph_relation_ablation
         self.graph_message_ablation = graph_message_ablation
         self.graph_input_ablation = graph_input_ablation
         self.num_intents = num_intents
@@ -418,6 +435,8 @@ class RIActor(nn.Module):
                 use_role_pair_gate=graph_message_ablation != "no_role_pair_gate",
                 role_gate_prior_strength=role_gate_prior_strength,
                 global_residual_weight=multi_relation_global_residual_weight,
+                disable_task_support=(graph_relation_ablation == "no_task_support"),
+                role_pair_gate_fixed_value=role_pair_gate_fixed_value,
             )
         self.intent_head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
@@ -546,11 +565,13 @@ class RIGMAPPOAgent(nn.Module):
         role_dim: int,
         intent_dim: int,
         graph_encoder: str = "single",
+        graph_relation_ablation: str = "none",
         graph_message_ablation: str = "none",
         graph_input_ablation: str = "none",
         use_intent_context: bool = True,
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
+        role_pair_gate_fixed_value: float = 0.5,
     ):
         super().__init__()
         self.num_agents = num_agents
@@ -565,11 +586,13 @@ class RIGMAPPOAgent(nn.Module):
             hidden_dim=hidden_dim,
             action_dim=action_dim,
             graph_encoder=graph_encoder,
+            graph_relation_ablation=graph_relation_ablation,
             graph_message_ablation=graph_message_ablation,
             graph_input_ablation=graph_input_ablation,
             use_intent_context=use_intent_context,
             role_gate_prior_strength=role_gate_prior_strength,
             multi_relation_global_residual_weight=multi_relation_global_residual_weight,
+            role_pair_gate_fixed_value=role_pair_gate_fixed_value,
         )
         self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
 
@@ -932,11 +955,13 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         role_dim=cfg.role_dim,
         intent_dim=cfg.intent_dim,
         graph_encoder=cfg.graph_encoder,
+        graph_relation_ablation=cfg.graph_relation_ablation,
         graph_message_ablation=cfg.graph_message_ablation,
         graph_input_ablation=cfg.graph_input_ablation,
         use_intent_context=cfg.env_name != "3d_intercept",
         role_gate_prior_strength=cfg.role_gate_prior_strength,
         multi_relation_global_residual_weight=cfg.multi_relation_global_residual_weight,
+        role_pair_gate_fixed_value=cfg.role_pair_gate_fixed_value,
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     optimizer = make_optimizer(agent, cfg)
