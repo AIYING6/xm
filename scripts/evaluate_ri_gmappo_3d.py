@@ -170,6 +170,7 @@ def build_agent(args: argparse.Namespace, cfg: RIGMAPPOConfig) -> tuple[RIGMAPPO
     )
     if checkpoint is not None:
         load_matching_state_dict(agent, str(args.checkpoint), torch.device(args.device))
+    agent = agent.to(torch.device(args.device))
     agent.eval()
     return agent, policy_source
 

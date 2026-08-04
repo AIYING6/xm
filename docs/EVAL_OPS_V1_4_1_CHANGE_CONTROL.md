@@ -63,6 +63,10 @@ Allowed scope (evaluation tooling only):
     legacy_recovery`, `--selection-success-weight 100`.
   - `SELECTION_COLUMNS` gains `checkpoint_sha256`; the selected row now records
     the SHA256 of the selected checkpoint file.
+- `scripts/evaluate_ri_gmappo_3d.py`
+  - `build_agent` now moves the agent to `args.device` (`agent.to(device)`) —
+    fixes a CUDA evaluation bug where parameters stayed on CPU while inputs were
+    on CUDA (previously masked because rehearsal ran with `--device cpu`).
 - `scripts/evaluate_happo_checkpoint_sweep.py`
   - Same argparse defaults (`legacy_recovery`, `100`); selector shared with the
     main sweep (unchanged import).
@@ -98,5 +102,23 @@ v1.4 checkpoints, and the formal training result directory
   `6f391694…` and are **unchanged**.
 - The v1.4 training commit, checkpoints, training states, logs, and formal
   result directory are **completely unchanged** by this version.
-- `formal-post-sixth-eval-ops-v1.4.1` marks this evaluation tool version only.
+- The evaluation tags below mark evaluation tool versions only.
 - No validation, test, or robustness evaluation has been run.
+
+## 5. Version lineage
+
+```text
+formal-post-sixth-eval-ops-v1.4.1 : selector/schema unified to the frozen
+    weighted-score rule (legacy_recovery, success weight 100, larger-update
+    tie-break), generator explicit args, extended audit, regression tests,
+    initial preflight (no_graph dry-run).
+formal-post-sixth-eval-ops-v1.4.2 : adds the CUDA device-placement fix
+    (scripts/evaluate_ri_gmappo_3d.py build_agent now moves the agent to
+    args.device) and freezes --device cuda as the generator default. The
+    v1.4.1 tag is left untouched; the full formal validation uses v1.4.2.
+```
+
+Both tags share the same selector/schema semantics; v1.4.2 additionally fixes
+the device bug that dry-run exposed on the CUDA path (rehearsal had run on CPU).
+All v1.4 validation and the later v1.5 ablation validation use
+`formal-post-sixth-eval-ops-v1.4.2` with `--device cuda`.

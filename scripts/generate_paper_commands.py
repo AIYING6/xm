@@ -368,7 +368,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--methods", nargs="+", default=None)
     parser.add_argument("--seeds", nargs="+", type=int, default=(0,))
     parser.add_argument("--include-sweeps", action="store_true")
-    parser.add_argument("--device", default="cpu")
+    parser.add_argument("--device", default="cuda")
     parser.add_argument("--out-root", type=Path, default=ROOT / "results" / "paper_config_runs")
     parser.add_argument("--out-csv", type=Path, default=ROOT / "results" / "paper_command_manifest.csv")
     parser.add_argument("--out-md", type=Path, default=ROOT / "docs" / "paper_command_manifest.md")
