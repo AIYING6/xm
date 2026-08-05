@@ -20,6 +20,7 @@ from scripts.evaluate_3d_checkpoint_sweep import (  # noqa: E402
     SUMMARY_COLUMNS,
     completed_key,
     display_path,
+    failure_exposure_stats,
     mean,
     mean_delayed_recovery,
     mean_delayed_recovery_steps,
@@ -221,6 +222,8 @@ def summarize_rows(
         "selection_score": f"{score:.6g}",
         "selection_metric": args.selection_metric,
         "selection_success_weight": f"{args.selection_success_weight:.6g}",
+        "selection_policy": args.selection_policy,
+        **failure_exposure_stats(rows, float(SCENARIOS[scenario_name].node_failure_start_step)),
     }
 
 
@@ -322,6 +325,12 @@ def parse_args() -> argparse.Namespace:
         choices=("legacy_recovery", "delayed_recovery", "fresh_info_recovery"),
         default="legacy_recovery",
         help="Checkpoint-selection metric, matching the RI-GMAPPO checkpoint sweep (v1.4 adjudication default legacy_recovery).",
+    )
+    parser.add_argument(
+        "--selection-policy",
+        choices=("v1_4_score", "v1_5_wilson"),
+        default="v1_4_score",
+        help="Checkpoint-selection ranking policy, matching the RI-GMAPPO checkpoint sweep (v1_5_wilson = frozen v1.5 rule).",
     )
     parser.add_argument(
         "--delayed-recovery-min-step",

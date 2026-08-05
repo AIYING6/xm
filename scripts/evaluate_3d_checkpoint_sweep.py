@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import math
 import re
 import sys
 from collections import defaultdict
@@ -65,9 +66,17 @@ SUMMARY_COLUMNS = (
     "timeout_mean",
     "collision_mean",
     "constraint_violation_mean",
+    "failure_exposed_count",
+    "recovered_given_exposure_count",
+    "recovery_given_exposure",
+    "wilson_lower_95",
+    "estimate_unstable",
+    "time_to_recovery_given_exposure",
+    "time_to_success",
     "selection_score",
     "selection_metric",
     "selection_success_weight",
+    "selection_policy",
 )
 
 SELECTION_COLUMNS = (
@@ -113,6 +122,14 @@ SELECTION_COLUMNS = (
     "episode_min_blue_red_distance_mean",
     "episode_min_blue_blue_distance_mean",
     "constraint_violation_mean",
+    "failure_exposed_count",
+    "recovered_given_exposure_count",
+    "recovery_given_exposure",
+    "wilson_lower_95",
+    "estimate_unstable",
+    "time_to_recovery_given_exposure",
+    "time_to_success",
+    "selection_policy",
     "episodes",
 )
 
@@ -202,6 +219,18 @@ def parse_args() -> argparse.Namespace:
             "post-failure chain closure at or after --delayed-recovery-min-step; "
             "fresh_info_recovery selects stable post-failure recovery with attacker "
             "fresh target information."
+        ),
+    )
+    parser.add_argument(
+        "--selection-policy",
+        choices=("v1_4_score", "v1_5_wilson"),
+        default="v1_4_score",
+        help=(
+            "Checkpoint-selection ranking policy. v1_4_score is the frozen v1.4 "
+            "weighted-score rule (eval-ops-v1.4.1/1.4.2). v1_5_wilson is the frozen "
+            "v1.5 rule: Wilson95 lower bound of recovery given failure exposure, then "
+            "success, recovery time, success time, larger checkpoint_update "
+            "(V1_5_CHECKPOINT_SELECTOR_ADJUDICATION.md)."
         ),
     )
     parser.add_argument(
@@ -420,6 +449,77 @@ def mean_delayed_recovery_steps(rows: list[dict[str, object]], min_step: int) ->
     return float(np.mean(values)) if values else float("inf")
 
 
+def wilson_lower_95(recovered: float, exposed: float, z: float = 1.96) -> float:
+    """Wilson 95% lower bound of the binomial proportion recovered/exposed.
+
+    Frozen in docs/V1_5_CHECKPOINT_SELECTOR_ADJUDICATION.md (v1.5 selector).
+    Returns 0.0 for exposed <= 0 (no exposed episodes is ineligible anyway).
+    """
+    if exposed <= 0.0:
+        return 0.0
+    p = recovered / exposed
+    denom = 1.0 + z * z / exposed
+    center = p + z * z / (2.0 * exposed)
+    half = z * math.sqrt(p * (1.0 - p) / exposed + z * z / (4.0 * exposed * exposed))
+    return (center - half) / denom
+
+
+def parse_time(value: str) -> float:
+    """Parse a time metric; inf/empty map to a large sentinel so that
+    'no recovery/success' ranks worst when minimising."""
+    try:
+        v = float(value)
+        return v if math.isfinite(v) else 1e12
+    except (TypeError, ValueError):
+        return 1e12
+
+
+def failure_exposure_stats(
+    rows: list[dict[str, object]],
+    failure_step: float | None,
+) -> dict[str, str]:
+    """v1.5 exposure statistics pooled over the episode rows of one scenario.
+
+    failure_exposed : final step >= scenario failure step
+    recovered_given : exposed episode with post_failure_chain_recovered == 1
+    time_to_recovery_given_exposure : recovery steps of exposed&recovered episodes
+    time_to_success : final steps of successful episodes
+    estimate_unstable : 1 when exposed < 10 (frozen rule)
+    """
+    exposed = 0
+    recovered = 0
+    rec_steps: list[float] = []
+    succ_steps: list[float] = []
+    for row in rows:
+        try:
+            steps = float(row["steps"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        if failure_step is not None and steps >= failure_step:
+            exposed += 1
+            if float(row.get("post_failure_chain_recovered", 0.0)) > 0.5:
+                recovered += 1
+                rs = float(row.get("post_failure_chain_recovery_steps", -1.0))
+                if rs >= 0.0:
+                    rec_steps.append(rs)
+        if float(row.get("success", 0.0)) > 0.5:
+            succ_steps.append(steps)
+    rec_given = (recovered / exposed) if exposed > 0 else float("nan")
+    return {
+        "failure_exposed_count": str(exposed),
+        "recovered_given_exposure_count": str(recovered),
+        "recovery_given_exposure": f"{rec_given:.6g}",
+        "wilson_lower_95": f"{wilson_lower_95(float(recovered), float(exposed)):.6g}",
+        "estimate_unstable": "1" if exposed < 10 else "0",
+        "time_to_recovery_given_exposure": (
+            "inf" if not rec_steps else f"{float(np.mean(rec_steps)):.6g}"
+        ),
+        "time_to_success": (
+            "inf" if not succ_steps else f"{float(np.mean(succ_steps)):.6g}"
+        ),
+    }
+
+
 def selection_score(
     recovery: float,
     recovery_steps: float,
@@ -477,6 +577,16 @@ def summarize_rows(
         max_collision_rate=args.max_selection_collision_rate,
         success_weight=args.selection_success_weight,
     )
+    failure_step: float | None = None
+    for r0 in rows:
+        fs = r0.get("node_failure_start_step")
+        if fs not in (None, ""):
+            try:
+                failure_step = float(fs)
+            except (TypeError, ValueError):
+                pass
+            break
+    exposure = failure_exposure_stats(rows, failure_step)
     return {
         "split": args.split,
         "scenario": scenario_name,
@@ -525,6 +635,8 @@ def summarize_rows(
         "selection_score": f"{score:.6g}",
         "selection_metric": args.selection_metric,
         "selection_success_weight": f"{args.selection_success_weight:.6g}",
+        "selection_policy": getattr(args, "selection_policy", "v1_4_score"),
+        **exposure,
     }
 
 
@@ -577,6 +689,13 @@ def mean_numeric(rows: list[dict[str, str]], key: str) -> str:
         return ""
     result = float(np.mean(values))
     return "inf" if not np.isfinite(result) else f"{result:.6g}"
+
+
+def _to_int(value: str) -> int:
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return 0
 
 
 def aggregate_suite_rows(args: argparse.Namespace, summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
@@ -642,6 +761,23 @@ def aggregate_suite_rows(args: argparse.Namespace, summary_rows: list[dict[str, 
         ):
             if key in base:
                 base[key] = mean_numeric(rows, key)
+        if getattr(args, "selection_policy", "v1_4_score") == "v1_5_wilson":
+            # v1.5 selector: exposure counts pooled across the 4 scenarios;
+            # Wilson lower bound computed on the pooled k/n.
+            exposed = sum(_to_int(r.get("failure_exposed_count", "0")) for r in rows)
+            recovered = sum(_to_int(r.get("recovered_given_exposure_count", "0")) for r in rows)
+            base["failure_exposed_count"] = str(exposed)
+            base["recovered_given_exposure_count"] = str(recovered)
+            base["recovery_given_exposure"] = (
+                f"{(recovered / exposed):.6g}" if exposed > 0 else "nan"
+            )
+            base["wilson_lower_95"] = f"{wilson_lower_95(float(recovered), float(exposed)):.6g}"
+            base["estimate_unstable"] = "1" if exposed < 10 else "0"
+            base["time_to_recovery_given_exposure"] = mean_numeric(
+                rows, "time_to_recovery_given_exposure"
+            )
+            base["time_to_success"] = mean_numeric(rows, "time_to_success")
+            base["selection_policy"] = getattr(args, "selection_policy", "v1_4_score")
         aggregate_rows.append(base)
     return aggregate_rows
 
@@ -672,17 +808,48 @@ def select_checkpoints(args: argparse.Namespace, summary_rows: list[dict[str, st
                 f"graph_message_ablation={graph_message_ablation}, "
                 f"graph_input_ablation={graph_input_ablation}, train_seed={train_seed}"
             )
-        # v1.4 selection adjudication (Case C, eval-ops-v1.4.1):
-        # rank solely by selection_score (weighted formula, computed in
-        # summarize_rows/selection_score), then by larger checkpoint_update on
-        # exact ties. No recovery/steps/success lexicographic ordering is used.
-        best = max(
-            eligible_rows,
-            key=lambda row: (
-                parse_score(row.get("selection_score", "-1000000000")),
-                int(row["checkpoint_update"]),
-            ),
-        )
+        if getattr(args, "selection_policy", "v1_4_score") == "v1_5_wilson":
+            # v1.5 selector (frozen in V1_5_CHECKPOINT_SELECTOR_ADJUDICATION.md):
+            # eligibility: collision <= 0 AND failure_exposed_count > 0.
+            # rank: (wilson95 lower bound up, success up, recovery time down,
+            #        success time down, checkpoint_update up).
+            eligible_rows = [
+                row
+                for row in rows
+                if parse_score(row.get("collision_mean", "0")) <= 0.0
+                and _to_int(row.get("failure_exposed_count", "0")) > 0
+            ]
+            if not eligible_rows:
+                split, scenario, graph_encoder, graph_relation_ablation, graph_message_ablation, graph_input_ablation, train_seed = key
+                raise RuntimeError(
+                    "no v1.5-eligible checkpoint (collision>0 or no failure exposure) for "
+                    f"split={split}, scenario={scenario}, graph_encoder={graph_encoder}, "
+                    f"graph_relation_ablation={graph_relation_ablation}, "
+                    f"graph_message_ablation={graph_message_ablation}, "
+                    f"graph_input_ablation={graph_input_ablation}, train_seed={train_seed}"
+                )
+            best = min(
+                eligible_rows,
+                key=lambda row: (
+                    -parse_score(row.get("wilson_lower_95", "-1000000000")),
+                    -parse_score(row.get("success_mean", "0")),
+                    parse_time(row.get("time_to_recovery_given_exposure", "inf")),
+                    parse_time(row.get("time_to_success", "inf")),
+                    -int(row["checkpoint_update"]),
+                ),
+            )
+        else:
+            # v1.4 selection adjudication (Case C, eval-ops-v1.4.1):
+            # rank solely by selection_score (weighted formula, computed in
+            # summarize_rows/selection_score), then by larger checkpoint_update on
+            # exact ties. No recovery/steps/success lexicographic ordering is used.
+            best = max(
+                eligible_rows,
+                key=lambda row: (
+                    parse_score(row.get("selection_score", "-1000000000")),
+                    int(row["checkpoint_update"]),
+                ),
+            )
         selected.append(
             {
                 "split": best["split"],
@@ -751,6 +918,14 @@ def select_checkpoints(args: argparse.Namespace, summary_rows: list[dict[str, st
                 "episode_min_blue_red_distance_mean": best.get("episode_min_blue_red_distance_mean", ""),
                 "episode_min_blue_blue_distance_mean": best.get("episode_min_blue_blue_distance_mean", ""),
                 "constraint_violation_mean": best.get("constraint_violation_mean", ""),
+                "failure_exposed_count": best.get("failure_exposed_count", ""),
+                "recovered_given_exposure_count": best.get("recovered_given_exposure_count", ""),
+                "recovery_given_exposure": best.get("recovery_given_exposure", ""),
+                "wilson_lower_95": best.get("wilson_lower_95", ""),
+                "estimate_unstable": best.get("estimate_unstable", ""),
+                "time_to_recovery_given_exposure": best.get("time_to_recovery_given_exposure", ""),
+                "time_to_success": best.get("time_to_success", ""),
+                "selection_policy": best.get("selection_policy", getattr(args, "selection_policy", "v1_4_score")),
                 "episodes": best["episodes"],
             }
         )
