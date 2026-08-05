@@ -167,6 +167,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
     parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
+    parser.add_argument("--role-gate-prior-strength", type=float, default=0.0,
+                        help="Role-pair gate prior logit (model-init only; overwritten by checkpoint).")
+    parser.add_argument("--role-pair-gate-fixed-value", type=float, default=0.5,
+                        help="Fixed gate value when --graph-message-ablation=no_role_pair_gate (v1.5 w/o Role-Pair Gate uses sigmoid(0.4)=0.598687660112452).")
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
     parser.add_argument("--single-root", type=Path, default=ROOT / "results" / "intercept_3d_strict_sensing_formal" / "runs" / "single")

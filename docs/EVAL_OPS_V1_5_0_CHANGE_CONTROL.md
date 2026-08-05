@@ -34,6 +34,12 @@ Files changed (evaluation tooling only; no model / env / PPO / BC change):
 - `tests/test_selection_v1_5_wilson.py` — 13 regression tests for the frozen
   v1.5 rule (Wilson maths, ranking order, tie-break, collision/exposure
   eligibility, N<10 flag, suite pooling, HAPPO identity)
+- `scripts/evaluate_ri_gmappo_3d.py` — `build_config` now forwards
+  `role_gate_prior_strength` and `role_pair_gate_fixed_value` into the model
+  config (fix: without this, evaluating the w/o Role-Pair Gate ablation would
+  fall back to fixed gate 0.5 instead of sigmoid(0.4)=0.598687660112452)
+- `scripts/evaluate_3d_checkpoint_sweep.py` — argparse gains
+  `--role-gate-prior-strength` / `--role-pair-gate-fixed-value`
 
 ## 2. What is NOT changed
 
