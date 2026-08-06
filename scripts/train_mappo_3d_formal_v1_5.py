@@ -328,10 +328,17 @@ def effective_config_sha256(cfg: MAPPO3DConfig) -> str:
 # ---------------------------------------------------------------------------
 
 def role_onehot(role: np.ndarray, num_roles: int) -> np.ndarray:
-    """role: (num_envs, num_agents) -> one-hot (num_envs, num_agents, num_roles)."""
+    """role: (..., num_agents) -> one-hot (..., num_agents, num_roles).
+
+    Generalized over leading dims (1D flat, 2D num_envs x num_agents, and 3D
+    rollout x num_envs x num_agents); semantics unchanged from the frozen 2D
+    form. The flat-view advanced-index assignment below broadcasts correctly
+    for any leading shape.
+    """
     r = np.asarray(role, dtype=np.int64)
     out = np.zeros((*r.shape, num_roles), dtype=np.float32)
-    out[np.arange(r.shape[0])[:, None], np.arange(r.shape[1])[None, :], r] = 1.0
+    flat = r.reshape(-1)
+    out.reshape(-1, num_roles)[np.arange(flat.size), flat] = 1.0
     return out
 
 
