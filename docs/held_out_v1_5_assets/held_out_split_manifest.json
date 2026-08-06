@@ -1,0 +1,33 @@
+{
+  "generated": "2026-08-07 01:02:45",
+  "protocol": "FORMAL_HELD_OUT_TEST_PROTOCOL_V1_5",
+  "status": "HELD-OUT TEST TARGET SET (one-shot)",
+  "base_seed": 745669,
+  "seed_derivation": {
+    "manifest_csv_sha256": "0C4CA4F2A2DCA077EDBBA2949D74CA1D8B200811B6946D8A9C897E7D79E1DEA0",
+    "anchor": "formal-held-out-v1.5",
+    "derivation_hash": "E00E7C255D236509259DEA8F869D7A7D2EB7F6F4E841201BA60A5C8B19E7460E",
+    "formula": "candidate=(int(h[0:8],16)%900000)+100000; skip {888000,120000,641939}",
+    "reserved_excluded": [
+      120000,
+      641939,
+      888000
+    ]
+  },
+  "episode_seed_rule": "episode_seed = base_seed + episode_index (matched across all 27 checkpoints)",
+  "scenarios": [
+    "dropout030_delay2_relay_failure_early",
+    "dropout030_delay2_relay_failure",
+    "dropout030_delay2_relay_failure_delayed",
+    "dropout030_delay2_relay_failure_late"
+  ],
+  "episodes_per_scenario": 100,
+  "total_episodes": 10800,
+  "checkpoints": 27,
+  "input_sha_audit": {
+    "27_of_27": true,
+    "pass": 27,
+    "problems": []
+  },
+  "no_selection": "True - held-out evaluates only locked checkpoints; no selector, no reselection"
+}
