@@ -508,12 +508,40 @@ def eval_policy(agent, cfg: MAPPO3DConfig, base_seed: int) -> dict:
 # ---------------------------------------------------------------------------
 
 def strict_bc_load(agent: nn.Module, path: str, device: torch.device) -> str:
-    """STRICT BC load: missing or extra keys raise (no silent skip)."""
+    """STRICT BC load: missing or extra keys raise (no silent skip).
+
+    Supports two formats:
+      - MAPPO BC format {"actor_state": ..., "meta": ...}: actor-only strict
+        load; the critic keeps its (random) initialization and is NOT touched.
+      - legacy full-model format {"model_state": ...}: full strict load.
+    """
     payload = torch.load(path, map_location=device, weights_only=False)
-    model_state = payload.get("model_state", payload)
+    if "actor_state" in payload:
+        model_state = payload["actor_state"]
+        target = agent.actor
+        current = target.state_dict()
+        # meta dimension check (actor-only BC format): obs/role/action/hidden
+        # must match the target actor; mismatch is a hard failure.
+        meta = payload.get("meta", {})
+        in_feat = target.net[0].in_features
+        out_feat = target.net[-1].out_features
+        hid_feat = target.net[0].out_features
+        meta_ok = (
+            meta.get("obs_dim", in_feat - agent.role_dim) + meta.get("role_dim", agent.role_dim) == in_feat
+            and meta.get("action_dim", out_feat) == out_feat
+            and meta.get("hidden_dim", hid_feat) == hid_feat
+        )
+        if not meta_ok:
+            raise RuntimeError(
+                f"STRICT BC load FAILED: metadata dims mismatch "
+                f"meta={meta} actor_in={in_feat} action={out_feat} hidden={hid_feat}"
+            )
+    else:
+        model_state = payload.get("model_state", payload)
+        target = agent
+        current = agent.state_dict()
     if not isinstance(model_state, dict):
         raise ValueError(f"BC checkpoint {path} has no model state")
-    current = agent.state_dict()
     missing = [k for k in model_state if k not in current]
     extra = [k for k in current if k not in model_state]
     wrong_shape = [k for k in model_state if k in current and current[k].shape != model_state[k].shape]
@@ -521,7 +549,7 @@ def strict_bc_load(agent: nn.Module, path: str, device: torch.device) -> str:
         raise RuntimeError(
             f"STRICT BC load FAILED: missing={missing} extra={extra} wrong_shape={wrong_shape}"
         )
-    agent.load_state_dict(model_state)
+    target.load_state_dict(model_state)
     return _sha256(Path(path))
 
 
