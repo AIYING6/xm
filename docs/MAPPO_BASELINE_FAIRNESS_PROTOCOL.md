@@ -59,6 +59,13 @@ NOT be added later to rescue weak MAPPO performance.
   ground-truth, NO graph relation, NO EA-RG-specific information. Without it a
   single shared policy cannot distinguish the 3 heterogeneous UAV roles; this
   matches the information boundary (roles are observable as in other methods).
+- **role_dim = 4 (frozen 2026-08-06)**: the blue agents have roles 0/1/2 and
+  the red target (role=4) is excluded from actor input. The one-hot has 4
+  columns for consistency with the existing formal actor input protocol
+  (`num_roles = max(4, max(role)+1)`); columns 0/1/2 encode the three blue
+  roles and column 3 is an unused reserved bit (always 0). role_dim is
+  identical in the training entrypoint, the BC entrypoint, and the evaluation
+  entrypoint; it is frozen and will not be changed after freeze.
 - **Centralized critic** over the global state (share_obs), canonical MAPPO.
 - Decided BEFORE validation; the shared+role-hot vs per-role actor variants
   will NOT be selected by validation performance.
@@ -69,6 +76,35 @@ NOT be added later to rescue weak MAPPO performance.
 checkpoint save/load round-trip, episode fields complete (failure_exposed /
 recovered derivable), and the `v1_5_wilson` selector consumes MAPPO output.
 Performance MUST NOT tune network or hyperparameters.
+
+## 5b. Frozen PPO hyper-parameters and their source (frozen 2026-08-06)
+
+Canonical MAPPO values (consistent with the standard MAPPO implementation and
+the earlier simple_mappo.py baseline; NOT tuned on any validation result):
+
+```text
+actor_lr / critic_lr = 3e-4        (fixed, no LR schedule)
+gamma = 0.99, gae_lambda = 0.95
+clip_coef = 0.2, entropy_coef = 0.01, value_coef = 0.5
+ppo_epochs = 4, minibatch_size = 512 (minibatch degenerates to the full batch
+                                      when samples < 512)
+max_grad_norm = 0.5
+advantage normalization: YES (per-update, in update_policy)
+value clipping: NONE (not used, consistent with simple_mappo.py)
+LR decay: NONE
+```
+
+Explicit differences vs the v1.5 Full (EA-RG) config — REPORTED, not hidden:
+
+```text
+Full actor_lr 5e-5 / critic_lr 1e-4, clip 0.1, ppo_epochs 2  -> MAPPO 3e-4/3e-4,
+clip 0.2, epochs 4 (canonical MAPPO defaults)
+Environment interaction budget IDENTICAL: 8 envs x 128 rollout x 977 updates
+= 1,000,448 env steps
+```
+
+These values are frozen before any MAPPO validation result exists and will not
+be modified based on downstream performance.
 
 ## 6. Effective-config diff audit
 
