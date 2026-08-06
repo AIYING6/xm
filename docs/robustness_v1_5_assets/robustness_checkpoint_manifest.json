@@ -1,0 +1,209 @@
+{
+  "generated": "2026-08-07 07:32:46",
+  "protocol": "FORMAL_ROBUSTNESS_PROTOCOL_V1_5",
+  "total_checkpoints": 21,
+  "methods": [
+    "full_ea_rg",
+    "w_o_role_pair_gate",
+    "w_o_gate_prior",
+    "w_o_task_support",
+    "mappo",
+    "happo",
+    "param_matched_single"
+  ],
+  "input_sha_audit": {
+    "21_of_21": true,
+    "pass": 21
+  },
+  "checkpoints": [
+    {
+      "method": "full_ea_rg",
+      "train_seed": 0,
+      "selected_checkpoint_update": "700",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\ea_rg_mappo_s_gate_prior\\ppo_seed0_1m\\actor_critic_update_0700.pt",
+      "file_sha256": "B9FECBE9ACC3A7CB7306F80338DA8116E54D86A71292A3AA188D6378EF75A82A",
+      "manifest_sha256": "B9FECBE9ACC3A7CB7306F80338DA8116E54D86A71292A3AA188D6378EF75A82A",
+      "match": "PASS"
+    },
+    {
+      "method": "full_ea_rg",
+      "train_seed": 1,
+      "selected_checkpoint_update": "900",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\ea_rg_mappo_s_gate_prior\\ppo_seed1_1m\\actor_critic_update_0900.pt",
+      "file_sha256": "84AA96304E66CFA1D928A7B7BBB477B2FDACF8CE54F82F9DD1ADF5A131A39DE6",
+      "manifest_sha256": "84AA96304E66CFA1D928A7B7BBB477B2FDACF8CE54F82F9DD1ADF5A131A39DE6",
+      "match": "PASS"
+    },
+    {
+      "method": "full_ea_rg",
+      "train_seed": 2,
+      "selected_checkpoint_update": "977",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\ea_rg_mappo_s_gate_prior\\ppo_seed2_1m\\actor_critic_update_0977.pt",
+      "file_sha256": "BD4ADC24E01728BB8153796D40E0097152210654A157DFA1AB5D02B2B509526A",
+      "manifest_sha256": "BD4ADC24E01728BB8153796D40E0097152210654A157DFA1AB5D02B2B509526A",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_gate_prior",
+      "train_seed": 0,
+      "selected_checkpoint_update": "400",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_gate_prior\\ppo_seed0_1m\\actor_critic_update_0400.pt",
+      "file_sha256": "942535D5E99491749DB45C6704EF153CD1AB40ACD75145F6114CF0CFC170A888",
+      "manifest_sha256": "942535D5E99491749DB45C6704EF153CD1AB40ACD75145F6114CF0CFC170A888",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_gate_prior",
+      "train_seed": 1,
+      "selected_checkpoint_update": "200",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_gate_prior\\ppo_seed1_1m\\actor_critic_update_0200.pt",
+      "file_sha256": "F02C13A5A220C11AEA177F368AF9154697109ED3A1466B95BC64A355F38B1AEC",
+      "manifest_sha256": "F02C13A5A220C11AEA177F368AF9154697109ED3A1466B95BC64A355F38B1AEC",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_gate_prior",
+      "train_seed": 2,
+      "selected_checkpoint_update": "977",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_gate_prior\\ppo_seed2_1m\\actor_critic_update_0977.pt",
+      "file_sha256": "484DE2691C411C4B0AB819D60E3BBB90123500922DFEDC8F249B03C0FDCD1F27",
+      "manifest_sha256": "484DE2691C411C4B0AB819D60E3BBB90123500922DFEDC8F249B03C0FDCD1F27",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_task_support",
+      "train_seed": 0,
+      "selected_checkpoint_update": "900",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_task_support\\ppo_seed0_1m\\actor_critic_update_0900.pt",
+      "file_sha256": "1B6053D11A1A5019C1FD10F3954577E061921F9E59DF298BD3D714463A3C9225",
+      "manifest_sha256": "1B6053D11A1A5019C1FD10F3954577E061921F9E59DF298BD3D714463A3C9225",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_task_support",
+      "train_seed": 1,
+      "selected_checkpoint_update": "300",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_task_support\\ppo_seed1_1m\\actor_critic_update_0300.pt",
+      "file_sha256": "5942D1502461C99C7FB4AB3D8F66DBE17C8B2CF940F0E7519C1F22837852EEF1",
+      "manifest_sha256": "5942D1502461C99C7FB4AB3D8F66DBE17C8B2CF940F0E7519C1F22837852EEF1",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_task_support",
+      "train_seed": 2,
+      "selected_checkpoint_update": "600",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_task_support\\ppo_seed2_1m\\actor_critic_update_0600.pt",
+      "file_sha256": "88554CE77983915D60CF1E2BB6F7B2F52E000EA43A977EEA4452B6BA00D51EF0",
+      "manifest_sha256": "88554CE77983915D60CF1E2BB6F7B2F52E000EA43A977EEA4452B6BA00D51EF0",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_role_pair_gate",
+      "train_seed": 0,
+      "selected_checkpoint_update": "100",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_role_pair_gate\\ppo_seed0_1m\\actor_critic_update_0100.pt",
+      "file_sha256": "B9FBB2E91D628DAA8467A177BA5D77D8AD0D3A1C3CA8A8CB99011AC12A6D28FF",
+      "manifest_sha256": "B9FBB2E91D628DAA8467A177BA5D77D8AD0D3A1C3CA8A8CB99011AC12A6D28FF",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_role_pair_gate",
+      "train_seed": 1,
+      "selected_checkpoint_update": "800",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_role_pair_gate\\ppo_seed1_1m\\actor_critic_update_0800.pt",
+      "file_sha256": "6DD0B885C91DBDA603C4DE129ECA9E05E45CFB360D135826983448B3DB7BE1DC",
+      "manifest_sha256": "6DD0B885C91DBDA603C4DE129ECA9E05E45CFB360D135826983448B3DB7BE1DC",
+      "match": "PASS"
+    },
+    {
+      "method": "w_o_role_pair_gate",
+      "train_seed": 2,
+      "selected_checkpoint_update": "500",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_ablation_v1.5\\results\\paper_config_runs\\formal_ablation_v1.5_ppo_977_20260804\\w_o_role_pair_gate\\ppo_seed2_1m\\actor_critic_update_0500.pt",
+      "file_sha256": "1BD9B993D079897E3665C9A2A243FC443A7E63C7EF905BBCC6E034658666CBC8",
+      "manifest_sha256": "1BD9B993D079897E3665C9A2A243FC443A7E63C7EF905BBCC6E034658666CBC8",
+      "match": "PASS"
+    },
+    {
+      "method": "param_matched_single",
+      "train_seed": 0,
+      "selected_checkpoint_update": "500",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\param_matched_single\\ppo_seed0_1m\\actor_critic_update_0500.pt",
+      "file_sha256": "C7CDEB2F29D33C403CE88F6DF922558FEF51CCE36B77907C9EFAACD6FEBF7D87",
+      "manifest_sha256": "C7CDEB2F29D33C403CE88F6DF922558FEF51CCE36B77907C9EFAACD6FEBF7D87",
+      "match": "PASS"
+    },
+    {
+      "method": "param_matched_single",
+      "train_seed": 1,
+      "selected_checkpoint_update": "200",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\param_matched_single\\ppo_seed1_1m\\actor_critic_update_0200.pt",
+      "file_sha256": "FE03232706899B7C79125CCC834172EFB5CD80EF4953F84669D72610B6D50EB0",
+      "manifest_sha256": "FE03232706899B7C79125CCC834172EFB5CD80EF4953F84669D72610B6D50EB0",
+      "match": "PASS"
+    },
+    {
+      "method": "param_matched_single",
+      "train_seed": 2,
+      "selected_checkpoint_update": "900",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\param_matched_single\\ppo_seed2_1m\\actor_critic_update_0900.pt",
+      "file_sha256": "98AB73AEC76B803976132C3EEBCEC34F18A9A90EC214D3310BFBDC67AA7EDCDD",
+      "manifest_sha256": "98AB73AEC76B803976132C3EEBCEC34F18A9A90EC214D3310BFBDC67AA7EDCDD",
+      "match": "PASS"
+    },
+    {
+      "method": "happo",
+      "train_seed": 0,
+      "selected_checkpoint_update": "300",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\happo\\ppo_seed0_1m\\happo_update_0300.pt",
+      "file_sha256": "1219F17D520131D6567D653A207CEDA445E9EE5010E50A6E3288356B1741AC0E",
+      "manifest_sha256": "1219F17D520131D6567D653A207CEDA445E9EE5010E50A6E3288356B1741AC0E",
+      "match": "PASS"
+    },
+    {
+      "method": "happo",
+      "train_seed": 1,
+      "selected_checkpoint_update": "977",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\happo\\ppo_seed1_1m\\happo_update_0977.pt",
+      "file_sha256": "A5B46A285722BA09749748D2B190C551E0B0DEDF220606956EF7C08DC9660691",
+      "manifest_sha256": "A5B46A285722BA09749748D2B190C551E0B0DEDF220606956EF7C08DC9660691",
+      "match": "PASS"
+    },
+    {
+      "method": "happo",
+      "train_seed": 2,
+      "selected_checkpoint_update": "800",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\paper_config_runs\\formal_budget_post_sixth_freeze_v1.4_formal_main_20260802\\happo\\ppo_seed2_1m\\happo_update_0800.pt",
+      "file_sha256": "39239D1BADF65AB06C5F342F468BF88776B8156EF4EB2464D1EB3E59F39BA6DD",
+      "manifest_sha256": "39239D1BADF65AB06C5F342F468BF88776B8156EF4EB2464D1EB3E59F39BA6DD",
+      "match": "PASS"
+    },
+    {
+      "method": "mappo",
+      "train_seed": 0,
+      "selected_checkpoint_update": "600",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_mappo_v1.5\\results\\paper_config_runs\\formal_mappo_v1.5_ppo_977_20260806\\ppo_seed0\\actor_critic_update_0600.pt",
+      "file_sha256": "C99A5718F4C09FC22054E3900F7199A9AE4A3A6060A24C45FBAEFC73C66EE0F0",
+      "manifest_sha256": "C99A5718F4C09FC22054E3900F7199A9AE4A3A6060A24C45FBAEFC73C66EE0F0",
+      "match": "PASS"
+    },
+    {
+      "method": "mappo",
+      "train_seed": 1,
+      "selected_checkpoint_update": "900",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_mappo_v1.5\\results\\paper_config_runs\\formal_mappo_v1.5_ppo_977_20260806\\ppo_seed1\\actor_critic_update_0900.pt",
+      "file_sha256": "6ABA31F9197D119CC02CAEFEAC9E7706B489740BB67E9B7CCC5E960328A27735",
+      "manifest_sha256": "6ABA31F9197D119CC02CAEFEAC9E7706B489740BB67E9B7CCC5E960328A27735",
+      "match": "PASS"
+    },
+    {
+      "method": "mappo",
+      "train_seed": 2,
+      "selected_checkpoint_update": "100",
+      "checkpoint_abs": "D:\\Code\\Codex\\ri_gmappo_uav_mappo_v1.5\\results\\paper_config_runs\\formal_mappo_v1.5_ppo_977_20260806\\ppo_seed2\\actor_critic_update_0100.pt",
+      "file_sha256": "21A242CFB4C20F7872603B3FA0A06EAC8817681D1E56E500884D5D19C4F6E6F9",
+      "manifest_sha256": "21A242CFB4C20F7872603B3FA0A06EAC8817681D1E56E500884D5D19C4F6E6F9",
+      "match": "PASS"
+    }
+  ]
+}

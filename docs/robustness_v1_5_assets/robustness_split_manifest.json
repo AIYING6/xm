@@ -1,0 +1,107 @@
+{
+  "generated": "2026-08-07 07:32:46",
+  "protocol": "FORMAL_ROBUSTNESS_PROTOCOL_V1_5",
+  "base_seed": 946804,
+  "seed_derivation": {
+    "held_out_split_manifest_sha256": "17433806FE9FE76136415B5F8CA70AF461A7C5EB1D8B40C5722A2862F6E56FEB",
+    "anchor": "formal-robustness-v1.5",
+    "derivation_hash": "35F67EF4BD3ED802EA442A8ED5A8651605874604BBC3F926256FF085993DE308",
+    "formula": "candidate=(int(h[0:8],16)%900000)+100000; skip {888000,120000,641939,745669}"
+  },
+  "episode_seed_rule": "episode_seed = base_seed + episode_index (matched across 21 checkpoints x 10 conditions)",
+  "episodes_per_condition": 50,
+  "total_episodes": 10500,
+  "conditions": [
+    {
+      "id": "R00",
+      "key": "dropout030_delay2_relay_failure",
+      "dropout": 0.3,
+      "delay": 2,
+      "agent": 1,
+      "start": 40,
+      "duration": 80
+    },
+    {
+      "id": "R01",
+      "key": "dropout050_delay2_relay_failure",
+      "dropout": 0.5,
+      "delay": 2,
+      "agent": 1,
+      "start": 40,
+      "duration": 80
+    },
+    {
+      "id": "R02",
+      "key": "dropout070_delay2_relay_failure",
+      "dropout": 0.7,
+      "delay": 2,
+      "agent": 1,
+      "start": 40,
+      "duration": 80
+    },
+    {
+      "id": "R03",
+      "key": "dropout030_delay4_relay_failure",
+      "dropout": 0.3,
+      "delay": 4,
+      "agent": 1,
+      "start": 40,
+      "duration": 80
+    },
+    {
+      "id": "R04",
+      "key": "dropout030_delay8_relay_failure",
+      "dropout": 0.3,
+      "delay": 8,
+      "agent": 1,
+      "start": 40,
+      "duration": 80
+    },
+    {
+      "id": "R05",
+      "key": "dropout030_delay2_relay_failure_early",
+      "dropout": 0.3,
+      "delay": 2,
+      "agent": 1,
+      "start": 25,
+      "duration": 80
+    },
+    {
+      "id": "R06",
+      "key": "dropout030_delay2_relay_failure_delayed",
+      "dropout": 0.3,
+      "delay": 2,
+      "agent": 1,
+      "start": 55,
+      "duration": 80
+    },
+    {
+      "id": "R07",
+      "key": "dropout030_delay2_scout_failure",
+      "dropout": 0.3,
+      "delay": 2,
+      "agent": 0,
+      "start": 40,
+      "duration": 80
+    },
+    {
+      "id": "R08",
+      "key": "dropout030_delay2_relay_failure_late",
+      "dropout": 0.3,
+      "delay": 2,
+      "agent": 1,
+      "start": 70,
+      "duration": 80
+    },
+    {
+      "id": "R09",
+      "key": "dropout070_delay8_relay_failure_early",
+      "dropout": 0.7,
+      "delay": 8,
+      "agent": 1,
+      "start": 25,
+      "duration": 80
+    }
+  ],
+  "no_selection": "True - robustness evaluates locked checkpoints only; no selector"
+}
