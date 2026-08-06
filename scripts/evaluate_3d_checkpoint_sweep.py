@@ -1076,7 +1076,13 @@ def main() -> None:
         if stop_requested:
             break
 
-    selected_rows = select_checkpoints(args, summary_rows)
+    if args.split == "validation":
+        selected_rows = select_checkpoints(args, summary_rows)
+    else:
+        # Held-out (split=test): selection is NOT run (FORMAL_HELD_OUT_TEST_PROTOCOL_V1_5).
+        # Episode + summary are the frozen outputs; the selection CSV below is an
+        # empty mechanical artifact and must never be used for decisions.
+        selected_rows = []
     write_csv(episode_path, episode_rows, (*extra_episode_columns, *CSV_COLUMNS))
     write_csv(summary_path, summary_rows, SUMMARY_COLUMNS)
     write_csv(selection_path, selected_rows, SELECTION_COLUMNS)

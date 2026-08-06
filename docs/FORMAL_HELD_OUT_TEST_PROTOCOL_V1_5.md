@@ -36,6 +36,7 @@ MAPPO TRAINING/VALIDATION COMPLETE
 | 27-checkpoint joint manifest | built by `build_mappo_joint_27_manifest.py` |
 | Eval implementation (MAPPO) | `mappo-freeze-v1.5.0 @ 11fa019` (`evaluate_mappo_v1_5.py`) |
 | Eval implementation (8 methods) | `formal-ablation-eval-ops-v1.5.0 @ 9e48fe7` |
+| Held-out eval ops (selector-skip fix) | `held-out-eval-ops-v1.5.1` (see addendum below) |
 
 `evaluate_mappo_v1_5.py` SHA256 (frozen, unchanged by audit-script commits):
 `C4F969DAF54EE7B6E7429B40A6B35D47FB6C7560450298D3EC595C4752F678B4`
@@ -207,3 +208,59 @@ This document + the held-out split manifest + the 27-checkpoint input SHA
 audit are committed and tagged before any held-out evaluation runs.
 
 Tag: `held-out-eval-ops-v1.5.0`
+
+## Addendum A (2026-08-07): selector-skip fix for held-out (ops v1.5.1)
+
+### Root cause (attempt01 failure)
+
+The first held-out attempt ran 5/27 groups then stopped at
+`w_o_gate_prior/seed2` with a non-zero exit. Diagnosis on the isolated copy
+(`results/paper_config_runs/_failed_attempts/
+formal_held_out_v1_5_10800_20260807_attempt01`) showed:
+
+- episode rows: 400/400 (4 scenarios x 100), unique keys, no NaN/Inf; split=test
+- summary rows: 4/4, update=977, selection_policy=v1_5_wilson
+- `test_selected_checkpoints.csv` missing; IN_PROGRESS left; Task LastResult=1
+
+Replaying the frozen selector on the isolated summary reproduced the failure
+deterministically:
+
+```
+RuntimeError: no collision-eligible checkpoint for split=test, scenario=scenario_suite,
+graph_encoder=multi_relation, ..., train_seed=2
+```
+
+Cause: `w_o_gate_prior/seed2` has `collision_mean=0.01 > 0` on the early
+scenario under the held-out split; the suite-aggregated collision exceeds the
+`--max-selection-collision-rate 0.0` gate, so the validation selector (which
+the frozen eval entrypoints always invoked) raised and aborted the whole task.
+Held-out must record locked checkpoints faithfully even when a checkpoint would
+not be *selectable*; it must never depend on the selector.
+
+### Fix (minimal, held-out semantics)
+
+- `evaluate_3d_checkpoint_sweep.py`, `evaluate_happo_checkpoint_sweep.py`,
+  `evaluate_mappo_v1_5.py`: on `--split test`, skip `select_checkpoints`
+  entirely (`selected_rows = []`); validation behavior is unchanged.
+- The selection CSV is still written as an empty mechanical artifact and is
+  NEVER used for any decision.
+- Both worktree copies of `evaluate_3d_checkpoint_sweep.py` were patched
+  (ablation + MAPPO) because MAPPO's `evaluate_mappo_v1_5.py` imports the
+  local copy.
+- New tests `tests/test_held_out_selector_skip.py` (7 cases) verify:
+  - split=test never calls the selector (3 entrypoints),
+  - split=validation still calls it (3 entrypoints),
+  - a collision-bearing suite summary still raises on the validation selector
+    path (root-cause regression).
+- Verified: 52/52 MAPPO test suite; test-split smoke with the previously
+  failing `w_o_gate_prior/seed2` checkpoint completes exit=0 with empty
+  selection CSV.
+
+### Impact on the attempt
+
+The failed attempt01 was preserved in full (SHA-frozen) as evidence and is
+NOT used as a formal result. The formal held-out test must be re-run as a
+single one-shot task with a fresh output root and the same frozen split
+(base_seed 745669, 27 checkpoints, 4 scenarios x 100 episodes = 10,800).
+
+Ops tag for this addendum: `held-out-eval-ops-v1.5.1`.
