@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Task-Support relation strength by window (9 blue--blue pairs; 3 training seeds; pooled over episodes). Early-post and pre-recovery are lower than pre-failure; no post-failure activation increase.
+\label{tab:s1_ts_windows}
+\begin{tabular}{lcccc}
+\toprule
+Window & Full pooled & seed0 & seed1 & seed2 \\
+\midrule
+pre_failure & 0.1409 & 0.1333 & 0.1417 & 0.1476 \\
+early_post_failure & 0.0920 & 0.0923 & 0.0911 & 0.0927 \\
+pre_recovery & 0.0900 & 0.0909 & 0.0877 & 0.0913 \\
+\midrule
+early$_\text{post}$ $-$ pre & $-0.0488$ & down & down & down \\
+pre-rec $-$ early & $\approx 0$ & \multicolumn{3}{c}{no rebound} \\
+\bottomrule
+\end{tabular}
+\end{table}

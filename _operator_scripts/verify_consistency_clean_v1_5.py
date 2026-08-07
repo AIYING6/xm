@@ -16,7 +16,7 @@ HIGH_RISK = [
     "reorganiz", "communication efficiency", "best recovery", "dominates",
     "computationally efficient", "all components consistently",
     "88.6", "53.2", "21.8", "88.2", "46.6", "23.2", "64.8", "77.6", "47.5",
-    "35.4", "66.8", "41.6", "11.4", "35.2", "60.7", "88.9", "87.8", "2.2",
+    "35.4", "66.8", "41.6", "11.4", "35.2", "60.7", "88.9", "87.8", "2.2 percentage",
     "37.0", "56.0", "85.0", "five-seed", "five training seeds",
     "update-60", "update 60", "fx60", "500 matched", "role-pair-conditioned message gating",
 ]
@@ -33,6 +33,10 @@ CANONICAL = {
     "0.545", "0.396", "0.141", "0.092",
     # efficiency (locked) / protocol constants
     "83", "17", "7", "0.02", "0.972",
+    # supplementary S1/S2 numbers (canonical / task-support mechanism lock)
+    "0.997", "57.6", "49.9", "18.0", "3.0", "0.011", "0.4", "0.090",
+    "0.0488", "32.96", "32.23", "4.74", "8.80", "2.996", "3.000",
+    "0.1409", "0.0920", "0.0898", "0.0909", "0.0913", "0.1333", "0.1476",
 }
 # mechanism constants / layout params allowed with context
 EXEMPT_CTX = ("logit 0.4", "0.599", "0.98\\linewidth", "0.98\\textwidth",
@@ -52,7 +56,10 @@ def strip_comments_and_false(text: str) -> str:
 def main():
     problems = []
     clean = {}
-    for p in sorted(TEX.glob("*.tex")) + sorted((TEX / "sections").glob("*.tex")):
+    paths = list(sorted(TEX.glob("*.tex"))) + list(sorted((TEX / "sections").glob("*.tex")))
+    if (TEX / "supplementary" / "sections").exists():
+        paths += list(sorted((TEX / "supplementary" / "sections").glob("*.tex")))
+    for p in paths:
         raw = p.read_text(encoding="utf-8")
         clean[p.name] = strip_comments_and_false(raw)
 
