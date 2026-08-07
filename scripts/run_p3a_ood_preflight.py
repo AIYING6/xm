@@ -25,7 +25,7 @@ from scripts.p3a_ood_cells import (  # noqa: E402
 def make_args(checkpoint, seed, device, eval_batch_size, overrides):
     a = argparse.Namespace(
         checkpoint=checkpoint, episodes=EPISODES_PER_CELL, eval_batch_size=eval_batch_size,
-        seed=seed, base_seed=EVAL_BASE_SEED, target_policy="straight",
+        seed=int(seed), base_seed=EVAL_BASE_SEED, target_policy="straight",
         communication_range_scale=1.0, communication_dropout_prob=0.3,
         message_delay_steps=2, radar_dropout_prob=0.0, strict_target_sensing=True,
         agent_target_info_bottleneck=True, target_prior_position=(0.0, 0.0, 0.0),
