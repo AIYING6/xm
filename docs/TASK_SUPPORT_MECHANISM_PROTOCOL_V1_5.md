@@ -131,7 +131,72 @@ Report honestly; no forced interpretation.
 - All CSVs carry schema + provenance (method, seed, scenario, episode, event steps,
   metric, value, source lock tags).
 
-## 8. Determinism and scope guard
+## Addendum B (frozen 2026-08-07) — node set fact
+
+Verified by resetting the locked eval env (seed 745669): `relation_adj` shape is
+(3, 4, 4) with roles `[0, 1, 2, 4]` = scout, relay, attacker, target. There is NO
+interceptor node (role 3) in this environment configuration. Therefore:
+
+- Blue-blue ordered pairs = 3 x 3 = **9** (receivers/senders among {0,1,2}),
+  not 12 as written in Section 0/2/4. All window statistics use 9 pairs.
+- Non-zero-edge fraction denominator = 9 (not 12).
+- `relation_adj[2]` is 0 at reset and activates dynamically (requires sender target
+  info / attack window), consistent with the failure re-organization hypothesis.
+- Section 0/2/4 statements "12 blue-blue pairs" and "N=4 (3 blue + 1 target)" are
+  superseded by this Addendum; everything else unchanged.
+
+## Addendum C (frozen 2026-08-07) — evidence guards and acceptance
+
+Frozen before interpreting the 1200-episode extraction.
+
+1. **Full vs w/o relation_adj[2] difference is NOT mechanism evidence.** w/o TS sets
+   env-side active_support=0 AND model-side output=0 by definition. Any plot where
+   "Full has support edges, w/o has none" is a definitional consequence, not a finding.
+   The paper must NOT claim "Task-Support learned more support edges."
+2. **Mechanism evidence = Full's INTERNAL temporal dynamics only.** Pre-registered
+   per-episode dynamics (computed from Full trajectories):
+   - support activation rate by window (pre-failure / early post-failure / pre-recovery /
+     post-recovery), fixed windows [-20,-1]/[0,20]/[r-20,r-1]/[r,r+20];
+   - active edges / 9; unique (receiver->sender) pairs active;
+   - first support activation latency after failure (step of first active edge > failure step);
+   - support persistence (consecutive steps with >=1 active edge after failure);
+   - receiver/sender role-pair distribution (9 ordered blue-blue pairs);
+   - support activity enhancement before recovery (mean strength in [r-10, r-1] vs [f, f+10]);
+   - time from support activation to first recovery (if support precedes recovery);
+   - recovered-vs-failed episode contrast (Full recovered episodes vs Full non-recovered
+     episodes: earlier / more persistent / more structured support?);
+   - cross-seed directional consistency (same window trend across the 3 seeds).
+   All window-based numbers use the frozen windows; no re-windowing after inspection.
+3. **Behavioral equivalence acceptance (CPU/reference vs mechanism extractor).**
+   Before any mechanism verdict, verify the extractor reproduces the reference eval
+   events. Pre-registered check: per (method, seed, scenario) cell, the first 5 episodes
+   (episode indices 0-4, same base_seed derivation, deterministic actions):
+   success, collision, episode steps, failure exposure, recovered must match between
+   (a) reference eval (original evaluate_ri_gmappo_3d path, CPU) and
+   (b) mechanism extractor. Action sequence hash equality is best-effort; any tiny
+   floating-point deviations must leave all five event indicators identical and be
+   recorded transparently in the report. If a mismatch appears, the extractor is fixed
+   and the whole 1200-episode extraction re-run (no partial patching).
+4. **Four-layer reporting structure (frozen):**
+   - A. Full internal support dynamics (per-window stats above);
+   - B. Full recovered vs non-recovered episode contrast (descriptive only);
+   - C. Full vs w/o TS result effect — CITE locked performance (Full recovery ~0.971,
+     w/o TS ~0.892; pooled t_recovery ~10.82 vs ~16.14) as the ablation effect, NOT as
+     an internal relation-count comparison;
+   - D. fixed-rule case figures from the frozen case manifest (C1/C2/C3, smallest
+     episode index; no manual selection).
+5. **Verdict standards (unchanged from Section 6, restated):**
+   - SUPPORT: Full shows a cross-seed-consistent temporal task-support re-organization
+     after failure, in the direction of faster/higher recovery.
+   - EMPIRICAL SUPPORT ONLY: clear ablation performance gap but no stable interpretable
+     internal temporal pattern.
+   - INCONCLUSIVE: inconsistent internal directions or driven by few episodes /
+     unstable-exposure cells.
+   Even under SUPPORT the paper wording is limited to: "Task-Support relation provides a
+   dynamic task-dependent relational mask that is associated with faster post-failure
+   coordination recovery." NOT "an independent communication channel."
+
+## 9. Determinism and scope guard
 
 - All episodes run with the locked held-out base-seed derivation; no new randomness.
 - Exactly 2 scenarios x 2 methods x 3 seeds x 100 episodes = 1200 episodes total.

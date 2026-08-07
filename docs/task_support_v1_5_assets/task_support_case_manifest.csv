@@ -1,0 +1,4 @@
+case_class,method,seed,scenario,episode,full_success,steps,failure_step,full_recovery_step,wot_recovery_step
+C1,full,0,dropout030_delay2_relay_failure,4,1,46,39,46,49
+C2,full,0,dropout030_delay2_relay_failure,25,1,44,39,44,-1
+C3,full,0,dropout030_delay2_relay_failure,95,0,260,39,-1,-1

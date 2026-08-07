@@ -1,0 +1,13 @@
+method,scenario,window,mean_strength_mean,nonzero_mean,n_episodes
+full,dropout030_delay2_relay_failure,early_post_failure,0.0980,0.0980,300
+full,dropout030_delay2_relay_failure,pre_failure,0.2272,0.2272,300
+full,dropout030_delay2_relay_failure,pre_recovery,0.0999,0.0999,263
+full,dropout030_delay2_relay_failure_early,early_post_failure,0.0861,0.0861,300
+full,dropout030_delay2_relay_failure_early,pre_failure,0.0545,0.0545,300
+full,dropout030_delay2_relay_failure_early,pre_recovery,0.0794,0.0794,254
+w_o_task_support,dropout030_delay2_relay_failure,early_post_failure,0.0000,0.0000,300
+w_o_task_support,dropout030_delay2_relay_failure,pre_failure,0.0000,0.0000,300
+w_o_task_support,dropout030_delay2_relay_failure,pre_recovery,0.0000,0.0000,234
+w_o_task_support,dropout030_delay2_relay_failure_early,early_post_failure,0.0000,0.0000,300
+w_o_task_support,dropout030_delay2_relay_failure_early,pre_failure,0.0000,0.0000,300
+w_o_task_support,dropout030_delay2_relay_failure_early,pre_recovery,0.0000,0.0000,201
