@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Restricted mean survival time (RMST, steps) at pre-specified horizons under matched failure exposure (Early+Nominal primary population; mean over 3 training seeds). Lower is better (earlier recovery). $\tau=80$ equals the active node-failure duration.
+\label{tab:rmst}
+\begin{tabular}{lcccc}
+\toprule
+Method & RMST(50) & RMST(80) & RMST(100) & RMST(220) \\
+\midrule
+EA-RG Full & 11.16 & 11.81 & 12.21 & 14.47 \\
+MAPPO & 14.27 & 15.51 & 16.32 & 20.39 \\
+HAPPO & 12.30 & 13.52 & 14.02 & 14.14 \\
+Wider Single-Graph & 12.24 & 13.84 & 14.87 & 16.49 \\
+w/o Role-Pair Mod & 12.13 & 12.63 & 12.84 & 13.63 \\
+\bottomrule
+\end{tabular}
+\end{table}
