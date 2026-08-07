@@ -4,7 +4,7 @@
 \subsection{Experimental Setup}
 \label{sec:setup}
 
-We evaluate the proposed method in a 3DOF heterogeneous UAV semantic-search environment with three blue agents (scout, relay, attacker) and a target. All methods are trained with three independent random seeds for $977$ PPO updates. Validation and held-out evaluation are strictly separated: validation (base seed 641939) is used \emph{only} for checkpoint selection, and all reported results come from a locked held-out split with base seed 745669, evaluated exactly once. The held-out evaluation covers four formal scenarios (nominal and early relay failure, with and without the delayed-communication configuration); each selected checkpoint is evaluated over 100 episodes per scenario per seed, giving 10{,}800 held-out episodes in total. Robustness evaluation (base seed 946804) covers seven methods $\times$ ten perturbation conditions $\times$ three seeds $\times$ 50 episodes, i.e., 10{,}500 episodes.
+We evaluate the proposed method in a 3DOF heterogeneous UAV cooperative-interception environment with three blue agents (scout, relay, attacker) and a target. All methods are trained with three independent random seeds for $977$ PPO updates. Validation and held-out evaluation are strictly separated: validation (base seed 641939) is used \emph{only} for checkpoint selection, and all reported results come from a locked held-out split with base seed 745669, evaluated exactly once. The held-out evaluation covers four formal scenarios (nominal and early relay failure, with and without the delayed-communication configuration); each selected checkpoint is evaluated over 100 episodes per scenario per seed, giving 10{,}800 held-out episodes in total. Robustness evaluation (base seed 946804) covers seven methods $\times$ ten perturbation conditions $\times$ three seeds $\times$ 50 episodes, i.e., 10{,}500 episodes.
 
 An episode is successful if the attacker closes the kill chain within the horizon without collision; episodes with collision are ineligible for success. The recovery metric is defined as the number of failure-exposed episodes in which the post-failure kill chain is re-established, divided by the number of failure-exposed episodes ($\mathrm{recovered\_given\_exposure} / \mathrm{failure\_exposed}$). Recovery latency $t_{\mathrm{rec}}$ is defined only for episodes that successfully recover. Reported values are the mean $\pm$ sample standard deviation (ddof=1) over the three training seeds.
 
@@ -19,34 +19,32 @@ An episode is successful if the attacker closes the kill chain within the horizo
 
 Table~\ref{tab:held_out} reports held-out performance. EA-RG reaches a success rate of $0.985 \pm 0.011$ and a recovery rate of $0.971 \pm 0.021$, placing it in the first tier. At the same time, HAPPO ($1.000$) and the wider single-graph baseline ($0.995$) obtain slightly higher final recovery rates, and even the w/o Role-Pair Gate ablation reaches $0.990$. EA-RG therefore achieves near-saturated held-out reliability, although it does not obtain the highest terminal recovery probability among the compared methods.
 
-The temporal metrics tell a different story. EA-RG completes successful tasks in $46.1 \pm 0.4$ steps and re-establishes the kill chain after failure in $10.8 \pm 0.6$ steps, the lowest recovery latency among all methods and the smallest seed-level variance. These results suggest that the primary advantage of EA-RG is not a higher terminal success probability, but a substantially faster return to effective coordination after failure. This motivates RQ2.
+The temporal metrics tell a different story. EA-RG completes successful tasks in $46.1 \pm 0.4$ steps and re-establishes the kill chain after failure in $10.8 \pm 0.6$ steps, the lowest conditional recovery latency among all methods and the smallest seed-level variance. Because this quantity is defined only for episodes that recover, it motivates a censor-aware analysis of \emph{when} recovery occurs across the full post-failure horizon (RQ2).
 
-\subsection{RQ2: Does EA-RG accelerate post-failure recovery?}
+\subsection{RQ2: How does EA-RG affect censor-aware post-failure recovery dynamics?}
 
-Figure~\ref{fig:pareto_recovery} plots the reliability--recovery-speed trade-off: each method is a point with recovery rate on the $x$-axis (higher is better) and recovery latency on the $y$-axis (lower is better); error bars are sample standard deviations over the three training seeds. Methods closer to the lower-right are more favorable.
+The conditional recovery latency reported in Table~\ref{tab:held_out} describes only failure-exposed episodes that eventually recover. We therefore denote this quantity as the \emph{conditional mean recovery time among recovered failure-exposed episodes}. Although useful as a descriptive measure, it does not account for episodes in which recovery is not observed before termination. To evaluate the complete post-failure recovery-time distribution, we additionally perform a pre-specified censor-aware survival analysis using Kaplan--Meier estimation and restricted mean survival time (RMST).
 
-EA-RG occupies the favorable region: near-saturated recovery reliability combined with the lowest recovery latency. Concretely, relative to the locked three-seed means:
+The survival analysis uses failure onset as the time origin. A recovery event is defined at the start of the first stable post-failure task-chain closure window, consistent with the recovery clock used in the formal evaluation. Episodes that remain unrecovered until termination are right-censored at their available post-failure observation time. The primary analysis includes the early- and nominal-failure scenarios, for which every method, training seed, and scenario contains exactly 100 failure-exposed episodes. The delayed- and late-failure scenarios are not pooled into the primary survival comparison because many episodes terminate before failure occurs and the resulting exposure rate is method dependent; these scenarios are retained only for terminal-reliability and landmark-sensitivity analyses.
 
-\begin{center}
-\begin{tabular}{lcc}
-\toprule
-Comparison & Recovery & Recovery-time reduction \\
-\midrule
-EA-RG vs.\ MAPPO & $0.971$ vs.\ $0.947$ & $\approx 38\%$ shorter \\
-EA-RG vs.\ HAPPO & $0.971$ vs.\ $1.000$ & $\approx 34\%$ shorter \\
-EA-RG vs.\ wider single-graph & $0.971$ vs.\ $0.995$ & $\approx 59\%$ shorter \\
-\bottomrule
-\end{tabular}
-\end{center}
+The primary endpoint is
+\begin{equation}
+\mathrm{RMST}(\tau)=\int_{0}^{\tau} S(t)\,dt,
+\label{eq:rmst}
+\end{equation}
+where $S(t)=P(T>t)$ is the Kaplan--Meier estimate of the probability that recovery has not yet occurred. The common primary horizon is fixed at $\tau=220$ steps, the largest complete post-failure follow-up shared by the primary scenarios. A lower RMST indicates earlier recovery after accounting for both observed recovery events and right-censored episodes.
 
-We emphasize that these are recovery-time reductions, not superiority claims over the competitors' reliability: EA-RG reduces recovery time by approximately 34\% relative to HAPPO while retaining a recovery probability of $0.971$ versus $1.000$. The reduction is especially large against the wider single-graph baseline ($26.2 \pm 23.6$ vs.\ $10.8 \pm 0.6$ steps); EA-RG also exhibits substantially lower cross-seed variability in recovery latency (sample SD $0.6$ vs.\ $2.5$--$23.6$). We report these differences descriptively at $n=3$ and do not apply significance tests. The success--completion-time Pareto is provided in Supplementary Fig.~S1.
+Figure~\ref{fig:km_recovery} shows the primary Kaplan--Meier recovery curves. EA-RG obtains an RMST of $14.47 \pm 3.10$ steps across the three training seeds. The corresponding values are $20.39 \pm 7.72$ for MAPPO, $14.14 \pm 2.94$ for HAPPO, and $16.49 \pm 8.64$ for the wider single-graph baseline. Thus, EA-RG has a lower mean full-horizon RMST than MAPPO and the wider single-graph baseline, but the seed-wise differences are not uniformly favorable. In particular, the paired Full-minus-baseline RMST differences are $(-1.22\,/\,-17.67\,/\,+1.11)$ steps against MAPPO and $(-9.01\,/\,+0.87\,/\,+2.06)$ against the wider single-graph baseline. HAPPO achieves a slightly lower mean RMST than EA-RG ($14.14$ versus $14.47$), with mixed seed-wise differences of $(+4.64\,/\,-1.00\,/\,-2.67)$. We therefore do not interpret the primary RMST results as evidence of uniform full-horizon superiority.
+
+The recovery advantage becomes more consistent during the early post-failure period. The pre-specified RMST sensitivity analysis evaluates $\tau = 50$, $80$, and $100$ steps in addition to the primary horizon. At $\tau = 80$, which corresponds to the duration for which the failed node remains inactive, EA-RG achieves an RMST of $11.81$ steps compared with $15.51$ for MAPPO. The paired Full-minus-MAPPO differences are $(-2.64)$, $(-7.27)$, and $(-1.21)$ steps for the three training seeds, respectively. A paired hierarchical bootstrap gives a 95\% interval of $[-7.16, -1.05]$ steps. The same direction of improvement is observed for all three seeds at both $\tau = 50$ and $\tau = 100$. This consistency indicates that the principal temporal benefit of EA-RG relative to MAPPO is concentrated in the early recovery period, particularly while the node failure remains active.
+
+These censor-aware results refine the interpretation obtained from the conditional recovery-time metric. EA-RG retains the lowest conditional mean recovery time among the compared methods, $10.8 \pm 0.6$ steps, but this quantity alone overstates the difference from methods with higher terminal recovery probability. The Kaplan--Meier and RMST analyses show instead that EA-RG provides a reproducible early-recovery advantage over MAPPO while remaining competitive, rather than uniformly superior, over the full observation horizon against HAPPO and the wider single-graph baseline. The main contribution is therefore a shift toward earlier post-failure task-chain restoration rather than universal dominance of the complete recovery-time distribution.
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.92\linewidth]{figures/fig_pareto_recovery.png}
-    \caption{Reliability--recovery-speed Pareto (n=3 training seeds; error bars are sample SD). 
-    EA-RG (blue) reaches near-saturated recovery reliability with the lowest recovery latency.}
-    \label{fig:pareto_recovery}
+    \includegraphics[width=0.95\linewidth]{figures/km_recovery_curve_primary.png}
+    \caption{Kaplan--Meier analysis of post-failure recovery under matched failure exposure. The primary analysis uses the early- and nominal-failure scenarios and a common horizon of $\tau=220$ steps. Lower survival probability indicates that a larger fraction of episodes has already restored the task chain.}
+    \label{fig:km_recovery}
 \end{figure}
 
 \subsection{RQ3: Which components contribute to performance?}
@@ -57,7 +55,7 @@ Table~\ref{tab:ablation} reports the internal ablations in the order of their he
 
 \textbf{Task-Support provides a clear empirical contribution.} Removing it lowers recovery from $0.971$ to $0.892 \pm 0.160$ and increases recovery latency from $10.8$ to $15.0 \pm 4.5$ steps. We deliberately do not interpret this as evidence of post-failure relational re-organization: the temporal analysis in the Discussion shows that Task-Support activation \emph{decreases} rather than increases immediately after failure (from 0.141 in the pre-failure window to 0.092 in the early post-failure window), with no consistent pre-recovery rebound. Its benefit is therefore supported empirically.
 
-\textbf{The static Role-Pair Gate shows no consistent independent benefit.} Removing it leaves recovery effectively unchanged or slightly higher ($0.990$ vs.\ $0.971$). Consistent with the robustness and efficiency evidence below, we do not regard the Role-Pair Gate as an independently validated core component; it is retained as an auxiliary architectural component.
+\textbf{The static Role-Pair Modulation shows limited independent benefit.} Removing it leaves recovery effectively unchanged or slightly higher ($0.990$ vs.\ $0.971$) and leaves the primary censor-aware RMST essentially unchanged ($13.63 \pm 3.86$ vs.\ $14.47 \pm 3.10$, with mixed per-seed differences). Consistent with the robustness and efficiency evidence below, we do not regard the Role-Pair Modulation as an independently validated core component; it is retained as an auxiliary architectural component.
 
 \subsection{RQ4: How robust is EA-RG under communication and failure perturbations?}
 
