@@ -173,7 +173,7 @@ def curved_arrow(ax: plt.Axes, start: tuple[float, float], end: tuple[float, flo
 
 def plot_multi_relation_graph(out_path: Path) -> None:
     fig, ax = plt.subplots(figsize=(9.0, 5.2))
-    ax.set_title("Perception-communication-task support multi-relation role graph", fontsize=12, pad=12)
+    ax.set_title("Task-graph multi-relation representation (perception / communication / task support)", fontsize=12, pad=12)
     ax.set_xlim(0, 1.15)
     ax.set_ylim(0, 1)
     ax.axis("off")
@@ -203,7 +203,7 @@ def plot_multi_relation_graph(out_path: Path) -> None:
         ax.add_patch(circle)
         ax.text(x, y + 0.002, name, ha="center", va="center", fontsize=9, color="white", weight="bold", zorder=5)
 
-    box_text = "Role-pair-conditioned messages\nscout->attacker | relay->attacker | attacker->relay\nunion-graph residual preserves sparse early context"
+    box_text = "Static role-pair modulation (auxiliary)\nmultiplies sender messages by a learned embedding\nnot conditioned on failure state; no message pruning"
     ax.text(
         0.45,
         0.93,
