@@ -4,8 +4,41 @@ The locked three-seed evidence supports a focused claim: task-graph-driven multi
 
 First, Full does not achieve the globally highest final reliability. HAPPO and the wider single-graph baseline reach recovery rates of 1.000 and 0.995, respectively, slightly above Full's $0.971 \pm 0.021$. A censor-aware survival analysis further shows that the full-horizon recovery dynamics are competitive rather than uniformly superior: the primary RMST is $14.47 \pm 3.10$ for EA-RG, close to HAPPO's $14.14 \pm 2.94$ and to the w/o Role-Pair Modulation variant's $13.63 \pm 3.86$, and the per-seed differences against HAPPO are mixed ($+4.64 / -1.00 / -2.67$). The advantage of Full is therefore not a uniformly shorter full-horizon recovery distribution. Instead, it is concentrated in the early post-failure period: at $\tau = 80$, corresponding to the active node-failure interval, EA-RG reduces RMST from $15.51$ to $11.81$ steps relative to MAPPO with all three seeds in the same direction, and the same pattern holds at $\tau = 50$ and $100$. In other words, the method shifts task-level recovery toward the early post-failure window while retaining near-saturated terminal reliability, rather than improving every part of the recovery-time distribution.
 
-Second, computational cost is higher. Full has 117{,}302 parameters, a 12.05 ms joint-decision latency, 242 env-steps/s end-to-end throughput, and the largest training peak memory (71.9 MB) among the compared methods. The method trades additional computational cost for faster task-level recovery; the two notions of efficiency (computational latency vs.\ recovery latency in environment steps) must be kept separate.
+Second, computational cost is higher. Full has 117{,}302 parameters, a 12.05 ms joint-decision latency, 242 env-steps/s end-to-end throughput, and the largest training peak memory (71.9 MB) among the compared methods. The method trades additional computational cost for the earlier post-failure task-chain recovery characterized in RQ2; the two notions of efficiency (computational latency vs.\ recovery latency in environment steps) must be kept separate.
 
 Third, the role-pair modulation provides limited independent benefit. Removing it leaves held-out recovery effectively unchanged or slightly higher (0.990 vs.\ 0.971), leaves the primary censor-aware RMST essentially unchanged (13.63 vs.\ 14.47, seed-mixed), and does not improve robustness under strong perturbations in a consistent direction. It is therefore retained only as an auxiliary architectural component, and the paper does not attribute communication compression or robustness gains to it. The strongest mechanism evidence instead concerns Gate Prior: a structured role-pair initialization that raises cross-seed gate correlation from 0.562 to 0.962 and improves worst-seed training stability. Removing the task-support relation degrades held-out recovery (0.971 $\rightarrow$ 0.892) and increases recovery latency (10.8 $\rightarrow$ 15.0), but temporal analysis does not reveal a consistent post-failure activation increase; its benefit is therefore supported empirically rather than by a specific temporal mechanism.
 
-These limitations define the next development path. The current result package is suitable as a strong 3v1 mechanism foundation. To target a higher-tier submission, future work should add carefully controlled scenario-depth experiments, such as more training seeds, an external communication baseline, and unseen-layout / failure generalization, without diluting the current locked evidence chain.
+\subsection{Limitations}
+
+We state the main limitations explicitly.
+
+\begin{enumerate}
+    \item \textbf{Three independent training seeds.} All cross-method statistics use $n=3$
+    independent replications; seed-wise differences are reported in full, but the precision
+    of the estimates is limited by this sample size.
+    \item \textbf{Fixed 3-UAV/1-target role structure.} The scout--relay--attacker team is
+    fixed; scalability to larger teams or multi-target settings is not validated.
+    \item \textbf{3DOF dynamics.} Motion is simplified to three degrees of freedom; full
+    6DOF aerodynamics, missiles, and radar models are out of scope.
+    \item \textbf{No visual semantic perception pipeline.} Target information arrives as
+    abstract detection states; the method is not a vision-language perception system.
+    \item \textbf{Full-horizon recovery is competitive, not uniformly superior.} The primary
+    RMST is lower than MAPPO and the wider single-graph baseline but close to HAPPO
+    ($14.47$ vs.\ $14.14$) and to the w/o Role-Pair Modulation variant; the most consistent
+    advantage is concentrated in the early post-failure period ($\tau \le 100$).
+    \item \textbf{Role-Pair Modulation contributes little independently.} It is retained as
+    an auxiliary component; it does not provide communication compression, robustness, or a
+    stable full-horizon recovery benefit.
+    \item \textbf{Robustness is not out-of-distribution generalization.} The perturbation
+    grid shares the same scenario family; genuinely unseen target-maneuver, initial-geometry,
+    or communication-topology shifts are not covered.
+    \item \textbf{Task-Support benefit is empirical.} Removing it degrades held-out recovery
+    and slows recovery, but the internal temporal mechanism remains inconclusive; no
+    post-failure activation re-organization is claimed.
+\end{enumerate}
+
+These limitations define the next development path. The current result package is suitable
+as a strong 3v1 mechanism foundation. To target a higher-tier submission, future work should
+add carefully controlled scenario-depth experiments, such as more training seeds, an external
+communication baseline, and genuinely unseen-distribution generalization, without diluting
+the current locked evidence chain.
