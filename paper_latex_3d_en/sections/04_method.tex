@@ -10,7 +10,7 @@ The graph representation contains UAV and target nodes. Node roles distinguish s
 
 The method constructs separate perception, communication, and task-support adjacency matrices. Perception relations indicate which platform can directly detect or track the target. Communication relations indicate which platforms can exchange information. Task-support relations indicate which platform is currently supporting another platform's kill-chain function, such as scout-to-attacker target-information support or relay-to-attacker communication reconstruction.
 
-Role-pair-conditioned message propagation is used so that messages can depend on sender role, receiver role, and relation type. This is the key distinction from a single homogeneous graph encoder.
+Messages can depend on relation type and on receiver/sender identity through state-dependent, edge-feature-modulated attention over separate relation channels. This multi-relation task-graph structure, rather than a single merged adjacency with shared parameters, is the key distinction from a single homogeneous graph encoder. A learned \emph{static} role-pair modulation is retained as an auxiliary architectural component: each relation channel multiplies sender messages by a learned role-pair gate $g_{\rho_i,\rho_j}^{(r)}$ that is an embedding lookup conditioned on (receiver role, sender role, relation), not a function of the failure state.
 
 Let $\mathcal{R}=\{\mathrm{per},\mathrm{comm},\mathrm{sup}\}$ denote the perception, communication, and task-support relation set. For receiver node $i$ and sender node $j$, relation $r$ has adjacency $A^r_{ij}$ and edge feature $e^r_{ij}$. The message passed from $j$ to $i$ is
 \begin{equation}
@@ -25,13 +25,13 @@ where $\alpha^r_{ij}$ is an edge-aware attention weight. The single-graph baseli
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.98\linewidth]{intercept_3d_multi_relation_graph.png}
-    \caption{Multi-relation role graph. Perception, communication, task-support, and attack-window relations have different semantics, while role-pair-conditioned messages control information flow between heterogeneous platforms.}
+    \caption{Multi-relation task graph. Perception, communication, and task-support relations have different semantics and are processed by state-dependent, edge-feature-modulated attention. Task-support is a task-dependent relational mask over delivered communication rather than an independent information channel; a static role-pair modulation is applied as an auxiliary component.}
     \label{fig:multi_relation_graph}
 \end{figure}
 
 \subsection{Training Protocol}
 
-The training procedure first learns the basic straight-target interception task, then performs fixed-budget safety-continuation training under randomized communication range, dropout, message delay, radar dropout, and temporary blue-node communication failure. Demonstration pretraining, reward shaping, and topology randomization are used as training aids rather than as isolated claimed innovations. A three-seed no-curriculum diagnostic did not show an independent curriculum advantage, so the paper-facing comparison emphasizes the graph/message architecture and its mechanism ablations.
+The training procedure first learns the basic straight-target interception task, then continues with 977 PPO updates under randomized communication range, dropout, message delay, radar dropout, and temporary blue-node communication failure (three training seeds). Demonstration pretraining, reward shaping, and topology randomization are used as training aids rather than as isolated claimed innovations. Gate Prior and role-pair modulation are two distinct concepts: Gate Prior is a \emph{structured initialization prior} that sets a subset of role-pair gate logits to a fixed positive value at initialization (logit 0.4, sigmoid $\approx 0.599$) and then lets them evolve with gradient training; the role-pair gate itself is a \emph{learned static role-pair modulation} whose weights are not conditioned on the failure state. All dynamics in the method come from state-dependent attention, relation masks, edge-feature modulation, and the environment's communication availability; the gate weights are not conditioned on the failure state at runtime.
 
 The policy is optimized with a MAPPO-style clipped objective under centralized training and decentralized execution:
 \begin{equation}
