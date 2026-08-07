@@ -1,0 +1,67 @@
+{
+  "generated": "2026-08-07 12:11:06",
+  "protocol": "FORMAL_EFFICIENCY_PROTOCOL_V1_5 (formal, phase 3)",
+  "budget": {
+    "warmup": 200,
+    "measure": 1000,
+    "repeats": 10,
+    "batch_sizes": [
+      1,
+      8
+    ],
+    "e2e": {
+      "envs": 8,
+      "steps": 128
+    },
+    "comm": {
+      "episodes": 3,
+      "steps": 200
+    }
+  },
+  "hardware": {
+    "gpu_name": "NVIDIA GeForce GTX 1650 Ti",
+    "cuda_version": "12.4",
+    "pytorch_version": "2.4.1+cu124",
+    "gpu_driver": "580.97",
+    "cpu": "Intel64 Family 6 Model 165 Stepping 2, GenuineIntel",
+    "ram_gb": null,
+    "platform": "Windows-10-10.0.22631-SP0",
+    "precision": "FP32",
+    "tf32_matmul": false,
+    "tf32_cudnn": true,
+    "compile": false,
+    "timestamp": "2026-08-07 11:57:50",
+    "gpu_memory_total": "4096 MiB"
+  },
+  "methods": [
+    "full_ea_rg",
+    "w_o_role_pair_gate",
+    "mappo",
+    "happo",
+    "param_matched_single"
+  ],
+  "overall": "PASS",
+  "problems": [],
+  "raw_latency_sample_sha256": {
+    "full_ea_rg": {
+      "1": "d9dce2ca8b44a9a6",
+      "8": "a6c07eb6a6f5a469"
+    },
+    "w_o_role_pair_gate": {
+      "1": "7815e180f1f935dc",
+      "8": "9fe005240f6659db"
+    },
+    "mappo": {
+      "1": "621560bbec9847f4",
+      "8": "f23e1484e670cb8a"
+    },
+    "happo": {
+      "1": "5efad430e0e2dfb6",
+      "8": "d607b4df96566e6e"
+    },
+    "param_matched_single": {
+      "1": "c8dc7a85c30daece",
+      "8": "b3c6009485ddbe22"
+    }
+  }
+}

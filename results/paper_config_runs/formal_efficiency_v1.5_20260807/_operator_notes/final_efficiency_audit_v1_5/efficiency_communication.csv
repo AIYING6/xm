@@ -1,0 +1,6 @@
+method,rpg_applies,trajectory_source,episodes,episodes_completed,steps_total,mean_candidate_edges_per_step,mean_physical_comm_edges_per_step,mean_inflight_messages_per_step,mean_payload_scalars_per_step,mean_payload_scalars_per_step_incl_meta,edge_feature_dim,continuous_payload_dim,metadata_fields
+full_ea_rg,yes,fixed_action_rng,3,0,600,4.735,1.735,3.4283333333333332,23.99833333333333,37.711666666666666,17,7,4
+w_o_role_pair_gate,yes,fixed_action_rng,3,0,600,4.735,1.735,3.4283333333333332,23.99833333333333,37.711666666666666,17,7,4
+mappo,no,fixed_action_rng,3,0,600,4.735,1.735,3.4283333333333332,23.99833333333333,37.711666666666666,17,7,4
+happo,no,fixed_action_rng,3,0,600,4.735,1.735,3.4283333333333332,23.99833333333333,37.711666666666666,17,7,4
+param_matched_single,no,fixed_action_rng,3,0,600,4.735,1.735,3.4283333333333332,23.99833333333333,37.711666666666666,17,7,4
