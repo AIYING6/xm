@@ -131,6 +131,12 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         graph_input_ablation=args.graph_input_ablation,
         multi_relation_global_residual_weight=getattr(args, "multi_relation_global_residual_weight", 1.0),
         device=args.device,
+        # --- P3-A OOD eval-side extensions (default no-op) ---
+        blue_init_rotation_deg=float(getattr(args, "blue_init_rotation_deg", 0.0)),
+        blue_init_spacing_scale=float(getattr(args, "blue_init_spacing_scale", 1.0)),
+        target_init_range_scale=float(getattr(args, "target_init_range_scale", 1.0)),
+        target_init_bearing_offset_deg=float(getattr(args, "target_init_bearing_offset_deg", 0.0)),
+        comm_topology_mode=str(getattr(args, "comm_topology_mode", "none")),
     )
 
 

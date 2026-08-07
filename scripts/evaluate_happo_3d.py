@@ -66,6 +66,12 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         graph_message_ablation="none",
         graph_input_ablation="none",
         device=args.device,
+        # --- P3-A OOD eval-side extensions (default no-op; same make_env as RI) ---
+        blue_init_rotation_deg=float(getattr(args, "blue_init_rotation_deg", 0.0)),
+        blue_init_spacing_scale=float(getattr(args, "blue_init_spacing_scale", 1.0)),
+        target_init_range_scale=float(getattr(args, "target_init_range_scale", 1.0)),
+        target_init_bearing_offset_deg=float(getattr(args, "target_init_bearing_offset_deg", 0.0)),
+        comm_topology_mode=str(getattr(args, "comm_topology_mode", "none")),
     )
 
 

@@ -120,6 +120,12 @@ class RIGMAPPOConfig:
     node_failure_duration_random_min: int | None = None
     node_failure_duration_random_max: int | None = None
     device: str = "cpu"
+    # --- P3-A OOD eval-side extensions (default no-op, pass through to env) ---
+    blue_init_rotation_deg: float = 0.0
+    blue_init_spacing_scale: float = 1.0
+    target_init_range_scale: float = 1.0
+    target_init_bearing_offset_deg: float = 0.0
+    comm_topology_mode: str = "none"
     out_dir: str = "results/ri_gmappo"
     save_interval: int = 10
     save_snapshots: bool = False
@@ -687,6 +693,11 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 if training
                 else cfg.node_failure_duration_steps,
                 graph_relation_ablation=cfg.graph_relation_ablation,
+                blue_init_rotation_deg=cfg.blue_init_rotation_deg,
+                blue_init_spacing_scale=cfg.blue_init_spacing_scale,
+                target_init_range_scale=cfg.target_init_range_scale,
+                target_init_bearing_offset_deg=cfg.target_init_bearing_offset_deg,
+                comm_topology_mode=cfg.comm_topology_mode,
             )
         )
     raise ValueError(f"Unsupported env_name: {cfg.env_name}")

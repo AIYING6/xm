@@ -107,6 +107,12 @@ class UAVIntercept3DConfig:
     agent_target_info_bottleneck: bool = False
     max_target_message_age_steps: int = 80
     min_target_confidence: float = 0.2
+    # --- P3-A OOD eval-side extensions (default no-op; do not change prior behavior) ---
+    blue_init_rotation_deg: float = 0.0
+    blue_init_spacing_scale: float = 1.0
+    target_init_range_scale: float = 1.0
+    target_init_bearing_offset_deg: float = 0.0
+    comm_topology_mode: str = "none"
     target_prior_position: Tuple[float, float, float] = (10_000.0, 0.0, 5_000.0)
     failed_blue_agent: int = -1
     node_failure_start_step: int = 0
@@ -194,11 +200,52 @@ class UAVIntercept3DEnv:
         self.blue_gamma = np.asarray([0.02, 0.0, -0.02], dtype=np.float32)
         self.blue_energy = np.ones(cfg.num_blue, dtype=np.float32)
 
+        # --- G1: blue formation spacing/rotation about centroid (default no-op) ---
+        if cfg.blue_init_spacing_scale != 1.0 or cfg.blue_init_rotation_deg != 0.0:
+            centroid = self.blue_pos.mean(axis=0)
+            xy = self.blue_pos[:, :2] - centroid[:2]
+            if cfg.blue_init_spacing_scale != 1.0:
+                xy = xy * cfg.blue_init_spacing_scale
+            if cfg.blue_init_rotation_deg != 0.0:
+                th = math.radians(cfg.blue_init_rotation_deg)
+                rot = np.asarray([[math.cos(th), -math.sin(th)],
+                                  [math.sin(th), math.cos(th)]], dtype=np.float32)
+                xy = xy @ rot.T
+            self.blue_pos = np.concatenate([xy + centroid[:2], self.blue_pos[:, 2:3]],
+                                           axis=1).astype(np.float32)
+
         target_y = float(self.rng.uniform(-2_000.0, 2_000.0))
         self.red_pos = np.asarray([[10_000.0, target_y, 5_000.0]], dtype=np.float32)
+        # --- G2: target relative range/bearing from blue centroid (default no-op) ---
+        if cfg.target_init_range_scale != 1.0 or cfg.target_init_bearing_offset_deg != 0.0:
+            centroid = self.blue_pos.mean(axis=0)
+            rel = self.red_pos[0, :2] - centroid[:2]
+            r = float(np.linalg.norm(rel))
+            ang = math.atan2(float(rel[1]), float(rel[0]))
+            if cfg.target_init_range_scale != 1.0:
+                r = r * cfg.target_init_range_scale
+            if cfg.target_init_bearing_offset_deg != 0.0:
+                ang = ang + math.radians(cfg.target_init_bearing_offset_deg)
+            self.red_pos = np.asarray([[centroid[0] + r * math.cos(ang),
+                                        centroid[1] + r * math.sin(ang),
+                                        float(self.red_pos[0, 2])]], dtype=np.float32)
         self.red_speed = np.asarray([210.0], dtype=np.float32)
         self.red_heading = np.asarray([math.pi + float(self.rng.uniform(-0.12, 0.12))], dtype=np.float32)
         self.red_gamma = np.asarray([float(self.rng.uniform(-0.03, 0.03))], dtype=np.float32)
+
+        # --- C1/C2: longest blue-blue XY pair (deterministic at reset) ---
+        self._ood_prune_links: list[tuple[int, int]] = []
+        if cfg.comm_topology_mode in ("symmetric_longest_prune", "directed_longest_prune"):
+            xy = self.blue_pos[:, :2]
+            dists = np.linalg.norm(xy[:, None, :] - xy[None, :, :], axis=-1)
+            np.fill_diagonal(dists, -np.inf)
+            a, b = np.unravel_index(int(np.argmax(dists)), dists.shape)
+            lo = a if float(self.blue_pos[a, 1]) <= float(self.blue_pos[b, 1]) else b
+            hi = b if lo == a else a
+            if cfg.comm_topology_mode == "symmetric_longest_prune":
+                self._ood_prune_links = [(lo, hi), (hi, lo)]
+            else:  # directed: only lower-y -> higher-y
+                self._ood_prune_links = [(lo, hi)]
 
         self.message_age = np.full((cfg.num_blue, cfg.num_blue), cfg.max_steps, dtype=np.float32)
         self.message_age[np.eye(cfg.num_blue, dtype=bool)] = 0.0
@@ -478,6 +525,13 @@ class UAVIntercept3DEnv:
                 else:
                     self.message_age[i, j] = min(float(cfg.max_steps), self.message_age[i, j] + 1.0)
         self.comm_adj = delivered_comm
+
+        # --- C1/C2: apply topology pruning after comm-adjacency formation ---
+        # link list stores directed (sender, receiver) pairs: lower-y -> higher-y for C2,
+        # both directions for C1.
+        for (src, dst) in self._ood_prune_links:
+            if src != dst and 0 <= src < cfg.num_blue and 0 <= dst < cfg.num_blue:
+                self.comm_adj[dst, src] = 0.0
 
         for i, typ in enumerate(cfg.blue_types):
             self.attack_window[i] = float(self._in_attack_window(i, typ))
