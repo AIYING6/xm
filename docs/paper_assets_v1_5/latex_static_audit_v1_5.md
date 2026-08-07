@@ -1,10 +1,10 @@
 # LaTeX Static Audit v1.5 (no TeX install required)
 
 - files scanned: 11
-- labels defined: 32
-- \ref used: 15
-- \input targets: 12
-- \includegraphics: 8
+- labels defined: 35
+- \ref used: 17
+- \input targets: 13
+- \includegraphics: 9
 - problems: 0
 
 ## Status
