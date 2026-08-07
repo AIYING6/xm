@@ -1,6 +1,58 @@
 # Current Project State
 
-Last updated: 2026-08-02
+Last updated: 2026-08-07
+
+## v1.5 Milestone (2026-08-07) — training complete, evidence locked, paper drafted
+
+The 8-02 snapshot below (BC=0/15, PPO=0/15) is HISTORICAL. Between 08-02 and 08-07 the
+formal v1.5 chain completed and was locked. Current state:
+
+**Formal training (completed, 3 worktrees):**
+- main worktree `ri_gmappo_uav` (branch `codex/project-state-20260802`): Full + happo +
+  no_graph + single_graph + param_matched_single, 3 seeds × BC + PPO 977 updates
+  (`results/.../formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/`).
+- ablation worktree `ri_gmappo_uav_ablation_v1.5`: w_o_gate_prior / w_o_task_support /
+  w_o_role_pair_gate / others, 3 seeds.
+- mappo worktree `ri_gmappo_uav_mappo_v1.5` (branch `mappo-baseline-v1.5`): MAPPO baseline +
+  held-out / robustness / efficiency runs.
+
+**Locked evidence chain (tags on respective branches):**
+- validation 641939 (selection only) → 27-checkpoint joint manifest (`aed47e1`).
+- held-out 745669, 10,800 episodes, 27/27 PASS, base table: Full recovery 0.971±0.021,
+  t_rec 10.8±0.6; w/o GP 0.772/15.3; w/o TS 0.892/15.0; w/o RPG 0.990/13.8;
+  MAPPO 0.947/17.4; HAPPO 1.000/16.3; param-matched 0.995/26.2.
+  (tag `formal-held-out-results-lock-v1.5.1`.)
+- robustness 946804, 10,500 episodes, 210/210 PASS; **RPG verdict = REMOVE/simplify**
+  (tag `formal-robustness-results-lock-v1.5.0`).
+- efficiency profiling (5 methods × 5 blocks) OVERALL PASS; RPG message stats identical
+  to w/o RPG → no bandwidth compression (tag `formal-efficiency-results-lock-v1.5.0`).
+- Gate Prior mechanism: SUPPORT (cross-seed gate corr 0.962 vs 0.562; AUC 0.545 vs 0.396;
+  first≥0.9 Full 200/200/600 vs w/o 600/500/None; drift<0.02; saturation 0)
+  (tag `gate-prior-mechanism-results-lock-v1.5.0`).
+- Task-Support mechanism: 1200-episode extraction, behavior-equivalence 60/60,
+  verdict **EMPIRICAL SUPPORT ONLY** (windows pre 0.141→early 0.092→pre-rec 0.090;
+  no post-failure activation increase; 952/952 recovery=termination)
+  (tag `task-support-mechanism-results-lock-v1.5.0`).
+
+**Paper (v1.5, `paper_latex_3d_en/`):** fully rewritten and consistent.
+- Abstract (final), Intro (3 contributions), Method 3.1–3.7 (RPG = static modulation,
+  Gate Prior = structured init prior), Experiments RQ1–RQ6 (4 canonical tables + Pareto /
+  robustness / Gate-Prior figures), Discussion (three explicit trade-offs), Conclusion,
+  Supplementary S1/S2.
+- Single numeric source: `docs/paper_assets_v1_5/canonical_results_v1_5.csv` (built
+  programmatically from locked assets; consistency audit PASS).
+- Three-layer audit PASS (high-risk phrases 0 / unverified numbers 0 / P0-P1 open 0);
+  LaTeX static audit PASS (no TeX install on this machine; full compile pending on a
+  machine with pdflatex).
+- Journal matching: `docs/JOURNAL_MATCHING_V1_5.md` (first submission target IEEE TAES).
+
+**Remaining before submission (short list):**
+1. Full LaTeX compile on a TeX-capable machine (main + supplementary, 2 passes each).
+2. Clean root `_tmp_*` scratch files (~25 files, non-blocking).
+3. Journal-format adaptation (abstract length, references, figure dpi).
+
+The frozen-baseline section below documents the v1.4 freeze gates that governed training;
+they remain valid for provenance but no longer describe the current milestone.
 
 ## Frozen Baseline (post-sixth-freeze-v1)
 
