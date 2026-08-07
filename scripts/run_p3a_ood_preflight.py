@@ -229,12 +229,19 @@ def main() -> int:
                                 logits = agent.actor(actor_in)
                                 act = torch.argmax(logits, dim=-1).reshape(n_env, num_agents).cpu().numpy()
                             elif method == "happo":
-                                obs_t = torch.as_tensor(np.stack([obs_l[i] for i in ai]), dtype=torch.float32, device=device)
-                                so_t = torch.as_tensor(np.stack([share_l[i] for i in ai]), dtype=torch.float32, device=device)
-                                role_t = torch.as_tensor(g["role"], dtype=torch.long, device=device)
-                                # HAPPO agent uses obs + share_obs (no graph inputs)
-                                act, *_ = agent.get_action(obs_t, so_t, role=role_t, deterministic=True)
-                                act = act.cpu().numpy()
+                                # HAPPO uses the same get_action_and_value signature as RI,
+                                # with intent-related kwargs defaulted inside the agent.
+                                actions, *_ = agent.get_action_and_value(
+                                    torch.as_tensor(np.stack([obs_l[i] for i in ai]), dtype=torch.float32, device=device),
+                                    torch.as_tensor(g["node_feat"], dtype=torch.float32, device=device),
+                                    torch.as_tensor(g["edge_feat"], dtype=torch.float32, device=device),
+                                    torch.as_tensor(g["role"], dtype=torch.long, device=device),
+                                    torch.as_tensor(g["adj"], dtype=torch.float32, device=device),
+                                    torch.as_tensor(np.stack([share_l[i] for i in ai]), dtype=torch.float32, device=device),
+                                    relation_adj=torch.as_tensor(g["relation_adj"], dtype=torch.float32, device=device),
+                                    deterministic=True,
+                                )
+                                act = actions.cpu().numpy()
                             else:
                                 actions, *_ = agent.get_action_and_value(
                                     torch.as_tensor(np.stack([obs_l[i] for i in ai]), dtype=torch.float32, device=device),

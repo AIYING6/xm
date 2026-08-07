@@ -369,3 +369,20 @@ def test_output_root_is_v1_1():
     from scripts.p3a_ood_cells import OUT_ROOT
     assert str(OUT_ROOT).endswith("p3a_ood_results_v1_1")
     assert "v1_0" not in str(OUT_ROOT)
+
+
+def test_happo_rollout_interface_matches_held_out():
+    # Regression: preflight must call HAPPO via get_action_and_value with the
+    # same signature as evaluate_happo_3d.py (no get_action, no intent kwargs).
+    from pathlib import Path
+    preflight = Path("scripts/run_p3a_ood_preflight.py").read_text(encoding="utf-8")
+    # Anchor on the rollout branch (distinct comment; audit branch also has
+    # "elif method == \"happo\":" so we must not match that).
+    anchor = "# HAPPO uses the same get_action_and_value signature as RI"
+    hap_block_start = preflight.index(anchor)
+    hap_block = preflight[hap_block_start:hap_block_start + 1400]
+    assert "get_action_and_value" in hap_block
+    assert "agent.get_action(" not in hap_block
+    assert "intent_label" not in hap_block
+    assert "relation_adj=" in hap_block
+    assert "deterministic=True" in hap_block
