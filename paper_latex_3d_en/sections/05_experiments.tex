@@ -11,13 +11,13 @@ An episode is successful if the attacker closes the kill chain within the horizo
 \begin{itemize}
     \item \textbf{EA-RG Full}: the proposed task-graph-driven multi-relation method.
     \item \textbf{Internal ablations}: w/o Gate Prior, w/o Task-Support, w/o Role-Pair Gate.
-    \item \textbf{Graph baselines}: no-graph, single-graph, and a parameter-matched graph baseline (a multi-relation encoder whose parameter count is matched to EA-RG Full; ``matched'' refers to matching the parameter budget).
+    \item \textbf{Graph baselines}: no-graph, single-graph, and a wider single-graph baseline (a higher-capacity encoder with a larger parameter budget than the single-graph baseline).
     \item \textbf{External MARL baselines}: MAPPO and HAPPO, evaluated with the same held-out protocol.
 \end{itemize}
 
 \subsection{RQ1: Does EA-RG achieve competitive held-out task performance?}
 
-Table~\ref{tab:held_out} reports held-out performance. EA-RG reaches a success rate of $0.985 \pm 0.011$ and a recovery rate of $0.971 \pm 0.021$, placing it in the first tier. At the same time, HAPPO ($1.000$) and the parameter-matched graph baseline ($0.995$) obtain slightly higher final recovery rates, and even the w/o Role-Pair Gate ablation reaches $0.990$. EA-RG therefore achieves near-saturated held-out reliability, although it does not obtain the highest terminal recovery probability among the compared methods.
+Table~\ref{tab:held_out} reports held-out performance. EA-RG reaches a success rate of $0.985 \pm 0.011$ and a recovery rate of $0.971 \pm 0.021$, placing it in the first tier. At the same time, HAPPO ($1.000$) and the wider single-graph baseline ($0.995$) obtain slightly higher final recovery rates, and even the w/o Role-Pair Gate ablation reaches $0.990$. EA-RG therefore achieves near-saturated held-out reliability, although it does not obtain the highest terminal recovery probability among the compared methods.
 
 The temporal metrics tell a different story. EA-RG completes successful tasks in $46.1 \pm 0.4$ steps and re-establishes the kill chain after failure in $10.8 \pm 0.6$ steps, the lowest recovery latency among all methods and the smallest seed-level variance. These results suggest that the primary advantage of EA-RG is not a higher terminal success probability, but a substantially faster return to effective coordination after failure. This motivates RQ2.
 
@@ -34,12 +34,12 @@ Comparison & Recovery & Recovery-time reduction \\
 \midrule
 EA-RG vs.\ MAPPO & $0.971$ vs.\ $0.947$ & $\approx 38\%$ shorter \\
 EA-RG vs.\ HAPPO & $0.971$ vs.\ $1.000$ & $\approx 34\%$ shorter \\
-EA-RG vs.\ param-matched & $0.971$ vs.\ $0.995$ & $\approx 59\%$ shorter \\
+EA-RG vs.\ wider single-graph & $0.971$ vs.\ $0.995$ & $\approx 59\%$ shorter \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-We emphasize that these are recovery-time reductions, not superiority claims over the competitors' reliability: EA-RG reduces recovery time by approximately 34\% relative to HAPPO while retaining a recovery probability of $0.971$ versus $1.000$. The reduction is especially large against the parameter-matched graph baseline ($26.2 \pm 23.6$ vs.\ $10.8 \pm 0.6$ steps); EA-RG also exhibits substantially lower cross-seed variability in recovery latency (sample SD $0.6$ vs.\ $2.5$--$23.6$). We report these differences descriptively at $n=3$ and do not apply significance tests. The success--completion-time Pareto is provided in Supplementary Fig.~S1.
+We emphasize that these are recovery-time reductions, not superiority claims over the competitors' reliability: EA-RG reduces recovery time by approximately 34\% relative to HAPPO while retaining a recovery probability of $0.971$ versus $1.000$. The reduction is especially large against the wider single-graph baseline ($26.2 \pm 23.6$ vs.\ $10.8 \pm 0.6$ steps); EA-RG also exhibits substantially lower cross-seed variability in recovery latency (sample SD $0.6$ vs.\ $2.5$--$23.6$). We report these differences descriptively at $n=3$ and do not apply significance tests. The success--completion-time Pareto is provided in Supplementary Fig.~S1.
 
 \begin{figure}[t]
     \centering
@@ -77,7 +77,7 @@ EA-RG remains competitive under severe perturbations, but it does not dominate e
 
 \subsection{RQ5: What is the computational cost of faster recovery?}
 
-Table~\ref{tab:efficiency} reports the locked efficiency profiling. EA-RG is computationally heavier than MAPPO, HAPPO, and the parameter-matched graph baseline: $117{,}302$ parameters, a $12.05$\,ms joint-decision latency, $83$ joint decisions/s, $242$ env-steps/s end-to-end throughput, and the largest training peak memory ($71.9$\,MB). The benefit therefore lies in task-level recovery efficiency rather than per-forward computational efficiency: the method trades additional computational cost for faster post-failure coordination recovery. These two notions of efficiency must be kept separate.
+Table~\ref{tab:efficiency} reports the locked efficiency profiling. EA-RG is computationally heavier than MAPPO, HAPPO, and the wider single-graph baseline: $117{,}302$ parameters, a $12.05$\,ms joint-decision latency, $83$ joint decisions/s, $242$ env-steps/s end-to-end throughput, and the largest training peak memory ($71.9$\,MB). The benefit therefore lies in task-level recovery efficiency rather than per-forward computational efficiency: the method trades additional computational cost for faster post-failure coordination recovery. These two notions of efficiency must be kept separate.
 
 We also report the communication cost precisely. The graph edge-feature dimension ($17$) describes \emph{graph computation} only. The actual transmitted message consists of $7$ continuous scalars (positions, velocities, and a confidence), integer metadata, and a variable-length path. Crucially, the physical communication statistics of EA-RG and its w/o Role-Pair Gate ablation are identical (fixed shared trajectory): the Role-Pair Gate does not provide bandwidth compression or message pruning.
 

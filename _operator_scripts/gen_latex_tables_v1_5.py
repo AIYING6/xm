@@ -18,7 +18,7 @@ RB_COND = [f"R{i:02d}" for i in range(10)]
 SHORT = {"full_ea_rg": "EA-RG Full", "w_o_gate_prior": "w/o Gate Prior",
          "w_o_task_support": "w/o Task-Support", "w_o_role_pair_gate": "w/o Role-Pair Gate",
          "no_graph": "no-graph", "single_graph": "single-graph",
-         "param_matched_single": "param-matched graph", "happo": "HAPPO", "mappo": "MAPPO"}
+         "param_matched_single": "wider single-graph", "happo": "HAPPO", "mappo": "MAPPO"}
 
 
 def load():
