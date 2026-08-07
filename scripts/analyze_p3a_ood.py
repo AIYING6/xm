@@ -59,6 +59,9 @@ def km_rmst(observed: np.ndarray, censored: np.ndarray, tau: float) -> float:
 
     observed[i] = T_event if the episode recovered (uncensored); else -1.
     censored[i] = T_censor if the episode did NOT recover; else -1.
+
+    RMST(tau) = integral_0^tau S(t) dt. Because S(t) <= 1, RMST must lie in
+    [0, tau]; any value outside that interval indicates an integration bug.
     """
     times = []
     for ev, ce in zip(observed, censored):
@@ -75,14 +78,17 @@ def km_rmst(observed: np.ndarray, censored: np.ndarray, tau: float) -> float:
     n_risk = len(times)
     area = 0.0
     for t, event in times:
-        if t_prev < tau:
-            area += surv * (min(t, tau) - min(t_prev, tau))
-        if t > tau:
+        if t_prev >= tau:
+            break
+        upper = min(t, tau)
+        area += surv * (upper - t_prev)
+        t_prev = upper
+        if t >= tau:
             break
         if event:
             surv *= (n_risk - 1.0) / n_risk
         n_risk -= 1
-        t_prev = t
+    # Trailing segment only if we did not already reach tau in the loop above.
     if t_prev < tau:
         area += surv * (tau - t_prev)
     return float(area)

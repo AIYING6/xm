@@ -509,6 +509,23 @@ def test_km_rmst_mixed():
     assert abs(rmst - 50.0) < 1e-6
 
 
+def test_km_rmst_event_after_tau_no_double_count():
+    # Regression for the double-count bug: a single event at t>tau must give
+    # RMST(tau) = tau (S=1 over [0,tau]); it must NOT exceed tau.
+    from scripts.analyze_p3a_ood import km_rmst
+    rmst = km_rmst(np.array([100.0]), np.array([-1.0]), 80.0)
+    assert abs(rmst - 80.0) < 1e-9
+    rmst2 = km_rmst(np.array([-1.0]), np.array([120.0]), 80.0)
+    assert abs(rmst2 - 80.0) < 1e-9
+    # mixed: event at 100 (>tau) and censor at 30.
+    # S=1 over [0,30]; censoring at 30 does NOT reduce S; event at 100 is
+    # outside the window -> S stays 1 -> RMST80 = 80.
+    rmst3 = km_rmst(np.array([100.0, -1.0]), np.array([-1.0, 30.0]), 80.0)
+    assert abs(rmst3 - 80.0) < 1e-6
+    # never exceeds tau
+    assert rmst <= 80.0 + 1e-9 and rmst2 <= 80.0 + 1e-9 and rmst3 <= 80.0 + 1e-9
+
+
 def test_bootstrap_params_frozen():
     from scripts.analyze_p3a_ood import N_BOOT, RNG_SEED, TAU_PRIMARY, TAU_FULL, CELLS_ORDER
     assert N_BOOT == 10000
