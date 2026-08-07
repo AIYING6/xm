@@ -1,26 +1,40 @@
 \section{Method}
+\label{sec:method}
 
-\subsection{Overview}
+\subsection{Problem Formulation}
+\label{sec:problem}
 
-EA-RG-MAPPO-S combines a MAPPO-style training objective with a multi-relation role graph actor. The critic uses centralized training information, while the actor receives local observations and graph observations. The policy is executed in a decentralized manner.
+We consider a cooperative interception task with three blue UAV actors---scout, relay, and attacker---and one target. The target is represented as a graph node but is not an actor. The problem is formalized as a decentralized partially observable Markov decision process (Dec-POMDP) $\langle \mathcal{I}, \mathcal{S}, \mathcal{A}, O, P, R, \gamma \rangle$ with agents $\mathcal{I}=\{0,1,2\}$ (scout, relay, attacker). At each step, agent $i$ obtains a local observation $o_i$ that includes an ego-state slice, an implicit role identity (role one-hot), and a local observation of the multi-relation graph; the team takes joint actions under a shared cooperative reward that encourages closing the kill chain, avoiding collisions, and maintaining task-relevant information flow.
 
-The graph representation contains UAV and target nodes. Node roles distinguish scout, relay, attacker, and target entities. Edge features encode relative distance, relative velocity, altitude difference, relative bearing, communication reachability, message age, information confidence, sensing source, and current kill-chain stage.
+The environment includes two sources of degradation relevant to this paper. First, communication is unreliable: messages may be dropped (dropout) or arrive with delay, and the physical communication availability is represented by an environment-driven adjacency $\mathrm{comm\_adj}$ rather than by a learned gate. Second, a blue node (typically the relay) can fail for a temporary window, during which it neither sends nor relays information. The optimization target is therefore not only to maximize the terminal success probability but also to minimize the post-failure coordination-recovery latency: after a node or link failure, the team should re-establish effective coordination as quickly as possible. We define failure exposure and recovery conceptually here; the statistical definitions used for evaluation are given in Section~\ref{sec:setup}.
 
-\subsection{Multi-Relation Role Graph}
+\subsection{Task-Graph Construction}
+\label{sec:task_graph}
 
-The method constructs separate perception, communication, and task-support adjacency matrices. Perception relations indicate which platform can directly detect or track the target. Communication relations indicate which platforms can exchange information. Task-support relations indicate which platform is currently supporting another platform's kill-chain function, such as scout-to-attacker target-information support or relay-to-attacker communication reconstruction.
+The graph has $N=4$ nodes: the three blue actors and the target. A multi-relation adjacency $\mathrm{relation\_adj} \in \mathbb{R}^{3\times N\times N}$ encodes three relation channels, one per relation $r \in \mathcal{R}=\{\mathrm{per}, \mathrm{comm}, \mathrm{sup}\}$ (perception, communication, task support), with the convention $A_{ij}=1$ meaning that sender $j$ connects to receiver $i$.
 
-Messages can depend on relation type and on receiver/sender identity through state-dependent, edge-feature-modulated attention over separate relation channels. This multi-relation task-graph structure, rather than a single merged adjacency with shared parameters, is the key distinction from a single homogeneous graph encoder. A learned \emph{static} role-pair modulation is retained as an auxiliary architectural component: each relation channel multiplies sender messages by a learned role-pair gate $g_{\rho_i,\rho_j}^{(r)}$ that is an embedding lookup conditioned on (receiver role, sender role, relation), not a function of the failure state.
+\begin{itemize}
+    \item \textbf{Perception}: direct sensing edges, active when the sender can detect or track the target;
+    \item \textbf{Communication}: edges gated by the environment-driven communication availability $\mathrm{comm\_adj}$ (a function of distance, dropout realization, and failure state), i.e., whether a message is physically deliverable;
+    \item \textbf{Task support}: task-dependency edges (see Section~\ref{sec:task_support}).
+\end{itemize}
 
-Let $\mathcal{R}=\{\mathrm{per},\mathrm{comm},\mathrm{sup}\}$ denote the perception, communication, and task-support relation set. For receiver node $i$ and sender node $j$, relation $r$ has adjacency $A^r_{ij}$ and edge feature $e^r_{ij}$. The message passed from $j$ to $i$ is
+The task graph represents task dependency structure; it is not itself the physical communication network. In particular, $\mathrm{comm\_adj}$ is provided by the environment and is not a learned quantity. The union of the relation channels (together with a self-loop) forms the node mask used during message aggregation.
+
+\subsection{Multi-Relation Graph Representation}
+\label{sec:graph_rep}
+
+Each relation channel is processed by an independent graph attention layer, and the encoder stacks two such layers, each containing the three relation channels, so that relation-specific reasoning is carried out separately before fusion. For receiver node $i$ and sender node $j$, relation $r$ has adjacency $A^r_{ij}$ and edge feature $e^r_{ij}$. The message passed from $j$ to $i$ in the first layer is
 \begin{equation}
-    m^r_{ij} = A^r_{ij} \, g_{r,\rho_i,\rho_j}\left(h_i, h_j, e^r_{ij}\right),
+    m^r_{ij} = A^r_{ij} \, g^r\left(h_i, h_j, e^r_{ij}\right),
+\label{eq:message}
 \end{equation}
-where $h_i$ and $h_j$ are node embeddings, $\rho_i$ and $\rho_j$ are receiver and sender roles, and $g_{r,\rho_i,\rho_j}$ is the role-pair-conditioned message map. The receiver update aggregates relation-specific messages as
+where $h_i, h_j$ are node embeddings and $g^r$ is the relation-specific message function that combines the sender representation with the relation's edge features. The receiver update aggregates relation-specific messages as
 \begin{equation}
     \tilde{h}_i = \phi\left(h_i, \sum_{r\in\mathcal{R}}\sum_{j} \alpha^r_{ij} m^r_{ij}\right),
+\label{eq:aggregate}
 \end{equation}
-where $\alpha^r_{ij}$ is an edge-aware attention weight. The single-graph baseline replaces $\mathcal{R}$ with one merged adjacency and shared message parameters.
+where $\alpha^r_{ij}$ is an edge-aware attention weight defined in Section~\ref{sec:attention} and $\phi$ is a non-linear update (with a global residual connection across relations). The single-graph baseline replaces $\mathcal{R}$ with one merged adjacency and shared message parameters; the multi-relation structure, rather than any single channel, is the key distinction from a homogeneous encoder.
 
 \begin{figure}[t]
     \centering
@@ -29,11 +43,44 @@ where $\alpha^r_{ij}$ is an edge-aware attention weight. The single-graph baseli
     \label{fig:multi_relation_graph}
 \end{figure}
 
-\subsection{Training Protocol}
+\subsection{State-Dependent Edge-Feature-Modulated Attention}
+\label{sec:attention}
 
-The training procedure first learns the basic straight-target interception task, then continues with 977 PPO updates under randomized communication range, dropout, message delay, radar dropout, and temporary blue-node communication failure (three training seeds). Demonstration pretraining, reward shaping, and topology randomization are used as training aids rather than as isolated claimed innovations. Gate Prior and role-pair modulation are two distinct concepts: Gate Prior is a \emph{structured initialization prior} that sets a subset of role-pair gate logits to a fixed positive value at initialization (logit 0.4, sigmoid $\approx 0.599$) and then lets them evolve with gradient training; the role-pair gate itself is a \emph{learned static role-pair modulation} whose weights are not conditioned on the failure state. All dynamics in the method come from state-dependent attention, relation masks, edge-feature modulation, and the environment's communication availability; the gate weights are not conditioned on the failure state at runtime.
+The attention weight in Eq.~\eqref{eq:aggregate} is state-dependent and edge-feature-modulated. For relation $r$, the raw attention score between receiver $i$ and sender $j$ is computed from the query of the receiver and the key of the sender, augmented by a learned projection of the edge feature,
+\begin{equation}
+    s^r_{ij} = \mathrm{LeakyReLU}\big(a^r \cdot [W_q h_i \,\|\, W_k h_j]\big) + \mathrm{MLP}_r(e^r_{ij}),
+\label{eq:score}
+\end{equation}
+where $e^r_{ij}$ is the edge feature for relation $r$ (relative position, velocity, altitude, bearing, communication reachability, message age, information confidence, sensing source, and kill-chain stage). The graph edge-feature dimension ($17$) describes \emph{graph computation} only; it is not the communication payload. The relation adjacency acts as a hard mask before the softmax: scores of disconnected pairs are set to $-\infty$, and
+\begin{equation}
+    \alpha^r_{ij} = \mathrm{softmax}_j\big( s^r_{ij} + \log \hat{A}^r_{ij}\big), \qquad \hat{A}^r_{ij}=\begin{cases}1,& A^r_{ij}=1 \text{ or } i=j,\\0,&\text{otherwise.}\end{cases}
+\label{eq:softmax}
+\end{equation}
+Physical message delivery is governed separately by the environment's $\mathrm{comm\_adj}$; the attention mask reflects graph-relation availability and may include the task-support channel, but it does not itself decide which bytes are transmitted. Consequently, dynamic adaptation in EA-RG arises primarily from state-dependent graph attention, relation masks, edge features, and environment-driven communication availability, rather than from the static role-pair modulation.
 
-The policy is optimized with a MAPPO-style clipped objective under centralized training and decentralized execution:
+\subsection{Task-Support Relation}
+\label{sec:task_support}
+
+The task-support channel is the slice $\mathrm{relation\_adj}[:,2,:,:]$, with receiver--sender orientation. An edge is active when (i) the receiver--sender pair is role-compatible with a task-dependency (e.g., scout or relay holding target information toward an attacker), (ii) the corresponding communication edge is available, and (iii) the sender currently holds task-relevant information (target information, or a local attack window for an attacker). Task-support therefore biases relational reasoning toward task-relevant delivered information; it is a task-dependent relational mask over delivered communication and is not an independent communication channel, nor does it decide whether real messages are sent. We do not claim any specific post-failure activation behavior for this channel here; its empirical contribution is evaluated in Section~\ref{sec:setup} and its temporal analysis in the Discussion.
+
+\subsection{Gate Prior and Static Role-Pair Modulation}
+\label{sec:gate_prior}
+
+This section separates two concepts that are often conflated.
+
+\textbf{Static role-pair modulation.} Each relation channel additionally multiplies the sender message by a learned gate
+\begin{equation}
+    \mu^{r}_{ij} = \sigma\big( \mathrm{Emb}^{(r)}_{\rho_i,\rho_j} \big),
+\label{eq:rpg}
+\end{equation}
+where $\rho_i, \rho_j$ are receiver and sender roles, $\mathrm{Emb}^{(r)}$ is a learned role-pair embedding for relation $r$, and $\sigma$ is the logistic function. This is a \emph{learned static role-pair modulation}: the embedding is a function of the role pair and relation only, not of the failure state or of any input feature. It performs multiplicative modulation, does not prune messages, and does not change the number of real transmitted messages. The modulation itself is retained as an auxiliary architectural component; its independent empirical contribution is evaluated separately.
+
+\textbf{Gate Prior.} The gate logits are initialized to a fixed structured value before training. In the full method a subset of role-pair gate logits is set to $0.4$ (sigmoid $\approx 0.599$), while in the w/o Gate Prior variant all logits are initialized to $0$ (sigmoid $= 0.5$). The prior therefore acts as a structured initialization / optimization bias over static role-pair modulation; it is not a runtime mechanism. We defer the question of whether this prior empirically improves stability to RQ6 (Section~\ref{sec:experiments}).
+
+\subsection{Actor--Critic Optimization}
+\label{sec:optim}
+
+The policy is trained with a MAPPO-style clipped objective under centralized training and decentralized execution:
 \begin{equation}
     \mathcal{L}_{\mathrm{PPO}} =
     \mathbb{E}\left[
@@ -42,5 +89,6 @@ The policy is optimized with a MAPPO-style clipped objective under centralized t
             \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t
         \right)
     \right],
+\label{eq:ppo}
 \end{equation}
-where $r_t(\theta)$ is the policy probability ratio and $\hat{A}_t$ is the advantage estimate from the centralized critic. The actor receives decentralized observations and communication-feasible graph information at execution time.
+where $r_t(\theta)$ is the policy probability ratio and $\hat{A}_t$ is the advantage estimate. The \emph{actor} receives the local observation (including the role one-hot), the node features, edge features, role vector, the union adjacency, and the multi-relation adjacency, and outputs a joint action in a decentralized manner. The \emph{critic} is a centralized value function that takes the global shared observation concatenated with the role one-hot; it does not use the graph gate. Behavior-cloning warm-start from the pretrained teacher is used as a training aid in the formal method chain. Detailed training schedules (number of seeds and updates) are given in Section~\ref{sec:setup}.
