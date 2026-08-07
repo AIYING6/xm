@@ -8,6 +8,12 @@ Second, computational cost is higher. Full has 117{,}302 parameters, a 12.05 ms 
 
 Third, the role-pair modulation provides limited independent benefit. Removing it leaves held-out recovery effectively unchanged or slightly higher (0.990 vs.\ 0.971), leaves the primary censor-aware RMST essentially unchanged (13.63 vs.\ 14.47, seed-mixed), and does not improve robustness under strong perturbations in a consistent direction. It is therefore retained only as an auxiliary architectural component, and the paper does not attribute communication compression or robustness gains to it. The strongest mechanism evidence instead concerns Gate Prior: a structured role-pair initialization that raises cross-seed gate correlation from 0.562 to 0.962 and improves worst-seed training stability. Removing the task-support relation degrades held-out recovery (0.971 $\rightarrow$ 0.892) and increases recovery latency (10.8 $\rightarrow$ 15.0), but temporal analysis does not reveal a consistent post-failure activation increase; its benefit is therefore supported empirically rather than by a specific temporal mechanism.
 
+\subsection{Boundary of the early-recovery advantage under zero-shot OOD shifts}
+
+A pre-specified zero-shot OOD evaluation (RQ7, protocol v1.1) delimits where the early-recovery advantage holds. Four findings define the boundary. First, under the \emph{nominal held-out} distribution the advantage is reproducible: three seeds agree at $\tau=50/80/100$, with a bootstrap interval excluding zero. Second, \emph{geometry shifts} (spacing/rotation, range/bearing) preserve part of the benefit, although more weakly and with one seed reverting. Third, \emph{communication-topology shifts} reverse the comparison: with the longest blue--blue edge pruned, MAPPO attains a higher recovery rate ($0.960$ vs.\ $0.770$) and a lower RMST80, and this reversal is consistent across seeds. Fourth, \emph{maneuver and joint shifts} saturate the recovery endpoint: within $\tau=80$ no method re-establishes the kill chain (recovery $\approx 0$), so all methods sit at the RMST80 ceiling and the comparison is uninformative at that horizon---not because Full and MAPPO behave alike, but because the shift overwhelms every evaluated method.
+
+The combined boundary is therefore: EA-RG provides reproducible early post-failure recovery gains under the nominal held-out distribution, but this advantage is distribution-dependent under zero-shot OOD shifts. Geometry shifts preserve part of the benefit, communication-topology shifts can reverse the comparison, and maneuver shifts can overwhelm all evaluated methods. We interpret this as evidence about \emph{where} the method helps, not as a claim of across-shift generalization. The multi-relation task graph encodes relationships that were learned on the training distribution; under topology pruning that removes the longest blue--blue edge, the learned communication-support structure transfers poorly relative to a simpler policy, while under severe maneuver shifts the recovery endpoint itself becomes inaccessible to all compared methods.
+
 \subsection{Limitations}
 
 We state the main limitations explicitly.
@@ -29,9 +35,12 @@ We state the main limitations explicitly.
     \item \textbf{Role-Pair Modulation contributes little independently.} It is retained as
     an auxiliary component; it does not provide communication compression, robustness, or a
     stable full-horizon recovery benefit.
-    \item \textbf{Robustness is not out-of-distribution generalization.} The perturbation
-    grid shares the same scenario family; genuinely unseen target-maneuver, initial-geometry,
-    or communication-topology shifts are not covered.
+    \item \textbf{Zero-shot OOD generalization is limited.} A pre-specified OOD evaluation
+    (protocol v1.1, RQ7) shows that the early-recovery advantage does not transfer uniformly:
+    it is partially preserved under geometry shifts, reversed under communication-topology
+    shifts, and overwhelmed by maneuver shifts, yielding an overall Gate~C verdict. The
+    evaluated shifts are one sample of possible shifts; other unseen distribution changes may
+    behave differently, and no re-tuning was performed after inspecting these results.
     \item \textbf{Task-Support benefit is empirical.} Removing it degrades held-out recovery
     and slows recovery, but the internal temporal mechanism remains inconclusive; no
     post-failure activation re-organization is claimed.

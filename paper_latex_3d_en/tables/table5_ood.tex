@@ -1,0 +1,35 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Zero-shot out-of-distribution (OOD) RMST80 comparison: Full $-$ MAPPO per seed $\times$ cell
+($\Delta^{80}_{s,c}$), per-seed 7-cell aggregate ($\Delta^{OOD}_s$), and family-level effects.
+8400 episodes (4 methods $\times$ 3 seeds $\times$ 7 cells $\times$ 100), base seed 1208607, protocol v1.1.
+Negative values indicate earlier Full recovery; all values in environment steps.
+\label{tab:ood}
+\begin{tabular}{lccccccc|c}
+\toprule
+Seed & C1 & C2 & G1 & G2 & J1 & M1 & M2 & $\Delta^{OOD}_s$ \\
+\midrule
+s0 & $-3.17$ & $-3.17$ & $-10.60$ & $0.00$ & $0.00$ & $0.00$ & $0.00$ & $-2.420$ \\
+s1 & $+4.52$ & $+4.52$ & $+1.76$ & $0.00$ & $0.00$ & $0.00$ & $0.00$ & $+1.543$ \\
+s2 & $+28.82$ & $+28.82$ & $+2.36$ & $0.00$ & $0.00$ & $0.00$ & $0.00$ & $+8.571$ \\
+\midrule
+mean & & & & & & & & $+2.565 \pm 5.567$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{2mm}
+\small
+Family effects (seed-averaged, Full $-$ MAPPO): Geometry (G1,G2) $-1.080$;
+Communication (C1,C2) $+10.057$; Maneuver (M1,M2) $0.000$; Joint (J1) $0.000$.
+Hierarchical paired bootstrap ($B=10{,}000$, RNG 20260807): mean $+2.532$,
+95\% CI $[-2.362,\ +8.435]$, $P(\Delta<0)=0.175$.
+
+\vspace{1mm}
+\footnotesize
+Cells C1/C2 (communication-topology pruning) reverse the comparison toward MAPPO;
+Maneuver (M1,M2) and Joint (J1) reach RMST80 ceiling saturation (recovery events
+$\approx 0$ within $\tau=80$), so their per-cell differences are zero; Geometry
+(G1,G2) preserves a small Full advantage. Cells remain in the equal-weight
+7-cell estimand and are not dropped.
+\end{table*}
