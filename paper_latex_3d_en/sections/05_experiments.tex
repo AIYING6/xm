@@ -21,6 +21,8 @@ Table~\ref{tab:held_out} reports held-out performance. EA-RG reaches a success r
 
 The temporal metrics tell a different story. EA-RG completes successful tasks in $46.1 \pm 0.4$ steps and re-establishes the kill chain after failure in $10.8 \pm 0.6$ steps, the lowest conditional recovery latency among all methods and the smallest seed-level variance. Because this quantity is defined only for episodes that recover, it motivates a censor-aware analysis of \emph{when} recovery occurs across the full post-failure horizon (RQ2).
 
+\input{tables/table1_held_out.tex}
+
 \subsection{RQ2: How does EA-RG affect censor-aware post-failure recovery dynamics?}
 
 The conditional recovery latency reported in Table~\ref{tab:held_out} describes only failure-exposed episodes that eventually recover. We therefore denote this quantity as the \emph{conditional mean recovery time among recovered failure-exposed episodes}. Although useful as a descriptive measure, it does not account for episodes in which recovery is not observed before termination. To evaluate the complete post-failure recovery-time distribution, we additionally perform a pre-specified censor-aware survival analysis using Kaplan--Meier estimation and restricted mean survival time (RMST).
@@ -53,6 +55,8 @@ These censor-aware results refine the interpretation obtained from the condition
 
 Table~\ref{tab:ablation} reports the internal ablations in the order of their held-out effect.
 
+\input{tables/table2_ablation.tex}
+
 \textbf{Gate Prior is the strongest internal component.} Removing it causes the largest reliability degradation among the tested components: recovery drops from $0.971$ to $0.772 \pm 0.244$, and recovery latency increases from $10.8$ to $15.3 \pm 2.5$ steps, with a marked rise in seed-level heterogeneity.
 
 \textbf{Task-Support provides a clear empirical contribution.} Removing it lowers recovery from $0.971$ to $0.892 \pm 0.160$ and increases recovery latency from $10.8$ to $15.0 \pm 4.5$ steps. We deliberately do not interpret this as evidence of post-failure relational re-organization: the temporal analysis in the Discussion shows that Task-Support activation \emph{decreases} rather than increases immediately after failure (from 0.141 in the pre-failure window to 0.092 in the early post-failure window), with no consistent pre-recovery rebound. Its benefit is therefore supported empirically.
@@ -80,6 +84,8 @@ EA-RG remains competitive under severe perturbations, but it does not dominate e
 Table~\ref{tab:efficiency} reports the locked efficiency profiling. EA-RG is computationally heavier than MAPPO, HAPPO, and the wider single-graph baseline: $117{,}302$ parameters, a $12.05$\,ms joint-decision latency, $83$ joint decisions/s, $242$ env-steps/s end-to-end throughput, and the largest training peak memory ($71.9$\,MB). The benefit therefore lies in task-level recovery efficiency rather than per-forward computational efficiency: the method trades additional computational cost for the earlier post-failure task-chain recovery characterized in RQ2. These two notions of efficiency must be kept separate.
 
 We also report the communication cost precisely. The graph edge-feature dimension ($17$) describes \emph{graph computation} only. The actual transmitted message consists of $7$ continuous scalars (positions, velocities, and a confidence), integer metadata, and a variable-length path. Crucially, the physical communication statistics of EA-RG and its w/o Role-Pair Gate ablation are identical (fixed shared trajectory): the Role-Pair Gate does not provide bandwidth compression or message pruning.
+
+\input{tables/table4_efficiency.tex}
 
 \subsection{RQ6: Why does Gate Prior improve stability?}
 

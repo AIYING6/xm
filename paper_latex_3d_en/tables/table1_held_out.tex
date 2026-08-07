@@ -1,23 +1,25 @@
 \begin{table*}[t]
 \centering
 \small
-\caption{Held-out performance (3 training seeds; mean $\pm$ sample SD; 10{,}800 episodes; base seed 745669). Arrows denote the direction of improvement. Wilson95 is the 95\% lower bound of the recovery rate.
+\setlength{\tabcolsep}{4pt}
+\caption{Held-out performance (3 training seeds; mean $\pm$ sample SD; 10{,}800 episodes; base seed 745669). Arrows denote the direction of improvement. Wilson95 is the 95\% lower bound of the recovery rate.}
 \label{tab:held_out}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \toprule
 Method & Success $\uparrow$ & Recovery $\uparrow$ & Wilson95 $\uparrow$ & $t_{\mathrm{succ}}$ $\downarrow$ & $t_{\mathrm{rec}}$ $\downarrow$ & Collision $\downarrow$ \\
 \midrule
-EA-RG Full & $0.985000 \pm 0.010897$ & $0.970569 \pm 0.021256$ & $0.938367 \pm 0.029418$ & $46.1 \pm 0.4$ & $10.8 \pm 0.6$ & $0.000000 \pm 0.000000$ \\
-w/o Gate Prior & $0.864167 \pm 0.151953$ & $0.771629 \pm 0.244171$ & $0.723649 \pm 0.261441$ & $49.3 \pm 1.7$ & $15.3 \pm 2.5$ & $0.000833 \pm 0.001443$ \\
-w/o Task-Support & $0.939167 \pm 0.090634$ & $0.891751 \pm 0.160002$ & $0.853596 \pm 0.181663$ & $49.0 \pm 2.8$ & $15.0 \pm 4.5$ & $0.000833 \pm 0.001443$ \\
-w/o Role-Pair Gate & $0.994167 \pm 0.002887$ & $0.990208 \pm 0.005090$ & $0.965352 \pm 0.008393$ & $48.5 \pm 4.3$ & $13.8 \pm 5.6$ & $0.000833 \pm 0.001443$ \\
-no-graph & $0.935833 \pm 0.102602$ & $0.911261 \pm 0.141335$ & $0.880917 \pm 0.161084$ & $100.9 \pm 19.7$ & $86.6 \pm 22.9$ & $0.000000 \pm 0.000000$ \\
-single-graph & $0.718333 \pm 0.442792$ & $0.684090 \pm 0.461829$ & $0.648859 \pm 0.460612$ & $54.4 \pm 13.9$ & $22.4 \pm 19.3$ & $0.000833 \pm 0.001443$ \\
-wider single-graph & $0.996667 \pm 0.005774$ & $0.994949 \pm 0.008748$ & $0.974905 \pm 0.011445$ & $57.6 \pm 18.0$ & $26.2 \pm 23.6$ & $0.000000 \pm 0.000000$ \\
-HAPPO & $1.000000 \pm 0.000000$ & $1.000000 \pm 0.000000$ & $0.981962 \pm 0.000678$ & $49.9 \pm 3.0$ & $16.3 \pm 4.1$ & $0.000000 \pm 0.000000$ \\
-MAPPO & $0.970833 \pm 0.028976$ & $0.947059 \pm 0.051379$ & $0.911386 \pm 0.063616$ & $51.0 \pm 3.6$ & $17.4 \pm 7.2$ & $0.000000 \pm 0.000000$ \\
+EA-RG Full & $0.985 \pm 0.011$ & $0.971 \pm 0.021$ & $0.938 \pm 0.029$ & $46.1 \pm 0.4$ & $10.8 \pm 0.6$ & $0.000$ \\
+w/o Gate Prior & $0.864 \pm 0.152$ & $0.772 \pm 0.244$ & $0.724 \pm 0.261$ & $49.3 \pm 1.7$ & $15.3 \pm 2.5$ & $0.001$ \\
+w/o Task-Support & $0.939 \pm 0.091$ & $0.892 \pm 0.160$ & $0.854 \pm 0.182$ & $49.0 \pm 2.8$ & $15.0 \pm 4.5$ & $0.001$ \\
+w/o Role-Pair Gate & $0.994 \pm 0.003$ & $0.990 \pm 0.005$ & $0.965 \pm 0.008$ & $48.5 \pm 4.3$ & $13.8 \pm 5.6$ & $0.001$ \\
+no-graph & $0.936 \pm 0.103$ & $0.911 \pm 0.141$ & $0.881 \pm 0.161$ & $100.9 \pm 19.7$ & $86.6 \pm 22.9$ & $0.000$ \\
+single-graph & $0.718 \pm 0.443$ & $0.684 \pm 0.462$ & $0.649 \pm 0.461$ & $54.4 \pm 13.9$ & $22.4 \pm 19.3$ & $0.001$ \\
+wider single-graph & $0.997 \pm 0.006$ & $0.995 \pm 0.009$ & $0.975 \pm 0.011$ & $57.6 \pm 18.0$ & $26.2 \pm 23.6$ & $0.000$ \\
+HAPPO & $1.000 \pm 0.000$ & $1.000 \pm 0.000$ & $0.982 \pm 0.001$ & $49.9 \pm 3.0$ & $16.3 \pm 4.1$ & $0.000$ \\
+MAPPO & $0.971 \pm 0.029$ & $0.947 \pm 0.051$ & $0.911 \pm 0.064$ & $51.0 \pm 3.6$ & $17.4 \pm 7.2$ & $0.000$ \\
 \midrule
-\multicolumn{7}{l}{\footnotesize Internal ablations: w/o Gate Prior, w/o Task-Support, w/o Role-Pair Gate. Graph baselines: no-graph, single-graph, wider single-graph. External MARL baselines: MAPPO, HAPPO.} \\
+\multicolumn{7}{l}{\footnotesize Internal ablations: w/o Gate Prior, w/o Task-Support, w/o Role-Pair Gate.} \\
+\multicolumn{7}{l}{\footnotesize Graph baselines: no-graph, single-graph, wider single-graph. External MARL baselines: MAPPO, HAPPO.} \\
 \bottomrule
 \end{tabular}
 \end{table*}
