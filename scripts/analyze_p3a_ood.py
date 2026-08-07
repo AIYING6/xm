@@ -156,8 +156,14 @@ def cell_stats(rows: list[dict]) -> dict:
     t_events = np.array([float(r["recovery_event_time"]) for r in rows if float(r["recovery_event_time"]) >= 0])
     t_censors = np.array([float(r["censor_time"]) for r in rows if float(r["censor_time"]) >= 0])
     e_t_rec = float(np.mean(t_events)) if len(t_events) else float("nan")
-    rmst80 = km_rmst(t_events, t_censors, TAU_PRIMARY)
-    rmst220 = km_rmst(t_events, t_censors, TAU_FULL)
+    # P1-frozen paired clock: each episode contributes exactly one (event, censor)
+    # value, with the other = -1. km_rmst requires the two arrays to be the SAME
+    # length and pair per-episode (event time OR censor time). Passing the
+    # disjoint arrays above would mis-pair and corrupt RMST.
+    ev_all = np.array([float(r["recovery_event_time"]) for r in rows], dtype=float)
+    ce_all = np.array([float(r["censor_time"]) for r in rows], dtype=float)
+    rmst80 = km_rmst(ev_all, ce_all, TAU_PRIMARY)
+    rmst220 = km_rmst(ev_all, ce_all, TAU_FULL)
     return {
         "n": n, "success": succ, "collision": coll, "P_rec": p_rec,
         "E_Trec_recovered": e_t_rec, "RMST80": rmst80, "RMST220": rmst220,

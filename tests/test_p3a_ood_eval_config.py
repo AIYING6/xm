@@ -588,6 +588,25 @@ def test_analysis_runtime_imports():
     assert True
 
 
+def test_cell_stats_paired_clock_not_disjoint():
+    """Regression: cell_stats must feed km_rmst per-episode paired (event, censor)
+    arrays (same length), not disjoint recovered/censored lists. A block with
+    many recovered events at ~20 must NOT yield RMST80=80 (ceiling artifact)."""
+    from scripts.analyze_p3a_ood import cell_stats, km_rmst
+    rows = []
+    for i in range(95):
+        rows.append({"success": 0.0, "collision": 0.0, "recovery_observed": 1.0,
+                     "recovery_event_time": 17.0, "censor_time": -1.0})
+    for i in range(5):
+        rows.append({"success": 0.0, "collision": 0.0, "recovery_observed": 0.0,
+                     "recovery_event_time": -1.0, "censor_time": 60.0})
+    st = cell_stats(rows)
+    assert st["P_rec"] == 0.95
+    assert st["RMST80"] < 80.0  # must not be ceiling-saturated
+    assert 0.0 <= st["RMST80"] <= 80.0
+    assert 0.0 <= st["RMST220"] <= 220.0
+
+
 def test_happo_rollout_interface_matches_held_out():
     # Regression: preflight must call HAPPO via get_action_and_value with the
     # same signature as evaluate_happo_3d.py (no get_action, no intent kwargs).
