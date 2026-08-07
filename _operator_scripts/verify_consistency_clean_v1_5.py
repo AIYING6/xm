@@ -27,10 +27,17 @@ CANONICAL = {
     "0.990", "0.892", "15.0", "0.772", "0.562", "0.962", "117,302", "12.05",
     "242", "71.9", "38", "34", "59", "0.9384", "46.1", "0.9471", "1.000",
     "0.995", "0.6", "0.977",
+    # robustness absolute cells (robustness_absolute_recovery_v1_5.csv, locked)
+    "0.940", "0.993", "0.927", "0.987",
+    # gate-prior mechanism (locked gate_prior assets)
+    "0.545", "0.396", "0.141", "0.092",
+    # efficiency (locked) / protocol constants
+    "83", "17", "7", "0.02", "0.972",
 }
 # mechanism constants / layout params allowed with context
 EXEMPT_CTX = ("logit 0.4", "0.599", "0.98\\linewidth", "0.98\\textwidth",
-              "left=2.35cm", "right=2.35cm", "top=2.35cm", "bottom=2.35cm")
+              "left=2.35cm", "right=2.35cm", "top=2.35cm", "bottom=2.35cm",
+              "logit", "sigmoid")
 
 
 def strip_comments_and_false(text: str) -> str:
