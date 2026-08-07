@@ -509,17 +509,66 @@ def test_km_rmst_mixed():
     assert abs(rmst - 50.0) < 1e-6
 
 
-def test_bootstrap_diff_sign():
-    from scripts.analyze_p3a_ood import bootstrap_rmst_diff
-    rng = np.random.default_rng(42)
-    # Full: early events (good). MAPPO: late/censored (bad).
-    obs_f = rng.uniform(1, 20, 200)
-    cen_f = np.full(200, -1.0)
-    obs_m = np.full(200, -1.0)
-    cen_m = rng.uniform(40, 70, 200)
-    mean, sd, lo, hi = bootstrap_rmst_diff(obs_f, cen_f, obs_m, cen_m, 80.0, 200, rng)
-    assert mean < 0  # Full RMST lower -> better recovery -> Delta negative
-    assert lo < 0 and hi < 0
+def test_bootstrap_params_frozen():
+    from scripts.analyze_p3a_ood import N_BOOT, RNG_SEED, TAU_PRIMARY, TAU_FULL, CELLS_ORDER
+    assert N_BOOT == 10000
+    assert RNG_SEED == 20260807
+    assert TAU_PRIMARY == 80
+    assert TAU_FULL == 220
+    assert CELLS_ORDER == ["C1", "C2", "G1", "G2", "J1", "M1", "M2"]
+
+
+def _synthetic_8400(full_early: bool = True, n: int = 100):
+    """Build a synthetic 8400-row dataset. If full_early, Full recovers earlier
+    (small T_event) than MAPPO, so Delta^OOD should be negative."""
+    import numpy as np
+    rows = []
+    rng = np.random.default_rng(7)
+    for method in ["full_ea_rg", "mappo", "happo", "param_matched_single"]:
+        for seed in ["0", "1", "2"]:
+            for cell in ["C1", "C2", "G1", "G2", "J1", "M1", "M2"]:
+                for e in range(n):
+                    rec = bool(rng.random() < 0.7)
+                    if method == "full_ea_rg":
+                        tev = float(rng.uniform(2, 25)) if rec else -1.0
+                        tce = -1.0 if rec else float(rng.uniform(40, 80))
+                    elif method == "mappo":
+                        tev = float(rng.uniform(15, 50)) if rec else -1.0
+                        tce = -1.0 if rec else float(rng.uniform(60, 120))
+                    else:
+                        tev = float(rng.uniform(5, 40)) if rec else -1.0
+                        tce = -1.0 if rec else float(rng.uniform(50, 100))
+                    rows.append({"method": method, "train_seed": seed, "cell": cell,
+                                 "episode_id": e, "eval_seed": 0,
+                                 "checkpoint_sha256": "A" * 64, "checkpoint_path": "x",
+                                 "checkpoint_update": 1, "protocol_tag": "p",
+                                 "implementation_tag": "i", "preflight_lock_tag": "l",
+                                 "steps": 100.0, "failure_start_step": 25.0,
+                                 "failure_exposed": 1.0, "success": 0.0,
+                                 "collision": 0.0, "post_failure_chain_recovered": float(rec),
+                                 "recovery_window_start_step": 0.0,
+                                 "recovery_event_time": tev, "censor_time": tce,
+                                 "recovery_observed": float(rec), "reward": 0.0})
+    return rows
+
+
+def test_hierarchical_bootstrap_sign_and_reproducible():
+    from scripts.analyze_p3a_ood import hierarchical_bootstrap_delta, RNG_SEED
+    rows = _synthetic_8400(full_early=True)
+    m1, sd1, lo1, hi1, p1 = hierarchical_bootstrap_delta(rows, n_boot=200)
+    m2, sd2, lo2, hi2, p2 = hierarchical_bootstrap_delta(rows, n_boot=200)
+    assert m1 < 0  # Full recovers earlier -> Delta negative
+    assert lo1 < 0 and hi1 < 0
+    assert p1 >= 0.95
+    # reproducible under the frozen RNG seed
+    assert m1 == m2 and lo1 == lo2 and hi1 == hi2 and p1 == p2
+
+
+def test_analysis_runtime_imports():
+    from scripts.analyze_p3a_ood import (  # noqa: F401
+        km_rmst, cell_stats, hierarchical_bootstrap_delta, main,
+    )
+    assert True
 
 
 def test_happo_rollout_interface_matches_held_out():
