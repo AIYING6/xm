@@ -237,6 +237,12 @@ def main() -> int:
 
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
     out_path = Path(args.out) if args.out else OUT_ROOT / "p3a_ood_raw_results.csv"
+    # fail-if-exists: the formal 8400 run must never append/overwrite existing raw
+    # output (e.g. smoke data). Any pre-existing file => abort before episode 0.
+    if out_path.exists():
+        print(f"FAIL-IF-EXISTS: raw output already exists -> {out_path}")
+        print("Remove it only after explicit audit, or point --out to a fresh path.")
+        return 1
 
     all_rows: list[dict] = []
     for method in PRIMARY_METHODS:
