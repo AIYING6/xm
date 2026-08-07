@@ -156,3 +156,216 @@ def test_happo_same_env_config():
     c0 = base.blue_pos[:, :2].mean(0)
     d0 = np.linalg.norm(base.blue_pos[:, :2] - c0, axis=1)
     assert np.allclose(d, d0 * 1.2, atol=1e-2)
+
+
+# ---------------------------------------------------------------------------
+# P3-A.2 v1.1.2 provenance tests: checkpoint manifest / MAPPO strict loader /
+# frozen protocol invariants. No performance endpoints are touched.
+# ---------------------------------------------------------------------------
+
+EXPECTED_UPDATES = {
+    ("full_ea_rg", "0"): 700, ("full_ea_rg", "1"): 900, ("full_ea_rg", "2"): 977,
+    ("mappo", "0"): 600, ("mappo", "1"): 900, ("mappo", "2"): 100,
+    ("happo", "0"): 300, ("happo", "1"): 977, ("happo", "2"): 800,
+    ("param_matched_single", "0"): 500, ("param_matched_single", "1"): 200,
+    ("param_matched_single", "2"): 900,
+}
+
+EXPECTED_SHA256_PREFIX = {
+    ("full_ea_rg", "0"): "B9FECBE9ACC3", ("full_ea_rg", "1"): "84AA96304E66",
+    ("full_ea_rg", "2"): "BD4ADC24E017", ("mappo", "0"): "C99A5718F4C0",
+    ("mappo", "1"): "6ABA31F9197D", ("mappo", "2"): "21A242CFB4C2",
+    ("happo", "0"): "1219F17D5201", ("happo", "1"): "A5B46A285722",
+    ("happo", "2"): "39239D1BADF6", ("param_matched_single", "0"): "C7CDEB2F29D3",
+    ("param_matched_single", "1"): "FE0323270689", ("param_matched_single", "2"): "98AB73AEC76B",
+}
+
+
+@pytest.mark.parametrize("method", ["full_ea_rg", "mappo", "happo", "param_matched_single"])
+@pytest.mark.parametrize("seed", ["0", "1", "2"])
+def test_checkpoint_update_mapping_exact(method, seed):
+    from scripts.p3a_ood_cells import checkpoint_update, load_held_out_manifest
+    man = load_held_out_manifest()
+    assert (method, seed) in man, f"missing {method} seed{seed} in held-out manifest"
+    assert checkpoint_update(method, seed) == EXPECTED_UPDATES[(method, seed)]
+    assert man[(method, seed)]["match"] == "PASS"
+
+
+@pytest.mark.parametrize("method", ["full_ea_rg", "mappo", "happo", "param_matched_single"])
+@pytest.mark.parametrize("seed", ["0", "1", "2"])
+def test_checkpoint_sha256_matches_manifest(method, seed):
+    from scripts.p3a_ood_cells import checkpoint_path, load_held_out_manifest
+    man = load_held_out_manifest()
+    ck = checkpoint_path(method, seed)
+    if not ck.exists():
+        pytest.skip(f"checkpoint file not present: {ck}")
+    from scripts.p3a_mappo_loader import sha256_file
+    actual = sha256_file(ck)
+    assert actual == man[(method, seed)]["sha256"]
+    assert actual.startswith(EXPECTED_SHA256_PREFIX[(method, seed)])
+
+
+def test_manifest_has_exactly_12_primary_rows():
+    from scripts.p3a_ood_cells import load_held_out_manifest
+    man = load_held_out_manifest()
+    primary = {(m, s) for m in ["full_ea_rg", "mappo", "happo", "param_matched_single"]
+               for s in ["0", "1", "2"]}
+    assert primary.issubset(set(man.keys()))
+    assert all(k in man for k in primary)
+
+
+def test_mappo_agent_is_mappo_agent_3d():
+    from scripts.p3a_mappo_loader import MAPPOAgent3D, build_config, load_agent_strict
+    from scripts.p3a_ood_cells import checkpoint_path
+    ck = checkpoint_path("mappo", "0")
+    if not ck.exists():
+        pytest.skip(f"mappo checkpoint not present: {ck}")
+    import argparse
+    a = argparse.Namespace(checkpoint=ck, seed=0, episodes=1, eval_batch_size=1,
+                           base_seed=1208607, target_policy="straight",
+                           communication_range_scale=1.0, communication_dropout_prob=0.3,
+                           message_delay_steps=2, radar_dropout_prob=0.0,
+                           strict_target_sensing=True, agent_target_info_bottleneck=True,
+                           target_prior_position=(0.0, 0.0, 0.0),
+                           max_target_message_age_steps=40, min_target_confidence=0.0,
+                           failed_blue_agent=1, node_failure_start_step=25,
+                           node_failure_duration_steps=80, attack_hold_steps=4,
+                           min_success_step=0, stochastic=False, allow_random_policy=False,
+                           hidden_dim=64, role_dim=8, intent_dim=8,
+                           graph_encoder="multi_relation", graph_relation_ablation="none",
+                           graph_message_ablation="none", graph_input_ablation="none",
+                           multi_relation_global_residual_weight=0.5, device="cpu",
+                           max_steps=260,
+                           blue_init_rotation_deg=0.0, blue_init_spacing_scale=1.0,
+                           target_init_range_scale=1.0, target_init_bearing_offset_deg=0.0,
+                           comm_topology_mode="none")
+    cfg = build_config(a)
+    agent, audit = load_agent_strict(a, cfg)
+    assert isinstance(agent, MAPPOAgent3D)
+    assert audit["agent_class"] == "MAPPOAgent3D"
+    assert audit["strict_load"] is True
+    assert audit["partial_tensors"] == 0
+    assert audit["skipped_tensors"] == 0
+
+
+def test_mappo_loader_never_uses_matching_load():
+    import re
+    from pathlib import Path
+    src = Path("scripts/p3a_mappo_loader.py").read_text(encoding="utf-8")
+    # Only check import/call usage, not doc-comment mentions.
+    import_lines = [ln for ln in src.splitlines()
+                    if ln.startswith("import ") or ln.startswith("from ")]
+    assert not any("load_matching_state_dict" in ln for ln in import_lines)
+    assert "load_matching_state_dict(" not in src
+    assert "MAPPOAgent3D" in src
+    assert "strict" in src.lower()
+
+
+def test_mappo_load_signature_strict_no_partial():
+    # Held-out MAPPO behavior: strict state_dict load, 12 tensors, no partial.
+    from scripts.p3a_ood_cells import checkpoint_path
+    ck = checkpoint_path("mappo", "0")
+    if not ck.exists():
+        pytest.skip(f"mappo checkpoint not present: {ck}")
+    import torch
+    from algorithms.ri_gmappo.simple_ri_gmappo import make_env
+    from scripts.p3a_mappo_loader import build_config, compute_load_signature, MAPPOAgent3D
+    import argparse
+    a = argparse.Namespace(checkpoint=ck, seed=0, episodes=1, eval_batch_size=1,
+                           base_seed=1208607, target_policy="straight",
+                           communication_range_scale=1.0, communication_dropout_prob=0.3,
+                           message_delay_steps=2, radar_dropout_prob=0.0,
+                           strict_target_sensing=True, agent_target_info_bottleneck=True,
+                           target_prior_position=(0.0, 0.0, 0.0),
+                           max_target_message_age_steps=40, min_target_confidence=0.0,
+                           failed_blue_agent=1, node_failure_start_step=25,
+                           node_failure_duration_steps=80, attack_hold_steps=4,
+                           min_success_step=0, stochastic=False, allow_random_policy=False,
+                           hidden_dim=64, role_dim=8, intent_dim=8,
+                           graph_encoder="multi_relation", graph_relation_ablation="none",
+                           graph_message_ablation="none", graph_input_ablation="none",
+                           multi_relation_global_residual_weight=0.5, device="cpu",
+                           max_steps=260,
+                           blue_init_rotation_deg=0.0, blue_init_spacing_scale=1.0,
+                           target_init_range_scale=1.0, target_init_bearing_offset_deg=0.0,
+                           comm_topology_mode="none")
+    cfg = build_config(a)
+    env = make_env(cfg, a.seed, training=False)
+    sd = torch.load(ck, map_location="cpu", weights_only=True)
+    obs_in = int(sd["actor.net.0.weight"].shape[1])
+    action_out = int(sd["actor.net.4.weight"].shape[0])
+    hidden = int(sd["actor.net.0.weight"].shape[0])
+    agent = MAPPOAgent3D(obs_dim=env.obs_dim, role_dim=obs_in - env.obs_dim,
+                         share_obs_dim=env.share_obs_dim, action_dim=action_out,
+                         hidden_dim=hidden)
+    sig = compute_load_signature(agent, str(ck), torch.device("cpu"))
+    assert sig["partial_tensors"] == 0
+    assert sig["skipped_tensors"] == 0
+    assert sig["matched_tensors"] == len(sd)
+
+
+def test_preflight_uses_correct_loaders():
+    from pathlib import Path
+    src = Path("scripts/run_p3a_ood_preflight.py").read_text(encoding="utf-8")
+    # mappo must route through p3a_mappo_loader STRICT, not ri build_agent
+    assert "load_agent_strict" in src
+    assert "method == \"mappo\"" in src
+    # Full / Wider (non-happo, non-mappo) go through evaluate_ri_gmappo_3d
+    assert "ri_build_agent(a, cfg)" in src
+    # HAPPO through evaluate_happo_3d
+    assert "ha_build_agent(a, cfg)" in src
+
+
+def test_method_graph_encoder_mapping():
+    from scripts.run_p3a_ood_preflight import _METHOD_GRAPH_ENCODER
+    assert _METHOD_GRAPH_ENCODER == {
+        "full_ea_rg": "multi_relation",
+        "param_matched_single": "single",
+        "mappo": "no_graph",
+        "happo": "no_graph",
+    }
+
+
+def test_wider_single_graph_load_signature_matches_held_out():
+    # Held-out param_matched_single (Wider Single-Graph): 34/0/0 via single encoder.
+    from scripts.p3a_ood_cells import checkpoint_path
+    from scripts.run_p3a_ood_preflight import make_args, common_eval_overrides
+    from scripts.evaluate_ri_gmappo_3d import build_config, build_agent
+    from scripts.p3a_mappo_loader import compute_load_signature
+    import torch
+    ck = checkpoint_path("param_matched_single", "0")
+    if not ck.exists():
+        pytest.skip(f"wider checkpoint not present: {ck}")
+    a = make_args(ck, "0", "cpu", 1, common_eval_overrides(), method="param_matched_single")
+    cfg = build_config(a)
+    agent, _ = build_agent(a, cfg)
+    sig = compute_load_signature(agent, str(ck), torch.device("cpu"))
+    assert sig["partial_tensors"] == 0
+    assert sig["skipped_tensors"] == 0
+    assert sig["matched_tensors"] == 34
+
+
+def test_protocol_invariants_v1_1():
+    from scripts.p3a_ood_cells import (CELLS, EVAL_BASE_SEED, EXPOSURE_GATE,
+                                       FAILURE_DURATION, FAILURE_START, HORIZON,
+                                       OUT_ROOT)
+    assert FAILURE_START == 25
+    assert FAILURE_DURATION == 80
+    assert HORIZON == 260
+    assert EXPOSURE_GATE == 0.99
+    assert EVAL_BASE_SEED == 1208607
+    assert set(CELLS.keys()) == {"G1", "G2", "M1", "M2", "C1", "C2", "J1"}
+    assert CELLS["G1"] == {"blue_init_spacing_scale": 1.20, "blue_init_rotation_deg": 20.0}
+    assert CELLS["G2"] == {"target_init_range_scale": 1.40, "target_init_bearing_offset_deg": 25.0}
+    assert CELLS["M1"] == {"target_policy": "weaving"}
+    assert CELLS["M2"] == {"target_policy": "break_turn"}
+    assert CELLS["C1"] == {"comm_topology_mode": "symmetric_longest_prune"}
+    assert CELLS["C2"] == {"comm_topology_mode": "directed_longest_prune"}
+    assert CELLS["J1"] == {"blue_init_spacing_scale": 1.20, "blue_init_rotation_deg": 20.0,
+                           "target_policy": "weaving", "comm_topology_mode": "symmetric_longest_prune"}
+
+
+def test_output_root_is_v1_1():
+    from scripts.p3a_ood_cells import OUT_ROOT
+    assert str(OUT_ROOT).endswith("p3a_ood_results_v1_1")
+    assert "v1_0" not in str(OUT_ROOT)

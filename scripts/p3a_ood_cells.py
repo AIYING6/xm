@@ -1,8 +1,12 @@
 # p3a_ood_cells.py — P3-A OOD protocol v1.1: single code-level source of the 7 cells,
-# frozen methods/checkpoints, and evaluation parameters. Do NOT edit values here; any
-# change requires a new protocol version.
+# frozen methods, evaluation parameters, and the checkpoint manifest (held-out
+# truth source). Do NOT edit frozen values here; any change requires a new protocol
+# version. Checkpoint provenance is read from the copied frozen held-out manifest
+# (docs/statistics/p3a_ood_results_v1_1/held_out_split_manifest.csv), NOT from
+# hard-coded update numbers.
 from __future__ import annotations
 
+import csv
 from pathlib import Path
 
 # --- frozen evaluation parameters (p3a_ood_protocol_v1_1) ---
@@ -13,6 +17,12 @@ FAILURE_START = 25
 FAILURE_DURATION = 80
 HORIZON = 260
 EXPOSURE_GATE = 0.99
+
+# --- v1.1 output root (NOT v1_0) ---
+OUT_ROOT = Path("docs/statistics/p3a_ood_results_v1_1")
+
+# --- copied frozen held-out manifest (single truth source for checkpoints) ---
+HELD_OUT_MANIFEST_CSV = OUT_ROOT / "held_out_split_manifest.csv"
 
 # --- exact OOD cell definitions (protocol v1.1; no e.g. anywhere) ---
 CELLS: dict[str, dict] = {
@@ -30,32 +40,56 @@ CELLS: dict[str, dict] = {
 PRIMARY_METHODS = ["full_ea_rg", "mappo", "happo", "param_matched_single"]
 OPTIONAL_METHODS = ["w_o_task_support"]
 
-# --- frozen checkpoints (zero-shot; must match recorded SHA256 in results manifest) ---
-_CHECKPOINT_TMPL = {
-    # (base dir, seed pattern, file)
-    "full_ea_rg": (
-        Path(r"D:/Code/Codex/ri_gmappo_uav/results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/ea_rg_mappo_s_gate_prior"),
-        "ppo_seed{S}_1m", "actor_critic_update_0700.pt"),
-    "happo": (
-        Path(r"D:/Code/Codex/ri_gmappo_uav/results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/happo"),
-        "ppo_seed{S}_1m", "happo_update_0300.pt"),
-    "param_matched_single": (
-        Path(r"D:/Code/Codex/ri_gmappo_uav/results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/param_matched_single"),
-        "ppo_seed{S}_1m", "actor_critic_update_0500.pt"),
-    "mappo": (
-        Path(r"D:/Code/Codex/ri_gmappo_uav_mappo_v1.5/results/paper_config_runs/formal_mappo_v1.5_ppo_977_20260806"),
-        "ppo_seed{S}", "actor_critic_update_0600.pt"),
-    "w_o_task_support": (
-        Path(r"D:/Code/Codex/ri_gmappo_uav_ablation_v1.5/results/paper_config_runs/formal_ablation_v1.5_ppo_977_20260804/w_o_task_support"),
-        "ppo_seed{S}_1m", "actor_critic_update_0100.pt"),
+# method -> (run-dir template, filename prefix)
+_METHOD_DIR = {
+    "full_ea_rg": ("ppo_seed{S}_1m", "actor_critic_update_"),
+    "happo": ("ppo_seed{S}_1m", "happo_update_"),
+    "param_matched_single": ("ppo_seed{S}_1m", "actor_critic_update_"),
+    "mappo": ("ppo_seed{S}", "actor_critic_update_"),
+    "w_o_task_support": ("ppo_seed{S}_1m", "actor_critic_update_"),
 }
 
 TRAIN_SEEDS = ["0", "1", "2"]
 
 
+def load_held_out_manifest() -> dict[tuple[str, str], dict]:
+    """Read the copied frozen held-out manifest -> {(method, seed): row}.
+
+    Columns (frozen asset): method, train_seed, selected_checkpoint_update,
+    checkpoint_abs, file_sha256, manifest_sha256, match, base_seed,
+    episodes_per_scenario, scenarios. P3-A reuses exactly these
+    validation-selected checkpoints (zero-shot; no reselection).
+    """
+    if not HELD_OUT_MANIFEST_CSV.exists():
+        raise FileNotFoundError(
+            f"frozen held-out manifest missing: {HELD_OUT_MANIFEST_CSV} "
+            f"(copy from the v1.5 worktree: docs/held_out_v1_5_assets/held_out_split_manifest.csv)"
+        )
+    manifest: dict[tuple[str, str], dict] = {}
+    with HELD_OUT_MANIFEST_CSV.open("r", encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            method = row["method"]
+            if method not in _METHOD_DIR:
+                continue
+            manifest[(method, row["train_seed"])] = {
+                "update": int(row["selected_checkpoint_update"]),
+                "path": Path(row["checkpoint_abs"]),
+                "sha256": row["file_sha256"].strip().upper(),
+                "manifest_sha256": row["manifest_sha256"].strip().upper(),
+                "match": row["match"],
+            }
+    return manifest
+
+
 def checkpoint_path(method: str, seed: str) -> Path:
-    base, pat, fname = _CHECKPOINT_TMPL[method]
-    return base / pat.replace("{S}", seed) / fname
+    """Path of the frozen validation-selected checkpoint for (method, seed)."""
+    manifest = load_held_out_manifest()
+    return manifest[(method, str(seed))]["path"]
+
+
+def checkpoint_update(method: str, seed: str) -> int:
+    manifest = load_held_out_manifest()
+    return manifest[(method, str(seed))]["update"]
 
 
 def cell_overrides(cell: str) -> dict:
