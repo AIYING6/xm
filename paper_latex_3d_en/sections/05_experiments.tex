@@ -73,9 +73,9 @@ EA-RG remains competitive under severe perturbations, but it does not dominate e
 
 \input{tables/table3_robustness.tex}
 
-\subsection{RQ5: What is the computational cost of faster recovery?}
+\subsection{RQ5: What is the computational cost of earlier task-chain recovery?}
 
-Table~\ref{tab:efficiency} reports the locked efficiency profiling. EA-RG is computationally heavier than MAPPO, HAPPO, and the wider single-graph baseline: $117{,}302$ parameters, a $12.05$\,ms joint-decision latency, $83$ joint decisions/s, $242$ env-steps/s end-to-end throughput, and the largest training peak memory ($71.9$\,MB). The benefit therefore lies in task-level recovery efficiency rather than per-forward computational efficiency: the method trades additional computational cost for faster post-failure coordination recovery. These two notions of efficiency must be kept separate.
+Table~\ref{tab:efficiency} reports the locked efficiency profiling. EA-RG is computationally heavier than MAPPO, HAPPO, and the wider single-graph baseline: $117{,}302$ parameters, a $12.05$\,ms joint-decision latency, $83$ joint decisions/s, $242$ env-steps/s end-to-end throughput, and the largest training peak memory ($71.9$\,MB). The benefit therefore lies in task-level recovery efficiency rather than per-forward computational efficiency: the method trades additional computational cost for the earlier post-failure task-chain recovery characterized in RQ2. These two notions of efficiency must be kept separate.
 
 We also report the communication cost precisely. The graph edge-feature dimension ($17$) describes \emph{graph computation} only. The actual transmitted message consists of $7$ continuous scalars (positions, velocities, and a confidence), integer metadata, and a variable-length path. Crucially, the physical communication statistics of EA-RG and its w/o Role-Pair Gate ablation are identical (fixed shared trajectory): the Role-Pair Gate does not provide bandwidth compression or message pruning.
 

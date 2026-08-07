@@ -13,3 +13,18 @@ EA-RG lies close to the high-success frontier with a low completion time ($0.985
     first-tier methods.}
     \label{fig:s1_pareto_success}
 \end{figure}
+
+For completeness, Fig.~\ref{fig:s1_pareto_conditional} shows the corresponding Pareto in the
+conditional recovery-latency view. This figure is \emph{based on the conditional mean
+recovery time among recovered failure-exposed episodes} (the conditional quantity used in
+Table 1, before censoring is accounted for); it is provided only as a descriptive
+visualization and does not substitute for the censor-aware KM/RMST analysis in RQ2.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/fig_pareto_recovery.png}
+    \caption{Conditional recovery-latency Pareto (n=3 training seeds; error bars are sample SD). 
+    Based on conditional mean recovery time among recovered failure-exposed episodes; see the 
+    censor-aware RMST analysis in RQ2 for the primary evidence.}
+    \label{fig:s1_pareto_conditional}
+\end{figure}
