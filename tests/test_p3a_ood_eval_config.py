@@ -371,6 +371,157 @@ def test_output_root_is_v1_1():
     assert "v1_0" not in str(OUT_ROOT)
 
 
+# ---------------------------------------------------------------------------
+# P3-A.3a collection runner + raw schema / recovery clock (frozen P1)
+# ---------------------------------------------------------------------------
+
+def test_raw_schema_frozen_columns():
+    from scripts.run_p3a_ood_eval import RAW_COLUMNS, PROTOCOL_TAG, IMPLEMENTATION_TAG, PREFLIGHT_LOCK_TAG, TAU_PRIMARY, TAU_FULL
+    required = {
+        "method", "train_seed", "cell", "episode_id", "eval_seed",
+        "checkpoint_path", "checkpoint_sha256", "checkpoint_update",
+        "protocol_tag", "implementation_tag", "preflight_lock_tag",
+        "steps", "failure_start_step", "failure_exposed",
+        "success", "collision", "post_failure_chain_recovered",
+        "recovery_window_start_step", "recovery_event_time", "censor_time",
+        "recovery_observed", "reward",
+    }
+    assert set(RAW_COLUMNS) == required
+    assert PROTOCOL_TAG == "p3a-ood-protocol-v1.1"
+    assert IMPLEMENTATION_TAG == "p3a-ood-eval-impl-v1.1.3"
+    assert PREFLIGHT_LOCK_TAG == "p3a-ood-preflight-lock-v1.1"
+    assert TAU_PRIMARY == 80
+    assert TAU_FULL == 220
+
+
+def test_p3a3a_runtime_episodes_frozen():
+    from scripts.run_p3a_ood_eval import (  # noqa: F401
+        build_raw_row, completeness_audit, run_cell,
+    )
+    assert True  # import smoke; real 8400 run happens outside tests
+
+
+def test_completeness_audit_logic():
+    from scripts.run_p3a_ood_eval import completeness_audit, EPISODES_PER_CELL
+    rows = []
+    for m in ["full_ea_rg", "mappo", "happo", "param_matched_single"]:
+        for s in ["0", "1", "2"]:
+            for c in ["G1", "G2", "M1", "M2", "C1", "C2", "J1"]:
+                for e in range(EPISODES_PER_CELL):
+                    rows.append({"method": m, "train_seed": s, "cell": c, "episode_id": e,
+                                 "checkpoint_sha256": "A" * 64, "failure_exposed": 1})
+    audit = completeness_audit(rows)
+    assert audit["rows"] == 8400
+    assert audit["expected_rows"] == 8400
+    assert audit["unique_cells"] == 84
+    assert audit["missing"] == []
+    assert audit["duplicates"] == 0
+    assert audit["exposure_violations"] == 0
+
+
+def test_completeness_audit_detects_missing():
+    from scripts.run_p3a_ood_eval import completeness_audit
+    rows = [{"method": "full_ea_rg", "train_seed": "0", "cell": "G1", "episode_id": 0,
+             "checkpoint_sha256": "B" * 64, "failure_exposed": 1}]
+    audit = completeness_audit(rows)
+    assert audit["rows"] == 1
+    assert len(audit["missing"]) == 8399
+
+
+def _full_info(t, chain_closed=0.0, tracking=1.0, comm=1.0):
+    """Minimal step-info dict carrying every key post_failure_recovery_metrics reads."""
+    return {
+        "step": float(t),
+        "chain_closed": float(chain_closed),
+        "node_failure_active": 1.0 if t >= 25 else 0.0,
+        "tracking_rate": float(tracking),
+        "comm_connectivity": float(comm),
+        "attacker_info_attack_window": 1.0,
+        "attacker_window_cache_generation_step_max": 200.0,
+        "attacker_window_cache_delivery_step_max": 200.0,
+        "attacker_window_direct_info": 1.0,
+        "attacker_window_comm_info": 0.0,
+    }
+
+
+def test_recovery_clock_matches_p1_definition():
+    """P1 frozen: T_event = stable_window_start - failure_start; T_censor = steps - failure_start.
+    Verify build_raw_row maps the held-out recovery metrics exactly."""
+    import argparse
+    from scripts.run_p3a_ood_eval import build_raw_row
+    args = argparse.Namespace(
+        node_failure_start_step=25, node_failure_duration_steps=80,
+        failed_blue_agent=1, attack_hold_steps=4,
+    )
+    # recovered episode: chain closes at step 40 -> stable_window_start = 40-4+1=37
+    # T_event = 37 - 25 = 12
+    infos = [_full_info(t, chain_closed=1.0 if t >= 40 else 0.0) for t in range(20, 45)]
+    row = build_raw_row("full_ea_rg", "0", "G1", 0, args, "SHA", infos,
+                        {"step": 44, "success": 0.0, "collision": 0.0}, 1.5)
+    assert row["recovery_observed"] == 1.0
+    assert row["recovery_event_time"] == 12.0
+    assert row["recovery_window_start_step"] == 37.0
+    assert row["censor_time"] == -1.0
+    assert row["failure_exposed"] == 1.0
+    assert row["steps"] == 44.0
+    assert row["reward"] == 1.5
+
+
+def test_censor_clock_unrecovered():
+    import argparse
+    from scripts.run_p3a_ood_eval import build_raw_row
+    args = argparse.Namespace(
+        node_failure_start_step=25, node_failure_duration_steps=80,
+        failed_blue_agent=1, attack_hold_steps=4,
+    )
+    infos = [_full_info(t, chain_closed=0.0) for t in range(20, 61)]
+    row = build_raw_row("mappo", "1", "C1", 3, args, "SHA", infos,
+                        {"step": 60, "success": 0.0, "collision": 0.0}, -2.0)
+    assert row["recovery_observed"] == 0.0
+    assert row["recovery_event_time"] == -1.0
+    assert row["censor_time"] == 35.0  # 60 - 25
+    assert row["recovery_window_start_step"] == -1.0
+
+
+# ---------------------------------------------------------------------------
+# P3-A.3b statistical analysis (frozen primary endpoint)
+# ---------------------------------------------------------------------------
+
+def test_km_rmst_no_events():
+    from scripts.analyze_p3a_ood import km_rmst
+    # all censored at 60 -> S(t)=1 -> RMST(tau=80) = 80
+    rmst = km_rmst(np.array([-1.0]), np.array([60.0]), 80.0)
+    assert abs(rmst - 80.0) < 1e-9
+
+
+def test_km_rmst_all_event_at_0():
+    from scripts.analyze_p3a_ood import km_rmst
+    # all events at t=0 -> S(t)=0 immediately -> RMST = 0
+    rmst = km_rmst(np.array([0.0, 0.0]), np.array([-1.0, -1.0]), 80.0)
+    assert abs(rmst) < 1e-9
+
+
+def test_km_rmst_mixed():
+    from scripts.analyze_p3a_ood import km_rmst
+    # one event at 20, one censored at 60, tau=80
+    rmst = km_rmst(np.array([20.0, -1.0]), np.array([-1.0, 60.0]), 80.0)
+    # S(0..20)=1 (area 20), S(20..60)=0.5 (area 0.5*40=20), S(60..80)=0.5 (area 10)
+    assert abs(rmst - 50.0) < 1e-6
+
+
+def test_bootstrap_diff_sign():
+    from scripts.analyze_p3a_ood import bootstrap_rmst_diff
+    rng = np.random.default_rng(42)
+    # Full: early events (good). MAPPO: late/censored (bad).
+    obs_f = rng.uniform(1, 20, 200)
+    cen_f = np.full(200, -1.0)
+    obs_m = np.full(200, -1.0)
+    cen_m = rng.uniform(40, 70, 200)
+    mean, sd, lo, hi = bootstrap_rmst_diff(obs_f, cen_f, obs_m, cen_m, 80.0, 200, rng)
+    assert mean < 0  # Full RMST lower -> better recovery -> Delta negative
+    assert lo < 0 and hi < 0
+
+
 def test_happo_rollout_interface_matches_held_out():
     # Regression: preflight must call HAPPO via get_action_and_value with the
     # same signature as evaluate_happo_3d.py (no get_action, no intent kwargs).
