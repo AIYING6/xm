@@ -1,94 +1,99 @@
 \section{Experiments}
 \label{sec:experiments}
 
-% ============================================================================
-% DEPRECATED V1.4 EXPERIMENT SECTION — TO BE REPLACED BY V1.5 RQ1-RQ6
-% The v1.4 fixed-budget fx60 package (5 seeds, update-60 checkpoints, 500 matched
-% episodes, 88.6%/53.2%/21.8%) is NOT the locked evidence base and must not be
-% cited. The old content below is wrapped in \iffalse and does not compile.
-% Rebuild this chapter from canonical_results_v1_5.csv (table1_held_out /
-% table2_ablation / table3_robustness / table4_efficiency) with the Pareto,
-% robustness, and Gate-Prior figures, following docs/PAPER_RESTRUCTURE_MAP_V1_5.md.
-% ============================================================================
+\subsection{Experimental Setup}
+\label{sec:setup}
 
-\textit{(Experiments section under reconstruction: v1.5 locked evidence chain —
-held-out 10{,}800 episodes, robustness 10{,}500 episodes, efficiency profiling, and
-mechanism analyses. See canonical tables and the consistency replacement map.)}
+We evaluate the proposed method in a 3DOF heterogeneous UAV semantic-search environment with three blue agents (scout, relay, attacker) and a target. All methods are trained with three independent random seeds for $977$ PPO updates. Validation and held-out evaluation are strictly separated: validation (base seed 641939) is used \emph{only} for checkpoint selection, and all reported results come from a locked held-out split with base seed 745669, evaluated exactly once. The held-out evaluation covers four formal scenarios (nominal and early relay failure, with and without the delayed-communication configuration); each selected checkpoint is evaluated over 100 episodes per scenario per seed, giving 10{,}800 held-out episodes in total. Robustness evaluation (base seed 946804) covers seven methods $\times$ ten perturbation conditions $\times$ three seeds $\times$ 50 episodes, i.e., 10{,}500 episodes.
 
-\iffalse
+An episode is successful if the attacker closes the kill chain within the horizon without collision; episodes with collision are ineligible for success. The recovery metric is defined as the number of failure-exposed episodes in which the post-failure kill chain is re-established, divided by the number of failure-exposed episodes ($\mathrm{recovered\_given\_exposure} / \mathrm{failure\_exposed}$). Recovery latency $t_{\mathrm{rec}}$ is defined only for episodes that successfully recover. Reported values are the mean $\pm$ sample standard deviation (ddof=1) over the three training seeds.
 
-\subsection{Experimental Protocol}
+\begin{itemize}
+    \item \textbf{EA-RG Full}: the proposed task-graph-driven multi-relation method.
+    \item \textbf{Internal ablations}: w/o Gate Prior, w/o Task-Support, w/o Role-Pair Gate.
+    \item \textbf{Graph baselines}: no-graph, single-graph, and a parameter-matched graph baseline (a multi-relation encoder whose parameter count is matched to EA-RG Full; ``matched'' refers to matching the parameter budget).
+    \item \textbf{External MARL baselines}: MAPPO and HAPPO, evaluated with the same held-out protocol.
+\end{itemize}
 
-We evaluate the proposed method in a 3DOF heterogeneous cooperative interception task with strict intermittent target sensing and temporary relay-node communication failure. The decentralized actors do not receive global target-state fallback. Target information is available only through direct sensing or valid communication messages, and stale or low-confidence target caches cannot close the kill chain. Delayed communication follows post-step timing, and the relay-failure window is applied consistently during evaluation.
+\subsection{RQ1: Does EA-RG achieve competitive held-out task performance?}
 
-The current paper-facing result package uses a fixed-budget checkpoint rule. Each method is trained for 60 safety-continuation PPO updates from the same source-policy family and is evaluated at the fixed checkpoint \texttt{actor\_critic\_update\_0060.pt}. No validation-based checkpoint selection is used in this fixed-budget package. The test scenario is \texttt{dropout030\_relay\_failure}. Each method is evaluated with five training seeds and 100 matched test episodes per seed.
+Table~\ref{tab:held_out} reports held-out performance. EA-RG reaches a success rate of $0.985 \pm 0.011$ and a recovery rate of $0.971 \pm 0.021$, placing it in the first tier. At the same time, HAPPO ($1.000$) and the parameter-matched graph baseline ($0.995$) obtain slightly higher final recovery rates, and even the w/o Role-Pair Gate ablation reaches $0.990$. EA-RG therefore achieves near-saturated held-out reliability, although it does not obtain the highest terminal recovery probability among the compared methods.
 
-The primary metrics are post-failure chain recovery rate, tracking rate during failure, communication connectivity during failure, chain-closure rate during failure, timeout rate, and collision rate. Statistical intervals use a hierarchical bootstrap: training seeds are resampled first, and matched episodes are then resampled within each seed.
+The temporal metrics tell a different story. EA-RG completes successful tasks in $46.1 \pm 0.4$ steps and re-establishes the kill chain after failure in $10.8 \pm 0.6$ steps, the lowest recovery latency among all methods and the smallest seed-level variance. These results suggest that the primary advantage of EA-RG is not a higher terminal success probability, but a substantially faster return to effective coordination after failure. This motivates RQ2.
 
-\subsection{Main Comparison}
+\subsection{RQ2: Does EA-RG accelerate post-failure recovery?}
 
-Table~\ref{tab:gate1-safety-fx60-main} reports the fixed-update-60 main comparison. The full multi-relation method achieves an 88.6\% post-failure recovery rate, compared with 53.2\% for the single-graph baseline and 21.8\% for the no-graph MAPPO-style baseline. The full method also improves failure-window tracking from 47.5\% to 77.6\% relative to the single-graph baseline and from 14.8\% to 77.6\% relative to the no-graph baseline.
+Figure~\ref{fig:pareto_recovery} plots the reliability--recovery-speed trade-off: each method is a point with recovery rate on the $x$-axis (higher is better) and recovery latency on the $y$-axis (lower is better); error bars are sample standard deviations over the three training seeds. Methods closer to the lower-right are more favorable.
 
-\input{../results/gate1_safety_fx60_paper_tables/main_results_latex.tex}
+EA-RG occupies the favorable region: near-saturated recovery reliability combined with the lowest recovery latency. Concretely, relative to the locked three-seed means:
 
-The seed-aware bootstrap indicates that the recovery improvement over the single-graph baseline is 35.4 percentage points, with a 95\% confidence interval of [1.2, 73.0] percentage points. Against the no-graph baseline, the recovery improvement is 66.8 percentage points, with a 95\% confidence interval of [28.6, 93.8] percentage points. The full method maintains zero test collisions in this fixed-budget evaluation, while the single-graph baseline has a 2.8\% mean collision rate.
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Comparison & Recovery & Recovery-time reduction \\
+\midrule
+EA-RG vs.\ MAPPO & $0.971$ vs.\ $0.947$ & $\approx 38\%$ shorter \\
+EA-RG vs.\ HAPPO & $0.971$ vs.\ $1.000$ & $\approx 34\%$ shorter \\
+EA-RG vs.\ param-matched & $0.971$ vs.\ $0.995$ & $\approx 59\%$ shorter \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-These results show that under strict information constraints, explicit multi-relation role-graph reasoning improves the ability to recover a cooperative kill chain after a critical communication-node failure.
+We emphasize that these are recovery-time reductions, not superiority claims over the competitors' reliability: EA-RG reduces recovery time by approximately 34\% relative to HAPPO while retaining a recovery probability of $0.971$ versus $1.000$. The reduction is especially large against the parameter-matched graph baseline ($26.2 \pm 23.6$ vs.\ $10.8 \pm 0.6$ steps); EA-RG also exhibits substantially lower cross-seed variability in recovery latency (sample SD $0.6$ vs.\ $2.5$--$23.6$). We report these differences descriptively at $n=3$ and do not apply significance tests. The success--completion-time Pareto is provided in Supplementary Fig.~S1.
 
-\subsection{Failure-Timing Generalization}
-
-Table~\ref{tab:gate1-safety-fx60-timing} evaluates whether the fixed-update-60 policies depend on the nominal relay-failure onset time. The same checkpoints are evaluated without retraining under an earlier relay-failure onset. The early-failure setting remains discriminative: the full multi-relation method recovers the kill chain in 88.2\% of episodes, compared with 46.6\% for the single-graph baseline and 23.2\% for the no-graph baseline. The seed-aware full-minus-single recovery delta is 41.6 percentage points with a 95\% confidence interval of [4.4, 78.6] percentage points.
-
-\input{../results/gate1_safety_fx60_failure_timing_generalization_formal_merged/timing_generalization_latex.tex}
-
-Delayed and late relay-failure onsets are not used as primary evidence because many successful episodes terminate before the delayed failure window contributes valid post-failure measurements. Therefore, the timing result supports robustness to earlier-than-nominal relay loss, not arbitrary failure-time robustness.
-
-\subsection{Mechanism Ablations}
-
-Table~\ref{tab:gate1-safety-fx60-ablation} evaluates two mechanism ablations of the full multi-relation model.
-
-\input{../results/gate1_safety_fx60_paper_tables/ablation_results_latex.tex}
-
-Removing role-pair-conditioned message gating reduces recovery from 88.6\% to 64.8\%. The seed-aware recovery-rate delta is 23.8 percentage points, with a 95\% confidence interval of [2.8, 59.2] percentage points. This ablation also increases the timeout rate from 11.4\% to 35.2\% and reduces failure-window tracking from 77.6\% to 60.7\%. Because both the full and ablated variants have zero collision rate, the degradation is not explained by unsafe flight termination. This supports role-pair-conditioned message gating as the cleanest current mechanism contribution.
-
-Removing task-support relations also reduces mean recovery from 88.6\% to 64.8\%, but its seed-aware recovery interval crosses zero. Therefore, the task-support relation is reported as supportive mechanism evidence rather than as a statistically decisive result.
-
-\input{../results/gate1_safety_fx60_paper_tables/seed_aware_deltas_latex.tex}
-
-\subsection{Failure-Aligned Mechanism Analysis}
-
-Figure~\ref{fig:gate1_safety_fx60_mechanism} shows failure-aligned tracking, connectivity, chain-closure, and recovery-CDF curves. All curves are aligned to the relay-failure start time and aggregated over the matched fixed-budget test set. After relay failure, connectivity drops sharply for all methods, indicating that the full method's advantage is not simply caused by maintaining a fully connected communication graph. Instead, the full method preserves higher target tracking and accumulates recovery events earlier and more consistently after the failure.
-
-\begin{figure*}[t]
+\begin{figure}[t]
     \centering
-    \includegraphics[width=0.98\textwidth]{gate1_safety_fx60_mechanism_curves.png}
-    \caption{Failure-aligned mechanism curves under relay failure. Curves are aligned to the relay-failure start time and aggregated over five training seeds and 500 matched test episodes. The full multi-relation method achieves higher post-failure recovery and better target tracking despite the sharp connectivity drop after relay failure.}
-    \label{fig:gate1_safety_fx60_mechanism}
-\end{figure*}
+    \includegraphics[width=0.92\linewidth]{figures/fig_pareto_recovery.png}
+    \caption{Reliability--recovery-speed Pareto (n=3 training seeds; error bars are sample SD). 
+    EA-RG (blue) reaches near-saturated recovery reliability with the lowest recovery latency.}
+    \label{fig:pareto_recovery}
+\end{figure}
 
-Figure~\ref{fig:gate1_safety_fx60_case} presents a representative matched episode selected automatically by a median-positive-difference rule rather than by hand-picking the largest gap. In this episode, the single-graph baseline fails to recover the chain and times out, whereas the full method re-establishes chain closure shortly after the relay failure. This case illustrates the aggregate trend shown in the failure-aligned curves.
+\subsection{RQ3: Which components contribute to performance?}
 
-\begin{figure*}[t]
+Table~\ref{tab:ablation} reports the internal ablations in the order of their held-out effect.
+
+\textbf{Gate Prior is the strongest internal component.} Removing it causes the largest reliability degradation among the tested components: recovery drops from $0.971$ to $0.772 \pm 0.244$, and recovery latency increases from $10.8$ to $15.3 \pm 2.5$ steps, with a marked rise in seed-level heterogeneity.
+
+\textbf{Task-Support provides a clear empirical contribution.} Removing it lowers recovery from $0.971$ to $0.892 \pm 0.160$ and increases recovery latency from $10.8$ to $15.0 \pm 4.5$ steps. We deliberately do not interpret this as evidence of post-failure relational re-organization: the temporal analysis in the Discussion shows that Task-Support activation \emph{decreases} rather than increases immediately after failure (from 0.141 in the pre-failure window to 0.092 in the early post-failure window), with no consistent pre-recovery rebound. Its benefit is therefore supported empirically.
+
+\textbf{The static Role-Pair Gate shows no consistent independent benefit.} Removing it leaves recovery effectively unchanged or slightly higher ($0.990$ vs.\ $0.971$). Consistent with the robustness and efficiency evidence below, we do not regard the Role-Pair Gate as an independently validated core component; it is retained as an auxiliary architectural component.
+
+\subsection{RQ4: How robust is EA-RG under communication and failure perturbations?}
+
+Figure~\ref{fig:robustness} shows recovery degradation relative to the R00 (nominal) condition across ten perturbation conditions, grouped into four families: communication dropout (R01--R02), message delay (R03--R04), failure timing / failed role (R05--R08), and joint stress (R09). Conditions with insufficient failure exposure were marked unstable and excluded from deterministic mechanism conclusions (these are R06 and R08 in the table).
+
+EA-RG remains competitive under severe perturbations, but it does not dominate every baseline or ablation. The important preregistered question is whether the Role-Pair Gate contributes robustness. The preregistered verdict cells are: R02 (strong communication dropout): Full $0.940$ vs.\ w/o Role-Pair Gate $1.000$; R04 (long delay): Full $1.000$ vs.\ w/o Role-Pair Gate $0.993$; R09 (joint stress): Full $0.927$ vs.\ w/o Role-Pair Gate $0.987$. The preregistered robustness criterion therefore does not support the Role-Pair Gate as an independent robustness mechanism.
+
+\begin{figure}[t]
     \centering
-    \includegraphics[width=0.98\textwidth]{gate1_safety_fx60_representative_case_timeline.png}
-    \caption{Representative matched recovery case selected by a median-positive-difference rule. The full multi-relation method re-establishes kill-chain closure shortly after relay failure, whereas the single-graph baseline loses the chain and times out.}
-    \label{fig:gate1_safety_fx60_case}
-\end{figure*}
+    \includegraphics[width=0.95\linewidth]{figures/fig_robustness_degradation.png}
+    \caption{Robustness: recovery degradation relative to R00 (n=3 training seeds; 
+    unstable-exposure cells excluded).}
+    \label{fig:robustness}
+\end{figure}
 
-\subsection{Model Size and Inference Cost}
+\input{tables/table3_robustness.tex}
 
-Table~\ref{tab:gate1-safety-fx60-model-cost} reports model-size and actor-inference-cost diagnostics for the compared graph encoders. The full multi-relation actor is larger than the single-graph baseline because it maintains separate perception, communication, and task-support channels and role-pair-conditioned message gates. This additional cost is modest in absolute CPU actor-forward latency for the present 3v1 setting, but it should be reported as part of the baseline fairness analysis rather than hidden behind the recovery-rate improvement.
+\subsection{RQ5: What is the computational cost of faster recovery?}
 
-\input{../results/gate1_safety_fx60_model_costs/model_costs_latex.tex}
+Table~\ref{tab:efficiency} reports the locked efficiency profiling. EA-RG is computationally heavier than MAPPO, HAPPO, and the parameter-matched graph baseline: $117{,}302$ parameters, a $12.05$\,ms joint-decision latency, $83$ joint decisions/s, $242$ env-steps/s end-to-end throughput, and the largest training peak memory ($71.9$\,MB). The benefit therefore lies in task-level recovery efficiency rather than per-forward computational efficiency: the method trades additional computational cost for faster post-failure coordination recovery. These two notions of efficiency must be kept separate.
 
-\subsection{Contribution-Boundary Diagnostics}
+We also report the communication cost precisely. The graph edge-feature dimension ($17$) describes \emph{graph computation} only. The actual transmitted message consists of $7$ continuous scalars (positions, velocities, and a confidence), integer metadata, and a variable-length path. Crucially, the physical communication statistics of EA-RG and its w/o Role-Pair Gate ablation are identical (fixed shared trajectory): the Role-Pair Gate does not provide bandwidth compression or message pruning.
 
-A three-seed no-curriculum development diagnostic was conducted to check whether topology curriculum should be claimed as an independent source of the improvement. The diagnostic did not show a clear curriculum advantage: validation-selected recovery was 88.9\% without curriculum and 87.8\% with the topology curriculum, and the fixed-update-60 comparison differed by only 2.2 percentage points. Therefore, topology curriculum is treated as a training protocol in this paper, not as a primary contribution.
+\subsection{RQ6: Why does Gate Prior improve stability?}
 
-We also screened a stronger scout-failure stressor with 0.30 communication dropout and a two-step message delay. The expected ordering was preserved, with 37.0\% recovery for the no-graph baseline, 56.0\% for the single-graph baseline, and 85.0\% for the full multi-relation method. However, the seed-aware recovery interval between the full and single-graph methods still crossed zero. This result is used as supplemental scenario-screening evidence rather than as a main-table claim.
+Figure~\ref{fig:gate_prior} shows the locked parameter-trajectory analysis. The strongest results are the following. First, the cross-seed gate correlation is $0.962$ with the prior versus $0.562$ without it: the prior starts all seeds from a shared structured initialization that remains consistent across seeds. Second, the training success AUC improves from $0.396$ to $0.545$, and the first evaluation point reaching success $\geq 0.9$ is attained at updates $\{200, 200, 600\}$ across seeds with the prior, versus $\{600, 500, \text{not reached}\}$ without it, matching the much weaker worst-seed behavior observed without the prior. Third, gate logits drift by less than $\approx 0.02$ after update 100, and the gate saturation fraction is zero in both configurations: the learned modulation never collapses to hard on/off states.
 
-\subsection{Current Limitations}
+We therefore conclude that Gate Prior does not act by driving the learned modulation toward saturated on/off states. Instead, it provides a structured initialization that remains largely preserved during training and substantially increases cross-seed consistency. This interpretation is consistent with, but does not by itself prove, a causal link to the worst-seed improvements.
 
-This fixed-budget package focuses on graph and message mechanisms under a 3v1 strict-sensing relay-failure task. It supports the claim that multi-relation role-graph reasoning and role-pair-conditioned message passing improve kill-chain recovery under strict information constraints. It does not claim that topology curriculum is an independent contribution, nor does it claim full-system 4v2 red-blue air-combat validity with online missile, radar, and 6DOF dynamics. These extensions are treated as future scenario-depth work rather than as claims of the present result.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.92\linewidth]{figures/fig_gate_evolution.png}
+    \caption{Gate evolution with and without the prior: 150 aggregated gate values over training 
+    (mean $\pm$ SD over the three seeds). The prior preserves a consistent structured starting 
+    point; gates never saturate.}
+    \label{fig:gate_prior}
+\end{figure}
 
-\fi
+The Task-Support temporal analysis (window statistics and case trajectories) is provided in Supplementary Fig.~S2; its single most important negative result is stated in RQ3.

@@ -1,0 +1,19 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Robustness summary: recovery degradation $\Delta$ relative to the R00 condition (3-seed means; unstable-exposure cells excluded and marked \emph{n/a}). R02/R04/R09 ($^*$) support the preregistered Role-Pair Gate robustness verdict.
+\label{tab:robustness}
+\begin{tabular}{lcccccc}
+\toprule
+Method & R01 & R02$^*$ & R03 & R04$^*$ & R05 & R06 & R07 & R08 & R09$^*$ \\
+\midrule
+EA-RG Full & -0.020 & -0.053 & +0.007 & +0.007 & -0.007 & \emph{n/a} & +0.007 & \emph{n/a} & -0.067 \\
+w/o Gate Prior & -0.047 & -0.067 & -0.007 & -0.053 & -0.140 & \emph{n/a} & +0.000 & \emph{n/a} & -0.213 \\
+w/o Task-Support & -0.060 & -0.180 & -0.007 & +0.013 & -0.107 & \emph{n/a} & -0.020 & \emph{n/a} & -0.040 \\
+w/o Role-Pair Gate & +0.000 & +0.000 & +0.000 & -0.007 & +0.000 & \emph{n/a} & -0.007 & \emph{n/a} & -0.013 \\
+param-matched graph & +0.000 & -0.027 & +0.000 & -0.167 & +0.000 & +0.000 & -0.040 & +0.000 & -0.480 \\
+HAPPO & -0.387 & -0.907 & -0.693 & -0.987 & +0.000 & \emph{n/a} & +0.000 & \emph{n/a} & -1.000 \\
+MAPPO & -0.013 & -0.100 & -0.080 & -0.467 & +0.013 & \emph{n/a} & +0.007 & \emph{n/a} & -0.547 \\
+\bottomrule
+\end{tabular}
+\end{table*}

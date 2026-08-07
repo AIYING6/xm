@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Ablation study on held-out (3 seeds). Removing Gate Prior causes the largest reliability degradation; Task-Support contributes empirically; the Role-Pair Gate shows no consistent independent benefit.
+\label{tab:ablation}
+\begin{tabular}{lcccc}
+\toprule
+Variant & Recovery $\uparrow$ & $t_{\mathrm{rec}}$ $\downarrow$ & Success $\uparrow$ & $t_{\mathrm{succ}}$ $\downarrow$ \\
+\midrule
+EA-RG Full & $0.970569 \pm 0.021256$ & $10.8 \pm 0.6$ & $0.985000 \pm 0.010897$ & $46.1 \pm 0.4$ \\
+w/o Gate Prior & $0.771629 \pm 0.244171$ & $15.3 \pm 2.5$ & $0.864167 \pm 0.151953$ & $49.3 \pm 1.7$ \\
+w/o Task-Support & $0.891751 \pm 0.160002$ & $15.0 \pm 4.5$ & $0.939167 \pm 0.090634$ & $49.0 \pm 2.8$ \\
+w/o Role-Pair Gate & $0.990208 \pm 0.005090$ & $13.8 \pm 5.6$ & $0.994167 \pm 0.002887$ & $48.5 \pm 4.3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
