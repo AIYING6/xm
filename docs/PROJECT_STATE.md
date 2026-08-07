@@ -1,6 +1,31 @@
 # Current Project State
 
-Last updated: 2026-08-07
+Last updated: 2026-08-07 (v1.6)
+
+## v1.6 Survival Analysis (2026-08-07) — Decision Gate passed
+
+P1 survival protocol v1.1 (tag `survival-protocol-v1.1`) executed locally on locked
+held-out data; cell-by-cell identical to the sandbox run. Data audit 11/11 PASS
+(10,800 rows; 5,358 recovered; 714 exposed-unrecovered; 4,728 unexposed; horizon 260;
+54/54 primary cells = 100 exposed; Early+Nominal = primary population).
+
+- Primary RMST(220): Full **14.47±3.10**; MAPPO 20.39±7.72; HAPPO 14.14±2.94;
+  wider single-graph 16.49±8.64; w/o RPG 13.63±3.86; w/o TS 29.57; w/o GP 48.48.
+- **Decision Gate = NO CLEAN A/B/C** → conservative claim: "EA-RG shows a directionally
+  consistent early post-failure recovery advantage over MAPPO under matched failure
+  exposure, while full-horizon censor-aware recovery is competitive rather than uniformly
+  superior to HAPPO and the wider single-graph baseline."
+- Early-window evidence (most robust): Full−MAPPO Δ_s at τ=50/80/100 all 3 seeds < 0,
+  bootstrap CI excludes 0 (P=1.0000/0.9996/0.9937); τ=80 = node-failure active duration.
+- Headlines removed: "~34% faster than HAPPO" (conditional-time only), "RPG sacrifices
+  reliability for speed".
+- Verdicts: RPG = limited independent benefit (Full 14.47 vs 13.63, seed-mixed);
+  Gate Prior = conditional contribution (removal 14.47→48.48, seed-mixed);
+  Task-Support = empirically supported relation (removal 14.47→29.57, seed-mixed).
+- Tag `paper-v1.6-survival-locked`; P2 rewrite follows the Decision Memo
+  (`docs/statistics/P1B_DECISION_MEMO_V1_1.md`).
+
+## v1.5 Milestone (2026-08-07) — training complete, evidence locked, paper drafted
 
 ## v1.5 Milestone (2026-08-07) — training complete, evidence locked, paper drafted
 
