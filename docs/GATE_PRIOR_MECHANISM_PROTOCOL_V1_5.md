@@ -113,3 +113,33 @@ observed role is optimization stability and cross-seed consistency, NOT runtime 
     3. `fig_gate_evolution.png`
     4. `fig_cross_seed_dispersion.png`
 - All CSVs carry schema + provenance (method, seed, update node, metric, value, source lock tag).
+
+---
+
+## Addendum A (frozen 2026-08-07) — gate unit accounting, implementation fact
+
+Frozen after checkpoint inspection; corrects the unit count in Section 1 without
+changing any statistic, node list, or verdict rule.
+
+1. `multi_relation_graph` contains **two** stacked graph layers (`layer1`, `layer2`),
+   each with 3 relation channels => **6** `RoleConditionedGraphAttentionLayer`s that own a
+   `role_pair_gate` (`layer{1,2}.{0,1,2}.role_pair_gate.weight`, shape (25, 64)).
+2. Role ids: SCOUT=0, RELAY=1, ATTACKER=2, INTERCEPTOR=3, TARGET=4 => `num_roles=5`,
+   Embedding covers 5x5 = 25 pairs (all 25 kept in statistics; unused pairs stay at init).
+3. Aggregated gate unit = (layer, relation, pair) mean over 64 hidden dims =>
+   **150 values** (6 channels x 25 pairs). Scalar population = 6 x 25 x 64 = 9600.
+   Section 1's "48 values" is superseded by 150; all per-node statistics (mean/SD/min/max/
+   |gate-initial|, relation grouping, saturation, cross-seed similarity) use the 150-vector
+   (or 9600-scalar) definition.
+4. Per-relation grouping = 2 layers x 25 pairs = 50 values per relation (layer1+layer2 pooled).
+5. Prior-filled pairs (logit init +0.4, sigmoid = 0.59868766), identical in layer1 and layer2:
+   - PERCEPTION (r0): (S,T),(R,T),(A,T),(I,T) — 4 pairs
+   - COMMUNICATION (r1): (S,R),(R,S),(R,A),(R,I),(A,R),(I,R) — 6 pairs
+   - TASK_SUPPORT (r2): (A,S),(I,S),(S,R),(A,R),(I,R),(R,A),(R,I) — 7 pairs
+   - total 17 (relation, pair) units x 2 layers = 34 gate channels start at 0.5987;
+     the remaining 150-34=116 channels start at sigmoid(0)=0.5.
+   (S=scout, R=relay, A=attacker, I=interceptor, T=target; pair=(receiver, sender).)
+6. `gate drift |gate - initial_gate|` uses per-channel initial: 0.5987 for the 34
+   prior channels, 0.5 otherwise.
+7. All other frozen content (Section 2 nodes, Section 3 stats, Section 4 metrics,
+   Section 6/7 verdict rules) is unchanged.
