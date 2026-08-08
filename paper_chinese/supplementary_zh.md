@@ -66,6 +66,6 @@ M1、M2 和 J1 的 RMST80 上限饱和意味着在该窗口内恢复事件近乎
 
 ## S5 图表、代码与数据溯源
 
-主稿图 1 是代码事实示意图，生成脚本为 `scripts/render_zh_three_relation_method_figure.py`；事实来源为 `docs/figure_contracts/FACT_MANIFEST_METHOD_FIGURE.md`。主稿图 2 从冻结 held-out 输入只读重绘，生成脚本为 `scripts/render_zh_early_recovery_figure.py`。两图的文件哈希和输入/事实指纹分别写入同目录的 `.provenance.txt`。
+主稿图 1 是代码事实示意图，主图发布包由 `scripts/render_publication_main_figures.py` 生成；事实来源为 `docs/figure_contracts/FACT_MANIFEST_METHOD_FIGURE.md`。主稿图 2 从冻结 held-out 输入只读重绘，并由同一发布脚本输出。两图的交付格式、输入/事实指纹和图元核验记录分别位于 `paper_chinese/figures/publication/`、`publication_figure_provenance.txt` 和 `docs/figure_redesign/PUBLICATION_FIGURE_EVIDENCE_AUDIT.md`。
 
 脚本、配置、锁定结果和证据优先级的总入口为 `docs/PAPER_EVIDENCE_PACK.md`、`docs/EVIDENCE_STATUS_REGISTRY.csv` 与 `docs/NUMERIC_PROVENANCE_AUDIT.md`。正式投稿前，作者需按目标期刊政策提供数据与代码可用性声明。

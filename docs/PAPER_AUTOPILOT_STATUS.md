@@ -4,7 +4,7 @@
 
 - Control document: `D:/File/Downloads/CODEX_PAPER_AUTOPILOT_MASTER_V7_1_CN_FINAL (1).md` (V7.1-CN FINAL), read on 2026-08-08.
 - Language target: Simplified Chinese, journal-neutral manuscript.
-- Active production state: `P7_PRE_SUBMISSION_QA`; the evidence-led Chinese intermediate manuscript and its two P1 figures are available, pending submission-metadata and Supplementary packaging.
+- Active production state: `P14_FINAL_SELF_REVIEW_COMPLETE`; the evidence-led Chinese manuscript, Supplementary and frozen P1 figure bundle have converged, pending venue-specific metadata, final template build and final PDF review.
 - Existing active manuscript: `paper_latex_3d_en/main.tex` (English draft; evidence-bearing source only, not the intended final Chinese manuscript).
 - Resume source: no earlier `docs/PAPER_AUTOPILOT_STATUS.md` was present.
 
@@ -17,11 +17,12 @@
 | P2 Literature Evidence Layer | COMPLETE | Support, contradiction, closest-work and identity records updated; no novelty-first claim permitted |
 | P3 RQ / Claim / Innovation Blueprint | INITIALIZED | Blueprint and hierarchy drafted from project evidence only |
 | P4 Statistics & Canonical Paper Data | COMPLETE | Numeric/statistical provenance audits identify RMST80 as P1 and reporting restrictions |
-| P5 Figure / Table Contracts | CONDITIONAL PASS | Contracts completed; method figure and Gate Prior figure require remediation before publication |
+| P5 Figure / Table Contracts | COMPLETE WITH ROUTED GATE-PRIOR ASSET | Three-relation method figure is remediated; the incomplete Gate Prior trajectory remains excluded from publication figures. |
 | P6 Chinese Manuscript Synthesis | COMPLETE | `paper_chinese/manuscript_zh.md` drafted from locked evidence; no line-by-line English translation |
-| P7 Figure / Manuscript QA | COMPLETE WITH OPEN PACKAGING ITEMS | Two P1 figures regenerated and visually checked; reviewer-style bounded audit recorded |
-| P8 Supplementary Evidence Packaging | INITIALIZED | `paper_chinese/supplementary_zh.md` contains only locked source-data routes and admissible supporting detail |
-| P9--P17 | NOT STARTED | Await venue selection, final formatting and submission metadata |
+| P7 Figure / Manuscript QA | COMPLETE | Two P1 figures are regenerated, visually frozen and evidence-audited. |
+| P8 Supplementary Evidence Packaging | COMPLETE | `paper_chinese/supplementary_zh.md` contains locked source-data routes and admissible supporting detail. |
+| P9--P14 Manuscript Convergence / Self-Review | COMPLETE WITH CONDITIONAL PACKAGING ITEMS | Cold read, narrative, cross-section, negative-result, visual-freeze and final self-review records are complete. |
+| P15--P17 Venue Formatting / Clean Build / Artifact Freeze | NOT STARTED | Await target journal, author metadata and final template source. |
 
 ## Current scientific anchor
 
@@ -37,8 +38,8 @@ No scientific conflict blocks P2--P5. The following are in progress through inde
 
 - P2 verified that the paper may claim a specific combination of strict sensing, relay failure, three-relation task representation, and matched-exposure KM/RMST recovery evaluation. It may not claim first use of graph MARL, learned communication, or graph learning for cooperative air combat. Two verified BibTeX corrections were applied to `royston2011rmst` and `zhou2023racer`.
 - P4 locks RMST80 versus MAPPO as the P1 time endpoint; it prohibits treating OOD bootstrap probability as a p-value or recovered-only `t_rec` as the main time result. Gate Prior mechanism numbers await a complete audited asset.
-- P5 confirms that the method code implements exactly three relations. The current four-relation method schematic is blocked. The current Gate Prior figure is blocked because its Full-with-Prior curve is absent.
-- P6 produced the Chinese intermediate manuscript and regenerated the admissible P1 figures: `paper_chinese/figures/fig1_three_relation_task_graph.*` and `fig2_early_recovery_km.*`. Both have provenance files and were visually checked. The Gate Prior trajectory remains excluded.
+- P5 confirms that the method code implements exactly three relations. The four-relation prototype is quarantined; the manuscript-facing method schematic now shows only these three relations. The Gate Prior trajectory remains excluded because its Full-with-Prior curve is absent.
+- P6 produced the Chinese manuscript and publication-facing P1 figures in `paper_chinese/figures/publication/`. The earlier PNG assets remain preserved as prototypes; the SVG/PDF/600-dpi publication bundle has provenance and evidence audits. The Gate Prior trajectory remains excluded.
 - P7 records a bounded three-emphasis reviewer audit in `docs/CHINESE_MANUSCRIPT_REVIEW.md`. Its consensus action is packaging and claim discipline, not new training. The dedicated publication-figure redesign pass has now replaced the manuscript-facing Fig. 1 and Fig. 2 assets with SVG/PDF/600-dpi PNG/TIFF bundles after dual scientific/graphic review and a 17/17 evidence audit.
 - P8 adds a Chinese supplementary draft with seedwise RMST, pre-specified time-window sensitivity, and explicit routes to the locked OOD/robustness/cost assets. The known `hierarchical_bootstrap.csv` early-window `observed_delta` field defect is quarantined in the stale-evidence blacklist; it is not used by the main or supplementary narrative.
 

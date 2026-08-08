@@ -1,6 +1,6 @@
 # Publication Figure Evidence Audit
 
-Generated: 2026-08-08T15:18:47
+Generated: 2026-08-08T15:38:03
 
 This audit verifies deliverable presence and element-level alignment with the locked figure contracts. It does not re-estimate statistics or alter the inputs.
 
