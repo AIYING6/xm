@@ -9,6 +9,7 @@ The following must not enter the new Chinese main manuscript unless re-adjudicat
 5. P3-B calibration grids, oracles, structural metrics, and candidate protocol as current-paper evaluation evidence.
 6. Any 6DOF/JSBSim/radar/missile/human-UAV completion claim.
 7. Scratch files, untracked compiled PDFs, `_tmp_*` outputs, and historical manuscript audits that predate v1.6.
+8. `docs/statistics/survival_results_v1_1/hierarchical_bootstrap.csv` 的 `observed_delta` 列在 \(\tau<220\) 时：当前生成脚本复用了 \(\tau=220\) 的点估计。该列不得用于早期窗口的点估计；早期 per-seed 差异仅引用 P1B Decision Memo，bootstrap CSV 只引用已核验的区间/方向概率。
 
 ## Historical-contamination check
 

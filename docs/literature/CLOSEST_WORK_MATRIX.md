@@ -1,12 +1,22 @@
-# Closest-Work Matrix
+# 最接近工作差异矩阵
 
-## P0 status: PENDING
+**用途：** 供引言和相关工作使用，防止将“应用相邻”错误升级成“方法首创”。“未见”仅指 P2 有界检索与可核验资料，不是全领域否定。
 
-The current English Related Work contains candidate citations, but none has yet passed the required claim-first closest-work comparison for the new Chinese manuscript.
+| 工作 | 已核验任务与方法 | 已核验主要终点 | 与本文相同点 | 关键差异 | 写作处理 |
+|---|---|---|---|---|---|
+| Ou et al., 2024 | 2 对 1 多 UAV 协同空战；将 UAV 视为图节点，GCN 用于信息共享，并结合 LSTM/dueling DRL。 | 对规则/固定策略对手的协同机动、收敛和决策效率。 | UAV 空战、图式信息交互、学习决策。 | 未报告本文的严格间歇感知、中继节点失效、三关系任务图或 KM/RMST 恢复终点。 | **最接近应用先例；必须引用。** 用“不同于”而非“首次”。 |
+| Huo et al., 2025 | 多机空战；GraphSAGE 与强化学习/零阶优化。 | 1v1 与 8v8 仿真中的胜率、奖励及决策表现。 | 图网络、MARL、空战决策。 | 场景、架构、失效模型及评价终点均不同；其存在否定“GNN+RL 空战首创”。 | **最接近方法/应用反证；必须引用。** |
+| Zhou et al., 2023 (RACER) | 多 UAV 去中心化探索；异步有限通信、任务分派与在线路径规划。 | 探索效率、可扩展性和有限通信鲁棒性。 | UAV、有限通信、任务协调。 | 非 MARL、非拦截、非异构失效恢复，且不使用事件时间恢复评估。 | 相邻应用背景；不作直接性能比较。 |
+| Das et al., 2019 (TarMAC) | 面向智能体的可微目标通信。 | 协同基准表现。 | 可学习的信息选择与注意力。 | 非 UAV、非显式失效任务链、非多关系任务图与 RMST。 | 方法背景；不夸大差异为首次学习通信。 |
+| Ding et al., 2024 (MAGI) | 以图信息瓶颈学习高效、鲁棒的多智能体通信。 | 通信效率与鲁棒性相关实验。 | 图/通信 MARL。 | 非 UAV 拦截和失效后恢复；同时构成“图通信自然鲁棒”说法的反证压力。 | 方法背景与边界提醒。 |
+| Qiu et al., 2023 | 多能微电网受损后检修队调度的分层 MARL。 | 系统韧性/调度效益。 | 受损系统中的协同恢复问题。 | 领域、观测、控制对象、时间尺度和恢复端点均不同。 | 只在需要跨域动机时简短引用。 |
 
-| Dimension | Present work | Closest-work candidate | Verified difference | Status |
-|---|---|---|---|---|
-| Task | strict-sensing 3DOF relay-failure task-chain recovery | AUTHOR_CHECK_REQUIRED | not yet verified | PENDING |
-| Method | three-relation task graph with edge-aware attention | AUTHOR_CHECK_REQUIRED | not yet verified | PENDING |
-| Endpoint | matched-exposure early recovery via RMST | AUTHOR_CHECK_REQUIRED | not yet verified | PENDING |
-| Boundary | frozen zero-shot topology/maneuver OOD | AUTHOR_CHECK_REQUIRED | not yet verified | PENDING |
+## 可用差异化定位
+
+本文的可辩护定位并非“图 MARL 的首创”，而是以下组合在本项目冻结证据下的具体问题化：
+
+1. 严格间歇感知、通信可用性和中继节点失效共同造成的任务链中断；
+2. 由感知、通信和任务支撑构成的三关系任务图；
+3. 以匹配失效暴露后的早期恢复为主终点，并使用 KM/RMST 描述右删失事件时间。
+
+不得将第 1--3 项写成全领域“首次组合”；应写为本文的研究聚焦和方法—评估设计。
