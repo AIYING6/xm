@@ -1,6 +1,6 @@
 # 3DOF Interception Environment Smoke Test
 
-Generated: 2026-08-02T01:40:37
+Generated: 2026-08-08T23:12:55
 
 Purpose:
 
@@ -24,10 +24,10 @@ reset -> obs, share_obs, graph_obs
 step -> obs, share_obs, graph_obs, rewards, dones, infos
 obs shape = (3, 34)
 share_obs shape = (3, 47)
-node_feat shape = (4, 20)
-edge_feat shape = (4, 4, 18)
-adj shape = (4, 4)
-relation_adj shape = (3, 4, 4)
+node_feat shape = (3, 4, 21) [receiver, node, feature]
+edge_feat shape = (3, 4, 4, 18) [receiver, receiver-node, sender-node, feature]
+adj shape = (3, 4, 4)
+relation_adj shape = (3, 3, 4, 4)
 ```
 
 ## Boundary
