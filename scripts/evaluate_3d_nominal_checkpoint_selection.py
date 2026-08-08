@@ -83,7 +83,7 @@ def parse_case(text: str) -> Case:
     if len(fields) != 3:
         raise argparse.ArgumentTypeError("case must use name=graph_encoder:seed:run_dir")
     graph_encoder, seed_text, run_dir = fields
-    if graph_encoder not in {"no_graph", "single", "multi_relation"}:
+    if graph_encoder not in {"no_graph", "matched_nongraph", "single", "multi_relation"}:
         raise argparse.ArgumentTypeError(f"unsupported graph_encoder: {graph_encoder}")
     return Case(method=method, graph_encoder=graph_encoder, train_seed=int(seed_text), run_dir=Path(run_dir))
 
@@ -98,7 +98,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoint-glob", type=str, default="actor_critic_update_*.pt")
     parser.add_argument("--episodes", type=int, default=20)
     parser.add_argument("--base-seed", type=int, default=509_000)
-    parser.add_argument("--target-policy", type=str, default="weaving_mild")
+    parser.add_argument("--target-policy", type=str, default="mixed")
     parser.add_argument("--max-selection-collision-rate", type=float, default=0.0)
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--role-dim", type=int, default=8)
@@ -173,8 +173,9 @@ def make_eval_args(args: argparse.Namespace, candidate: Candidate) -> argparse.N
         episodes=args.episodes,
         eval_batch_size=args.eval_batch_size,
         seed=candidate.case.train_seed,
-        base_seed=args.base_seed,
+        base_seed=10_000 + 100 * candidate.case.train_seed,
         target_policy=args.target_policy,
+        target_prior_position=(10_000.0, 0.0, 5_000.0),
         communication_range_scale=1.0,
         communication_dropout_prob=0.30,
         message_delay_steps=2,
@@ -186,6 +187,7 @@ def make_eval_args(args: argparse.Namespace, candidate: Candidate) -> argparse.N
         failed_blue_agent=1,
         node_failure_start_step=40,
         node_failure_duration_steps=80,
+        min_success_step=80,
         stochastic=False,
         allow_random_policy=False,
         hidden_dim=args.hidden_dim,
