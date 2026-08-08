@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import shlex
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,6 +22,7 @@ def main() -> int:
     errors = []
     expected = {(method, seed) for method in ("multi_relation", "single", "matched_nongraph") for seed in (0, 1, 2)}
     found = set()
+    normalized = []
     for command in commands:
         method = re.search(r"--graph-encoder\s+(\S+)", command)
         seed = re.search(r"--seed\s+(\d+)", command)
@@ -28,6 +30,18 @@ def main() -> int:
             errors.append("command missing graph encoder or seed")
             continue
         found.add((method.group(1), int(seed.group(1))))
+        tokens = shlex.split(command)
+        parsed = {}
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
+            if token.startswith("--") and i + 1 < len(tokens) and not tokens[i + 1].startswith("--"):
+                parsed[token] = tokens[i + 1]; i += 2
+            elif token.startswith("--"):
+                parsed[token] = "true"; i += 1
+            else:
+                i += 1
+        normalized.append({k: v for k, v in parsed.items() if k not in {"--seed", "--graph-encoder", "--eval-base-seed", "--out-dir"}})
         for flag, value in REQUIRED.items():
             match = re.search(re.escape(flag) + r"\s+(\S+)", command)
             if not match or match.group(1) != value:
@@ -36,6 +50,8 @@ def main() -> int:
             errors.append(f"{method.group(1)} seed {seed.group(1)}: missing strict sensing/bottleneck")
     if found != expected:
         errors.append(f"run matrix mismatch: found={sorted(found)} expected={sorted(expected)}")
+    if normalized and any(item != normalized[0] for item in normalized[1:]):
+        errors.append("unintended command difference beyond seed/encoder/eval-base-seed/out-dir")
     if errors:
         print("FORMAL_V1_8_LAUNCH_MANIFEST_AUDIT: FAIL")
         print("\n".join(errors))
