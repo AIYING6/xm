@@ -4,9 +4,15 @@
 
 - Control document: `D:/File/Downloads/CODEX_PAPER_AUTOPILOT_MASTER_V7_1_CN_FINAL (1).md` (V7.1-CN FINAL), read on 2026-08-08.
 - Language target: Simplified Chinese, 《航空学报》中文版 submission packaging.
-- Active production state: `P16_TEMPLATE_PREVIEW_COMPLETE`; the evidence-led Chinese manuscript, Supplementary and frozen P1 figure bundle have converged. An anonymous official-template DOCX/PDF now exists; author metadata, signed attachments and final reference-format check remain.
+- Active production state: `P0_SCIENTIFIC_INTEGRITY_HOLD`; the prior P16 template preview is preserved but packaging is paused pending the required scientific-scope decision below.
 - Existing active manuscript: `paper_latex_3d_en/main.tex` (English draft; evidence-bearing source only, not the intended final Chinese manuscript).
 - Resume source: no earlier `docs/PAPER_AUTOPILOT_STATUS.md` was present.
+
+## 2026-08-08 scientific-integrity hold
+
+- **P0 HOLD — AUTHOR_DECISION_REQUIRED.** A row-level audit of the locked Early+Nominal primary population found that all observed P1 events are first stable task-chain establishments after failure onset; there are **0 recovery-after-observed-loss events** for every frozen method. The existing RMST endpoint therefore cannot support a claim that a failure disrupted an established task chain which the policy subsequently recovered.
+- The execution implementation centrally constructs and batches a whole actor graph. Its target-state mask and relation masks are real controls, but it does not establish per-UAV distributed graph construction or access control. Existing unqualified CTDE/decentralized-execution/local-graph claims are unsupported.
+- See `docs/SCIENTIFIC_INTEGRITY_HARDENING_AUDIT.md`. No manuscript, figure, numerical-result, or training change has been made while the authors choose between evidence-preserving reframe and approved rerun.
 
 ## Phase register
 
