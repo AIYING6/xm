@@ -373,7 +373,13 @@ def export(fig: plt.Figure, name: str) -> list[Path]:
     fig.savefig(base.with_suffix(".svg"), bbox_inches="tight", facecolor="white")
     fig.savefig(base.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
     fig.savefig(base.with_suffix(".png"), dpi=600, bbox_inches="tight", facecolor="white")
-    fig.savefig(base.with_suffix(".tiff"), dpi=600, bbox_inches="tight", facecolor="white")
+    fig.savefig(
+        base.with_suffix(".tiff"),
+        dpi=600,
+        bbox_inches="tight",
+        facecolor="white",
+        pil_kwargs={"compression": "tiff_lzw"},
+    )
     plt.close(fig)
     return [base.with_suffix(ext) for ext in (".svg", ".pdf", ".png", ".tiff")]
 
