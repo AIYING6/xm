@@ -20,7 +20,7 @@
   blue-blue XY pair; `comm_adj[dst, src] = 0` removes src->dst; C1 prunes both
   directions, C2 prunes only lower-y -> higher-y.
 
-### 2. Task feasibility — PROBLEM FOUND
+### 2. Endpoint saturation / discriminability — PROBLEM FOUND (needs independent calibration)
 | cell | method | target_visible | attack_window | success |
 |---|---|---|---|---|
 | G2 | full_ea_rg | 1.00 | 0.00 | 0.00 |
@@ -33,12 +33,14 @@
 
 - G2: target range x1.40 + bearing +25deg puts the target outside MAPPO's
   detection envelope (visible 0.00); Full sees it (1.00) but cannot form an
-  attack window either (0.00). The cell is at the feasibility boundary.
+  attack window either (0.00). The cell sits at a severe saturation boundary.
 - M1/M2/J1: trained Full and MAPPO both achieve attack_window = 0.00 and
   success = 0.00. The RMST80 ceiling saturation observed in the formal run is
-  confirmed to be genuine TASK INFEASIBILITY, not a method difference.
+  severe endpoint saturation with limited discriminability; whether the task is
+  genuinely infeasible requires an algorithm-independent oracle calibration
+  (hand-coded policy, NOT Full/MAPPO/HAPPO/Wider results).
 - C1/C2: both methods can still form attack windows and succeed (Full 1.00,
-  MAPPO 0.95). Discriminative and feasible.
+  MAPPO 0.95). Discriminative and feasible under the evaluated policies.
 
 ### 3. Endpoint discriminability — PARTIAL
 - C1/C2: discriminative (Full vs MAPPO difference real, comparator-neutral).
@@ -69,11 +71,14 @@
 - **C1/C2 reversal = REAL weakness of EA-RG under communication-topology
   pruning.** Comparator-neutral, discriminative, feasible. Keep as a scientific
   finding (already in Gate C).
-- **M1/M2/J1 saturation = task infeasibility** (endpoint unreachable for all
-  methods). These cells do not discriminate algorithms; they are
-  failure-boundary / severe-stress conditions, not primary discriminative
-  evidence. Their RMST80=80 is upper-ceiling saturation, not "Full ~ MAPPO".
-- **G2 is near the feasibility boundary** (MAPPO cannot even see the target).
+- **M1/M2/J1 saturation = severe endpoint saturation / limited
+  discriminability** (recovery endpoint unreachable within tau=80 for all
+  evaluated methods). These cells do not discriminate algorithms under the
+  evaluated policies; they behave as failure-boundary / severe-stress
+  conditions. Their RMST80=80 is upper-ceiling saturation, not "Full ~ MAPPO".
+  Whether the underlying task is genuinely infeasible will be settled by an
+  algorithm-independent oracle feasibility calibration (P3-B, not yet run).
+- **G2 is near the saturation boundary** (MAPPO cannot even see the target).
   Its severity is questionable as a moderate deployment shift.
 
 ## Implication for a calibrated suite (P3-B, NOT YET AUTHORIZED)
@@ -88,6 +93,38 @@ If a new calibrated OOD suite is designed (P3-B v1.0 or later), it should:
   in the protocol before any formal run;
 - freeze the new design BEFORE running; archive P3-A v1.1 as the original
   severe-suite diagnostic result (Gate C stands for v1.1).
+
+## Amendment 1 (2026-08-08): qualified MPC feasibility oracle
+
+A full-state centralized geometric MPC controller (hand-coded, no learning,
+no access to Full/MAPPO/HAPPO/Wider checkpoints or results) was implemented
+(`scripts/p3b_oracle_feasibility.py`). Nominal qualification PASS:
+aw = success = 1.000 in the pure nominal environment.
+
+With this qualified oracle:
+
+| cell | full-state MPC aw | full-state MPC success |
+|---|---|---|
+| G1 | 1.000 | 1.000 |
+| G2 | 1.000 | 1.000 |
+| M1 | 1.000 | 1.000 |
+| M2 | 1.000 | 1.000 |
+| C1 | 1.000 | 1.000 |
+| C2 | 1.000 | 1.000 |
+| J1 | 1.000 | 1.000 |
+
+> A qualified full-state MPC oracle confirms kinematic feasibility for all
+> seven P3-A cells; the observed saturation therefore reflects limited
+> learned-policy transfer and/or information-constrained task difficulty
+> rather than physical infeasibility.
+
+An information-constrained variant (IC-MPC: each agent may use only its own
+legal detection / communication cache / constant-velocity extrapolation, never
+the true target state without legal information) also passes nominal
+(aw=success=1.000) and yields: G1=1.0, G2=0.575, M1=1.0, M2=1.0, C1=1.0,
+C2=1.0, J1=0.875. This shows G2 carries genuine information/kinematic
+difficulty, and that learned-policy saturation on M1/M2/J1 is not explained by
+information infeasibility either.
 
 ## Boundaries
 

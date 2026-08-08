@@ -1,0 +1,8 @@
+cell,n,attack_window_achieved_rate,target_visible_rate,success_rate,overrides
+G1,40,1.0000,1.0000,1.0000,"{'blue_init_spacing_scale': 1.2, 'blue_init_rotation_deg': 20.0}"
+G2,40,0.5750,0.9750,0.5750,"{'target_init_range_scale': 1.4, 'target_init_bearing_offset_deg': 25.0}"
+M1,40,1.0000,1.0000,1.0000,{'target_policy': 'weaving'}
+M2,40,1.0000,1.0000,1.0000,{'target_policy': 'break_turn'}
+C1,40,1.0000,1.0000,1.0000,{'comm_topology_mode': 'symmetric_longest_prune'}
+C2,40,1.0000,1.0000,1.0000,{'comm_topology_mode': 'directed_longest_prune'}
+J1,40,0.8750,1.0000,0.8750,"{'blue_init_spacing_scale': 1.2, 'blue_init_rotation_deg': 20.0, 'target_policy': 'weaving', 'comm_topology_mode': 'symmetric_longest_prune'}"
