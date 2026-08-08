@@ -126,6 +126,10 @@ class RIGMAPPOConfig:
     target_init_range_scale: float = 1.0
     target_init_bearing_offset_deg: float = 0.0
     comm_topology_mode: str = "none"
+    # --- P3-B parameterized target policies (default no-op; used only when
+    #     target_policy == "weaving_param" / "break_turn_param") ---
+    target_heading_amp: float = 0.45
+    target_break_turn_amp_rad: float = 0.5 * 3.141592653589793
     out_dir: str = "results/ri_gmappo"
     save_interval: int = 10
     save_snapshots: bool = False
@@ -698,6 +702,8 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 target_init_range_scale=cfg.target_init_range_scale,
                 target_init_bearing_offset_deg=cfg.target_init_bearing_offset_deg,
                 comm_topology_mode=cfg.comm_topology_mode,
+                target_heading_amp=cfg.target_heading_amp,
+                target_break_turn_amp_rad=cfg.target_break_turn_amp_rad,
             )
         )
     raise ValueError(f"Unsupported env_name: {cfg.env_name}")

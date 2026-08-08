@@ -119,6 +119,9 @@ class UAVIntercept3DConfig:
     node_failure_duration_steps: int = 0
     graph_relation_ablation: str = "none"
     target_policy: str = "evasive"
+    # --- P3-B parameterized target policies (default no-op; legacy paths unchanged) ---
+    target_heading_amp: float = 0.45  # used only by target_policy="weaving_param"
+    target_break_turn_amp_rad: float = 0.5 * math.pi  # used only by target_policy="break_turn_param"
     seed: int | None = None
     attack_hold_steps: int = 4
     collision_radius: float = 120.0
@@ -392,6 +395,35 @@ class UAVIntercept3DEnv:
                 turn = float(np.clip(angle_diff(desired_heading, self.red_heading[0]), -target.max_turn_rate, target.max_turn_rate))
                 desired_alt = 5_000.0 + alt_amp * math.sin(0.045 * self.step_count + 0.7)
                 climb = float(np.clip((desired_alt - self.red_pos[0, 2]) / 1_800.0, -1.0, 1.0))
+            elif self.config.target_policy == "weaving_param":
+                # P3-B single-axis weaving: only heading amplitude varies.
+                # altitude amplitude fixed at 350 m (mild level); frequencies fixed.
+                weave_amp = self.config.target_heading_amp
+                alt_amp = 350.0
+                desired_heading = wrap_angle(desired_heading + weave_amp * math.sin(0.07 * self.step_count))
+                turn = float(np.clip(angle_diff(desired_heading, self.red_heading[0]), -target.max_turn_rate, target.max_turn_rate))
+                desired_alt = 5_000.0 + alt_amp * math.sin(0.045 * self.step_count + 0.7)
+                climb = float(np.clip((desired_alt - self.red_pos[0, 2]) / 1_800.0, -1.0, 1.0))
+            elif self.config.target_policy == "break_turn_param":
+                # P3-B single-axis break-turn: only the DESIRED break-heading
+                # offset (relative to LOS) varies; trigger, phase, speed fixed.
+                rel = self.red_pos[0] - self.blue_pos
+                dists = np.linalg.norm(rel, axis=1)
+                nearest = int(np.argmin(dists))
+                nearest_dist = float(dists[nearest])
+                if nearest_dist < 9_000.0:
+                    los_heading = math.atan2(float(rel[nearest, 1]), float(rel[nearest, 0]))
+                    side = 1.0 if math.sin(0.045 * self.step_count + nearest) >= 0.0 else -1.0
+                    desired_heading = wrap_angle(los_heading + side * self.config.target_break_turn_amp_rad)
+                    turn = float(
+                        np.clip(
+                            angle_diff(desired_heading, self.red_heading[0]),
+                            -target.max_turn_rate,
+                            target.max_turn_rate,
+                        )
+                    )
+                    desired_alt = 5_900.0 if self.red_pos[0, 2] < center_blue[2] else 4_100.0
+                    climb = float(np.clip((desired_alt - self.red_pos[0, 2]) / 1_500.0, -1.0, 1.0))
         self.red_heading[0] = wrap_angle(self.red_heading[0] + turn * self.config.dt)
         self.red_gamma[0] = float(np.clip(self.red_gamma[0] + climb * 0.25 * target.max_gamma * self.config.dt, -target.max_gamma, target.max_gamma))
         xy_radius = float(np.linalg.norm(self.red_pos[0, :2]))
