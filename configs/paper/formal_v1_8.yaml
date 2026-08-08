@@ -1,0 +1,30 @@
+protocol_version: FAIR_ACTOR_PROTOCOL_V1_8
+packet_schema_version: PACKET_SCHEMA_V1_8
+actor_information_contract: ACTOR_INFORMATION_CONTRACT_V1_8
+env_name: 3d_intercept
+num_envs: 8
+rollout_steps: 128
+updates: 300
+hidden_dim: 128
+role_dim: 8
+intent_dim: 8
+ppo_epochs: 4
+lr: 0.0003
+clip_coef: 0.2
+entropy_coef: 0.01
+max_grad_norm: 0.5
+strict_target_sensing: true
+agent_target_info_bottleneck: true
+communication_dropout_prob: 0.30
+message_delay_steps: 2
+radar_dropout_prob: 0.10
+failed_blue_agent: 1
+node_failure_start_step: 40
+node_failure_duration_steps: 80
+attack_hold_steps: 4
+min_success_step: 80
+validation_interval_updates: 10
+validation_episodes: 20
+validation_base_seed_formula: "10000 + 100 * training_seed + episode_index"
+confirmatory_tau: [80, 220]
+formal_training_seeds: [0, 1, 2]

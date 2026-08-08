@@ -32,6 +32,10 @@ SUMMARY_COLUMNS = (
     "collision_mean",
     "constraint_violation_mean",
     "selection_score",
+    "validation_rmst80",
+    "validation_establishment_probability",
+    "validation_censoring_rate",
+    "validation_rmst220",
 )
 
 SELECTION_COLUMNS = (
@@ -48,6 +52,10 @@ SELECTION_COLUMNS = (
     "comm_connectivity_mean",
     "collision_mean",
     "episodes",
+    "validation_rmst80",
+    "validation_establishment_probability",
+    "validation_censoring_rate",
+    "validation_rmst220",
 )
 
 
@@ -168,16 +176,16 @@ def make_eval_args(args: argparse.Namespace, candidate: Candidate) -> argparse.N
         base_seed=args.base_seed,
         target_policy=args.target_policy,
         communication_range_scale=1.0,
-        communication_dropout_prob=0.0,
-        message_delay_steps=0,
-        radar_dropout_prob=0.0,
-        strict_target_sensing=False,
-        agent_target_info_bottleneck=False,
+        communication_dropout_prob=0.30,
+        message_delay_steps=2,
+        radar_dropout_prob=0.10,
+        strict_target_sensing=True,
+        agent_target_info_bottleneck=True,
         max_target_message_age_steps=80,
         min_target_confidence=0.2,
-        failed_blue_agent=-1,
-        node_failure_start_step=0,
-        node_failure_duration_steps=0,
+        failed_blue_agent=1,
+        node_failure_start_step=40,
+        node_failure_duration_steps=80,
         stochastic=False,
         allow_random_policy=False,
         hidden_dim=args.hidden_dim,
@@ -201,6 +209,17 @@ def selection_score(success: float, attack_window: float, tracking: float, colli
     return 1_000.0 * success + 100.0 * attack_window + 10.0 * tracking
 
 
+def validation_rmst(rows: list[dict[str, object]], tau: float) -> float:
+    values = []
+    for row in rows:
+        raw = row.get("post_failure_chain_recovery_steps_censored", row.get("post_failure_chain_recovery_steps", tau))
+        try:
+            values.append(float(np.clip(float(raw), 0.0, tau)))
+        except (TypeError, ValueError):
+            values.append(float(tau))
+    return float(np.mean(values)) if values else float(tau)
+
+
 def summarize_rows(args: argparse.Namespace, candidate: Candidate, rows: list[dict[str, object]]) -> dict[str, str]:
     success = mean(rows, "success")
     attack_window = mean(rows, "attack_window_formed")
@@ -209,6 +228,10 @@ def summarize_rows(args: argparse.Namespace, candidate: Candidate, rows: list[di
     collision = mean(rows, "collision")
     constraint = mean(rows, "constraint_violation")
     score = selection_score(success, attack_window, tracking, collision, constraint, args.max_selection_collision_rate)
+    rmst80 = validation_rmst(rows, 80.0)
+    rmst220 = validation_rmst(rows, 220.0)
+    establishment = mean(rows, "post_failure_chain_recovered")
+    censoring = float(1.0 - establishment)
     return {
         "split": args.split,
         "method": candidate.case.method,
@@ -225,6 +248,10 @@ def summarize_rows(args: argparse.Namespace, candidate: Candidate, rows: list[di
         "collision_mean": f"{collision:.6g}",
         "constraint_violation_mean": f"{constraint:.6g}",
         "selection_score": f"{score:.6g}",
+        "validation_rmst80": f"{rmst80:.6g}",
+        "validation_establishment_probability": f"{establishment:.6g}",
+        "validation_censoring_rate": f"{censoring:.6g}",
+        "validation_rmst220": f"{rmst220:.6g}",
     }
 
 
@@ -262,7 +289,17 @@ def select_checkpoints(rows: list[dict[str, str]]) -> list[dict[str, str]]:
         eligible = [row for row in group if float(row["selection_score"]) > -1_000_000_000.0]
         if not eligible:
             eligible = group
-        best = max(eligible, key=lambda row: (float(row["selection_score"]), int(row["checkpoint_update"])))
+        # Censoring-aware preregistered estimand: lower RMST80, then higher
+        # establishment probability, then lower RMST220, then earlier update.
+        best = min(
+            eligible,
+            key=lambda row: (
+                float(row["validation_rmst80"]),
+                -float(row["validation_establishment_probability"]),
+                float(row["validation_rmst220"]),
+                int(row["checkpoint_update"]),
+            ),
+        )
         selected.append(
             {
                 "split": best["split"],
@@ -278,6 +315,10 @@ def select_checkpoints(rows: list[dict[str, str]]) -> list[dict[str, str]]:
                 "comm_connectivity_mean": best["comm_connectivity_mean"],
                 "collision_mean": best["collision_mean"],
                 "episodes": best["episodes"],
+                "validation_rmst80": best["validation_rmst80"],
+                "validation_establishment_probability": best["validation_establishment_probability"],
+                "validation_censoring_rate": best["validation_censoring_rate"],
+                "validation_rmst220": best["validation_rmst220"],
             }
         )
     return selected
@@ -299,7 +340,8 @@ def write_report(path: Path, args: argparse.Namespace, selected_rows: list[dict[
         f"eval_batch_size = {args.eval_batch_size}",
         f"selection_csv = {display_path(resolve(args.selection_csv)) if args.selection_csv else 'none'}",
         f"max_selection_collision_rate = {args.max_selection_collision_rate}",
-        "selection_score = 1000 * success + 100 * attack_window_formed + 10 * tracking, invalid if collision exceeds threshold",
+        "failure = agent 1, start 40, duration 80; dropout=0.30, delay=2, radar_dropout=0.10, strict sensing + target bottleneck",
+        "selection = RMST80 ascending; establishment probability descending; RMST220 ascending; earlier update tie-break",
         "```",
         "",
         "## Selected Checkpoints",
