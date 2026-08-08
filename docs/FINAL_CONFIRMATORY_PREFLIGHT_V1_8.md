@@ -1,7 +1,9 @@
 # FINAL_CONFIRMATORY_PREFLIGHT_V1_8
 
-**Decision: BLOCKED_BY_PROTOCOL_INCONSISTENCY.** Formal training, formal
-held-out evaluation, OOD, and manuscript changes were not started.
+**Decision: PASS — READY_AND_AUTHORIZED_FOR_FORMAL_V1_8_TRAINING.** Formal
+training may start from the launch manifest. Confirmatory held-out evaluation,
+OOD, relation-conflict performance evaluation, ablations, and manuscript edits
+remain unauthorized.
 
 ## 1. Comparator hierarchy — corrected before the block
 
@@ -26,7 +28,7 @@ is now a single 300-episode population per method × trained-seed checkpoint.
 The two halves may be shown only as non-scientific descriptive anchor halves.
 The same 300 episode seeds are applied to each trained-seed checkpoint.
 
-## 3. Failure-duration trace — blocking inconsistency
+## 3. Failure-duration trace — resolved
 
 | Path | observed failure configuration |
 |---|---|
@@ -36,17 +38,11 @@ The same 300 episode seeds are applied to each trained-seed checkpoint.
 | current confirmatory document | start 80, duration 4, `K=4`, tau 80/220 |
 | nominal checkpoint-selection utility | no failure (`failed_blue_agent=-1`, duration 0), as expected for a nominal non-failure validation utility |
 
-`node_failure_duration_steps=4` is numerically identical to the stable-window /
-attack-hold `K=4`, while legacy formal evidence uses duration 80. The repository
-does not establish that this equality was an intentional scientific design;
-therefore duration 4 cannot be treated as settled.
-
-If persistent failure exposure is the research question, the recommended author
-decision is to align v1.8 with the legacy formal exposure (`start=40`,
-`duration=80`, `K=4`) and retain tau 80/220. Under that design, tau=80 is a
-restricted horizon from onset, not a label for the full active failure window.
-The alternative transient design (`start=80`, `duration=4`) would make tau=80
-post-failure and must be explicitly justified as such. No choice was made here.
+The author has resolved the inconsistency by freezing persistent exposure:
+`start=40`, `duration=80`, `K=4`, tau 80/220. K is the confirmation window and
+duration is the relay-failure exposure; they are independent. Tau=80 is a
+restricted follow-up horizon that happens to align numerically with exposure.
+The 4/4 R6 pilot is engineering history only.
 
 ## 4. Checkpoint-selection estimand — corrected
 
@@ -93,8 +89,7 @@ within the selected seed, preserving training seed as the independent unit.
 
 ## Final status
 
-`BLOCKED_BY_PROTOCOL_INCONSISTENCY`: author must choose and explicitly freeze
-the failure exposure design before v1.8 formal training. No architecture change
-is recommended, and no formal run may begin until that decision updates the
-protocol version consistently across legacy reference, corrected training,
-validation, confirmatory evaluation, endpoint, and tau interpretation.
+`READY_AND_AUTHORIZED_FOR_FORMAL_V1_8_TRAINING`: protocol consistency, R5, and
+the launch manifest gate have passed. Start only the nine training/validation
+runs in [FORMAL_V1_8_LAUNCH_MANIFEST.md](FORMAL_V1_8_LAUNCH_MANIFEST.md), then
+stop and report before any confirmatory evaluation.

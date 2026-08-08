@@ -1,9 +1,8 @@
 # FAIR_ACTOR_PROTOCOL_V1_8
 
-**Status: PRE-FLIGHT REVISION REQUIRED.** Comparator hierarchy and selection
-rules are frozen below; failure-duration alignment remains unresolved pending
-author choice. No formal training result is included, and no Stage 5 or
-manuscript rewrite is authorized.
+**Status: FROZEN and authorized for formal training.** No formal training result
+is included, and no Stage 5, confirmatory held-out evaluation, or manuscript
+rewrite is authorized in this phase.
 
 ## 1. Frozen actor and packet contract
 
@@ -46,6 +45,10 @@ entropy coefficient 0.01, max gradient norm 0.5, and the same strict sensing,
 packet, delay/dropout, failure, and environment parameters. No resume,
 mid-run protocol change, or post hoc budget extension is allowed.
 
+Formal persistent-failure parameters are explicit: `failed_blue_agent=1`,
+`node_failure_start_step=40`, and `node_failure_duration_steps=80`. The R6
+engineering pilot's start=4/duration=4 is historical engineering evidence only.
+
 The matrix contains 9 runs and 2,764,800 training environment transitions
 before validation. Planning estimate (not a measured result) is approximately
 18–36 wall-clock GPU-hours for training plus validation on the configured
@@ -65,11 +68,13 @@ is never used for confirmatory estimates.
 Primary endpoint: **time from failure onset to first stable task-chain
 establishment**. “Recovery” and “true recovery” are not endpoint labels. A
 chain is established when the legal task-chain predicate is true for `K=4`
-consecutive environment steps. Failure onset is the fixed configured relay
-failure start step. Episodes without establishment are right-censored at the
-episode horizon (260 steps) or earlier terminal event.
+consecutive environment steps. `K=4` is independent of the relay node-failure
+exposure duration of 80 steps. Episodes without establishment are right-
+censored at the episode horizon (260 steps) or earlier terminal event.
 
 Report RMST at `tau=80` and `tau=220`, with the endpoint origin at failure onset.
+`tau=80` is a prespecified restricted follow-up horizon; it is numerically
+aligned with, but not mechanically defined by, the 80-step failure exposure.
 The primary architecture comparator is corrected EA-RG Full versus corrected
 wider single-graph. The matched-information non-graph comparison is secondary;
 MAPPO/HAPPO remain system-level comparators and may reuse frozen checkpoints

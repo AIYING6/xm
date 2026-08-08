@@ -1,6 +1,6 @@
 # CONFIRMATORY_EVALUATION_PROTOCOL_V1_8
 
-**Status: PRE-FLIGHT REVISION REQUIRED pending failure-duration decision.**
+**Status: FROZEN and authorized for formal training.**
 
 ## Population and generation
 
@@ -25,14 +25,18 @@ its outcome is unfavorable.
 
 ## Failure and endpoint
 
-Relay failure onset is the configured fixed start step (agent 1, step 80) and
-failure duration is fixed at 4 steps. Primary endpoint is time from this onset
+Relay failure onset is the fixed start step 40 for relay agent 1 and failure
+duration is fixed at 80 steps. `K=4` is the independent stable task-chain
+confirmation window; it is not tied to failure duration. The R6 engineering
+pilot's 4/4 setting is history only. Primary endpoint is time from this onset
 to the first task-chain establishment that remains true for `K=4` consecutive
 steps. This is not labelled true recovery. Episodes with no stable
 establishment are right-censored at 260 steps or the first terminal event.
 
 Report RMST from failure onset at `tau=80` and `tau=220`; tau values and the
-censoring rule cannot change after results are observed. The primary
+censoring rule cannot change after results are observed. Tau=80 is a
+prespecified restricted follow-up horizon, numerically aligned with the
+exposure duration but not mechanically defined by it. The primary
 architecture comparator is corrected EA-RG Full versus corrected wider
 single-graph. Matched-information non-graph is secondary; MAPPO/HAPPO are
 conditional system-level comparators under the expanded no-graph invariance
