@@ -3,8 +3,8 @@
 ## Control and scope
 
 - Control document: `D:/File/Downloads/CODEX_PAPER_AUTOPILOT_MASTER_V7_1_CN_FINAL (1).md` (V7.1-CN FINAL), read on 2026-08-08.
-- Language target: Simplified Chinese, journal-neutral manuscript.
-- Active production state: `P14_FINAL_SELF_REVIEW_COMPLETE`; the evidence-led Chinese manuscript, Supplementary and frozen P1 figure bundle have converged, pending venue-specific metadata, final template build and final PDF review.
+- Language target: Simplified Chinese, 《航空学报》中文版 submission packaging.
+- Active production state: `P16_TEMPLATE_PREVIEW_COMPLETE`; the evidence-led Chinese manuscript, Supplementary and frozen P1 figure bundle have converged. An anonymous official-template DOCX/PDF now exists; author metadata, signed attachments and final reference-format check remain.
 - Existing active manuscript: `paper_latex_3d_en/main.tex` (English draft; evidence-bearing source only, not the intended final Chinese manuscript).
 - Resume source: no earlier `docs/PAPER_AUTOPILOT_STATUS.md` was present.
 
@@ -22,7 +22,8 @@
 | P7 Figure / Manuscript QA | COMPLETE | Two P1 figures are regenerated, visually frozen and evidence-audited. |
 | P8 Supplementary Evidence Packaging | COMPLETE | `paper_chinese/supplementary_zh.md` contains locked source-data routes and admissible supporting detail. |
 | P9--P14 Manuscript Convergence / Self-Review | COMPLETE WITH CONDITIONAL PACKAGING ITEMS | Cold read, narrative, cross-section, negative-result, visual-freeze and final self-review records are complete. |
-| P15--P17 Venue Formatting / Clean Build / Artifact Freeze | NOT STARTED | Await target journal, author metadata and final template source. |
+| P15 Journal Requirements / Template Selection | COMPLETE | 《航空学报》中文版官方 Word 模板与投稿附件已下载、哈希并核验。 |
+| P16 Template Conversion / Clean Build / Artifact Freeze | CONDITIONAL PASS | Anonymous official-template Word/PDF pre-review is 6 pages and has passed visual, bilingual, citation and metadata checks; author metadata, signed attachments and final reference-format check remain. |
 
 ## Current scientific anchor
 
@@ -49,6 +50,6 @@ At inspection start the repository already contained a modified smoke-test repor
 
 ## AUTHOR_DECISION_REQUIRED (non-blocking at P0)
 
-1. Target Chinese journal and its required submission format (Word or LaTeX) are not yet selected.
-2. Author, affiliation, funding, conflict, contribution, and data/code availability metadata are absent from the draft.
-3. Before final formatting, the author must approve the final journal and any venue-specific AI-use disclosure. No scientific decision is required to begin evidence-led Chinese drafting.
+1. Author, affiliation, funding, conflict, contribution, and data/code availability metadata are absent from the draft and must be supplied by the authors.
+2. Authors must complete signatures and secrecy-review stamping in the official submission attachments.
+3. Before upload, authors must confirm the then-current submission-system AI-use requirement and complete a final reference-format check. No further scientific decision is required.
