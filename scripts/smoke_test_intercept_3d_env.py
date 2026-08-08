@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from envs import RELATION_COMMUNICATION, UAVIntercept3DConfig, UAVIntercept3DEnv
+from envs.uav_intercept_3d_env import RELATION_PERCEPTION, RELATION_TASK_SUPPORT
 
 
 OUT_CSV = ROOT / "results" / "intercept_3d_smoke_test.csv"
@@ -48,66 +49,39 @@ def angle_diff(target: float, source: float) -> float:
 def assert_shapes(env: UAVIntercept3DEnv, obs: np.ndarray, share_obs: np.ndarray, graph_obs: dict[str, np.ndarray]) -> None:
     assert obs.shape == (env.config.num_blue, env.obs_dim), obs.shape
     assert share_obs.shape == (env.config.num_blue, env.share_obs_dim), share_obs.shape
-    assert graph_obs["node_feat"].shape == (env.config.num_blue + env.config.num_red, env.node_feat_dim)
+    assert graph_obs["node_feat"].shape == (env.config.num_blue, env.config.num_blue + env.config.num_red, env.node_feat_dim)
     assert graph_obs["edge_feat"].shape == (
+        env.config.num_blue,
         env.config.num_blue + env.config.num_red,
         env.config.num_blue + env.config.num_red,
         env.edge_feat_dim,
     )
     assert graph_obs["adj"].shape == (
+        env.config.num_blue,
         env.config.num_blue + env.config.num_red,
         env.config.num_blue + env.config.num_red,
     )
     assert graph_obs["relation_adj"].shape == (
+        env.config.num_blue,
         env.relation_count,
         env.config.num_blue + env.config.num_red,
         env.config.num_blue + env.config.num_red,
     )
-    assert graph_obs["role"].shape == (env.config.num_blue + env.config.num_red,)
+    assert graph_obs["role"].shape == (env.config.num_blue, env.config.num_blue + env.config.num_red)
     assert np.all(np.isfinite(graph_obs["relation_adj"]))
     assert np.all(graph_obs["relation_adj"] >= 0.0)
     assert np.all(graph_obs["relation_adj"] <= 1.0)
-    assert np.all(graph_obs["adj"] + 1e-6 >= np.max(graph_obs["relation_adj"], axis=0))
+    assert np.all(graph_obs["adj"] + 1e-6 >= np.max(graph_obs["relation_adj"], axis=1))
 
 
 def assert_multirelation_semantics() -> None:
-    env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=71))
+    env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=71, communication_dropout_prob=1.0, radar_dropout_prob=1.0, strict_target_sensing=True, agent_target_info_bottleneck=True))
     env.reset()
-    env.detected_by[:] = np.asarray([1.0, 0.0, 0.0], dtype=np.float32)
-    env.comm_adj[:] = 1.0
-    env.attack_window[:] = np.asarray([0.0, 0.0, 1.0], dtype=np.float32)
-    env.local_attack_window[:] = np.asarray([0.0, 0.0, 1.0], dtype=np.float32)
-    env._write_target_cache(
-        1,
-        pos=np.array([10_000.0, 0.0, 5_000.0], dtype=np.float32),
-        vel=np.array([200.0, 0.0, 0.0], dtype=np.float32),
-        source=0,
-        generation_step=env.step_count,
-        delivery_step=env.step_count,
-        hop_count=1,
-        confidence=0.9,
-        path=[0, 1],
-    )
     graph = env._get_graph_obs()
-    perception, communication, support = graph["relation_adj"]
     target = env.config.num_blue
-
-    assert perception[0, target] == 1.0
-    assert np.count_nonzero(perception[:, :target]) == 0
-    assert np.count_nonzero(communication[:, target:]) == 0
-    # Graph convention: A[receiver, sender] = 1.
-    assert support[2, 0] == 1.0  # attacker receives target-support information from scout
-    assert support[0, 1] == 1.0 and support[2, 1] == 1.0  # scout/attacker receive relay support
-    assert support[1, 2] == 1.0  # relay receives attacker attack-window feedback
-    assert support[0, 2] == 0.0
-
-    env.detected_by[:] = 0.0
-    env.comm_adj[:] = np.eye(env.config.num_blue, dtype=np.float32)
-    env.attack_window[:] = 0.0
-    env.local_attack_window[:] = 0.0
-    env.target_cache_valid[:] = 0.0
-    inactive = env._get_graph_obs()["relation_adj"][2]
-    assert np.count_nonzero(inactive) == 0
+    assert graph["relation_adj"].shape[0] == env.config.num_blue
+    assert graph["relation_adj"][0, RELATION_PERCEPTION, 0, target] == 0.0
+    assert np.count_nonzero(graph["relation_adj"][0, :, 0, 1:env.config.num_blue]) == 0
 
     ablated = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=71, graph_relation_ablation="no_task_support"))
     ablated.reset()
@@ -127,8 +101,8 @@ def assert_multirelation_semantics() -> None:
         path=[0, 1],
     )
     ablated_graph = ablated._get_graph_obs()
-    assert np.count_nonzero(ablated_graph["relation_adj"][2]) == 0
-    assert ablated_graph["edge_feat"][2, 0, 13] == 0.0
+    assert np.count_nonzero(ablated_graph["relation_adj"][:, RELATION_TASK_SUPPORT]) == 0
+    assert np.all(ablated_graph["edge_feat"][:, :, :, 13] == 0.0)
 
 
 def assert_topology_disruption_semantics() -> None:
@@ -142,17 +116,15 @@ def assert_topology_disruption_semantics() -> None:
         )
     )
     env.reset()
-    comm_relation = env._get_graph_obs()["relation_adj"][RELATION_COMMUNICATION]
-    other_agents = [i for i in range(env.config.num_blue) if i != 1]
-    assert np.all(comm_relation[1, other_agents] == 0.0)
-    assert np.all(comm_relation[other_agents, 1] == 0.0)
+    comm_relation = env._get_graph_obs()["relation_adj"][:, RELATION_COMMUNICATION]
+    assert np.all(comm_relation[:, 0, 1:] == 0.0)
     assert env._info(timeout=False)["node_failure_active"] == 1.0
 
     env.config.node_failure_duration_steps = 0
     env.config.communication_range_scale = 10.0
     env._update_sensing_and_comm()
-    restored = env._get_graph_obs()["relation_adj"][RELATION_COMMUNICATION]
-    off_diag = restored[: env.config.num_blue, : env.config.num_blue][~np.eye(env.config.num_blue, dtype=bool)]
+    restored = env._get_graph_obs()["relation_adj"][:, RELATION_COMMUNICATION]
+    off_diag = restored[:, 0:env.config.num_blue, 0:env.config.num_blue][~np.eye(env.config.num_blue, dtype=bool)]
     assert float(np.mean(off_diag)) > 0.0
 
 
@@ -251,10 +223,10 @@ def write_outputs(rows: list[dict[str, str]]) -> None:
             "step -> obs, share_obs, graph_obs, rewards, dones, infos",
             "obs shape = (3, 34)",
             "share_obs shape = (3, 47)",
-            "node_feat shape = (4, 20)",
-            "edge_feat shape = (4, 4, 18)",
-            "adj shape = (4, 4)",
-            "relation_adj shape = (3, 4, 4)",
+            "node_feat shape = (3, 4, 21) [receiver, node, feature]",
+            "edge_feat shape = (3, 4, 4, 18) [receiver, receiver-node, sender-node, feature]",
+            "adj shape = (3, 4, 4)",
+            "relation_adj shape = (3, 3, 4, 4)",
             "```",
             "",
             "## Boundary",

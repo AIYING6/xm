@@ -51,7 +51,8 @@ OBS3D_FIELD_NAMES = (
 )
 OBS3D_ROLE_IDENTITY_SLICE = slice(24, 28)
 NODE3D_ROLE_IDENTITY_SLICE = slice(11, 16)
-EDGE3D_FEAT_DIM = 17
+EDGE3D_FEAT_DIM = 18
+NODE3D_FEAT_DIM = 21
 RELATION3D_COUNT = 3
 RELATION_PERCEPTION = 0
 RELATION_COMMUNICATION = 1
@@ -163,7 +164,7 @@ class UAVIntercept3DEnv:
         self.num_agents = self.config.num_blue
         self.action_dim = len(ACTION3D_TABLE)
         self.obs_dim = 34
-        self.node_feat_dim = 20
+        self.node_feat_dim = NODE3D_FEAT_DIM
         self.edge_feat_dim = EDGE3D_FEAT_DIM
         self.relation_count = RELATION3D_COUNT
         self.share_obs_dim = self.config.num_blue * 10 + self.config.num_red * 9 + 8
@@ -189,6 +190,7 @@ class UAVIntercept3DEnv:
         self.last_detection_step = -1
         self.pending_messages: list[tuple[int, int, int]] = []
         self.pending_target_messages: list[dict[str, object]] = []
+        self.pending_status_messages: list[dict[str, object]] = []
 
         self.blue_pos = np.asarray(
             [
@@ -262,6 +264,9 @@ class UAVIntercept3DEnv:
         self.target_cache_hop_count = np.full(cfg.num_blue, -1, dtype=np.int64)
         self.target_cache_confidence = np.zeros(cfg.num_blue, dtype=np.float32)
         self.target_cache_path: list[list[int]] = [[] for _ in range(cfg.num_blue)]
+        self.sender_packet_cache: list[dict[int, dict[str, object]]] = [
+            {} for _ in range(cfg.num_blue)
+        ]
         self.detected_by = np.zeros(cfg.num_blue, dtype=np.float32)
         self.attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
         self.local_attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
@@ -439,6 +444,43 @@ class UAVIntercept3DEnv:
             self.red_gamma[0] = -0.25 * target.max_gamma
         self.red_pos[0] += velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0]) * self.config.dt
 
+    def _make_sender_status_packet(self, sender: int, send_step: int) -> dict[str, object]:
+        """Snapshot the frozen v1.8 sender-status payload at send time."""
+        typ = self.config.blue_types[sender]
+        vel = velocity_from_state(self.blue_speed[sender], self.blue_heading[sender], self.blue_gamma[sender])
+        target_valid = float(self.target_cache_valid[sender]) > 0.5
+        return {
+            "sender_id": int(sender),
+            "sender_role": int(typ.role),
+            "position": self.blue_pos[sender].copy(),
+            "velocity": vel.copy(),
+            "heading": float(self.blue_heading[sender]),
+            "energy": float(self.blue_energy[sender]),
+            "detected_by": float(self.detected_by[sender]),
+            # Compute from the sender state at packet creation time.  The
+            # episode-level cache is refreshed after communication updates,
+            # so reading it here would silently publish the previous step.
+            "local_attack_window": float(self._in_local_attack_window(sender, typ)),
+            "target_pos": self.target_cache_pos[sender].copy() if target_valid else np.zeros(3, dtype=np.float32),
+            "target_vel": self.target_cache_vel[sender].copy() if target_valid else np.zeros(3, dtype=np.float32),
+            "target_confidence": float(self.target_cache_confidence[sender]) if target_valid else 0.0,
+            "target_generation_step": int(self.target_cache_generation_step[sender]) if target_valid else -1,
+            "target_hop_count": int(self.target_cache_hop_count[sender]) if target_valid else -1,
+            "send_step": int(send_step),
+            "delivery_step": -1,
+            "validity": 0.0,
+        }
+
+    def _store_sender_packet(self, receiver: int, packet: dict[str, object], delivery_step: int) -> None:
+        stored = dict(packet)
+        stored["position"] = np.asarray(packet["position"], dtype=np.float32).copy()
+        stored["velocity"] = np.asarray(packet["velocity"], dtype=np.float32).copy()
+        stored["target_pos"] = np.asarray(packet["target_pos"], dtype=np.float32).copy()
+        stored["target_vel"] = np.asarray(packet["target_vel"], dtype=np.float32).copy()
+        stored["delivery_step"] = int(delivery_step)
+        stored["validity"] = 1.0
+        self.sender_packet_cache[receiver][int(packet["sender_id"])] = stored
+
     def _update_sensing_and_comm(self) -> None:
         cfg = self.config
         self.detected_by = np.zeros(cfg.num_blue, dtype=np.float32)
@@ -486,6 +528,18 @@ class UAVIntercept3DEnv:
                 retained_messages.append((deliver_step, receiver, sender))
         self.pending_messages = retained_messages
 
+        retained_status_messages: list[dict[str, object]] = []
+        for message in self.pending_status_messages:
+            deliver_step = int(message["deliver_step"])
+            receiver = int(message["receiver"])
+            sender = int(message["sender"])
+            if deliver_step <= self.step_count:
+                if not self._is_comm_failed(receiver) and not self._is_comm_failed(sender):
+                    self._store_sender_packet(receiver, message["packet"], deliver_step)
+            else:
+                retained_status_messages.append(message)
+        self.pending_status_messages = retained_status_messages
+
         retained_target_messages: list[dict[str, object]] = []
         for message in self.pending_target_messages:
             deliver_step = int(message["deliver_step"])
@@ -521,9 +575,11 @@ class UAVIntercept3DEnv:
                 reachable = dist <= effective_range
                 reachable = reachable and self.dropout_rng.random() >= cfg.communication_dropout_prob
                 if reachable:
+                    status_packet = self._make_sender_status_packet(j, self.step_count)
                     if cfg.message_delay_steps <= 0:
                         delivered_comm[i, j] = 1.0
                         self.message_age[i, j] = 0.0
+                        self._store_sender_packet(i, status_packet, self.step_count)
                         if eligible_valid[j] > 0.5:
                             self._write_target_cache(
                                 i,
@@ -539,6 +595,14 @@ class UAVIntercept3DEnv:
                     else:
                         deliver_step = self.step_count + cfg.message_delay_steps
                         self.pending_messages.append((deliver_step, i, j))
+                        self.pending_status_messages.append(
+                            {
+                                "deliver_step": deliver_step,
+                                "receiver": i,
+                                "sender": j,
+                                "packet": status_packet,
+                            }
+                        )
                         if eligible_valid[j] > 0.5:
                             self.pending_target_messages.append(
                                 {
@@ -1029,7 +1093,145 @@ class UAVIntercept3DEnv:
             arr = np.pad(arr, (0, self.share_obs_dim - arr.size))
         return np.tile(arr, (self.config.num_blue, 1)).astype(np.float32)
 
+    def _get_recipient_graph_view(self, receiver: int) -> Dict[str, np.ndarray]:
+        """Build one provenance-valid graph view for a single receiver."""
+        n_blue = self.config.num_blue
+        n = n_blue + self.config.num_red
+        node = np.zeros((n, self.node_feat_dim), dtype=np.float32)
+        edge = np.zeros((n, n, EDGE3D_FEAT_DIM), dtype=np.float32)
+        adj = np.eye(n, dtype=np.float32)
+        relation_adj = np.zeros((self.relation_count, n, n), dtype=np.float32)
+        role = np.zeros(n, dtype=np.int64)
+        valid = np.zeros(n, dtype=np.float32)
+
+        def fill_node(index: int, pos: np.ndarray, speed: float, heading: float, gamma: float,
+                      vel: np.ndarray, role_id: int, detected: float, attack: float,
+                      energy: float, is_blue: float, is_valid: float) -> None:
+            role[index] = int(role_id)
+            valid[index] = float(is_valid)
+            max_speed = self.config.blue_types[index].max_speed if index < n_blue else self.config.target_type.max_speed
+            node[index] = np.asarray(
+                [
+                    pos[0] / self.config.world_radius, pos[1] / self.config.world_radius,
+                    pos[2] / self.config.max_altitude, speed / max_speed,
+                    math.sin(float(heading)), math.cos(float(heading)),
+                    math.sin(float(gamma)), math.cos(float(gamma)),
+                    vel[0] / max_speed, vel[1] / max_speed, vel[2] / max_speed,
+                    float(role_id == ROLE_SCOUT), float(role_id == ROLE_RELAY),
+                    float(role_id == ROLE_ATTACKER), float(role_id == ROLE_INTERCEPTOR),
+                    float(role_id == ROLE_TARGET), detected, attack, energy,
+                    is_blue, float(is_valid),
+                ], dtype=np.float32
+            )
+
+        self_typ = self.config.blue_types[receiver]
+        self_vel = velocity_from_state(self.blue_speed[receiver], self.blue_heading[receiver], self.blue_gamma[receiver])
+        fill_node(receiver, self.blue_pos[receiver], float(self.blue_speed[receiver]),
+                  float(self.blue_heading[receiver]), float(self.blue_gamma[receiver]), self_vel,
+                  self_typ.role, float(self.detected_by[receiver]), float(self.local_attack_window[receiver]),
+                  float(self.blue_energy[receiver]), 1.0, 1.0)
+
+        for sender in range(n_blue):
+            if sender == receiver:
+                continue
+            packet = self.sender_packet_cache[receiver].get(sender)
+            typ = self.config.blue_types[sender]
+            if packet is None or float(packet.get("validity", 0.0)) <= 0.5:
+                fill_node(sender, np.zeros(3, dtype=np.float32), 0.0, 0.0, 0.0, np.zeros(3, dtype=np.float32),
+                          typ.role, 0.0, 0.0, 0.0, 1.0, 0.0)
+            else:
+                p = np.asarray(packet["position"], dtype=np.float32)
+                v = np.asarray(packet["velocity"], dtype=np.float32)
+                speed = float(np.linalg.norm(v))
+                gamma = math.atan2(float(v[2]), float(np.linalg.norm(v[:2]) + 1e-6)) if speed > 1e-6 else 0.0
+                fill_node(sender, p, speed, float(packet["heading"]), gamma, v, int(packet["sender_role"]),
+                          float(packet["detected_by"]), float(packet["local_attack_window"]),
+                          float(packet["energy"]), 1.0, 1.0)
+
+        target_pos, target_speed, target_heading, target_gamma, target_vel = self._target_state_for_agent_observation(receiver)
+        target_valid = float(self._has_target_information(receiver)) if (
+            self.config.strict_target_sensing and self.config.agent_target_info_bottleneck
+        ) else 1.0
+        fill_node(n_blue, target_pos if target_valid > 0.5 else np.zeros(3, dtype=np.float32),
+                  target_speed if target_valid > 0.5 else 0.0, target_heading if target_valid > 0.5 else 0.0,
+                  target_gamma if target_valid > 0.5 else 0.0,
+                  target_vel if target_valid > 0.5 else np.zeros(3, dtype=np.float32),
+                  ROLE_TARGET, float(target_valid), 0.0, 1.0, 0.0, target_valid)
+
+        positions = np.zeros((n, 3), dtype=np.float32)
+        velocities = np.zeros((n, 3), dtype=np.float32)
+        positions[receiver] = self.blue_pos[receiver]
+        velocities[receiver] = self_vel
+        for sender in range(n_blue):
+            packet = self.sender_packet_cache[receiver].get(sender)
+            if sender != receiver and packet is not None and float(packet.get("validity", 0.0)) > 0.5:
+                positions[sender] = np.asarray(packet["position"], dtype=np.float32)
+                velocities[sender] = np.asarray(packet["velocity"], dtype=np.float32)
+        if target_valid > 0.5:
+            positions[n_blue] = target_pos
+            velocities[n_blue] = target_vel
+
+        for src in range(n):
+            for dst in range(n):
+                if src != receiver and dst != src:
+                    continue
+                endpoint_valid = float(valid[src] > 0.5 and valid[dst] > 0.5)
+                rel = positions[dst] - positions[src] if endpoint_valid > 0.5 else np.zeros(3, dtype=np.float32)
+                rel_vel = velocities[dst] - velocities[src] if endpoint_valid > 0.5 else np.zeros(3, dtype=np.float32)
+                dist = float(np.linalg.norm(rel)) if endpoint_valid > 0.5 else 0.0
+                los = unit(rel) if endpoint_valid > 0.5 else np.zeros(3, dtype=np.float32)
+                comm = float(src == receiver and dst < n_blue and dst != receiver and valid[dst] > 0.5)
+                sensing = float(src == receiver and dst == n_blue and target_valid > 0.5)
+                support = float(src == receiver and dst < n_blue and dst != receiver and valid[dst] > 0.5)
+                active_support = support
+                if self.config.graph_relation_ablation == "no_task_support":
+                    support = active_support = 0.0
+                age = 0.0
+                confidence = endpoint_valid
+                if dst < n_blue and dst != receiver:
+                    packet = self.sender_packet_cache[receiver].get(dst)
+                    if packet is not None and endpoint_valid > 0.5:
+                        age = min(float(self.config.max_steps), float(self.step_count - int(packet["send_step"]))) / self.config.max_steps
+                        confidence = float(packet.get("target_confidence", 1.0))
+                adj[src, dst] = max(adj[src, dst], comm, sensing, active_support)
+                relation_adj[RELATION_PERCEPTION, src, dst] = sensing
+                relation_adj[RELATION_COMMUNICATION, src, dst] = comm
+                relation_adj[RELATION_TASK_SUPPORT, src, dst] = active_support
+                edge[src, dst] = np.asarray(
+                    [rel[0] / self.config.world_radius, rel[1] / self.config.world_radius,
+                     rel[2] / self.config.max_altitude, dist / self.config.world_radius,
+                     los[0], los[1], los[2], rel_vel[0] / 300.0, rel_vel[1] / 300.0,
+                     rel_vel[2] / 300.0, float(src < n_blue and dst < n_blue), sensing,
+                     comm, support, 0.0, age, confidence, endpoint_valid], dtype=np.float32
+                )
+        order = [receiver] + [k for k in range(n) if k != receiver]
+        node = node[order]
+        role = role[order]
+        valid = valid[order]
+        edge = edge[np.ix_(order, order)]
+        adj = adj[np.ix_(order, order)]
+        relation_adj = relation_adj[:, order][:, :, order]
+        return {
+            "node_feat": node, "edge_feat": edge, "adj": adj,
+            "relation_adj": relation_adj, "role": role,
+            "intent_label": np.asarray([4], dtype=np.int64), "has_intent_label": False,
+            "provenance_mask": valid,
+            "receiver_id": np.asarray(receiver, dtype=np.int64),
+        }
+
     def _get_graph_obs(self) -> Dict[str, np.ndarray]:
+        views = [self._get_recipient_graph_view(i) for i in range(self.config.num_blue)]
+        return {
+            "node_feat": np.stack([v["node_feat"] for v in views]).astype(np.float32),
+            "edge_feat": np.stack([v["edge_feat"] for v in views]).astype(np.float32),
+            "adj": np.stack([v["adj"] for v in views]).astype(np.float32),
+            "relation_adj": np.stack([v["relation_adj"] for v in views]).astype(np.float32),
+            "role": np.stack([v["role"] for v in views]).astype(np.int64),
+            "intent_label": np.stack([v["intent_label"] for v in views]).astype(np.int64),
+            "has_intent_label": False,
+            "provenance_mask": np.stack([v["provenance_mask"] for v in views]).astype(np.float32),
+            "receiver_id": np.arange(self.config.num_blue, dtype=np.int64),
+        }
         n_blue = self.config.num_blue
         n = n_blue + self.config.num_red
         node = np.zeros((n, self.node_feat_dim), dtype=np.float32)

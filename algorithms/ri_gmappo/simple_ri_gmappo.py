@@ -396,7 +396,7 @@ class RIActor(nn.Module):
         multi_relation_global_residual_weight: float = 1.0,
     ):
         super().__init__()
-        if graph_encoder not in {"no_graph", "single", "multi_relation"}:
+        if graph_encoder not in {"no_graph", "matched_nongraph", "single", "multi_relation"}:
             raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
         if graph_message_ablation not in {"none", "no_role_pair_gate"}:
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
@@ -417,6 +417,9 @@ class RIActor(nn.Module):
                 nn.Tanh(),
                 nn.Linear(hidden_dim, num_intents),
             )
+        elif graph_encoder == "matched_nongraph":
+            self.matched_edge_pool = nn.Sequential(nn.Linear(edge_feat_dim, hidden_dim), nn.Tanh())
+            self.matched_pool_fuse = nn.Sequential(nn.Linear(hidden_dim * 4, hidden_dim), nn.Tanh())
         elif graph_encoder == "single":
             self.gat1 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
             self.gat2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
@@ -503,7 +506,23 @@ class RIActor(nn.Module):
             if return_chain_aux:
                 return logits, attn, intent_logits, chain_aux_logits
             return logits, attn, intent_logits
-        if self.graph_encoder == "single":
+        if self.graph_encoder == "matched_nongraph":
+            receiver_feat = x[:, :1]
+            target_feat = x[:, -1:]
+            teammate_feat = x[:, 1:-1]
+            teammate_valid = node_feat[:, 1:-1, -1:].to(dtype=x.dtype)
+            denom = teammate_valid.sum(dim=1, keepdim=True).clamp_min(1.0)
+            teammate_mean = (teammate_feat * teammate_valid).sum(dim=1, keepdim=True) / denom
+            if edge_feat is None:
+                edge_context = torch.zeros_like(receiver_feat)
+            else:
+                edge_context = self.matched_edge_pool(edge_feat.mean(dim=(1, 2))).unsqueeze(1)
+            graph_feat = self.matched_pool_fuse(torch.cat([receiver_feat, teammate_mean, target_feat, edge_context], dim=-1))
+            intent_logits = self.intent_head(target_feat)
+            attn = torch.zeros(
+                obs.shape[0], x.shape[1], x.shape[1], dtype=x.dtype, device=x.device
+            )
+        elif self.graph_encoder == "single":
             x, _ = self.gat1(x, adj, edge_feat)
             x, attn = self.gat2(x, adj, edge_feat)
         else:
@@ -584,7 +603,11 @@ class RIGMAPPOAgent(nn.Module):
         self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
 
     def critic_value(self, share_obs: torch.Tensor, role: torch.Tensor) -> torch.Tensor:
-        agent_role = role[:, : self.num_agents].long().clamp(min=0, max=self.num_roles - 1)
+        if role.ndim == 3:
+            # Recipient-specific views are ordered with the receiver at node 0.
+            agent_role = role[:, :, 0].long().clamp(min=0, max=self.num_roles - 1)
+        else:
+            agent_role = role[:, : self.num_agents].long().clamp(min=0, max=self.num_roles - 1)
         role_one_hot = F.one_hot(agent_role, num_classes=self.num_roles).to(dtype=share_obs.dtype, device=share_obs.device)
         return self.critic(torch.cat([share_obs, role_one_hot], dim=-1)).squeeze(-1)
 
@@ -603,6 +626,39 @@ class RIGMAPPOAgent(nn.Module):
         detach_intent: bool = False,
         oracle_intent: bool = False,
     ):
+        recipient_views = node_feat.ndim == 4
+        if recipient_views:
+            batch_size, num_agents, num_nodes, _ = node_feat.shape
+            obs_actor = obs.reshape(batch_size * num_agents, 1, -1)
+            node_actor = node_feat.reshape(batch_size * num_agents, num_nodes, -1)
+            edge_actor = edge_feat.reshape(batch_size * num_agents, num_nodes, num_nodes, -1) if edge_feat is not None else None
+            role_actor = role.reshape(batch_size * num_agents, num_nodes)
+            adj_actor = adj.reshape(batch_size * num_agents, num_nodes, num_nodes)
+            relation_actor = relation_adj.reshape(batch_size * num_agents, relation_adj.shape[2], num_nodes, num_nodes) if relation_adj is not None else None
+            intent_actor = intent_label.reshape(batch_size * num_agents, -1) if intent_label is not None else None
+            action_actor = action.reshape(batch_size * num_agents, 1) if action is not None else None
+            logits, attn, intent_logits, chain_aux_logits = self.actor(
+                obs_actor, node_actor, edge_actor, role_actor, adj_actor, 1,
+                relation_adj=relation_actor, intent_label=intent_actor,
+                detach_intent=detach_intent, oracle_intent=oracle_intent,
+                return_chain_aux=True,
+            )
+            action_in = action_actor
+            dist = Categorical(logits=logits)
+            if action_in is None:
+                action_in = torch.argmax(logits, dim=-1) if deterministic else dist.sample()
+            log_prob = dist.log_prob(action_in)
+            entropy = dist.entropy()
+            value = self.critic_value(share_obs, role)
+            return (
+                action_in.reshape(batch_size, num_agents),
+                log_prob.reshape(batch_size, num_agents),
+                entropy.reshape(batch_size, num_agents),
+                value,
+                attn.reshape(batch_size, num_agents, *attn.shape[1:]),
+                intent_logits.reshape(batch_size, num_agents, *intent_logits.shape[1:]),
+                chain_aux_logits.reshape(batch_size, num_agents, *chain_aux_logits.shape[1:]),
+            )
         logits, attn, intent_logits, chain_aux_logits = self.actor(
             obs,
             node_feat,
