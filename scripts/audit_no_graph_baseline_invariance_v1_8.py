@@ -16,14 +16,7 @@ from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv
 
 
 LEGACY_REV = "f0c7f57"
-SEED = 431
-ACTIONS = np.asarray(
-    [
-        [0, 4, 8], [1, 3, 7], [2, 6, 5], [4, 0, 8],
-        [7, 1, 3], [8, 2, 6], [5, 4, 0], [3, 7, 1],
-        [6, 8, 2], [0, 5, 4], [2, 1, 7], [8, 6, 3],
-    ], dtype=np.int64
-)
+SEEDS = (431, 517, 809)
 
 
 def _load_legacy_module() -> types.ModuleType:
@@ -42,12 +35,14 @@ def _load_legacy_module() -> types.ModuleType:
 def _config_kwargs(cls):
     names = {field.name for field in dataclasses.fields(cls)}
     requested = {
-        "seed": SEED,
-        "communication_dropout_prob": 0.0,
-        "message_delay_steps": 1,
+        "communication_dropout_prob": 0.30,
+        "message_delay_steps": 2,
+        "radar_dropout_prob": 0.10,
+        "strict_target_sensing": True,
+        "agent_target_info_bottleneck": True,
         "failed_blue_agent": 1,
-        "node_failure_start_step": 4,
-        "node_failure_duration_steps": 4,
+        "node_failure_start_step": 40,
+        "node_failure_duration_steps": 80,
     }
     return {key: value for key, value in requested.items() if key in names}
 
@@ -111,10 +106,12 @@ def _compare(a, b, label, failures):
         failures.append(label)
 
 
-def main() -> int:
+def run_one(seed: int, horizon: int = 64):
     legacy = _load_legacy_module()
-    new_cfg = UAVIntercept3DConfig(**_config_kwargs(UAVIntercept3DConfig))
-    old_cfg = legacy.UAVIntercept3DConfig(**_config_kwargs(legacy.UAVIntercept3DConfig))
+    new_args = _config_kwargs(UAVIntercept3DConfig); new_args["seed"] = seed
+    old_args = _config_kwargs(legacy.UAVIntercept3DConfig); old_args["seed"] = seed
+    new_cfg = UAVIntercept3DConfig(**new_args)
+    old_cfg = legacy.UAVIntercept3DConfig(**old_args)
     new_env = UAVIntercept3DEnv(new_cfg)
     old_env = legacy.UAVIntercept3DEnv(old_cfg)
     new_obs, new_share, _ = new_env.reset()
@@ -122,7 +119,8 @@ def main() -> int:
     failures: list[str] = []
     _compare(old_obs, new_obs, "reset.obs", failures)
     _compare(old_share, new_share, "reset.share_obs", failures)
-    for step, action in enumerate(ACTIONS, start=1):
+    actions = np.random.default_rng(seed + 9000).integers(0, new_env.action_dim, size=(horizon, new_env.num_agents))
+    for step, action in enumerate(actions, start=1):
         old_obs, old_share, _, old_rewards, old_dones, old_infos = old_env.step(action)
         new_obs, new_share, _, new_rewards, new_dones, new_infos = new_env.step(action)
         old_snap = _snapshot(old_env, old_obs, old_share, old_rewards, old_dones, old_infos)
@@ -130,12 +128,23 @@ def main() -> int:
         _compare(old_snap, new_snap, f"step[{step}]", failures)
         if old_env.done or new_env.done:
             break
+    return failures, step
+
+
+def main() -> int:
+    all_failures = []
+    transitions = 0
+    for seed in SEEDS:
+        failures, count = run_one(seed)
+        transitions += count
+        all_failures.extend([f"seed={seed}:{item}" for item in failures])
+    failures = all_failures
     if failures:
         print("NO_GRAPH_BASELINE_INVARIANCE_AUDIT_V1_8: FAIL")
         for item in failures[:40]:
             print(f"  {item}")
         return 1
-    print(f"NO_GRAPH_BASELINE_INVARIANCE_AUDIT_V1_8: PASS ({step} transitions, seed={SEED})")
+    print(f"NO_GRAPH_BASELINE_INVARIANCE_AUDIT_V1_8: PASS ({transitions} transitions, seeds={SEEDS}, formal stochastic config)")
     return 0
 
 

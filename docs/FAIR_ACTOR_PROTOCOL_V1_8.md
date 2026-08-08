@@ -1,7 +1,9 @@
 # FAIR_ACTOR_PROTOCOL_V1_8
 
-**Status: FROZEN before formal training.** No formal training result is
-included in this document, and no Stage 5 or manuscript rewrite is authorized.
+**Status: PRE-FLIGHT REVISION REQUIRED.** Comparator hierarchy and selection
+rules are frozen below; failure-duration alignment remains unresolved pending
+author choice. No formal training result is included, and no Stage 5 or
+manuscript rewrite is authorized.
 
 ## 1. Frozen actor and packet contract
 
@@ -52,10 +54,11 @@ formal run manifest; it is not a reason to alter the budget or seed count.
 
 Validation runs every 10 updates on a fixed 20-episode validation population
 whose seeds are `10000 + 100*training_seed + episode_index`. The checkpoint is
-selected once per run by the prespecified validation score: primary endpoint
-among uncensored episodes, then censoring-aware median endpoint, then success
-rate; ties select the earlier checkpoint. The validation population is never
-used for confirmatory estimates.
+selected once per run using a censoring-aware validation estimand: (1) RMST at
+`tau=80`, (2) establishment probability with its censoring rate reported
+jointly, (3) RMST at `tau=220`, then (4) earlier checkpoint on ties. No
+uncensored-only endpoint is used as a selection gate. The validation population
+is never used for confirmatory estimates.
 
 ## 4. Frozen confirmatory endpoint and analysis
 
@@ -67,10 +70,10 @@ failure start step. Episodes without establishment are right-censored at the
 episode horizon (260 steps) or earlier terminal event.
 
 Report RMST at `tau=80` and `tau=220`, with the endpoint origin at failure onset.
-The primary comparator is corrected EA-RG Full versus matched-information
-non-graph; wider single-graph is the prespecified secondary architecture
-comparator. MAPPO/HAPPO are system-level comparators and may reuse frozen
-checkpoints only under the R7.5 PASS condition.
+The primary architecture comparator is corrected EA-RG Full versus corrected
+wider single-graph. The matched-information non-graph comparison is secondary;
+MAPPO/HAPPO remain system-level comparators and may reuse frozen checkpoints
+only under the expanded no-graph invariance audit.
 
 Bootstrap is hierarchical: resample training seeds with replacement, then
 episodes within each selected seed with replacement, preserving the seed as the
@@ -92,8 +95,8 @@ be folded into v1.8 results.
 
 ## 6. Formal comparator hierarchy
 
-1. Corrected EA-RG Full vs matched-information non-graph (primary).
-2. Corrected EA-RG Full vs corrected wider single-graph (secondary).
+1. Corrected EA-RG Full vs corrected wider single-graph (primary architecture).
+2. Corrected EA-RG Full vs matched-information non-graph (secondary matched-information).
 3. Corrected methods vs frozen MAPPO/HAPPO only as a system-level comparison,
    conditional on the trajectory-level invariance audit.
 
