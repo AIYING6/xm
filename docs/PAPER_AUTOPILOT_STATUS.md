@@ -39,7 +39,7 @@ No scientific conflict blocks P2--P5. The following are in progress through inde
 - P4 locks RMST80 versus MAPPO as the P1 time endpoint; it prohibits treating OOD bootstrap probability as a p-value or recovered-only `t_rec` as the main time result. Gate Prior mechanism numbers await a complete audited asset.
 - P5 confirms that the method code implements exactly three relations. The current four-relation method schematic is blocked. The current Gate Prior figure is blocked because its Full-with-Prior curve is absent.
 - P6 produced the Chinese intermediate manuscript and regenerated the admissible P1 figures: `paper_chinese/figures/fig1_three_relation_task_graph.*` and `fig2_early_recovery_km.*`. Both have provenance files and were visually checked. The Gate Prior trajectory remains excluded.
-- P7 records a bounded three-emphasis reviewer audit in `docs/CHINESE_MANUSCRIPT_REVIEW.md`. Its consensus action is packaging and claim discipline, not new training.
+- P7 records a bounded three-emphasis reviewer audit in `docs/CHINESE_MANUSCRIPT_REVIEW.md`. Its consensus action is packaging and claim discipline, not new training. The dedicated publication-figure redesign pass has now replaced the manuscript-facing Fig. 1 and Fig. 2 assets with SVG/PDF/600-dpi PNG/TIFF bundles after dual scientific/graphic review and a 17/17 evidence audit.
 - P8 adds a Chinese supplementary draft with seedwise RMST, pre-specified time-window sensitivity, and explicit routes to the locked OOD/robustness/cost assets. The known `hierarchical_bootstrap.csv` early-window `observed_delta` field defect is quarantined in the stale-evidence blacklist; it is not used by the main or supplementary narrative.
 
 ## Working-tree protection

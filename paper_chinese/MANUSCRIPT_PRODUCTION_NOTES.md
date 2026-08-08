@@ -4,8 +4,8 @@
 
 | 主稿对象 | 状态 | 权威来源 |
 |---|---|---|
-| 图 1：三关系方法图 | 已重绘并目视核验 | `docs/figure_contracts/FACT_MANIFEST_METHOD_FIGURE.md`（MF01–MF10）；`figures/fig1_three_relation_task_graph.provenance.txt` |
-| 图 2：精简 KM/RMST | 已从锁定 held-out 输入重渲染并目视核验 | `docs/statistics/survival_results_v1_1/`；`docs/statistics/P1B_DECISION_MEMO_V1_1.md`；`figures/fig2_early_recovery_km.provenance.txt` |
+| 图 1：三关系方法图 | 投稿版重构、目视核验与证据审计通过 | `docs/figure_contracts/FACT_MANIFEST_METHOD_FIGURE.md`（MF01–MF10）；`figures/publication/publication_figure_provenance.txt` |
+| 图 2：概览 + 早期细节 + RMST80 | 投稿版重构、目视核验与证据审计通过 | `docs/statistics/survival_results_v1_1/`；`docs/statistics/P1B_DECISION_MEMO_V1_1.md`；`figures/publication/publication_figure_provenance.txt` |
 | 表 1：主结果 | 数值已锁定 | `docs/paper_assets_v1_5/canonical_results_v1_5.csv`；P1B memo |
 | 表 2：消融 | 数值已锁定，解释受限 | P1B memo；`docs/STATISTICAL_PROVENANCE_AUDIT.md` |
 | 表 3：OOD 边界 | 数值已锁定 | `docs/statistics/p3a_ood_results_v1_1/p3a_ood_stats_lock_memo.md` |

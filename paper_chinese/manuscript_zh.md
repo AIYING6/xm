@@ -56,9 +56,9 @@ Full 与比较方法的差异采用分层配对 bootstrap 估计：先重采样�
 
 三类关系的邻接张量形状为 \([3,N,N]\)。攻击窗口只以节点状态或任务支撑条件标记，不能被解释为独立关系或物理链路。每条边的特征参与注意力分数计算，关系邻接作为硬掩码；自环始终可用。
 
-![图 1：任务与三关系图编码](figures/fig1_three_relation_task_graph.png)
+![图 1：任务与三关系图编码](figures/publication/fig1_method_overview_publication.png)
 
-**图 1｜任务与三关系图编码。** (a) scout–relay–attacker–target 的任务链和中继失效窗口；(b) 感知、通信、任务支撑三类边，关系专属图注意力、联合图残差和静态角色对调制。图中攻击窗口仅为节点状态/任务支撑条件，不是第四类关系。
+**图 1｜故障后协同的三关系任务图。** a，Scout–Relay–Attack–Target 异构任务场景及三类关系。b，中继失效前后的三关系任务图；失效使相应关系不可用，攻击窗口不构成第四类关系。c，局部观测和可用图经关系专属边特征注意力、Gate Prior 与静态 Role-Pair 调制、联合图残差融合后，供分散 actor 使用。感知为蓝色点线，环境递送通信为绿色虚线，任务支撑为橙色点划线；关系邻接是图聚合掩码，而非策略学习的物理通信开关。
 
 ### 3.2 关系聚合与训练边界
 
@@ -84,9 +84,9 @@ nominal held-out 套件共包含 10,800 个 episode。主要事件时间分析�
 
 在 \(\tau=220\) 的共同完整随访上限，EA-RG 的 RMST 为 \(14.47\pm3.10\) 步，MAPPO 为 \(20.39\pm7.72\) 步。与此同时，HAPPO 为 \(14.14\pm2.94\) 步，宽单图为 \(16.49\pm8.64\) 步；EA-RG 与后二者的逐 seed 差异并不一致。因此，完整随访的证据支持“竞争性表现”，不支持对所有基线的统一优越。
 
-![图 2：匹配失效暴露下的早期恢复](figures/fig2_early_recovery_km.png)
+![图 2：匹配失效暴露下的早期恢复](figures/publication/fig2_primary_recovery_publication.png)
 
-**图 2｜匹配失效暴露下的早期恢复。** 主面板仅显示 EA-RG、MAPPO、HAPPO 与宽单图的 KM 恢复曲线。每条曲线汇总 3 个独立训练 seed 的 600 个 Early+Nominal failure-exposed episodes；未恢复 episode 右删失。RMST 越低表示恢复越早，预设的主要统计比较为 EA-RG 与 MAPPO 的 RMST80。
+**图 2｜匹配失效暴露下的早期任务链恢复。** a，EA-RG、MAPPO、HAPPO 和宽单图的完整 KM 曲线；细虚线标出预设故障持续窗口的终点 \(\tau=80\)。b，0–35 步的早期细节，显示主要分离发生的时间段。c，EA-RG−MAPPO 的 RMST80 逐 seed 差异与合并的 hierarchical paired-bootstrap 95% 区间；负值表示 EA-RG 更早恢复。曲线汇总 3 个独立训练 seed、每方法 600 个 failure-exposed episodes；未恢复 episode 右删失。
 
 | 方法 | Recovery | Success | 条件平均 \(t_{rec}\)（步） | RMST80（步） | RMST220（步） |
 |---|---:|---:|---:|---:|---:|
