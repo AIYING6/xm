@@ -1,0 +1,66 @@
+{
+  "ablation_switch_is_not_a_legal_environment_intervention": true,
+  "audit": "G0_R1_TASK_SUPPORT_IDENTIFIABILITY",
+  "conditions": [
+    {
+      "communication_task_support_edge_feature_mismatches": 0,
+      "communication_task_support_mask_mismatches": 0,
+      "condition": "nominal",
+      "independent_legal_intervention_observed": false,
+      "states": 303
+    },
+    {
+      "communication_task_support_edge_feature_mismatches": 0,
+      "communication_task_support_mask_mismatches": 0,
+      "condition": "packet_loss",
+      "independent_legal_intervention_observed": false,
+      "states": 303
+    },
+    {
+      "communication_task_support_edge_feature_mismatches": 0,
+      "communication_task_support_mask_mismatches": 0,
+      "condition": "delayed_packets",
+      "independent_legal_intervention_observed": false,
+      "states": 303
+    },
+    {
+      "communication_task_support_edge_feature_mismatches": 0,
+      "communication_task_support_mask_mismatches": 0,
+      "condition": "radar_dropout",
+      "independent_legal_intervention_observed": false,
+      "states": 303
+    },
+    {
+      "communication_task_support_edge_feature_mismatches": 0,
+      "communication_task_support_mask_mismatches": 0,
+      "condition": "relay_failure",
+      "independent_legal_intervention_observed": false,
+      "states": 303
+    },
+    {
+      "communication_task_support_edge_feature_mismatches": 0,
+      "communication_task_support_mask_mismatches": 0,
+      "condition": "combined_formal_like",
+      "independent_legal_intervention_observed": false,
+      "states": 303
+    }
+  ],
+  "decision": "TASK_SUPPORT_NOT_AN_INDEPENDENT_LEGAL_INFORMATION_SOURCE",
+  "feature_identifiability": false,
+  "intervention_identifiability": false,
+  "mode": "read_only_method_independent_fixed_actions_and_static_source_inspection",
+  "repository_head_at_audit": "6a3bd409e7b5128341a521c49c855c447901245c",
+  "seeds_per_condition": [
+    701,
+    702,
+    703
+  ],
+  "source_contract": {
+    "communication_and_support_share_the_same_valid_teammate_predicate": true,
+    "each_factor_receives_the_same_generic_edge_feature_tensor": true,
+    "only_explicit_task_support_change_is_the_ablation_switch": true,
+    "task_support_edge_field_is_the_support_scalar": true
+  },
+  "steps_per_seed": 100,
+  "support_identifiability": false
+}

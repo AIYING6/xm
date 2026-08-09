@@ -1,6 +1,6 @@
 # v1.9 G0 — Scientific and Protocol Freeze
 
-**Status: BLOCKED_BY_RELATION_IDENTIFIABILITY_AND_INCOMPLETE_NOVELTY_KILLCHECK.**
+**Status: BLOCKED_BY_TASK_SUPPORT_NONIDENTIFIABILITY_AND_INCOMPLETE_NOVELTY_KILLCHECK.**
 
 This is the pre-GPU hard gate for PCRF-R1.  It authorizes neither D1-R1,
 D2, F1, held-out evaluation, OOD, an ablation, nor a manuscript superiority
@@ -110,6 +110,9 @@ recipient graph states.  It found:
 | communication/task-support exact equality | 605/605 states (100%) |
 | communication/task-support mean Jaccard | 1.000 |
 
+The subsequent G0-R1 audit in
+[`V1_9_G0_R1_TASK_SUPPORT_IDENTIFIABILITY_AUDIT.md`](V1_9_G0_R1_TASK_SUPPORT_IDENTIFIABILITY_AUDIT.md)
+confirmed the same conclusion at support, feature, and intervention levels.
 This confirms a critical structural limitation in the current frozen
 environment implementation: `Task-Support` is a duplicate of `Communication`,
 not an independently activated task-compatibility relation.  Consequently,
@@ -198,4 +201,4 @@ currently incomplete; no novelty conclusion is licensed.
 5. a revised three-method D2 protocol consistent with these locks.
 
 Until then, the only valid project status is
-`BLOCKED_BY_RELATION_IDENTIFIABILITY_AND_INCOMPLETE_NOVELTY_KILLCHECK`.
+`BLOCKED_BY_TASK_SUPPORT_NONIDENTIFIABILITY_AND_INCOMPLETE_NOVELTY_KILLCHECK`.
