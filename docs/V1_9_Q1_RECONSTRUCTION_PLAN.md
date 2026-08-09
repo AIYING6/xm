@@ -1,7 +1,7 @@
 # V1.9 Q1 Method Reconstruction Plan
 
-**Status: D0 static audit and D1 engineering gate passed; D2 budget calibration
-is prepared but not launched.** No v1.9 formal training, held-out evaluation,
+**Status: D0 static audit and D1 engineering gate passed; the initial D2
+attempt stopped before training and D2-R1 is prepared but not launched.** No v1.9 formal training, held-out evaluation,
 OOD evaluation, or manuscript performance claim is authorized. This document
 opens a new line without changing the in-progress v1.8 repair execution.
 
@@ -65,13 +65,15 @@ The closest single-graph actor is hidden width 168 with 195,837 parameters
 the same input-contract and runtime audit before it can be frozen for formal
 work.
 
-### Stage D2 — budget calibration (GPU; non-formal; prepared, not launched)
+### Stage D2 — budget calibration (GPU; non-formal; D2-R1 prepared, not launched)
 
 After one candidate method is fixed, use a small PCRF-only pilot to measure
 learning plateau, training-time variance, per-update runtime, validation
 runtime, disk usage, and GPU-memory demand. This produces a budget proposal,
-not a method comparison. The prepared D2 protocol fixes three engineering seeds
-and a 100-update budget, but does not authorize the GPU launch.
+not a method comparison. The initial attempt stopped before any training
+because `/usr/bin/time` was unavailable. D2-R1 replaces that timing recorder
+only, uses a separate output root, retains the three engineering seeds and
+100-update budget, and does not authorize the GPU launch.
 
 ### Stage F1 — frozen nominal core (formal)
 

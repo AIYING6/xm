@@ -8,8 +8,8 @@
   "scores": [],
   "technical_debts": [
     "PCRF static audit and D1 engineering artifacts passed; PCRF remains a hypothesis, not performance evidence.",
-    "Final seed count and training budget require a measured GPU pilot.",
+    "D2-R1 must pass its portable timing/artifact gate before final seed count and training budget can be proposed.",
     "v1.8 repair completion must be independently gated before it informs v1.9 decisions."
   ],
-  "status": "d1_passed_d2_prepared"
+  "status": "d1_passed_d2_initial_attempt_stopped_r1_prepared"
 }

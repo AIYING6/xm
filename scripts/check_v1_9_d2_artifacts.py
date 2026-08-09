@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.select_formal_v1_8_repair_checkpoints import verify_and_select  # noqa: E402
 
-PROTOCOL = "V1_9_D2_BUDGET_CALIBRATION"
+PROTOCOL = "V1_9_D2_BUDGET_CALIBRATION_R1"
 RUNS = tuple((f"pcrf_seed{seed}", "pcrf", seed) for seed in (9201, 9202, 9203))
 EXPECTED_UPDATES = [1, 20, 40, 60, 80, 100]
 
@@ -36,9 +36,12 @@ def check_run(root: Path, directory: str, method: str, seed: int) -> dict:
     rows = list(csv.DictReader(log_path.open(encoding="utf-8", newline="")))
     if not rows or int(rows[-1]["update"]) != 100:
         raise RuntimeError(f"{directory}: training did not reach update 100")
-    runtime_path = run_dir / "runtime_time_v.txt"
-    if not runtime_path.exists() or not runtime_path.read_text(encoding="utf-8").strip():
-        raise RuntimeError(f"{directory}: missing /usr/bin/time runtime record")
+    runtime_path = run_dir / "runtime_timing.json"
+    if not runtime_path.exists():
+        raise RuntimeError(f"{directory}: missing portable timing record")
+    timing = json.loads(runtime_path.read_text(encoding="utf-8"))
+    if timing.get("return_code") != 0 or float(timing.get("wall_seconds", -1.0)) < 0.0:
+        raise RuntimeError(f"{directory}: invalid portable timing record")
     return {
         "run": directory,
         "method": method,

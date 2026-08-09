@@ -1,9 +1,13 @@
 # v1.9 D2 Budget Calibration Protocol
 
-**Status: prepared, not launched.** This is a GPU engineering calibration after
-the completed D1 artifact gate. It is not a formal architecture comparison,
-checkpoint-selection study, held-out evaluation, ablation, OOD experiment, or
-paper evidence.
+**Status: initial attempt stopped before training; D2-R1 repair prepared, not
+launched.** The initial D2 launcher stopped at its first training command
+because the AutoDL image lacked `/usr/bin/time`; no seed or update was trained.
+Its incomplete output is retained as an engineering audit trail. D2-R1 replaces
+only that unavailable external utility with a repository-contained portable
+timing recorder and uses a separate output root and protocol identifier. It is
+not a formal architecture comparison, checkpoint-selection study, held-out
+evaluation, ablation, OOD experiment, or paper evidence.
 
 ## Purpose
 
@@ -37,9 +41,9 @@ validation, or confirmatory seeds.
 ## Required records
 
 Every run must retain training logs, validation summaries, episode records,
-snapshot metadata/manifests, and SHA256 values. The launcher additionally
-records `/usr/bin/time -v` output per run and 10-second GPU utilization/memory
-telemetry for the whole D2 window. The runtime manifest must record CUDA and
+snapshot metadata/manifests, and SHA256 values. D2-R1 additionally records an
+immutable repository-contained wall/CPU timing JSON per run and 10-second GPU
+utilization/memory telemetry for the whole D2-R1 window. The runtime manifest must record CUDA and
 the immutable source-archive commit/SHA256 provenance. The operator must pass
 these two values explicitly as `SOURCE_COMMIT` and `SOURCE_ARCHIVE_SHA256` at
 launch; the launcher deliberately has no fallback value that could describe an
