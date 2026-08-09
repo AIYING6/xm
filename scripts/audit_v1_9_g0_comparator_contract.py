@@ -136,7 +136,8 @@ def main() -> None:
     payload = json.dumps(report, indent=2, sort_keys=True)
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(payload + "\n", encoding="utf-8")
+        with args.output.open("w", encoding="utf-8", newline="\n") as output:
+            output.write(payload + "\n")
     print(payload)
     if report["decision"] != "NO_GO_FOR_THREE_RELATION_TASK_SUPPORT_MECHANISM":
         raise SystemExit("G0 audit outcome changed; require author review before proceeding")
