@@ -85,6 +85,10 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--out-dir", type=str, default=str(ROOT / "results" / "ri_gmappo"))
     parser.add_argument("--save-interval", type=int, default=10)
     parser.add_argument("--save-snapshots", action="store_true")
+    parser.add_argument("--validation-event-logging", action="store_true")
+    parser.add_argument("--run-id", type=str, default=None)
+    parser.add_argument("--method-label", type=str, default=None)
+    parser.add_argument("--protocol-version", type=str, default=None)
     parser.add_argument("--init-checkpoint", type=str, default=None)
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--update-offset", type=int, default=0)
@@ -164,6 +168,10 @@ def parse_args() -> RIGMAPPOConfig:
         out_dir=args.out_dir,
         save_interval=args.save_interval,
         save_snapshots=args.save_snapshots,
+        validation_event_logging=args.validation_event_logging,
+        run_id=args.run_id,
+        method_label=args.method_label,
+        protocol_version=args.protocol_version,
         init_checkpoint=args.init_checkpoint,
         resume=args.resume,
         update_offset=args.update_offset,

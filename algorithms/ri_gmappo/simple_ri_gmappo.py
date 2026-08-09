@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
 import csv
+import hashlib
+import json
 import random
+import subprocess
 
 import numpy as np
 import torch
@@ -133,6 +137,12 @@ class RIGMAPPOConfig:
     out_dir: str = "results/ri_gmappo"
     save_interval: int = 10
     save_snapshots: bool = False
+    # v1.8 protocol-repair switch.  It changes persistence/audit behavior only:
+    # the policy, environment, optimizer, and validation population are unchanged.
+    validation_event_logging: bool = False
+    run_id: str | None = None
+    method_label: str | None = None
+    protocol_version: str | None = None
     init_checkpoint: str | None = None
     resume: str | None = None
     update_offset: int = 0
@@ -929,15 +939,198 @@ def save_training_checkpoint(
     torch.save(payload, path)
 
 
-def eval_policy(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig, base_seed: int = 10_000) -> dict:
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for block in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def current_git_commit() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "UNAVAILABLE"
+
+
+def km_rmst_from_event_records(records: list[dict], tau: float) -> float:
+    """Kaplan-Meier restricted mean time to stable establishment.
+
+    Event times and censor times are measured from the frozen failure onset.  The
+    implementation groups ties, which is needed for deterministic integer-step
+    episodes and avoids treating same-step events as ordered observations.
+    """
+    observations: list[tuple[float, int]] = []
+    for record in records:
+        event = bool(record["event_observed"])
+        time = float(record["event_time"] if event else record["censor_time"])
+        observations.append((min(max(0.0, time), float(tau)), int(event and time <= tau)))
+    observations.sort(key=lambda item: item[0])
+    at_risk = len(observations)
+    survival, previous, area = 1.0, 0.0, 0.0
+    index = 0
+    while index < len(observations) and previous < tau:
+        time = observations[index][0]
+        area += survival * (time - previous)
+        end = index
+        events = 0
+        while end < len(observations) and observations[end][0] == time:
+            events += observations[end][1]
+            end += 1
+        if time < tau and at_risk > 0:
+            survival *= (at_risk - events) / at_risk
+        at_risk -= end - index
+        previous = time
+        index = end
+    if previous < tau:
+        area += survival * (tau - previous)
+    return float(area)
+
+
+def termination_reason(info: dict) -> str:
+    if float(info.get("success", 0.0)) > 0.5:
+        return "success"
+    if float(info.get("collision", 0.0)) > 0.5:
+        return "collision"
+    if float(info.get("constraint_violation", 0.0)) > 0.5:
+        return "constraint_violation"
+    if float(info.get("timeout", 0.0)) > 0.5:
+        return "timeout"
+    return "terminal_unspecified"
+
+
+def summarize_validation_event_records(records: list[dict]) -> dict:
+    if not records:
+        raise ValueError("validation event record set is empty")
+    establishment = float(np.mean([float(r["event_observed"]) for r in records]))
+    return {
+        "eval_rmst80": km_rmst_from_event_records(records, 80.0),
+        "eval_establishment_probability": establishment,
+        "eval_censoring_rate": float(1.0 - establishment),
+        "eval_rmst220": km_rmst_from_event_records(records, 220.0),
+    }
+
+
+def write_immutable_validation_records(
+    out_dir: Path,
+    update: int,
+    records: list[dict],
+    metrics: dict,
+    snapshot_path: Path,
+    snapshot_sha256: str,
+    cfg: RIGMAPPOConfig,
+) -> dict:
+    """Persist one validation point once; refusing overwrites makes the record immutable."""
+    point_dir = out_dir / "validation" / f"update_{update:04d}"
+    point_dir.mkdir(parents=True, exist_ok=True)
+    records_path = point_dir / "episode_event_records.csv"
+    summary_path = point_dir / "summary.json"
+    if records_path.exists() or summary_path.exists():
+        raise FileExistsError(f"refusing to overwrite immutable validation point: {point_dir}")
+    fields = [
+        "episode_seed", "failure_onset_step", "event_observed",
+        "first_stable_establishment_step", "event_time", "censor_time",
+        "termination_reason", "terminal_step",
+    ]
+    with records_path.open("x", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows([{name: record[name] for name in fields} for record in records])
+    summary = {
+        "protocol_version": cfg.protocol_version,
+        "run_id": cfg.run_id,
+        "method": cfg.method_label,
+        "training_seed": cfg.seed,
+        "update": update,
+        "validation_base_seed": cfg.eval_base_seed,
+        "episodes": len(records),
+        "snapshot_file": snapshot_path.name,
+        "snapshot_sha256": snapshot_sha256,
+        **{key: float(value) for key, value in metrics.items()},
+    }
+    with summary_path.open("x", encoding="utf-8") as f:
+        json.dump(summary, f, sort_keys=True, indent=2)
+        f.write("\n")
+    manifest_row = {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "protocol_version": cfg.protocol_version,
+        "run_id": cfg.run_id,
+        "method": cfg.method_label,
+        "training_seed": cfg.seed,
+        "update": update,
+        "git_commit": current_git_commit(),
+        "snapshot_path": str(snapshot_path.name),
+        "snapshot_sha256": snapshot_sha256,
+        "episode_records_path": str(records_path.relative_to(out_dir)),
+        "episode_records_sha256": sha256_file(records_path),
+        "summary_path": str(summary_path.relative_to(out_dir)),
+        "summary_sha256": sha256_file(summary_path),
+    }
+    manifest_path = out_dir / "snapshot_manifest.jsonl"
+    with manifest_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(manifest_row, sort_keys=True) + "\n")
+    return summary
+
+
+def save_immutable_validation_snapshot(
+    out_dir: Path,
+    agent: RIGMAPPOAgent,
+    optimizer: optim.Optimizer,
+    update: int,
+    best_eval_key: tuple[float, float, float, float] | None,
+    cfg: RIGMAPPOConfig,
+) -> tuple[Path, str]:
+    snapshot_path = out_dir / f"actor_critic_update_{update:04d}.pt"
+    if snapshot_path.exists():
+        raise FileExistsError(f"refusing to overwrite immutable snapshot: {snapshot_path}")
+    created_at = datetime.now(timezone.utc).isoformat()
+    payload = {
+        "model_state": agent.state_dict(),
+        "optimizer_state": optimizer.state_dict(),
+        "update": int(update),
+        "metadata": {
+            "method": cfg.method_label,
+            "training_seed": cfg.seed,
+            "update": int(update),
+            "git_commit": current_git_commit(),
+            "protocol_version": cfg.protocol_version,
+            "run_id": cfg.run_id,
+            "created_at_utc": created_at,
+        },
+    }
+    if best_eval_key is not None:
+        payload["best_eval_key_before_update"] = tuple(float(x) for x in best_eval_key)
+    torch.save(payload, snapshot_path)
+    snapshot_sha = sha256_file(snapshot_path)
+    metadata_path = out_dir / f"actor_critic_update_{update:04d}.metadata.json"
+    if metadata_path.exists():
+        raise FileExistsError(f"refusing to overwrite immutable metadata: {metadata_path}")
+    with metadata_path.open("x", encoding="utf-8") as f:
+        json.dump({**payload["metadata"], "snapshot_file": snapshot_path.name, "sha256": snapshot_sha}, f, sort_keys=True, indent=2)
+        f.write("\n")
+    return snapshot_path, snapshot_sha
+
+
+def eval_policy(
+    agent: RIGMAPPOAgent,
+    cfg: RIGMAPPOConfig,
+    base_seed: int = 10_000,
+    return_event_records: bool = False,
+) -> dict | tuple[dict, list[dict]]:
     device = torch.device(cfg.device)
     records = []
+    event_records: list[dict] = []
     intent_correct, intent_total = 0, 0
     agent.eval()
     with torch.no_grad():
         for ep in range(cfg.eval_episodes):
             env = make_env(cfg, base_seed + ep, training=False)
             obs, share_obs, graph = env.reset()
+            post_failure_chain_step: int | None = None
+            terminal_info: dict | None = None
             while True:
                 g = stack_graphs([graph])
                 actions, _, _, _, _, intent_logits, _ = agent.get_action_and_value(
@@ -959,11 +1152,34 @@ def eval_policy(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig, base_seed: int = 10_0
                     intent_total += int(np.prod(g["intent_label"].shape))
 
                 obs, share_obs, graph, _, dones, info = env.step(actions.squeeze(0).cpu().numpy())
+                if (
+                    int(info.get("step", 0)) >= cfg.node_failure_start_step
+                    and float(info.get("chain_closed", 0.0)) > 0.5
+                    and post_failure_chain_step is None
+                ):
+                    post_failure_chain_step = int(info["step"])
                 if np.all(dones):
                     records.append(info)
+                    terminal_info = info
                     break
+            if return_event_records:
+                assert terminal_info is not None
+                terminal_step = int(terminal_info["step"])
+                onset = int(cfg.node_failure_start_step)
+                event_observed = post_failure_chain_step is not None
+                event_time = (post_failure_chain_step - onset) if event_observed else -1
+                event_records.append({
+                    "episode_seed": int(base_seed + ep),
+                    "failure_onset_step": onset,
+                    "event_observed": int(event_observed),
+                    "first_stable_establishment_step": int(post_failure_chain_step) if event_observed else -1,
+                    "event_time": int(event_time),
+                    "censor_time": int(max(0, terminal_step - onset)),
+                    "termination_reason": termination_reason(terminal_info),
+                    "terminal_step": terminal_step,
+                })
     agent.train()
-    return {
+    metrics = {
         "eval_success_rate": float(np.mean([r["success"] for r in records])),
         "eval_collision_rate": float(np.mean([r["collision"] for r in records])),
         "eval_timeout_rate": float(np.mean([r["timeout"] for r in records])),
@@ -971,6 +1187,10 @@ def eval_policy(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig, base_seed: int = 10_0
         "eval_avg_distance": float(np.mean([r.get("mean_distance", r.get("mean_range", 0.0)) for r in records])),
         "eval_intent_acc": float(intent_correct / intent_total) if intent_total else float("nan"),
     }
+    if return_event_records:
+        metrics.update(summarize_validation_event_records(event_records))
+        return metrics, event_records
+    return metrics
 
 
 def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
@@ -1043,6 +1263,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "eval_avg_steps",
         "eval_avg_distance",
         "eval_intent_acc",
+        "eval_rmst80",
+        "eval_establishment_probability",
+        "eval_censoring_rate",
+        "eval_rmst220",
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
@@ -1051,7 +1275,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if write_header:
             writer.writeheader()
         f.flush()
-        best_eval_key = (-1.0, float("-inf"), float("-inf"), float("-inf"))
+        best_eval_key: tuple[float, float, float, float] | None = None
         for local_update in range(1, cfg.updates + 1):
             update = cfg.update_offset + local_update
             batch = collect_rollout(agent, envs, obs, share_obs, graph_obs, cfg, device)
@@ -1060,16 +1284,55 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
             if update % cfg.eval_interval == 0 or update == 1:
                 eval_base_seed = cfg.eval_base_seed if cfg.eval_base_seed is not None else 10_000 + update * 100
-                row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))
+                snapshot_path: Path | None = None
+                snapshot_sha256: str | None = None
+                if cfg.validation_event_logging:
+                    if not cfg.save_snapshots:
+                        raise ValueError("validation_event_logging requires immutable --save-snapshots")
+                    snapshot_path, snapshot_sha256 = save_immutable_validation_snapshot(
+                        out_dir, agent, optimizer, update, best_eval_key, cfg
+                    )
+                    eval_result = eval_policy(
+                        agent, cfg, base_seed=eval_base_seed, return_event_records=True
+                    )
+                    eval_metrics, event_records = eval_result
+                    write_immutable_validation_records(
+                        out_dir,
+                        update,
+                        event_records,
+                        eval_metrics,
+                        snapshot_path,
+                        snapshot_sha256,
+                        cfg,
+                    )
+                    row.update(eval_metrics)
+                else:
+                    row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))
                 print(row, flush=True)
-                eval_key = (
-                    float(row["eval_success_rate"]),
-                    -float(row["eval_collision_rate"]),
-                    -float(row["eval_timeout_rate"]),
-                    -float(row["eval_avg_steps"]),
-                )
-                if eval_key > best_eval_key:
-                    best_eval_key = eval_key
+                if cfg.validation_event_logging:
+                    # Frozen v1.8 selector: lower RMST80; then higher
+                    # establishment/lower censoring; then lower RMST220; then earlier update.
+                    selector_key = (
+                        float(row["eval_rmst80"]),
+                        -float(row["eval_establishment_probability"]),
+                        float(row["eval_censoring_rate"]),
+                        float(row["eval_rmst220"]),
+                        update,
+                    )
+                    incumbent_key = None if best_eval_key is None else (*best_eval_key, -1)
+                    is_better = incumbent_key is None or selector_key < incumbent_key
+                    new_best_eval_key = selector_key[:4]
+                else:
+                    legacy_key = (
+                        float(row["eval_success_rate"]),
+                        -float(row["eval_collision_rate"]),
+                        -float(row["eval_timeout_rate"]),
+                        -float(row["eval_avg_steps"]),
+                    )
+                    is_better = best_eval_key is None or legacy_key > best_eval_key
+                    new_best_eval_key = legacy_key
+                if is_better:
+                    best_eval_key = new_best_eval_key
                     torch.save(agent.state_dict(), out_dir / "actor_critic_best.pt")
             else:
                 row.update(
@@ -1080,6 +1343,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                         "eval_avg_steps": "",
                         "eval_avg_distance": "",
                         "eval_intent_acc": "",
+                        "eval_rmst80": "",
+                        "eval_establishment_probability": "",
+                        "eval_censoring_rate": "",
+                        "eval_rmst220": "",
                     }
                 )
             writer.writerow(row)
@@ -1093,7 +1360,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     update,
                     best_eval_key,
                 )
-                if cfg.save_snapshots:
+                if cfg.save_snapshots and not cfg.validation_event_logging:
                     torch.save(agent.state_dict(), out_dir / f"actor_critic_update_{update:04d}.pt")
                     save_training_checkpoint(
                         out_dir / f"actor_critic_training_state_update_{update:04d}.pt",
