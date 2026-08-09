@@ -27,7 +27,8 @@ matched-nongraph-R2 parameters (0.49% gap).
 
 Every run uses 8 environments, 128 rollout steps, 4 PPO epochs, the existing
 frozen communication/failure settings, CUDA, and validation at updates 1, 10,
-20, and 30.  To exercise genuine continuation, each run is executed as an
+20, and 30. D1-R2 may run on local or cloud CUDA; its small engineering scope
+does not require a cloud allocation. To exercise genuine continuation, each run is executed as an
 initial 10-update segment followed by a 20-update resume segment.  This is one
 30-update engineering run, not a performance extension.
 
@@ -35,9 +36,10 @@ initial 10-update segment followed by a 20-update resume segment.  This is one
 
 At each validation update the run must retain an immutable
 `actor_critic_update_XXXX.pt`, metadata, episode-level event record, validation
-summary, and hash/provenance manifest.  The source tree must be a clean Git
-checkout at the launcher-provided expected commit; archive-only deployment is
-not sufficient for this gate.  The resume segment must use that same commit,
+summary, and hash/provenance manifest. The source tree must have no tracked
+source modifications and must be at the launcher-provided expected Git commit;
+unrelated untracked result directories do not invalidate the gate. Archive-only
+deployment is not sufficient. The resume segment must use that same commit,
 run ID, method/seed configuration, and protocol identifier.
 
 The frozen selector is executed only to verify that all required selector

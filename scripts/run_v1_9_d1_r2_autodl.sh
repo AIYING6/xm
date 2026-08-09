@@ -15,7 +15,7 @@ if [[ "$actual_commit" != "$EXPECTED_SOURCE_COMMIT" ]]; then
   echo "D1-R2 refuses source mismatch: expected $EXPECTED_SOURCE_COMMIT, found $actual_commit" >&2
   exit 2
 fi
-if [[ -n "$(git status --porcelain)" ]]; then
+if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
   echo "D1-R2 requires a clean tracked source checkout." >&2
   exit 2
 fi
