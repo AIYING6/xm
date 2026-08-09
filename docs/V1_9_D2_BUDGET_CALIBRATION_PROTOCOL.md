@@ -1,6 +1,6 @@
 # v1.9 D2 Budget Calibration Protocol
 
-**Status: blocked pending PCRF-R1 D1 engineering validation.** The initial D2
+**Status: SUPERSEDED_AND_BLOCKED_BY_G0. Do not launch this protocol.** The initial D2
 launcher stopped at its first training command
 because the AutoDL image lacked `/usr/bin/time`; no seed or update was trained.
 Its incomplete output is retained as an engineering audit trail. D2-R1 replaces
@@ -11,14 +11,23 @@ must not be started until PCRF-R1 has passed a fresh D1-R1 CUDA/artifact gate.
 It is not a formal architecture comparison, checkpoint-selection study,
 held-out evaluation, ablation, OOD experiment, or paper evidence.
 
-## Purpose
+## Historical purpose and supersession
 
-D2 determines whether the already implemented PCRF training path is practical
-at the fixed D1 environment load, and records the cost needed to freeze a
-future formal budget. It does **not** decide whether PCRF is better than a
-single graph: no comparator is trained in D2.
+This document records the pre-G0 D2-R1 engineering design.  It cannot measure
+the final PCRF-R1 budget because it predates the G0 finding that the current
+Task-Support relation is exactly duplicated from Communication.  It is retained
+for its timing/artifact specification, not as an authorized launcher.
 
-## Fixed D2 matrix
+After an author resolves the G0 No-Go and freezes the final theory, the
+replacement D2 must train **all three** primary representations (PCRF, wider
+single graph, and matched-information non-graph) with one or two fresh
+engineering seeds each under a common environment and update budget.  Its
+permitted inference remains strictly engineering/method-blind: throughput,
+memory, disk, numerical stability, and endpoint information adequacy.  It
+cannot choose a winner, select a checkpoint for confirmation, or alter the
+scientific contract.
+
+## Superseded fixed D2 matrix (not for execution)
 
 | Method | encoder | hidden width | engineering seeds | updates |
 |---|---|---:|---|---:|

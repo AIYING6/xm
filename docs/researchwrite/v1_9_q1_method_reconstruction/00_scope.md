@@ -1,10 +1,12 @@
 # v1.9 Q1 Method Reconstruction — Scope
 
 **Mode:** compose.  
-**Status:** PCRF implementation, static audit, and D1 engineering feasibility
-gate are complete. D2 budget calibration is prepared but not launched; no
-formal training, confirmatory evaluation, OOD evaluation, or manuscript claim
-is authorized by this document.
+**Status:** PCRF-R1 source semantics and static boundary checks are complete,
+but G0 is blocked by a relation-identifiability failure and an incomplete
+novelty kill-check.  The prior D1 feasibility gate concerns the pre-R1
+candidate only; the pre-G0 D2 plan is superseded and not launchable.  No formal
+training, confirmatory evaluation, OOD evaluation, or manuscript claim is
+authorized by this document.
 
 ## Objective
 

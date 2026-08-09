@@ -28,9 +28,11 @@ writing must not silently upgrade a hypothesis to a result.
    state are excluded before actor feature construction.
 2. R5 boundary tests passed 14/14. This is a scientific-integrity prerequisite,
    not an algorithmic novelty claim.
-3. R6.5 showed perception, communication, and task-support masks are not
-   identical. However, task-support was a strict subset of communication in the
-   audited rollout family; 40% of communication edges lacked task support.
+3. The v1.9 G0 read-only comparator audit found that, in the current
+   recipient-specific implementation, the Task-Support and Communication masks
+   are exactly equal in all 605 audited graph states.  A three independently
+   meaningful relation claim is therefore not supported; this is a hard G0
+   No-Go pending an author decision, not a performance result.
 4. R6.5 found the union residual material but not dominant in its fixed audit.
    It remains a structural risk, not evidence of an advantage.
 5. R6.5 found near-zero Role-Pair gate variation in the pilot. Role-Pair is not

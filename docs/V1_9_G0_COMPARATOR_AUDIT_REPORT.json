@@ -1,0 +1,116 @@
+{
+  "audit": "G0_COMPARATOR_INPUT_AND_RELATION_SEPARABILITY",
+  "decision": "NO_GO_FOR_THREE_RELATION_TASK_SUPPORT_MECHANISM",
+  "edge_feature_schema": [
+    [
+      0,
+      "relative_x"
+    ],
+    [
+      1,
+      "relative_y"
+    ],
+    [
+      2,
+      "relative_z"
+    ],
+    [
+      3,
+      "distance"
+    ],
+    [
+      4,
+      "los_x"
+    ],
+    [
+      5,
+      "los_y"
+    ],
+    [
+      6,
+      "los_z"
+    ],
+    [
+      7,
+      "relative_vx"
+    ],
+    [
+      8,
+      "relative_vy"
+    ],
+    [
+      9,
+      "relative_vz"
+    ],
+    [
+      10,
+      "blue_blue"
+    ],
+    [
+      11,
+      "perception_relation"
+    ],
+    [
+      12,
+      "communication_relation"
+    ],
+    [
+      13,
+      "task_support_relation"
+    ],
+    [
+      14,
+      "reserved"
+    ],
+    [
+      15,
+      "message_age"
+    ],
+    [
+      16,
+      "message_confidence"
+    ],
+    [
+      17,
+      "endpoint_valid"
+    ]
+  ],
+  "mode": "read_only_method_independent_fixed_actions",
+  "pairwise_relation": {
+    "communication_task_support": {
+      "exactly_equal_fraction": 1.0,
+      "exactly_equal_states": 605,
+      "mean_jaccard": 1.0,
+      "min_jaccard": 1.0,
+      "state_count": 605
+    },
+    "perception_communication": {
+      "exactly_equal_fraction": 0.01652892561983471,
+      "exactly_equal_states": 10,
+      "mean_jaccard": 0.01652892561983471,
+      "min_jaccard": 0.0,
+      "state_count": 605
+    },
+    "perception_task_support": {
+      "exactly_equal_fraction": 0.01652892561983471,
+      "exactly_equal_states": 10,
+      "mean_jaccard": 0.01652892561983471,
+      "min_jaccard": 0.0,
+      "state_count": 605
+    }
+  },
+  "raw_graph_tensor_source_is_shared_across_graph_encoders": true,
+  "relation_edge_field_mismatch_entries": 0,
+  "relation_identity_is_present_in_shared_edge_features": true,
+  "repository_head_at_audit": "8b30b94dc5a908768f3c1a08a86598caaf5f4f0e",
+  "seeds": [
+    501,
+    502,
+    503,
+    504,
+    505
+  ],
+  "states_seen": 605,
+  "task_support_communication_mismatch_entries": 0,
+  "union_undercontains_relation_entries": 0
+}
