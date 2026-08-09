@@ -4,12 +4,12 @@
   "text_type": "research_design_foundation",
   "language": "zh",
   "target_reader": "author team",
-  "current_round": 1,
+  "current_round": 2,
   "scores": [],
   "technical_debts": [
-    "PCRF static audit and D1 engineering artifacts passed; PCRF remains a hypothesis, not performance evidence.",
-    "D2-R1 must pass its portable timing/artifact gate before final seed count and training budget can be proposed.",
+    "Three-relation PCRF-R1 was terminated after G0-R1 found Task-Support nonidentifiable from Communication.",
+    "PCRF-R2 requires a verified novelty kill-check and a source-separated P/C actor input contract before implementation or D0-R2.",
     "v1.8 repair completion must be independently gated before it informs v1.9 decisions."
   ],
-  "status": "d1_passed_d2_initial_attempt_stopped_r1_prepared"
+  "status": "pcrf_r2_conceptual_protocol_frozen_pre_novelty_and_pre_d0"
 }

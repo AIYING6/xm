@@ -4,8 +4,9 @@
 
 - **Purpose:** represent a receiver-local conflict between legal evidence
   sources, not a generic graph capacity increase.
-- **Inputs:** only the v1.8 legal actor contract plus source provenance, age,
-  confidence, relation overlap, and task compatibility derived after masking.
+- **Inputs:** source-tagged direct perception and delivered/cache-valid packet
+  claims, plus source-free legal self/task context.  Age/confidence are C-only;
+  no merged target cache may enter common context.
 - **Allowed claims:** the gate changes factor weighting under measurable legal
   disagreement; the construction cannot reveal unavailable teammate truth.
 - **Forbidden claims:** online “fault adaptation,” universal superiority,
@@ -40,8 +41,8 @@
 
 - **Purpose:** establish relation-conflict exposure and the predicted gate /
   representation response.
-- **Inputs:** all pre-frozen scenarios, including sensing/communication,
-  stale-delivery, task-irrelevant communication, and relay-failure conflict.
+- **Inputs:** all pre-frozen P/C scenarios: agreement, fresh P/stale C,
+  P-unavailable/C-valid, C-unavailable/P-valid, and relay-failure conflict.
 - **Allowed claim:** diagnostic consistency with the mechanism.
 - **Forbidden claim:** selecting only favorable conflict cells or treating this
   suite as nominal primary evidence.

@@ -2,19 +2,19 @@
 
 ## Scientific tension
 
-Under realistic packet delay, loss, and relay failure, an agent may have local
-perception, delivered teammate evidence, and task relevance that disagree. A
-single graph can aggregate legal features, but it has no explicit requirement
-to preserve which semantic source conflicts with which. Conversely, simply
-splitting a graph into named relation channels does not establish a useful
-inductive bias when the channels are redundant or bypassed by a union path.
+Under realistic packet delay, loss, and relay failure, an agent may have direct
+local target evidence and delivered/cache-valid teammate evidence with different
+availability, freshness, confidence, or content. A single graph can aggregate
+legal features, but it has no explicit requirement to preserve these sources
+before fusion. Conversely, named channels do not establish an inductive bias
+when they are redundant or bypassed by a common observation path.
 
 ## Central research question
 
-**When legally available perception, delivered communication, and task demand
-disagree, can a provenance-conditioned relation factorization improve stable
-task-chain establishment relative to parameter-matched single-graph and
-non-graph policies that receive exactly the same actor information?**
+**When direct local perception and delivered/cache-valid communication disagree,
+can source-preserving conflict-conditioned fusion improve stable task-chain
+establishment relative to matched single-graph and non-graph policies that
+receive exactly the same actor information?**
 
 ## Testable thesis
 
@@ -27,14 +27,14 @@ Its advantage must disappear when the conflict-conditioned fusion is ablated.
 The design name is **Provenance-Conditioned Relation Factorization (PCRF)**.
 It is a candidate, not an implemented method.
 
-1. Construct three legal evidence factors at each receiver: local perception,
-   delivered/cache-valid communication, and task-demand compatibility. Each
-   factor is built after availability/provenance masking and cannot invent a
-   missing packet or geometry.
+1. Construct two legal evidence factors at each receiver: direct local
+   perception and delivered/cache-valid communication.  Source-dependent target
+   content cannot enter the common context or invent a missing packet/geometry.
 2. Encode each factor separately with matched parameter budget.
 3. Derive a receiver-local **conflict descriptor** only from legal quantities:
-   factor availability, relation overlap/disagreement, packet age, confidence,
-   and role/task compatibility. It contains no simulator-global truth.
+   P/C availability difference, masked direct-versus-delivered target-content
+   discrepancy, delivered age, and confidence. It contains no simulator-global
+   truth.
 4. Fuse factor representations with a conflict-conditioned simplex gate. The
    gate must have a recorded neutral state under agreement and a measurable,
    bounded change under disagreement. It replaces the unrestricted union
@@ -52,10 +52,10 @@ nontrivial independent role effect.
 1. **Information structure matters.** Delayed/lost communication changes what
    a receiver can lawfully know. *Refutation:* PCRF leaks sender truth or uses
    unavailable geometry; this is a P0 stop.
-2. **Relation conflict is observable.** The environment can generate fixed
-   states with local sensing, delivery, freshness, and task demand in conflict.
-   *Refutation:* conflicts are absent/trivial, or their descriptors collapse to
-   the single-graph input.
+2. **P/C conflict is observable.** The environment can generate fixed states
+   with local sensing, delivery, freshness, and content in conflict.
+   *Refutation:* source separation cannot be implemented, or conflicts are
+   absent/trivial.
 3. **Factorized fusion is necessary.** Under matched input and capacity, PCRF
    should show a primary advantage in the pre-specified conflict-relevant
    population and mechanism-aligned representation behavior. *Refutation:* no

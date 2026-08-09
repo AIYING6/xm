@@ -1,12 +1,12 @@
 # v1.9 Q1 Method Reconstruction — Scope
 
 **Mode:** compose.  
-**Status:** PCRF-R1 source semantics and static boundary checks are complete,
-but G0 is blocked by a relation-identifiability failure and an incomplete
-novelty kill-check.  The prior D1 feasibility gate concerns the pre-R1
-candidate only; the pre-G0 D2 plan is superseded and not launchable.  No formal
-training, confirmatory evaluation, OOD evaluation, or manuscript claim is
-authorized by this document.
+**Status:** The author terminated three-relation PCRF-R1 after G0-R1 showed
+that Task-Support is not independent from Communication.  The active design is
+two-source PCRF-R2, conceptually frozen but blocked before implementation by a
+verified novelty kill-check and source-separated actor-input contract.  Prior
+D1/D2 launchers are historical and fail closed.  No formal training,
+confirmatory evaluation, OOD evaluation, or manuscript claim is authorized.
 
 ## Objective
 
@@ -32,9 +32,9 @@ to the frozen v1.8 formal repair execution.
 
 1. v1.8 remains a separate execution and must not be overwritten, stopped, or
    reinterpreted by this v1.9 design package.
-2. Every v1.9 actor uses only recipient-specific legal information: local
-   sensing and delivered/cache-valid packets with provenance, age, and
-   confidence. Critic/global simulator state remains actor-forbidden.
+2. Every v1.9 actor uses only recipient-specific legal information.  PCRF-R2
+   must keep direct local perception and delivered/cache-valid packets as
+   source-tagged inputs; critic/global simulator state remains actor-forbidden.
 3. Any v1.9 implementation receives a fresh version number, fresh training,
    validation, and confirmatory anchors. It must not reuse a viewed
    confirmatory population.

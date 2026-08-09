@@ -32,15 +32,20 @@ writing must not silently upgrade a hypothesis to a result.
    recipient-specific implementation, the Task-Support and Communication masks
    are exactly equal in all 605 audited graph states.  A three independently
    meaningful relation claim is therefore not supported; this is a hard G0
-   No-Go pending an author decision, not a performance result.
-4. R6.5 found the union residual material but not dominant in its fixed audit.
+   No-Go.  The author consequently terminated PCRF-R1 and authorized a
+   two-source PCRF-R2 theory/protocol freeze; this is not a performance result.
+4. The current pre-R2 common observation path can merge a receiver's direct
+   target cache and delivered target-cache estimate.  A valid PCRF-R2 must
+   remove this source-dependent target content from shared context and expose
+   it only through source-tagged P/C branches.
+5. R6.5 found the union residual material but not dominant in its fixed audit.
    It remains a structural risk, not evidence of an advantage.
-5. R6.5 found near-zero Role-Pair gate variation in the pilot. Role-Pair is not
+6. R6.5 found near-zero Role-Pair gate variation in the pilot. Role-Pair is not
    supported as a headline innovation on current evidence.
-6. The current v1.8 formal repair run is not complete and cannot support a
+7. The current v1.8 formal repair run is not complete and cannot support a
    method-performance claim until its immutable selection artifacts have passed
    the specified gate.
-7. PCRF D0 static tests passed 5/5 and the D1 four-run CUDA engineering pilot
+8. PCRF D0 static tests passed 5/5 and the D1 four-run CUDA engineering pilot
    reported `D1_ARTIFACT_GATE_PASS`. These are implementation and artifact
    checks only; they are not performance evidence.
 
@@ -49,9 +54,10 @@ writing must not silently upgrade a hypothesis to a result.
 - **Legal actor information:** receiver-local state/sensing plus packets that
   have actually been delivered and remain cache-valid, including their age,
   confidence, and provenance masks.
-- **Relation conflict:** a time/receiver state in which perception evidence,
-  delivered communication evidence, and task relevance do not induce the same
-  usable-neighbor set or reliability.
+- **P/C conflict:** a time/receiver state in which direct local target evidence
+  and delivered/cache-valid target evidence differ in availability, content,
+  freshness, or confidence.  It is not a relation-adjacency Jaccard difference
+  between different endpoint types.
 - **Mechanism evidence:** evidence that the proposed pathway activates under
   its stated condition, changes the representation, and is necessary for the
   predicted effect against matched alternatives.
@@ -72,7 +78,9 @@ writing must not silently upgrade a hypothesis to a result.
 
 - Whether a conflict-conditioned factorization has an advantage over a
   parameter-matched single graph under matched legal information.
-- Which relation conflicts occur often enough in realistic UAV episodes to
+- Whether source-separated direct P and delivered C inputs can be implemented
+  without a common-observation bypass.
+- Which P/C conflicts occur often enough in realistic UAV episodes to
   matter for the nominal population.
 - Whether the new mechanism improves learning stability, final establishment,
   or neither.

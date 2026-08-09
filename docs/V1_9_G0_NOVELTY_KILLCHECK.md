@@ -1,20 +1,24 @@
-# v1.9 G0 Novelty Kill-Check
+# v1.9 G0-R2 Novelty Kill-Check
 
 **Status: INCOMPLETE — no novelty or publication claim is authorized.**
 
-This is an adversarial search, not a bibliography assembled to support PCRF.
+This is an adversarial search for **two-source PCRF-R2**, not a bibliography
+assembled to support it.  PCRF-R1 was terminated and must not be used to infer
+R2 novelty.
 For every candidate, the final review must use the primary paper/proceedings
 page (and code, if available) to answer whether it already combines all of:
 
 1. recipient-valid actor information rather than global/team truth;
-2. delivered/cache-valid provenance with delay/age/confidence;
-3. relation-specific factor encoders;
-4. a conflict/disagreement-conditioned fusion rule; and
-5. a matched strong single-graph comparison.
+2. explicit separation of direct local perception and delivered/cache-valid
+   communication, without a merged common-observation bypass;
+3. delivered packet provenance with delay/age/confidence;
+4. a content/reliability-conflict-conditioned two-source fusion rule; and
+5. a matched strong single-graph comparison with the same raw source-tagged
+   fields.
 
 ## Verified discovery leads, not novelty conclusions
 
-| Candidate | Verified source | Direct overlap risk | Still to inspect |
+| Candidate | Verified source | Direct overlap risk | Still to inspect for the five R2 criteria |
 |---|---|---|---|
 | DACOM — delay-aware MARL communication | [AAAI-23 paper](https://ojs.aaai.org/index.php/AAAI/article/download/26389/26161) | delay-aware communication | actor boundary, provenance/cache semantics, graph factorization, comparator |
 | Learning Structured Communication | [arXiv:2002.04235](https://arxiv.org/abs/2002.04235) | learned topology + hierarchical graph communication | relation fusion and receiver-valid packets |
@@ -36,6 +40,7 @@ overlap verdict.  At least 8 and at most 15 nearest verified works must be
 screened before G0 can pass.  A paper that satisfies all five criteria is a
 novelty kill or requires a materially narrower claim; it must not be omitted.
 
-The current audit result that `Task-Support == Communication` makes the
-three-relation PCRF story structurally non-identifiable even if no exact prior
-method is found.  Literature search cannot repair that implementation fact.
+The current audit result that `Task-Support == Communication` terminated the
+three-relation PCRF story.  Likewise, literature search cannot repair the
+pre-R2 common-observation source bypass; it must be removed by a separately
+audited R2 implementation before D0-R2.

@@ -1,10 +1,13 @@
 # v1.9 G0 — Scientific and Protocol Freeze
 
-**Status: BLOCKED_BY_TASK_SUPPORT_NONIDENTIFIABILITY_AND_INCOMPLETE_NOVELTY_KILLCHECK.**
+**Status: G0-R1 CLOSED; G0-R2 IS PENDING VERIFIED NOVELTY KILL-CHECK AND
+SOURCE-SEPARATED IMPLEMENTATION CONTRACT.**
 
-This is the pre-GPU hard gate for PCRF-R1.  It authorizes neither D1-R1,
-D2, F1, held-out evaluation, OOD, an ablation, nor a manuscript superiority
-claim.  No PCRF-R1 architecture edit is allowed while this gate is open.
+This document records the pre-GPU hard gate that terminated PCRF-R1.  The
+author selected a narrower two-source successor; its current authority is
+defined in [PCRF-R2 theory/protocol freeze](V1_9_PCRF_R2_THEORY_AND_PROTOCOL_FREEZE.md).
+It authorizes neither D1-R2, D2, F1, held-out evaluation, OOD, an ablation,
+nor a manuscript superiority claim.
 
 ## 1. Immutable scope and execution routing
 
@@ -13,7 +16,8 @@ The project follows the author-approved order:
 ```text
 finish v1.8 repair selection freeze
   -> G0 hard gate
-  -> PCRF-R1 D1-R1 engineering gate
+  -> PCRF-R2 novelty kill-check and G0-R2 release
+  -> source-separated PCRF-R2 D0 then D1-R2 engineering gate
   -> three-method D2
   -> F1 formal training
   -> untouched F2 confirmatory evaluation
@@ -27,9 +31,9 @@ optimization branch and cannot justify a v1.9 headline claim.  Earlier D2 and
 D2-R1 outputs are retained only as engineering/provenance history because they
 predate the PCRF-R1 semantic freeze.
 
-## 2. Scientific question and falsifiable hypotheses
+## 2. Historical PCRF-R1 question and hypotheses
 
-PCRF-R1 is only a candidate answer to this question:
+The following was the PCRF-R1 question before G0-R1 terminated it:
 
 > Given the same legally available recipient-specific signals, does preserving
 > distinct relation channels and conditioning their fusion on legal source
@@ -41,14 +45,14 @@ The only intended confirmatory hypotheses are:
 | ID | Pre-result hypothesis | Required comparison | Failure consequence |
 |---|---|---|---|
 | H1 | PCRF-R1 establishes earlier than the strong single graph by the prespecified practical margin. | PCRF-R1 vs wider single graph | Stop the architecture-superiority headline. |
-| H2 | The PCRF-R1 minus single-graph contrast becomes more favourable as *independently occurring* legal relation conflict increases. | preregistered low/high conflict strata | Stop the conflict-conditioned mechanism claim. |
+| H2 | The PCRF-R1 minus single-graph contrast becomes more favourable as independently occurring legal relation conflict increases. | preregistered low/high conflict strata | Stop the conflict-conditioned mechanism claim. |
 | H3 | Full PCRF-R1 exceeds an otherwise identical `Delta=0` control in conflict-rich conditions. | Full vs `PCRF-Delta0` | Stop the deviation-necessity claim. |
 
 MAPPO/HAPPO are system-level reference methods only.  They cannot establish H1.
 The matched-information non-graph method is secondary: it tests whether graph
 message passing adds value, but it is not the pure architecture comparator.
 
-## 3. PCRF-R1 equation and information partition
+## 3. Historical PCRF-R1 equation and information partition
 
 For receiver \(i\), PCRF-R1 is frozen as
 
@@ -121,7 +125,8 @@ relation** claim, H2 cannot distinguish C from T, and H3 would not establish
 the claimed three-source mechanism.
 
 This is a G0 **No-Go**, not a reason to tune an architecture or search for a
-favourable metric.  The only permissible next decision is author-directed:
+favourable metric.  The author subsequently selected option 3 below and
+authorized PCRF-R2 in its separate theory/protocol freeze.  The options were:
 
 1. terminate PCRF-R1 as a three-relation headline; or
 2. approve a new, separately versioned information-contract/environment repair
@@ -130,7 +135,7 @@ favourable metric.  The only permissible next decision is author-directed:
 3. approve a narrower two-source PCRF research question, with a new theory,
    comparator, and protocol version.
 
-No choice above is made automatically by this document.
+No R1 architecture repair is authorized by this historical document.
 
 ## 6. Endpoint and censoring contract for any future F1/F2
 
@@ -164,7 +169,7 @@ not use which method is ahead to change difficulty or \(\tau\).
 
 ## 7. Statistics and training change control
 
-The intended primary contrast is PCRF-R1 minus wider single-graph restricted
+The historical intended primary contrast was PCRF-R1 minus wider single-graph restricted
 mean time at \(\tau=80\), with lower being better.  Analysis must resample
 training seeds first and evaluation episodes second; episode pooling never
 substitutes for independent training replicates.

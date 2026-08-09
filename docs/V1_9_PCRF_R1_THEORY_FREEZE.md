@@ -1,8 +1,10 @@
 # v1.9 PCRF-R1 Theory Freeze
 
-**Status: D0-R1 implementation frozen; a new D1-R1 engineering validation is
-required before D2. No training, held-out evaluation, OOD, or paper claim is
-authorized by this document.**
+**Status: TERMINATED_BY_AUTHOR_DECISION.**  G0-R1 showed that Task-Support is
+not independently identifiable from Communication.  This three-factor theory
+must not enter D1-R1, D2, F1, held-out evaluation, OOD, or a paper claim.  It
+is retained solely as a historical audit record; the successor is
+[`V1_9_PCRF_R2_THEORY_AND_PROTOCOL_FREEZE.md`](V1_9_PCRF_R2_THEORY_AND_PROTOCOL_FREEZE.md).
 
 ## Decision
 

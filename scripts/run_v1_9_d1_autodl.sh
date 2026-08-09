@@ -4,6 +4,9 @@
 # the operator invokes it on a CUDA instance.
 set -euo pipefail
 
+echo "PCRF-R1 D1 is terminated by the G0-R1 author decision. Use no GPU and do not relaunch this historical script." >&2
+exit 2
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 PYTHON_BIN="${PYTHON_BIN:-python}"

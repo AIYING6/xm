@@ -1,15 +1,12 @@
 # v1.9 D2 Budget Calibration Protocol
 
-**Status: SUPERSEDED_AND_BLOCKED_BY_G0. Do not launch this protocol.** The initial D2
+**Status: TERMINATED_WITH_PCRF_R1. Do not launch this protocol.** The initial D2
 launcher stopped at its first training command
 because the AutoDL image lacked `/usr/bin/time`; no seed or update was trained.
-Its incomplete output is retained as an engineering audit trail. D2-R1 replaces
-that unavailable external utility with a repository-contained portable timing
-recorder and uses a separate output root and protocol identifier. The
-subsequent PCRF-R1 theory freeze changed fusion semantics, so this launcher
-must not be started until PCRF-R1 has passed a fresh D1-R1 CUDA/artifact gate.
-It is not a formal architecture comparison, checkpoint-selection study,
-held-out evaluation, ablation, OOD experiment, or paper evidence.
+Its incomplete output and the remaining R1 specification are retained only as
+an engineering audit trail.  They are not a PCRF-R2 budget basis, a formal
+architecture comparison, checkpoint-selection study, held-out evaluation,
+ablation, OOD experiment, or paper evidence.
 
 ## Historical purpose and supersession
 
@@ -18,7 +15,9 @@ the final PCRF-R1 budget because it predates the G0 finding that the current
 Task-Support relation is exactly duplicated from Communication.  It is retained
 for its timing/artifact specification, not as an authorized launcher.
 
-After an author resolves the G0 No-Go and freezes the final theory, the
+The author resolved the G0-R1 No-Go by terminating PCRF-R1 and authorizing
+two-source PCRF-R2.  After the R2 novelty and source-separation gates are
+complete, the
 replacement D2 must train **all three** primary representations (PCRF, wider
 single graph, and matched-information non-graph) with one or two fresh
 engineering seeds each under a common environment and update budget.  Its
@@ -27,7 +26,7 @@ memory, disk, numerical stability, and endpoint information adequacy.  It
 cannot choose a winner, select a checkpoint for confirmation, or alter the
 scientific contract.
 
-## Superseded fixed D2 matrix (not for execution)
+## Superseded fixed D2 matrix (historical; not for execution)
 
 | Method | encoder | hidden width | engineering seeds | updates |
 |---|---|---:|---|---:|
@@ -36,7 +35,7 @@ scientific contract.
 The seeds are fresh engineering seeds and may not be reused as formal training,
 validation, or confirmatory seeds.
 
-## Fixed common configuration
+## Historical common configuration
 
 - 8 environments, 128 rollout steps, PPO epochs 4, CUDA;
 - strict recipient-specific sensing/bottleneck;
