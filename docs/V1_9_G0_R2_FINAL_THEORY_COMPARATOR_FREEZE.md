@@ -2,9 +2,9 @@
 
 **Status: `G0_R2_THEORY_AND_COMPARATOR_FROZEN`.**
 
-**Execution status: no implementation, D0-R2, D1-R2, D2, GPU run, formal
-training, held-out evaluation, OOD, ablation, or manuscript revision is
-authorized by this document.**
+**Execution status: the separately authorized source-separated implementation
+and D0-R2 audit now pass; D1-R2, D2, GPU run, formal training, held-out
+evaluation, OOD, ablation, and manuscript revision remain unauthorized.**
 
 This release follows the completed novelty kill-check, which passed only with
 a narrowed claim.  It supersedes no v1.8 protocol and does not rehabilitate
@@ -138,7 +138,8 @@ comparison or GPU experiment is permitted.
 
 ## 7. Release state
 
-The novelty and theory/comparator gates are now closed.  The next possible
-decision is **whether to authorize source-separated PCRF-R2 implementation and
-D0-R2 only**.  D1-R2 and every later stage remain blocked pending a separate
-D0 pass and author authorization.
+The novelty, theory/comparator, implementation, and D0-R2 integrity gates are
+now closed; see [D0-R2 audit](V1_9_D0_R2_IMPLEMENTATION_AUDIT.md).  The next
+possible decision is **whether to authorize D1-R2 engineering-only runs**.
+D2 and every later stage remain blocked pending a separate D1 pass and author
+authorization.

@@ -1211,12 +1211,158 @@ class UAVIntercept3DEnv:
         edge = edge[np.ix_(order, order)]
         adj = adj[np.ix_(order, order)]
         relation_adj = relation_adj[:, order][:, :, order]
+        r2 = self._get_pcrf_r2_sources(receiver, node, edge, role)
         return {
             "node_feat": node, "edge_feat": edge, "adj": adj,
             "relation_adj": relation_adj, "role": role,
             "intent_label": np.asarray([4], dtype=np.int64), "has_intent_label": False,
             "provenance_mask": valid,
             "receiver_id": np.asarray(receiver, dtype=np.int64),
+            **r2,
+        }
+
+    def _get_pcrf_r2_sources(
+        self,
+        receiver: int,
+        recipient_node: np.ndarray,
+        recipient_edge: np.ndarray,
+        recipient_role: np.ndarray,
+    ) -> Dict[str, np.ndarray]:
+        """Construct the frozen two-source PCRF-R2 raw actor contract.
+
+        `P` carries only the receiver's current direct target sensing. `C`
+        carries only snapshots in packets actually delivered to this receiver
+        and still cache-valid.  The old recipient graph and observation remain
+        available for historical v1.8 methods but are never consumed by R2.
+        """
+        n = recipient_node.shape[0]
+        target_index = n - 1
+        p_node = np.zeros_like(recipient_node)
+        c_node = np.zeros_like(recipient_node)
+        p_edge = np.zeros_like(recipient_edge)
+        c_edge = np.zeros_like(recipient_edge)
+        p_adj = np.eye(n, dtype=np.float32)
+        c_adj = np.eye(n, dtype=np.float32)
+
+        # Both source branches may use receiver-local kinematics, but neither
+        # branch receives a direct-detection flag or a local attack-window flag
+        # through that self node. Those fields are handled only by source-free
+        # context below.
+        receiver_node = recipient_node[0].copy()
+        receiver_node[16:18] = 0.0
+        p_node[0] = receiver_node
+        c_node[0] = receiver_node
+
+        def target_node_from_claim(pos: np.ndarray, vel: np.ndarray) -> np.ndarray:
+            result = np.zeros(self.node_feat_dim, dtype=np.float32)
+            speed = float(np.linalg.norm(vel))
+            heading = math.atan2(float(vel[1]), float(vel[0])) if speed > 1e-6 else 0.0
+            gamma = math.atan2(float(vel[2]), float(np.linalg.norm(vel[:2]) + 1e-6)) if speed > 1e-6 else 0.0
+            max_speed = self.config.target_type.max_speed
+            result[:11] = np.asarray(
+                [
+                    pos[0] / self.config.world_radius, pos[1] / self.config.world_radius,
+                    pos[2] / self.config.max_altitude, speed / max_speed,
+                    math.sin(heading), math.cos(heading), math.sin(gamma), math.cos(gamma),
+                    vel[0] / max_speed, vel[1] / max_speed, vel[2] / max_speed,
+                ],
+                dtype=np.float32,
+            )
+            result[15] = 1.0  # target role identity
+            result[16] = 1.0  # source-valid target claim
+            result[20] = 1.0  # node validity
+            return result
+
+        def source_edge(
+            src_pos: np.ndarray,
+            src_vel: np.ndarray,
+            dst_pos: np.ndarray,
+            dst_vel: np.ndarray,
+            *,
+            sensing: float,
+            communication: float,
+            age: float,
+            confidence: float,
+        ) -> np.ndarray:
+            rel = dst_pos - src_pos
+            rel_vel = dst_vel - src_vel
+            distance = float(np.linalg.norm(rel))
+            los = unit(rel)
+            return np.asarray(
+                [
+                    rel[0] / self.config.world_radius, rel[1] / self.config.world_radius,
+                    rel[2] / self.config.max_altitude, distance / self.config.world_radius,
+                    los[0], los[1], los[2], rel_vel[0] / 300.0, rel_vel[1] / 300.0,
+                    rel_vel[2] / 300.0, 0.0, sensing, communication, 0.0, 0.0,
+                    age, confidence, 1.0,
+                ],
+                dtype=np.float32,
+            )
+
+        receiver_vel = velocity_from_state(
+            self.blue_speed[receiver], self.blue_heading[receiver], self.blue_gamma[receiver]
+        )
+        direct_available = float(self.detected_by[receiver] > 0.5)
+        if direct_available > 0.5:
+            direct_vel = velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0])
+            p_node[target_index] = target_node_from_claim(self.red_pos[0], direct_vel)
+            p_edge[0, target_index] = source_edge(
+                self.blue_pos[receiver], receiver_vel, self.red_pos[0], direct_vel,
+                sensing=1.0, communication=0.0, age=0.0, confidence=1.0,
+            )
+            p_adj[0, target_index] = 1.0
+
+        # Sender-status nodes are legal only when the exact recipient cache has
+        # a delivered packet. Copying them from the recipient view preserves the
+        # immutable packet snapshot rather than reading current sender truth.
+        for node_index in range(1, target_index):
+            if recipient_node[node_index, -1] > 0.5:
+                c_node[node_index] = recipient_node[node_index]
+                c_adj[0, node_index] = 1.0
+                c_edge[0, node_index] = recipient_edge[0, node_index]
+
+        # Select one deterministic cache-valid target claim for the C target
+        # node. The selection is a representation choice, never a simulator
+        # truth lookup: highest confidence, then newest generation, then sender
+        # id. All candidate values originate in delivered packet snapshots.
+        candidates: list[tuple[float, int, int, dict[str, object]]] = []
+        for sender, packet in self.sender_packet_cache[receiver].items():
+            if float(packet.get("validity", 0.0)) <= 0.5:
+                continue
+            generation = int(packet.get("target_generation_step", -1))
+            confidence = float(packet.get("target_confidence", 0.0))
+            if generation < 0 or confidence < float(self.config.min_target_confidence):
+                continue
+            candidates.append((confidence, generation, int(sender), packet))
+        if candidates:
+            confidence, generation, _sender, packet = max(candidates, key=lambda row: (row[0], row[1], -row[2]))
+            claim_pos = np.asarray(packet["target_pos"], dtype=np.float32)
+            claim_vel = np.asarray(packet["target_vel"], dtype=np.float32)
+            c_node[target_index] = target_node_from_claim(claim_pos, claim_vel)
+            age = min(float(self.config.max_steps), float(self.step_count - generation)) / self.config.max_steps
+            c_edge[0, target_index] = source_edge(
+                self.blue_pos[receiver], receiver_vel, claim_pos, claim_vel,
+                sensing=0.0, communication=1.0, age=age, confidence=confidence,
+            )
+            c_adj[0, target_index] = 1.0
+
+        # The R2 actor must not read target-relative, direct-detection, packet
+        # connectivity, message-age, or target-cache values via the historical
+        # common observation.  Local attack/task/role and vehicle state remain
+        # legal context and are identically supplied to all R2 comparators.
+        context = self._get_obs()[receiver].copy()
+        context[8:15] = 0.0
+        context[18] = 0.0
+        context[28:32] = 0.0
+        return {
+            "pcrf_r2_p_node_feat": p_node,
+            "pcrf_r2_c_node_feat": c_node,
+            "pcrf_r2_p_edge_feat": p_edge,
+            "pcrf_r2_c_edge_feat": c_edge,
+            "pcrf_r2_p_adj": p_adj,
+            "pcrf_r2_c_adj": c_adj,
+            "pcrf_r2_context": context.astype(np.float32),
+            "pcrf_r2_role": recipient_role.copy(),
         }
 
     def _get_graph_obs(self) -> Dict[str, np.ndarray]:
@@ -1231,6 +1377,14 @@ class UAVIntercept3DEnv:
             "has_intent_label": False,
             "provenance_mask": np.stack([v["provenance_mask"] for v in views]).astype(np.float32),
             "receiver_id": np.arange(self.config.num_blue, dtype=np.int64),
+            "pcrf_r2_p_node_feat": np.stack([v["pcrf_r2_p_node_feat"] for v in views]).astype(np.float32),
+            "pcrf_r2_c_node_feat": np.stack([v["pcrf_r2_c_node_feat"] for v in views]).astype(np.float32),
+            "pcrf_r2_p_edge_feat": np.stack([v["pcrf_r2_p_edge_feat"] for v in views]).astype(np.float32),
+            "pcrf_r2_c_edge_feat": np.stack([v["pcrf_r2_c_edge_feat"] for v in views]).astype(np.float32),
+            "pcrf_r2_p_adj": np.stack([v["pcrf_r2_p_adj"] for v in views]).astype(np.float32),
+            "pcrf_r2_c_adj": np.stack([v["pcrf_r2_c_adj"] for v in views]).astype(np.float32),
+            "pcrf_r2_context": np.stack([v["pcrf_r2_context"] for v in views]).astype(np.float32),
+            "pcrf_r2_role": np.stack([v["pcrf_r2_role"] for v in views]).astype(np.int64),
         }
         n_blue = self.config.num_blue
         n = n_blue + self.config.num_red

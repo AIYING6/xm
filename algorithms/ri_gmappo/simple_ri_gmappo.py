@@ -512,6 +512,134 @@ class ProvenanceConditionedRelationFactorEncoder(nn.Module):
         return x, attention, diagnostics
 
 
+class TwoSourcePCRFR2Encoder(nn.Module):
+    """Faithful two-source PCRF-R2 encoder with no union or cross-source path."""
+
+    def __init__(self, node_feat_dim: int, role_dim: int, edge_dim: int, hidden_dim: int):
+        super().__init__()
+        self.p_input = nn.Sequential(nn.Linear(node_feat_dim + role_dim, hidden_dim), nn.Tanh())
+        self.c_input = nn.Sequential(nn.Linear(node_feat_dim + role_dim, hidden_dim), nn.Tanh())
+        self.p_layer1 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim)
+        self.p_layer2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim)
+        self.c_layer1 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim)
+        self.c_layer2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim)
+        self.baseline_gate_logits = nn.Parameter(torch.zeros(2))
+        self.gate_correction = nn.Sequential(
+            nn.Linear(4, hidden_dim), nn.Tanh(), nn.Linear(hidden_dim, 2)
+        )
+        nn.init.zeros_(self.gate_correction[-1].weight)
+        nn.init.zeros_(self.gate_correction[-1].bias)
+
+    def baseline_gate(self) -> torch.Tensor:
+        return torch.softmax(self.baseline_gate_logits, dim=-1)
+
+    def conflict_descriptor(
+        self,
+        p_node_feat: torch.Tensor,
+        c_node_feat: torch.Tensor,
+        p_adj: torch.Tensor,
+        c_adj: torch.Tensor,
+        c_edge_feat: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        target_index = p_node_feat.shape[1] - 1
+        p_available = p_adj[:, 0, target_index].clamp(0.0, 1.0)
+        c_available = c_adj[:, 0, target_index].clamp(0.0, 1.0)
+        both = p_available * c_available
+        # First eleven node fields are target kinematics only. They are zeroed
+        # before construction when a source is unavailable.
+        disagreement = (p_node_feat[:, target_index, :11] - c_node_feat[:, target_index, :11]).abs().mean(dim=-1)
+        disagreement = disagreement * both
+        age = c_edge_feat[:, 0, target_index, 15].clamp(0.0, 1.0) * c_available
+        uncertainty = (1.0 - c_edge_feat[:, 0, target_index, 16].clamp(0.0, 1.0)) * c_available
+        descriptor = torch.stack([p_available - c_available, disagreement, age, uncertainty], dim=-1)
+        availability = torch.stack([p_available, c_available], dim=-1)
+        return descriptor, availability
+
+    def fusion_gate(
+        self,
+        p_node_feat: torch.Tensor,
+        c_node_feat: torch.Tensor,
+        p_adj: torch.Tensor,
+        c_adj: torch.Tensor,
+        c_edge_feat: torch.Tensor,
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        descriptor, availability = self.conflict_descriptor(p_node_feat, c_node_feat, p_adj, c_adj, c_edge_feat)
+        zero = torch.zeros_like(descriptor)
+        delta = self.gate_correction(descriptor) - self.gate_correction(zero)
+        logits = self.baseline_gate_logits.unsqueeze(0) + delta
+        unnormalized = torch.exp(logits) * availability
+        weights = unnormalized / unnormalized.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+        return weights, {
+            "descriptor": descriptor,
+            "availability": availability,
+            "baseline_gate": self.baseline_gate().unsqueeze(0).expand_as(weights),
+            "gate_delta": delta,
+            "gate": weights,
+        }
+
+    def forward(
+        self,
+        p_node_feat: torch.Tensor,
+        c_node_feat: torch.Tensor,
+        p_edge_feat: torch.Tensor,
+        c_edge_feat: torch.Tensor,
+        p_adj: torch.Tensor,
+        c_adj: torch.Tensor,
+        role_feat: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+        weights, diagnostics = self.fusion_gate(p_node_feat, c_node_feat, p_adj, c_adj, c_edge_feat)
+        p = self.p_input(torch.cat([p_node_feat, role_feat], dim=-1))
+        c = self.c_input(torch.cat([c_node_feat, role_feat], dim=-1))
+        p, p_attn1 = self.p_layer1(p, p_adj, p_edge_feat)
+        p, p_attn2 = self.p_layer2(p, p_adj, p_edge_feat)
+        c, c_attn1 = self.c_layer1(c, c_adj, c_edge_feat)
+        c, c_attn2 = self.c_layer2(c, c_adj, c_edge_feat)
+        h_p, h_c = p[:, 0], c[:, 0]
+        fused = weights[:, :1] * h_p + weights[:, 1:] * h_c
+        diagnostics.update({"h_p": h_p, "h_c": h_c, "fused": fused})
+        attention = torch.stack([p_attn1, p_attn2, c_attn1, c_attn2], dim=1)
+        return fused, attention, diagnostics
+
+
+class UnifiedR2SingleGraphEncoder(nn.Module):
+    """Single-graph R2 comparator retaining every P/C raw source tag."""
+
+    def __init__(self, node_feat_dim: int, role_dim: int, edge_dim: int, hidden_dim: int, *, graph: bool):
+        super().__init__()
+        self.graph = graph
+        self.input = nn.Sequential(nn.Linear(node_feat_dim * 2 + role_dim, hidden_dim), nn.Tanh())
+        if graph:
+            self.layer1 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim * 2)
+            self.layer2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim * 2)
+        else:
+            self.pool_fuse = nn.Sequential(nn.Linear(hidden_dim * 2, hidden_dim), nn.Tanh())
+
+    def forward(
+        self,
+        p_node_feat: torch.Tensor,
+        c_node_feat: torch.Tensor,
+        p_edge_feat: torch.Tensor,
+        c_edge_feat: torch.Tensor,
+        p_adj: torch.Tensor,
+        c_adj: torch.Tensor,
+        role_feat: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        x = self.input(torch.cat([p_node_feat, c_node_feat, role_feat], dim=-1))
+        union_adj = (p_adj + c_adj).clamp(0.0, 1.0)
+        if self.graph:
+            edge = torch.cat([p_edge_feat, c_edge_feat], dim=-1)
+            x, _ = self.layer1(x, union_adj, edge)
+            x, attention = self.layer2(x, union_adj, edge)
+            return x[:, 0], attention
+        source_valid = (p_node_feat[..., -1:] + c_node_feat[..., -1:]).clamp(0.0, 1.0)
+        pooled = (x * source_valid).sum(dim=1) / source_valid.sum(dim=1).clamp_min(1.0)
+        fused = self.pool_fuse(torch.cat([x[:, 0], pooled], dim=-1))
+        attention = torch.zeros(
+            x.shape[0], x.shape[1], x.shape[1], dtype=x.dtype, device=x.device
+        )
+        return fused, attention
+
+
 OBS_ROLE_IDENTITY_SLICE = OBS3D_ROLE_IDENTITY_SLICE
 NODE_ROLE_IDENTITY_SLICE = NODE3D_ROLE_IDENTITY_SLICE
 
@@ -546,7 +674,10 @@ class RIActor(nn.Module):
         multi_relation_global_residual_weight: float = 1.0,
     ):
         super().__init__()
-        if graph_encoder not in {"no_graph", "matched_nongraph", "single", "multi_relation", "pcrf"}:
+        if graph_encoder not in {
+            "no_graph", "matched_nongraph", "single", "multi_relation", "pcrf",
+            "pcrf_r2", "single_r2", "matched_nongraph_r2",
+        }:
             raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
         if graph_message_ablation not in {"none", "no_role_pair_gate"}:
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
@@ -561,7 +692,15 @@ class RIActor(nn.Module):
         self.intent_emb = nn.Embedding(num_intents, intent_dim)
         self.obs_encoder = nn.Sequential(nn.Linear(obs_dim, hidden_dim), nn.Tanh())
         self.input = nn.Sequential(nn.Linear(node_feat_dim + role_dim, hidden_dim), nn.Tanh())
-        if graph_encoder == "no_graph":
+        if graph_encoder == "pcrf_r2":
+            self.r2_context_encoder = nn.Sequential(nn.Linear(obs_dim, hidden_dim), nn.Tanh())
+            self.pcrf_r2_graph = TwoSourcePCRFR2Encoder(node_feat_dim, role_dim, edge_feat_dim, hidden_dim)
+        elif graph_encoder in {"single_r2", "matched_nongraph_r2"}:
+            self.r2_context_encoder = nn.Sequential(nn.Linear(obs_dim, hidden_dim), nn.Tanh())
+            self.r2_unified_graph = UnifiedR2SingleGraphEncoder(
+                node_feat_dim, role_dim, edge_feat_dim, hidden_dim, graph=graph_encoder == "single_r2"
+            )
+        elif graph_encoder == "no_graph":
             self.no_graph_intent_head = nn.Sequential(
                 nn.Linear(hidden_dim, hidden_dim),
                 nn.Tanh(),
@@ -610,11 +749,60 @@ class RIActor(nn.Module):
         adj: torch.Tensor,
         num_agents: int,
         relation_adj: torch.Tensor | None = None,
+        pcrf_r2: dict[str, torch.Tensor] | None = None,
         intent_label: torch.Tensor | None = None,
         detach_intent: bool = False,
         oracle_intent: bool = False,
         return_chain_aux: bool = False,
     ):
+        if self.graph_encoder in {"pcrf_r2", "single_r2", "matched_nongraph_r2"}:
+            if pcrf_r2 is None:
+                raise ValueError(f"pcrf_r2 source tensors are required when graph_encoder='{self.graph_encoder}'")
+            required = {
+                "p_node_feat", "c_node_feat", "p_edge_feat", "c_edge_feat", "p_adj", "c_adj", "context", "role",
+            }
+            missing = sorted(required.difference(pcrf_r2))
+            if missing:
+                raise ValueError(f"Missing PCRF-R2 source tensors: {missing}")
+            r2_role = pcrf_r2["role"].long()
+            r2_role_feat = self.role_emb(r2_role)
+            if self.graph_encoder == "pcrf_r2":
+                graph_feat, attn, self.last_pcrf_diagnostics = self.pcrf_r2_graph(
+                    pcrf_r2["p_node_feat"], pcrf_r2["c_node_feat"],
+                    pcrf_r2["p_edge_feat"], pcrf_r2["c_edge_feat"],
+                    pcrf_r2["p_adj"], pcrf_r2["c_adj"], r2_role_feat,
+                )
+            else:
+                graph_feat, attn = self.r2_unified_graph(
+                    pcrf_r2["p_node_feat"], pcrf_r2["c_node_feat"],
+                    pcrf_r2["p_edge_feat"], pcrf_r2["c_edge_feat"],
+                    pcrf_r2["p_adj"], pcrf_r2["c_adj"], r2_role_feat,
+                )
+                self.last_pcrf_diagnostics = None
+            target_feat = graph_feat.unsqueeze(1)
+            intent_logits = self.intent_head(target_feat)
+            if not self.use_intent_context:
+                intent_context = torch.zeros(
+                    graph_feat.shape[0], num_agents, self.intent_emb.embedding_dim,
+                    dtype=graph_feat.dtype, device=graph_feat.device,
+                )
+            elif oracle_intent:
+                if intent_label is None:
+                    raise ValueError("intent_label is required when oracle_intent=True")
+                intent_context = self.intent_emb(intent_label.long())
+            else:
+                intent_probs = torch.softmax(intent_logits, dim=-1)
+                if detach_intent:
+                    intent_probs = intent_probs.detach()
+                intent_context = intent_probs @ self.intent_emb.weight
+            intent_context = intent_context.mean(dim=1).unsqueeze(1).expand(-1, num_agents, -1)
+            context_feat = self.r2_context_encoder(pcrf_r2["context"])
+            graph_actor_feat = graph_feat.unsqueeze(1).expand(-1, num_agents, -1)
+            logits = self.policy_head(torch.cat([context_feat.unsqueeze(1).expand(-1, num_agents, -1), graph_actor_feat, intent_context], dim=-1))
+            chain_aux_logits = self.chain_aux_head(graph_feat)
+            if return_chain_aux:
+                return logits, attn, intent_logits, chain_aux_logits
+            return logits, attn, intent_logits
         if self.graph_input_ablation == "no_edge_features" and edge_feat is not None:
             edge_feat = torch.zeros_like(edge_feat)
         if self.graph_input_ablation == "no_role_identity":
@@ -777,6 +965,7 @@ class RIGMAPPOAgent(nn.Module):
         adj: torch.Tensor,
         share_obs: torch.Tensor,
         relation_adj: torch.Tensor | None = None,
+        pcrf_r2: dict[str, torch.Tensor] | None = None,
         action: torch.Tensor | None = None,
         deterministic: bool = False,
         intent_label: torch.Tensor | None = None,
@@ -792,11 +981,18 @@ class RIGMAPPOAgent(nn.Module):
             role_actor = role.reshape(batch_size * num_agents, num_nodes)
             adj_actor = adj.reshape(batch_size * num_agents, num_nodes, num_nodes)
             relation_actor = relation_adj.reshape(batch_size * num_agents, relation_adj.shape[2], num_nodes, num_nodes) if relation_adj is not None else None
+            r2_actor = None
+            if pcrf_r2 is not None:
+                r2_actor = {
+                    key: value.reshape(batch_size * num_agents, *value.shape[2:])
+                    for key, value in pcrf_r2.items()
+                }
             intent_actor = intent_label.reshape(batch_size * num_agents, -1) if intent_label is not None else None
             action_actor = action.reshape(batch_size * num_agents, 1) if action is not None else None
             logits, attn, intent_logits, chain_aux_logits = self.actor(
                 obs_actor, node_actor, edge_actor, role_actor, adj_actor, 1,
                 relation_adj=relation_actor, intent_label=intent_actor,
+                pcrf_r2=r2_actor,
                 detach_intent=detach_intent, oracle_intent=oracle_intent,
                 return_chain_aux=True,
             )
@@ -824,6 +1020,7 @@ class RIGMAPPOAgent(nn.Module):
             adj,
             self.num_agents,
             relation_adj=relation_adj,
+            pcrf_r2=pcrf_r2,
             intent_label=intent_label,
             detach_intent=detach_intent,
             oracle_intent=oracle_intent,
@@ -970,7 +1167,7 @@ def stack_graphs(graphs: List[dict]) -> dict:
     if len(set(target_counts)) != 1:
         raise ValueError("All vectorized environments must have the same target-node count")
     target_count = target_counts[0]
-    return {
+    stacked = {
         "node_feat": np.stack([g["node_feat"] for g in graphs]).astype(np.float32),
         "edge_feat": np.stack(
             [g.get("edge_feat", np.zeros((*g["adj"].shape, EDGE_FEAT_DIM), dtype=np.float32)) for g in graphs]
@@ -989,6 +1186,48 @@ def stack_graphs(graphs: List[dict]) -> dict:
             [g.get("intent_label", np.zeros(target_count, dtype=np.int64)) for g in graphs]
         ).astype(np.int64),
         "has_intent_label": np.asarray([bool(g.get("has_intent_label", "intent_label" in g)) for g in graphs], dtype=bool),
+    }
+    r2_keys = (
+        "pcrf_r2_p_node_feat", "pcrf_r2_c_node_feat", "pcrf_r2_p_edge_feat", "pcrf_r2_c_edge_feat",
+        "pcrf_r2_p_adj", "pcrf_r2_c_adj", "pcrf_r2_context", "pcrf_r2_role",
+    )
+    if all(all(key in graph for key in r2_keys) for graph in graphs):
+        stacked.update({
+            "pcrf_r2_p_node_feat": np.stack([g["pcrf_r2_p_node_feat"] for g in graphs]).astype(np.float32),
+            "pcrf_r2_c_node_feat": np.stack([g["pcrf_r2_c_node_feat"] for g in graphs]).astype(np.float32),
+            "pcrf_r2_p_edge_feat": np.stack([g["pcrf_r2_p_edge_feat"] for g in graphs]).astype(np.float32),
+            "pcrf_r2_c_edge_feat": np.stack([g["pcrf_r2_c_edge_feat"] for g in graphs]).astype(np.float32),
+            "pcrf_r2_p_adj": np.stack([g["pcrf_r2_p_adj"] for g in graphs]).astype(np.float32),
+            "pcrf_r2_c_adj": np.stack([g["pcrf_r2_c_adj"] for g in graphs]).astype(np.float32),
+            "pcrf_r2_context": np.stack([g["pcrf_r2_context"] for g in graphs]).astype(np.float32),
+            "pcrf_r2_role": np.stack([g["pcrf_r2_role"] for g in graphs]).astype(np.int64),
+        })
+    return stacked
+
+
+PCRF_R2_GRAPH_FIELDS = {
+    "p_node_feat": "pcrf_r2_p_node_feat",
+    "c_node_feat": "pcrf_r2_c_node_feat",
+    "p_edge_feat": "pcrf_r2_p_edge_feat",
+    "c_edge_feat": "pcrf_r2_c_edge_feat",
+    "p_adj": "pcrf_r2_p_adj",
+    "c_adj": "pcrf_r2_c_adj",
+    "context": "pcrf_r2_context",
+    "role": "pcrf_r2_role",
+}
+
+
+def pcrf_r2_tensors(graph_obs: dict, device: torch.device) -> dict[str, torch.Tensor] | None:
+    """Convert the frozen R2 raw contract to tensors without synthesizing data."""
+    if not all(field in graph_obs for field in PCRF_R2_GRAPH_FIELDS.values()):
+        return None
+    return {
+        name: torch.as_tensor(
+            graph_obs[field],
+            dtype=torch.long if name == "role" else torch.float32,
+            device=device,
+        )
+        for name, field in PCRF_R2_GRAPH_FIELDS.items()
     }
 
 
@@ -1288,6 +1527,7 @@ def eval_policy(
                     torch.as_tensor(g["adj"], dtype=torch.float32, device=device),
                     torch.as_tensor(share_obs[None, ...], dtype=torch.float32, device=device),
                     relation_adj=torch.as_tensor(g["relation_adj"], dtype=torch.float32, device=device),
+                    pcrf_r2=pcrf_r2_tensors(g, device),
                     deterministic=True,
                     intent_label=torch.as_tensor(g["intent_label"], dtype=torch.long, device=device),
                     detach_intent=cfg.detach_intent,
@@ -1530,6 +1770,7 @@ def collect_rollout(
 ) -> dict:
     obs_buf, share_buf, node_buf, edge_buf, role_buf, adj_buf, intent_buf = [], [], [], [], [], [], []
     relation_adj_buf = []
+    r2_buf: dict[str, list[np.ndarray]] = {name: [] for name in PCRF_R2_GRAPH_FIELDS}
     action_buf, logp_buf, reward_buf, done_buf, value_buf = [], [], [], [], []
 
     for _ in range(cfg.rollout_steps):
@@ -1542,6 +1783,7 @@ def collect_rollout(
                 torch.as_tensor(graph_obs["adj"], dtype=torch.float32, device=device),
                 torch.as_tensor(share_obs, dtype=torch.float32, device=device),
                 relation_adj=torch.as_tensor(graph_obs["relation_adj"], dtype=torch.float32, device=device),
+                pcrf_r2=pcrf_r2_tensors(graph_obs, device),
                 intent_label=torch.as_tensor(graph_obs["intent_label"], dtype=torch.long, device=device),
                 detach_intent=cfg.detach_intent,
                 oracle_intent=cfg.oracle_intent,
@@ -1598,6 +1840,9 @@ def collect_rollout(
         role_buf.append(graph_obs["role"].copy())
         adj_buf.append(graph_obs["adj"].copy())
         relation_adj_buf.append(graph_obs["relation_adj"].copy())
+        for name, field in PCRF_R2_GRAPH_FIELDS.items():
+            if field in graph_obs:
+                r2_buf[name].append(graph_obs[field].copy())
         intent_buf.append(graph_obs["intent_label"].copy())
         action_buf.append(actions_np.copy())
         logp_buf.append(logp_np.copy())
@@ -1620,7 +1865,7 @@ def collect_rollout(
     dones_np = np.asarray(done_buf, dtype=np.float32)
     values_np = np.asarray(value_buf, dtype=np.float32)
     advantages, returns = compute_gae(rewards_np, dones_np, values_np, next_values, cfg.gamma, cfg.gae_lambda)
-    return {
+    rollout = {
         "obs": np.asarray(obs_buf, dtype=np.float32),
         "share_obs": np.asarray(share_buf, dtype=np.float32),
         "node_feat": np.asarray(node_buf, dtype=np.float32),
@@ -1641,6 +1886,12 @@ def collect_rollout(
         "next_share_obs": share_obs,
         "next_graph_obs": graph_obs,
     }
+    if all(len(values) == cfg.rollout_steps for values in r2_buf.values()):
+        rollout["pcrf_r2"] = {
+            name: np.asarray(values, dtype=np.int64 if name == "role" else np.float32)
+            for name, values in r2_buf.items()
+        }
+    return rollout
 
 
 def compute_gae(rewards, dones, values, next_values, gamma, gae_lambda):
@@ -1660,6 +1911,11 @@ def effective_intent_coef(cfg: RIGMAPPOConfig) -> float:
 
 
 def effective_chain_aux_coef(cfg: RIGMAPPOConfig, update: int) -> float:
+    # The historical auxiliary target includes Task-Support. It must remain
+    # disabled for the two-source R2 line so it cannot become an implicit third
+    # relation through gradient flow.
+    if cfg.graph_encoder in {"pcrf_r2", "single_r2", "matched_nongraph_r2"}:
+        return 0.0
     if cfg.env_name != "3d_intercept" or cfg.chain_aux_coef <= 0.0:
         return 0.0
     if cfg.chain_aux_warmup_updates > 0 and update <= cfg.chain_aux_warmup_updates:
@@ -1709,6 +1965,16 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
     relation_adj = torch.as_tensor(
         batch["relation_adj"].reshape(num_graphs, *batch["relation_adj"].shape[2:]), dtype=torch.float32, device=device
     )
+    r2_batch = None
+    if "pcrf_r2" in batch:
+        r2_batch = {
+            name: torch.as_tensor(
+                values.reshape(num_graphs, *values.shape[2:]),
+                dtype=torch.long if name == "role" else torch.float32,
+                device=device,
+            )
+            for name, values in batch["pcrf_r2"].items()
+        }
     intent_label = torch.as_tensor(batch["intent_label"].reshape(num_graphs, -1), dtype=torch.long, device=device)
     share_obs = torch.as_tensor(batch["share_obs"].reshape(num_graphs, num_agents, -1), dtype=torch.float32, device=device)
     actions = torch.as_tensor(batch["actions"].reshape(num_graphs, num_agents), dtype=torch.long, device=device)
@@ -1738,6 +2004,7 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
                 adj[mb],
                 share_obs[mb],
                 relation_adj=relation_adj[mb],
+                pcrf_r2={name: value[mb] for name, value in r2_batch.items()} if r2_batch is not None else None,
                 action=actions[mb],
                 intent_label=intent_label[mb],
                 detach_intent=cfg.detach_intent,

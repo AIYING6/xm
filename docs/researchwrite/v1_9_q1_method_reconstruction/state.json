@@ -8,9 +8,9 @@
   "scores": [],
   "technical_debts": [
     "Three-relation PCRF-R1 was terminated after G0-R1 found Task-Support nonidentifiable from Communication.",
-    "PCRF-R2 novelty kill-check passed only with a narrow delivery-grounded provenance claim; source-separated P/C actor inputs remain unimplemented.",
+    "PCRF-R2 novelty kill-check passed only with a narrow delivery-grounded provenance claim; source-separated P/C actor inputs and D0-R2 integrity tests are complete.",
     "Numerical practical margin, seed rule, endpoint-adequacy bounds, F1 budget, and PCRF-Delta0 control remain unfrozen.",
     "v1.8 confirmatory evidence remains separate from PCRF-R2 and is not authorized."
   ],
-  "status": "g0_r2_theory_and_comparator_frozen__implementation_not_authorized"
+  "status": "d0_r2_pass__d1_r2_not_authorized"
 }

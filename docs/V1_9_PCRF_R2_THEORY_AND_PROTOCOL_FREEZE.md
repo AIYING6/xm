@@ -8,7 +8,9 @@ PCRF-R1 line.  It freezes the R2 scientific object and the implementation
 contract necessary to test it.  The novelty kill-check and final theory/
 comparator conditions are now closed in
 [G0-R2 final freeze](V1_9_G0_R2_FINAL_THEORY_COMPARATOR_FREEZE.md).  That
-release still authorizes no code or GPU work by itself.
+release was followed by separately authorized source-separated implementation
+and a passing [D0-R2 audit](V1_9_D0_R2_IMPLEMENTATION_AUDIT.md).  D1-R2 and
+all GPU/performance work remain unauthorized.
 
 ## 1. Author decision and scientific scope
 

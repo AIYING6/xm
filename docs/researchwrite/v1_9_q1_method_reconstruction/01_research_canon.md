@@ -34,10 +34,10 @@ writing must not silently upgrade a hypothesis to a result.
    meaningful relation claim is therefore not supported; this is a hard G0
    No-Go.  The author consequently terminated PCRF-R1 and authorized a
    two-source PCRF-R2 theory/protocol freeze; this is not a performance result.
-4. The current pre-R2 common observation path can merge a receiver's direct
-   target cache and delivered target-cache estimate.  A valid PCRF-R2 must
-   remove this source-dependent target content from shared context and expose
-   it only through source-tagged P/C branches.
+4. The historical pre-R2 common observation path can merge a receiver's direct
+   target cache and delivered target-cache estimate.  PCRF-R2 now removes this
+   source-dependent target content from shared context and exposes it only
+   through source-tagged P/C branches; D0-R2 verifies the absence of a bypass.
 5. R6.5 found the union residual material but not dominant in its fixed audit.
    It remains a structural risk, not evidence of an advantage.
 6. R6.5 found near-zero Role-Pair gate variation in the pilot. Role-Pair is not
@@ -54,6 +54,9 @@ writing must not silently upgrade a hypothesis to a result.
    T2MAC, CDCMA, CoDe, Communication-Aware UAV MARL, and AsynCoMARL sharply
    constrain the novelty claim.  Broad source-separation, conflict-fusion,
    delay, graph-MARL, and UAV-communication claims are prior art.
+10. The source-separated PCRF-R2 implementation and D0-R2 audit passed
+    deterministic integrity tests.  This is an implementation result only;
+    no R2 performance, engineering-run, or confirmatory evidence exists.
 
 ## Definitions
 
