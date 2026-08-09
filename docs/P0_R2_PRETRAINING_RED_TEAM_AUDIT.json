@@ -1,7 +1,7 @@
 {
   "audit": "P0_R2_PRETRAINING_RED_TEAM",
   "completed_component": "P0_A_EVENT_ESTIMAND",
-  "status": "P0_A_TERMINAL_OUTCOME_ESTIMAND_FROZEN__P0_A_REPAIR_AUTHORIZED__D2_NOT_AUTHORIZED",
+  "status": "P0_A_REPAIRED__D1_R2_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED",
   "performance_use": "prohibited",
   "finding": "Irreversible collision and constraint-violation outcomes are currently represented as ordinary right-censoring in the RMST risk set.",
   "unstarted_components": [
@@ -11,5 +11,6 @@
     "P1_ONSET_STATE",
     "P1_ENDPOINT_CONSTRUCT_VALIDITY"
   ],
-  "frozen_author_decision": "Use the complete-follow-up restricted mean time to establishment (RMTE) estimand with terminal failure represented as T_E=infinity; repair and requalify D0/D1 only."
+  "p0_a_requalification": "PASS: six engineering runs completed 180/180 updates with four immutable snapshots and four terminal-outcome event records per run, empty stderr, and a verified RMTE artifact gate.",
+  "next_authorized_component": "P0_B_FEATURE_LEVEL_PROVENANCE"
 }

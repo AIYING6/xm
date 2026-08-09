@@ -1,6 +1,6 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P0_A_TERMINAL_OUTCOME_ESTIMAND_FROZEN__P0_A_REPAIR_AUTHORIZED__D2_NOT_AUTHORIZED`.**
+**Status: `P0_A_REPAIRED__D1_R2_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED`.**
 
 ## Scope and stop rule
 
@@ -55,14 +55,16 @@ failure represented as `T_E=infinity`. The authoritative repair contract is
 4. episode-record fields and selector semantics; and
 5. whether a new explicit target-escape/mission-failure taxonomy is needed.
 
-The authorized repair is limited to protocol/statistical code, deterministic
-regressions, D0, and fresh D1 engineering requalification. Existing D1-R2 is
-retained as an engineering audit trail; it is not formal selection or scientific
-evidence.
+The authorized repair was limited to protocol/statistical code, deterministic
+regressions, D0, and fresh D1 engineering requalification. The fresh six-run
+requalification passed with 180/180 updates, four immutable snapshots and four
+terminal-outcome event records per run, empty stderr, and a verified RMTE gate
+manifest. Existing D1-R2 remains an engineering audit trail; neither D1 run is
+formal selection or scientific evidence.
 
 ## Red-team verdict
 
-`P0_A_TERMINAL_OUTCOME_ESTIMAND_FROZEN__P0_A_REPAIR_AUTHORIZED__D2_NOT_AUTHORIZED`
+`P0_A_REPAIRED__D1_R2_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED`
 
 This verdict does not evaluate PCRF-R2 architecture, novelty, or performance.
 It identifies a statistical construct defect that must be resolved before those

@@ -1,6 +1,6 @@
 # P0-A Terminal-Outcome Estimand Freeze
 
-**Status: `P0_A_TERMINAL_OUTCOME_ESTIMAND_FROZEN__P0_A_REPAIR_AUTHORIZED__D2_NOT_AUTHORIZED`.**
+**Status: `P0_A_REPAIRED__D1_R2_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED`.**
 
 ## Target event and complete-follow-up outcomes
 
@@ -54,7 +54,8 @@ negative values favor PCRF.
 ## Requalification rule
 
 The historical D1-R2 run remains an engineering audit trail but cannot qualify
-the repaired event-record/selector pipeline. The repair requires deterministic
-RMTE/CIF/selector regressions, the existing D0 regressions, and a fresh six-run
-D1 engineering requalification using non-evidentiary seeds 9301/9302. D2, F1,
-F2, performance claims, mechanism experiments, and OOD remain prohibited.
+the repaired event-record/selector pipeline. The deterministic RMTE/CIF/selector
+regressions, existing D0 regressions, and fresh six-run D1 engineering
+requalification with non-evidentiary seeds 9301/9302 have passed. D2, F1, F2,
+performance claims, mechanism experiments, and OOD remain prohibited while the
+remaining P0-R2 red-team components are completed.
