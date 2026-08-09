@@ -1,16 +1,17 @@
 {
   "audit": "P0_R2_PRETRAINING_RED_TEAM",
-  "completed_component": "P0_A_EVENT_ESTIMAND",
-  "status": "P0_A_REPAIRED__D1_R2_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED",
+  "completed_component": "P0_B_FEATURE_LEVEL_PROVENANCE",
+  "status": "P0_B_CACHE_VALIDITY_CONTRACT_DEVIATION__STOP__D2_NOT_AUTHORIZED",
   "performance_use": "prohibited",
-  "finding": "Irreversible collision and constraint-violation outcomes are currently represented as ordinary right-censoring in the RMST risk set.",
+  "finding": "An expired delivered target claim enters the R2 C branch because source construction checks packet validity, generation, and confidence but not max_target_message_age_steps.",
   "unstarted_components": [
-    "P0_B_FEATURE_LEVEL_PROVENANCE",
     "P0_C_COMPARATOR_IDENTIFIABILITY",
     "P1_NATURAL_CONFLICT_PREVALENCE",
     "P1_ONSET_STATE",
     "P1_ENDPOINT_CONSTRUCT_VALIDITY"
   ],
   "p0_a_requalification": "PASS: six engineering runs completed 180/180 updates with four immutable snapshots and four terminal-outcome event records per run, empty stderr, and a verified RMTE artifact gate.",
-  "next_authorized_component": "P0_B_FEATURE_LEVEL_PROVENANCE"
+  "p0_b_verdict": "FAIL / NEW P0: cache-valid C contract deviation confirmed by scripts/audit_p0_b_feature_provenance_v1_9.py.",
+  "next_authorized_component": null,
+  "stop_reason": "Author decision is required before any repair or later red-team component."
 }

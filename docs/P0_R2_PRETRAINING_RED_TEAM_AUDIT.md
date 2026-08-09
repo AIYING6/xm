@@ -1,13 +1,14 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P0_A_REPAIRED__D1_R2_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED`.**
+**Status: `P0_B_CACHE_VALIDITY_CONTRACT_DEVIATION__STOP__D2_NOT_AUTHORIZED`.**
 
 ## Scope and stop rule
 
 This red-team audit was authorized after D1-R2 as a falsification gate. It does
-not interpret D1 metrics or add a method experiment. P0-A found a claim-critical
-estimand defect; per the stop rule, P0-B/P0-C/P1 work is not started and D2/F1/F2
-remain prohibited until the author approves a scientific protocol repair.
+not interpret D1 metrics or add a method experiment. P0-A was repaired and
+requalified. P0-B then found the contract deviation below. Per the stop rule,
+P0-C/P1 work is not started and D2/F1/F2 remain prohibited until the author
+decides whether and how to repair the frozen C-cache semantics.
 
 ## P0-A — event and censoring semantics
 
@@ -69,3 +70,43 @@ formal selection or scientific evidence.
 This verdict does not evaluate PCRF-R2 architecture, novelty, or performance.
 It identifies a statistical construct defect that must be resolved before those
 questions can be tested fairly.
+
+## P0-B — feature-level provenance and cache validity
+
+### Verdict: `FAIL / NEW P0`
+
+The frozen R2 contract permits C target evidence only from an actually
+delivered **and cache-valid** packet snapshot. It explicitly excludes expired
+packets. `max_target_message_age_steps` is the existing cache-validity bound:
+`_has_fresh_target_cache` rejects a target claim whose age exceeds it.
+
+However, `_get_pcrf_r2_sources` constructs its C target candidates from
+`sender_packet_cache[receiver]` using only packet `validity`, a nonnegative
+generation step, and minimum confidence. It does **not** reject a claim whose
+`step_count - target_generation_step` exceeds `max_target_message_age_steps`.
+Sender-status packets persist in that cache, so an expired target claim enters
+`pcrf_r2_c_node_feat` and `pcrf_r2_c_adj` despite being outside the frozen
+cache-valid C contract.
+
+The deterministic counterexample in
+`scripts/audit_p0_b_feature_provenance_v1_9.py` fixes the permitted cache age
+to two steps, injects an already delivered snapshot generated at step zero,
+and evaluates at step three. The C target node and C adjacency remain active.
+This is a protocol/representation deviation, not merely a graph-attention
+masking issue: the expired target coordinates are constructed before encoding.
+
+The issue is not a newly discovered simulator-global information channel—the
+recipient did receive the packet historically—but it changes the frozen
+meaning of **cache-valid C evidence**, the intended stale/expired distinction,
+and the conflict-mechanism exposure. It is therefore P0 for the R2 scientific
+contract. No repair is made under this audit authorization.
+
+### Stop decision
+
+`P0_B_CACHE_VALIDITY_CONTRACT_DEVIATION__STOP__D2_NOT_AUTHORIZED`
+
+Required author decision: either confirm that expired delivered target claims
+are intentionally legal C evidence (which would require a theory/protocol
+amendment and re-audit), or authorize a minimal pre-construction cache-age
+exclusion repair followed by the appropriate deterministic and engineering
+requalification. Neither option is taken automatically here.
