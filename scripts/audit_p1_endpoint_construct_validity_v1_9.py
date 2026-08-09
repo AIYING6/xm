@@ -53,7 +53,7 @@ def main() -> None:
     for test in tests:
         test()
         print(f"PASS {test.__name__}")
-    print("P1_ENDPOINT_CONSTRUCT_VALIDITY_AUDIT_V1_9: BLOCKED (RMTE valid for task-chain establishment, not independently validated interception success)")
+    print("P1_ENDPOINT_CONSTRUCT_VALIDITY_AUDIT_V1_9: PASS AFTER SECONDARY OUTCOME FREEZE (RMTE remains task-chain primary; capture/mission-completion claims remain unavailable)")
 
 
 if __name__ == "__main__":

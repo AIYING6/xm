@@ -1,7 +1,7 @@
 {
   "audit": "P0_R2_PRETRAINING_RED_TEAM",
-  "completed_component": "P1_ENDPOINT_CONSTRUCT_VALIDITY",
-  "status": "P1_ENDPOINT_CONSTRUCT_VALIDITY_BLOCKED__D2_NOT_AUTHORIZED",
+  "completed_component": "P1_INDEPENDENT_PHYSICAL_ENGAGEMENT_OUTCOME",
+  "status": "P0_R2_PRETRAINING_RED_TEAM_PASS__READY_FOR_D2_AUTHORIZATION",
   "performance_use": "prohibited",
   "finding": "The expired-C contract deviation was repaired: a target claim with age greater than max_target_message_age_steps is excluded from C node, adjacency, and actor C-branch construction before encoding.",
   "unstarted_components": [],
@@ -11,7 +11,8 @@
   "p0_c_comparator_identifiability": "PASS: all R2 comparators use one identical P/C source contract, single-R2 is source-aware unified rather than factorized, legacy tensors cannot bypass R2, and primary capacity gap is 0.47%.",
   "p1_natural_conflict_prevalence": "PASS: method-independent development rollout has 7,680 failure-active actor steps; all predeclared P/C conflict states exceed 30 records and 0.5% prevalence.",
   "p1_onset_state": "PASS AFTER AUTHOR FREEZE: primary F2 conclusion is end-to-end only; V1_9_COMMON_ONSET_STATE_DIAGNOSTIC_PROTOCOL.md preregisters a separate common-state secondary mechanism diagnostic.",
-  "p1_endpoint_construct_validity": "BLOCKED: RMTE exactly measures stable task-chain establishment, but environment success is the same chain predicate after min_success_step; no independent interception/capture/mission-completion outcome exists.",
+  "p1_endpoint_construct_validity": "PASS AFTER AUTHOR FREEZE: RMTE remains task-chain primary; a true-kinematic, evaluator-defined sustained physical engagement-readiness secondary outcome is frozen. Capture, neutralization, and mission-completion claims remain prohibited because the simulator lacks those transitions.",
+  "p1_independent_physical_engagement": "PASS: five deterministic checks establish true-state-only definition, task-chain counterexample, physical-threshold necessity, evaluator-owned stability, and safe-range/collision separation.",
   "next_authorized_component": null,
-  "stop_reason": "Author must freeze task-chain-only headline language or authorize a new independent mission outcome and its red-team audit before D2."
+  "stop_reason": "Red-team is complete. D2 remains prohibited until separately authorized by the author."
 }

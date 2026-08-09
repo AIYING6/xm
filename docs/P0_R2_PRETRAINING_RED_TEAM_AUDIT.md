@@ -1,6 +1,6 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P1_ENDPOINT_CONSTRUCT_VALIDITY_BLOCKED__D2_NOT_AUTHORIZED`.**
+**Status: `P0_R2_PRETRAINING_RED_TEAM_PASS__READY_FOR_D2_AUTHORIZATION`.**
 
 ## Scope and stop rule
 
@@ -9,9 +9,10 @@ not interpret D1 metrics or add a method experiment. P0-A was repaired and
 requalified. P0-B found and then, under an explicit author decision, repaired
 the cache-validity deviation below. P0-C and natural-conflict prevalence have
 passed. The author has frozen the end-to-end primary scope and a separately
-preregistered common-onset secondary diagnostic. The endpoint audit has now
-identified a claim-construct boundary; D2/F1/F2 remain prohibited pending the
-author's decision.
+preregistered common-onset secondary diagnostic. The author then selected a
+secondary independent physical outcome while retaining RMTE as primary. The
+physical construct has passed read-only definition and independence checks;
+D2/F1/F2 remain prohibited pending a separate D2 authorization.
 
 ## P0-A — event and censoring semantics
 
@@ -213,7 +214,7 @@ the next and only authorized component; D2 remains unauthorized.
 
 ## P1 — endpoint construct validity
 
-### Verdict: `BLOCKED — claim/endpoint boundary requires author freeze`
+### Initial verdict: `BLOCKED`; final verdict: `PASS AFTER AUTHOR FREEZE`
 
 `scripts/audit_p1_endpoint_construct_validity_v1_9.py` passes four static
 facts. The measured event is a legitimate operational **stable task-chain
@@ -233,18 +234,18 @@ independent criterion.
 
 Thus RMTE80/RMTE220 may support only the already specified operational claim:
 **earlier stable legal task-chain establishment in the simulated relay-failure
-cooperation task**. It cannot by itself support a claim of better physical
-interception, target capture, or mission completion. This is a P0 claim
-boundary, not a numerical/statistical defect in RMTE.
+cooperation task**. It cannot by itself support physical capture, target
+neutralization, actual interception completion, or mission completion.
 
-Before D2, the author must choose one path:
+The author selected a separate secondary outcome without changing RMTE primary.
+The resulting `V1_9_INDEPENDENT_PHYSICAL_ENGAGEMENT_OUTCOME_FREEZE.md` defines
+sustained physical engagement readiness from true kinematics alone. Its
+deterministic audit passes five checks, including an explicit counterexample
+where safe physical engagement exists while communication, tracking, cache
+state, and task-chain closure are absent. The outcome remains a physical
+engagement-readiness measure, not a mislabeled capture event.
 
-1. freeze the headline/result language to the operational task-chain endpoint,
-   explicitly excluding independent interception-success claims; or
-2. authorize a separately specified independent mission/interception outcome,
-   including its physical definition, event ordering, relation to RMTE, and a
-   fresh red-team/estimand audit before it can enter any formal protocol.
-
-No result, architecture, reward, physics, budget, or comparator has been
-changed. The P1 red-team cannot be declared complete and D2 remains prohibited
-until this boundary is frozen.
+All P0/P1 pretraining red-team components now pass within their frozen claim
+boundaries. No result, architecture, reward, physics, budget, or comparator has
+changed. The status is `P0_R2_PRETRAINING_RED_TEAM_PASS__READY_FOR_D2_AUTHORIZATION`:
+this permits an author decision about D2 but does not start it.
