@@ -13,6 +13,29 @@ ROLE_ATTACKER = 2
 ROLE_INTERCEPTOR = 3
 ROLE_TARGET = 4
 
+
+def physical_engagement_ready(env: "UAVIntercept3DEnv", agent_id: int) -> bool:
+    """Evaluator-only true-state physical-engagement predicate."""
+    typ = env.config.blue_types[agent_id]
+    if typ.role != ROLE_ATTACKER:
+        return False
+    rel = env.red_pos[0] - env.blue_pos[agent_id]
+    distance = float(np.linalg.norm(rel))
+    if not (typ.attack_range_min <= distance <= typ.attack_range_max):
+        return False
+    los_heading = math.atan2(float(rel[1]), float(rel[0]))
+    if abs(angle_diff(los_heading, float(env.blue_heading[agent_id]))) > typ.attack_cone:
+        return False
+    if abs(float(rel[2])) > 1_600.0:
+        return False
+    blue_vel = velocity_from_state(
+        float(env.blue_speed[agent_id]), float(env.blue_heading[agent_id]), float(env.blue_gamma[agent_id])
+    )
+    red_vel = velocity_from_state(
+        float(env.red_speed[0]), float(env.red_heading[0]), float(env.red_gamma[0])
+    )
+    return float(np.dot(blue_vel - red_vel, unit(rel))) > -30.0
+
 OBS3D_FIELD_NAMES = (
     "blue_x_norm",
     "blue_y_norm",

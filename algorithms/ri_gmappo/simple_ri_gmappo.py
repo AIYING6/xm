@@ -30,6 +30,7 @@ from envs import (
     UAVIntercept3DEnv,
     UAVPursuitConfig,
     UAVPursuitEnv,
+    physical_engagement_ready,
 )
 
 
@@ -1395,6 +1396,18 @@ def restricted_mean_time_to_establishment(records: list[dict], tau: float) -> fl
     return float(np.mean(values))
 
 
+def restricted_mean_time_to_physical_engagement(records: list[dict], tau: float) -> float:
+    """Complete-follow-up RMPE for the frozen evaluator-only endpoint."""
+    if not records:
+        raise ValueError("physical-engagement record set is empty")
+    values = []
+    for record in records:
+        event_time = float(record.get("physical_event_time", -1))
+        event = bool(record.get("physical_event_observed")) and 0.0 <= event_time <= tau
+        values.append(event_time if event else float(tau))
+    return float(np.mean(values))
+
+
 def establishment_cumulative_incidence(records: list[dict], tau: float) -> float:
     """Observed cumulative incidence of establishment by ``tau``.
 
@@ -1408,6 +1421,16 @@ def establishment_cumulative_incidence(records: list[dict], tau: float) -> float
     return float(np.mean([
         bool(record.get("event_observed"))
         and 0.0 <= float(record.get("event_time", -1)) <= tau
+        for record in records
+    ]))
+
+
+def physical_engagement_cumulative_incidence(records: list[dict], tau: float) -> float:
+    if not records:
+        raise ValueError("physical-engagement record set is empty")
+    return float(np.mean([
+        bool(record.get("physical_event_observed"))
+        and 0.0 <= float(record.get("physical_event_time", -1)) <= tau
         for record in records
     ]))
 
@@ -1466,6 +1489,10 @@ def summarize_validation_event_records(records: list[dict]) -> dict:
         "eval_establishment_probability220": establishment_cumulative_incidence(records, 220.0),
         "eval_terminal_failure_incidence220": terminal_failure_cumulative_incidence(records, 220.0),
         "eval_active_not_established_probability220": active_not_established_probability(records, 220.0),
+        "eval_rmpe80": restricted_mean_time_to_physical_engagement(records, 80.0),
+        "eval_physical_engagement_probability80": physical_engagement_cumulative_incidence(records, 80.0),
+        "eval_rmpe220": restricted_mean_time_to_physical_engagement(records, 220.0),
+        "eval_physical_engagement_probability220": physical_engagement_cumulative_incidence(records, 220.0),
     }
 
 
@@ -1489,6 +1516,7 @@ def write_immutable_validation_records(
         "episode_seed", "failure_onset_step", "event_observed",
         "first_stable_establishment_step", "event_time", "termination_reason",
         "terminal_failure_observed", "terminal_failure_time", "terminal_step",
+        "physical_event_observed", "first_stable_physical_engagement_step", "physical_event_time",
     ]
     with records_path.open("x", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
@@ -1585,6 +1613,8 @@ def eval_policy(
             env = make_env(cfg, base_seed + ep, training=False)
             obs, share_obs, graph = env.reset()
             post_failure_chain_step: int | None = None
+            post_failure_physical_step: int | None = None
+            physical_hold = 0
             terminal_info: dict | None = None
             while True:
                 g = stack_graphs([graph])
@@ -1608,6 +1638,13 @@ def eval_policy(
                     intent_total += int(np.prod(g["intent_label"].shape))
 
                 obs, share_obs, graph, _, dones, info = env.step(actions.squeeze(0).cpu().numpy())
+                if int(info.get("step", 0)) >= cfg.node_failure_start_step:
+                    physical_ready = any(
+                        physical_engagement_ready(env, agent_id) for agent_id in range(env.num_agents)
+                    )
+                    physical_hold = physical_hold + 1 if physical_ready else 0
+                    if physical_hold >= 4 and post_failure_physical_step is None:
+                        post_failure_physical_step = int(info["step"]) - 3
                 if (
                     int(info.get("step", 0)) >= cfg.node_failure_start_step
                     and float(info.get("chain_closed", 0.0)) > 0.5
@@ -1624,6 +1661,8 @@ def eval_policy(
                 onset = int(cfg.node_failure_start_step)
                 event_observed = post_failure_chain_step is not None
                 event_time = (post_failure_chain_step - onset) if event_observed else -1
+                physical_event_observed = post_failure_physical_step is not None
+                physical_event_time = (post_failure_physical_step - onset) if physical_event_observed else -1
                 reason = termination_reason(terminal_info)
                 terminal_failure = (not event_observed) and reason in {
                     "collision", "constraint_violation", "target_escape", "mission_failure",
@@ -1638,6 +1677,9 @@ def eval_policy(
                     "terminal_failure_observed": int(terminal_failure),
                     "terminal_failure_time": int(max(0, terminal_step - onset)) if terminal_failure else -1,
                     "terminal_step": terminal_step,
+                    "physical_event_observed": int(physical_event_observed),
+                    "first_stable_physical_engagement_step": int(post_failure_physical_step) if physical_event_observed else -1,
+                    "physical_event_time": int(physical_event_time),
                 })
     agent.train()
     metrics = {
@@ -1732,6 +1774,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "eval_establishment_probability220",
         "eval_terminal_failure_incidence220",
         "eval_active_not_established_probability220",
+        "eval_rmpe80",
+        "eval_physical_engagement_probability80",
+        "eval_rmpe220",
+        "eval_physical_engagement_probability220",
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
@@ -1811,6 +1857,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                         "eval_establishment_probability220": "",
                         "eval_terminal_failure_incidence220": "",
                         "eval_active_not_established_probability220": "",
+                        "eval_rmpe80": "",
+                        "eval_physical_engagement_probability80": "",
+                        "eval_rmpe220": "",
+                        "eval_physical_engagement_probability220": "",
                     }
                 )
             writer.writerow(row)

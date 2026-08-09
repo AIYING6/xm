@@ -9,4 +9,5 @@ from .uav_intercept_3d_env import (
     RELATION_TASK_SUPPORT,
     UAVIntercept3DConfig,
     UAVIntercept3DEnv,
+    physical_engagement_ready,
 )

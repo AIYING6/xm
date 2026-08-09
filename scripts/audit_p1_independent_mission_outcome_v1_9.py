@@ -12,29 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from envs.uav_intercept_3d_env import (  # noqa: E402
-    ROLE_ATTACKER, UAVIntercept3DConfig, UAVIntercept3DEnv, angle_diff, unit, velocity_from_state,
+    UAVIntercept3DConfig, UAVIntercept3DEnv, physical_engagement_ready,
 )
+from algorithms.ri_gmappo.simple_ri_gmappo import summarize_validation_event_records  # noqa: E402
 
 STABILITY_STEPS = 4
-
-
-def physical_engagement_ready(env: UAVIntercept3DEnv, agent_id: int) -> bool:
-    """Evaluator-only true-state safe firing-solution predicate."""
-    typ = env.config.blue_types[agent_id]
-    if typ.role != ROLE_ATTACKER:
-        return False
-    rel = env.red_pos[0] - env.blue_pos[agent_id]
-    distance = float(np.linalg.norm(rel))
-    if not (typ.attack_range_min <= distance <= typ.attack_range_max):
-        return False
-    los_heading = math.atan2(float(rel[1]), float(rel[0]))
-    if abs(angle_diff(los_heading, float(env.blue_heading[agent_id]))) > typ.attack_cone:
-        return False
-    if abs(float(rel[2])) > 1_600.0:
-        return False
-    blue_vel = velocity_from_state(float(env.blue_speed[agent_id]), float(env.blue_heading[agent_id]), float(env.blue_gamma[agent_id]))
-    red_vel = velocity_from_state(float(env.red_speed[0]), float(env.red_heading[0]), float(env.red_gamma[0]))
-    return float(np.dot(blue_vel - red_vel, unit(rel))) > -30.0
 
 
 def first_stable_physical_engagement(ready: list[bool], k: int = STABILITY_STEPS) -> int | None:
@@ -107,10 +89,27 @@ def test_safe_physical_envelope_excludes_collision_radius() -> None:
     assert env.config.blue_types[2].attack_range_min > env.config.collision_radius
 
 
+def test_rmpe_is_logged_from_the_frozen_physical_event() -> None:
+    records = [
+        {
+            "event_observed": 0, "event_time": -1, "terminal_failure_observed": 0,
+            "terminal_failure_time": -1, "physical_event_observed": 1, "physical_event_time": 50,
+        },
+        {
+            "event_observed": 0, "event_time": -1, "terminal_failure_observed": 1,
+            "terminal_failure_time": 20, "physical_event_observed": 0, "physical_event_time": -1,
+        },
+    ]
+    summary = summarize_validation_event_records(records)
+    assert summary["eval_rmpe80"] == 65.0
+    assert summary["eval_physical_engagement_probability80"] == 0.5
+    assert summary["eval_rmpe220"] == 135.0
+
+
 def main() -> None:
     tests = [test_outcome_uses_only_true_physical_state, test_true_safe_engagement_can_exist_without_task_chain,
              test_each_frozen_physical_constraint_is_necessary, test_stability_is_an_evaluator_counter_not_chain_closed,
-             test_safe_physical_envelope_excludes_collision_radius]
+             test_safe_physical_envelope_excludes_collision_radius, test_rmpe_is_logged_from_the_frozen_physical_event]
     for test in tests:
         test()
         print(f"PASS {test.__name__}")
