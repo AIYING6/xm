@@ -45,13 +45,35 @@ def agreement_relation() -> tuple[torch.Tensor, torch.Tensor]:
 def test_agreement_has_neutral_gate() -> None:
     encoder = make_encoder()
     relation, edge = agreement_relation()
+    with torch.no_grad():
+        encoder.baseline_gate_logits.copy_(torch.tensor([0.7, -0.2, -0.5]))
     gate, diagnostics = encoder.fusion_gate(relation, edge)
-    assert torch.allclose(gate, torch.full_like(gate, 1.0 / 3.0), atol=1e-6)
+    assert torch.allclose(gate, encoder.baseline_gate().unsqueeze(0), atol=1e-6)
+    assert not torch.allclose(gate, torch.full_like(gate, 1.0 / 3.0), atol=1e-6)
     assert torch.allclose(diagnostics["pairwise_disagreement"], torch.zeros_like(diagnostics["pairwise_disagreement"]))
+    assert torch.allclose(diagnostics["gate_delta"], torch.zeros_like(diagnostics["gate_delta"]), atol=1e-6)
+
+
+def configure_conflict_response(encoder: ProvenanceConditionedRelationFactorEncoder) -> None:
+    """Give the static test a deterministic, legal conflict response."""
+    first = encoder.gate_correction[0]
+    last = encoder.gate_correction[-1]
+    with torch.no_grad():
+        first.weight.zero_()
+        first.bias.zero_()
+        # conflict_features = centered support (0..2), disagreement (3..5),
+        # age (6), and uncertainty (7).
+        first.weight[0, 1] = 1.0
+        first.weight[1, 6] = 1.0
+        last.weight.zero_()
+        last.bias.zero_()
+        last.weight[RELATION_COMMUNICATION, 0] = 2.0
+        last.weight[RELATION_COMMUNICATION, 1] = -3.0
 
 
 def test_conflict_changes_gate_using_legal_fields_only() -> None:
     encoder = make_encoder()
+    configure_conflict_response(encoder)
     relation, edge = agreement_relation()
     agreement_gate, _ = encoder.fusion_gate(relation, edge)
     conflict = torch.zeros_like(relation)
@@ -64,6 +86,7 @@ def test_conflict_changes_gate_using_legal_fields_only() -> None:
     assert fresh_gate[0, RELATION_COMMUNICATION] == fresh_gate.max()
     assert stale_gate[0, RELATION_COMMUNICATION] < fresh_gate[0, RELATION_COMMUNICATION]
     assert diagnostics["pairwise_disagreement"].amax() > 0.0
+    assert diagnostics["gate_delta"].abs().amax() > 0.0
 
 
 def test_conflict_gate_receives_gradient() -> None:

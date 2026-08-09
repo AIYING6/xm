@@ -1,13 +1,15 @@
 # v1.9 D2 Budget Calibration Protocol
 
-**Status: initial attempt stopped before training; D2-R1 repair prepared, not
-launched.** The initial D2 launcher stopped at its first training command
+**Status: blocked pending PCRF-R1 D1 engineering validation.** The initial D2
+launcher stopped at its first training command
 because the AutoDL image lacked `/usr/bin/time`; no seed or update was trained.
 Its incomplete output is retained as an engineering audit trail. D2-R1 replaces
-only that unavailable external utility with a repository-contained portable
-timing recorder and uses a separate output root and protocol identifier. It is
-not a formal architecture comparison, checkpoint-selection study, held-out
-evaluation, ablation, OOD experiment, or paper evidence.
+that unavailable external utility with a repository-contained portable timing
+recorder and uses a separate output root and protocol identifier. The
+subsequent PCRF-R1 theory freeze changed fusion semantics, so this launcher
+must not be started until PCRF-R1 has passed a fresh D1-R1 CUDA/artifact gate.
+It is not a formal architecture comparison, checkpoint-selection study,
+held-out evaluation, ablation, OOD experiment, or paper evidence.
 
 ## Purpose
 
@@ -34,9 +36,10 @@ validation, or confirmatory seeds.
   minimum success step 80;
 - validation at updates 1, 20, 40, 60, 80, 100, with eight fixed episodes per
   seed; immutable snapshots and episode event/censor records are mandatory;
-- the D1 architecture, actor information contract, packet schema, reward,
-  optimizer, learning rate, rollout size, environment count, and hidden width
-  are unchanged.
+- PCRF-R1 baseline-plus-conflict fusion is fixed by
+  `V1_9_PCRF_R1_THEORY_FREEZE.md`; actor information contract, packet schema,
+  reward, optimizer, learning rate, rollout size, environment count, and hidden
+  width are unchanged.
 
 ## Required records
 
@@ -71,4 +74,5 @@ Stop and report without architecture changes if CUDA is unavailable, a run
 crashes, NaN/non-finite values appear, any snapshot/event record/hash fails,
 or telemetry/runtime provenance is missing. Do not extend past 100 updates,
 add comparators, inspect a held-out population, or alter the method after
-observing D2 trajectories.
+observing D2 trajectories. PCRF-R1 D1 failure stops D2 rather than permitting
+an unreviewed architecture repair.

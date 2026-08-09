@@ -399,10 +399,19 @@ class ProvenanceConditionedRelationFactorEncoder(nn.Module):
             nn.Tanh(),
             nn.Linear(hidden_dim, num_relations),
         )
-        # A zero correction has a meaningful, auditable base: equal legal
-        # relation evidence yields uniform fusion; disagreement changes it.
+        # The baseline is a learnable, receiver-invariant prior over legal
+        # information sources.  It is deliberately separated from the
+        # conflict-conditioned correction: no-conflict inputs must recover
+        # this baseline rather than an arbitrary equal-weight convention.
+        self.baseline_gate_logits = nn.Parameter(torch.zeros(num_relations))
+        # The output layer starts at zero, but the subtraction in
+        # ``fusion_gate`` additionally enforces Delta(0)=0 after learning.
         nn.init.zeros_(self.gate_correction[-1].weight)
         nn.init.zeros_(self.gate_correction[-1].bias)
+
+    def baseline_gate(self) -> torch.Tensor:
+        """Return the explicit, auditable no-conflict fusion baseline."""
+        return torch.softmax(self.baseline_gate_logits, dim=-1)
 
     def conflict_descriptor(
         self,
@@ -447,18 +456,31 @@ class ProvenanceConditionedRelationFactorEncoder(nn.Module):
         edge_feat: torch.Tensor | None,
     ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         descriptor, support = self.conflict_descriptor(relation_adj, edge_feat)
-        # Communication reliability is represented only by delivered legal
-        # fields.  Perception and task-support do not borrow packet confidence.
-        comm_confidence = descriptor[:, -1]
-        comm_age = descriptor[:, -2]
-        reliability = torch.ones_like(support)
-        reliability[:, RELATION_COMMUNICATION] = comm_confidence * (1.0 - comm_age)
-        base_logits = support * reliability
-        gate = torch.softmax(base_logits + self.gate_correction(descriptor), dim=-1)
+        # A conflict is a *relative* availability/relation disagreement plus
+        # delivered-communication freshness/uncertainty.  Centering support
+        # makes equal availability a zero-conflict condition regardless of
+        # its absolute density.  Packet metadata remain legal because they
+        # are read only on delivered communication edges above.
+        centered_support = support - support.mean(dim=-1, keepdim=True)
+        packet_age = descriptor[:, -2: -1]
+        packet_uncertainty = 1.0 - descriptor[:, -1:]
+        conflict_features = torch.cat(
+            [centered_support, descriptor[:, self.num_relations:-2], packet_age, packet_uncertainty], dim=-1
+        )
+        zero_conflict = torch.zeros_like(conflict_features)
+        # Subtracting the zero-conflict response guarantees that the gate is
+        # exactly the baseline when all legal conflict fields are neutral,
+        # even after the correction network has been trained.
+        gate_delta = self.gate_correction(conflict_features) - self.gate_correction(zero_conflict)
+        baseline_logits = self.baseline_gate_logits.unsqueeze(0).expand_as(gate_delta)
+        gate = torch.softmax(baseline_logits + gate_delta, dim=-1)
         return gate, {
             "descriptor": descriptor,
             "relation_support": support,
             "pairwise_disagreement": descriptor[:, self.num_relations:-2],
+            "conflict_features": conflict_features,
+            "baseline_gate": self.baseline_gate().unsqueeze(0).expand_as(gate),
+            "gate_delta": gate_delta,
             "gate": gate,
         }
 
