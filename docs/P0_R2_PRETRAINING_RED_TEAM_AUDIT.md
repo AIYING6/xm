@@ -1,6 +1,6 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P1_ONSET_STATE_PROTOCOL_BLOCKED__D2_NOT_AUTHORIZED`.**
+**Status: `P1_ENDPOINT_CONSTRUCT_VALIDITY_BLOCKED__D2_NOT_AUTHORIZED`.**
 
 ## Scope and stop rule
 
@@ -8,8 +8,10 @@ This red-team audit was authorized after D1-R2 as a falsification gate. It does
 not interpret D1 metrics or add a method experiment. P0-A was repaired and
 requalified. P0-B found and then, under an explicit author decision, repaired
 the cache-validity deviation below. P0-C and natural-conflict prevalence have
-passed. P1 onset-state has found a protocol decision boundary; D2/F1/F2 remain
-prohibited pending the author's decision.
+passed. The author has frozen the end-to-end primary scope and a separately
+preregistered common-onset secondary diagnostic. The endpoint audit has now
+identified a claim-construct boundary; D2/F1/F2 remain prohibited pending the
+author's decision.
 
 ## P0-A — event and censoring semantics
 
@@ -183,7 +185,7 @@ better in them.
 
 ## P1 — onset-state audit
 
-### Verdict: `BLOCKED — author protocol decision required`
+### Scope audit: `PASS AFTER AUTHOR FREEZE`
 
 `scripts/audit_p1_onset_state_v1_9.py` passes its static facts: the frozen
 failure window is steps 40--119; the current evaluator creates a new
@@ -198,17 +200,51 @@ cannot, by itself, identify a stronger causal claim that a later difference is
 caused specifically by *post-onset* PCRF conflict processing rather than by
 policy-dependent spatial/task state formed before step 40.
 
-No trained R2 formal policy exists, so the requested method-specific
-pre-onset-state divergence cannot be measured without starting an evidence
-phase. The audit therefore cannot choose a scientific interpretation on the
-author's behalf. Before D2, the author must choose one of the following:
+The author has now frozen both required boundaries. The primary F2 conclusion
+is explicitly **end-to-end**; it may not be presented as pure post-onset
+conflict-handling superiority. The separately preregistered
+`V1_9_COMMON_ONSET_STATE_DIAGNOSTIC_PROTOCOL.md` defines a secondary,
+method-independent state bank and common-state restoration diagnostic. It does
+not replace F2 or authorize implementation/training.
 
-1. freeze the primary claim as **end-to-end** only and prohibit a pure
-   post-onset causal/mechanism claim from the primary endpoint; or
-2. authorize a separately pre-registered common-onset-state diagnostic (with
-   shared stored states and equal legal information), which is secondary and
-   does not replace the primary evaluation.
+No architecture, reward, data source, training budget, primary protocol, or
+performance result was changed or inspected. P1 endpoint construct validity is
+the next and only authorized component; D2 remains unauthorized.
 
-Until that choice is frozen, P1 endpoint construct validity is not started and
-D2 is not authorized. No architecture, reward, data source, training budget,
-or performance result was changed or inspected.
+## P1 — endpoint construct validity
+
+### Verdict: `BLOCKED — claim/endpoint boundary requires author freeze`
+
+`scripts/audit_p1_endpoint_construct_validity_v1_9.py` passes four static
+facts. The measured event is a legitimate operational **stable task-chain
+establishment**: for `K=4` consecutive steps there must be an attack-window
+vehicle, nonzero tracking, and a communication route to an attacker. The event
+is recorded after the scheduled failure onset, and collision/constraint
+terminal outcomes are separately retained in the repaired RMTE outcome
+decomposition.
+
+However, the environment's terminal `success` is defined as that same
+`chain_closed` predicate plus `step >= min_success_step`. There is no separate
+capture, intercept, mission-completion, or terminal target-neutralization
+outcome. Consequently, a correlation between RMTE establishment and
+"interception success" cannot be empirically validated: in the present
+environment success is a delayed restatement of the same construct, not an
+independent criterion.
+
+Thus RMTE80/RMTE220 may support only the already specified operational claim:
+**earlier stable legal task-chain establishment in the simulated relay-failure
+cooperation task**. It cannot by itself support a claim of better physical
+interception, target capture, or mission completion. This is a P0 claim
+boundary, not a numerical/statistical defect in RMTE.
+
+Before D2, the author must choose one path:
+
+1. freeze the headline/result language to the operational task-chain endpoint,
+   explicitly excluding independent interception-success claims; or
+2. authorize a separately specified independent mission/interception outcome,
+   including its physical definition, event ordering, relation to RMTE, and a
+   fresh red-team/estimand audit before it can enter any formal protocol.
+
+No result, architecture, reward, physics, budget, or comparator has been
+changed. The P1 red-team cannot be declared complete and D2 remains prohibited
+until this boundary is frozen.
