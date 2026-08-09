@@ -1,6 +1,6 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P0_R2_STATISTICAL_BLOCK__D2_NOT_AUTHORIZED`.**
+**Status: `P0_A_TERMINAL_OUTCOME_ESTIMAND_FROZEN__P0_A_REPAIR_AUTHORIZED__D2_NOT_AUTHORIZED`.**
 
 ## Scope and stop rule
 
@@ -41,11 +41,11 @@ RMST80=50; retaining the terminal-failure episode as no establishment through
 the horizon returns RMST80=65. This is not a numerical corner case: it shows
 that later-event risk sets, hence method comparisons, can change.
 
-## Required author decision before any repair
+## Author decision and required repair
 
-The project must first freeze one scientific estimand, including whether
-terminal failures are handled as a competing outcome or as `T=infinity` for a
-bounded time-to-establishment endpoint. At minimum it must define:
+The author has frozen the complete-follow-up bounded endpoint with terminal
+failure represented as `T_E=infinity`. The authoritative repair contract is
+`docs/V1_9_P0A_TERMINAL_OUTCOME_ESTIMAND_FREEZE.md`. At minimum it defines:
 
 1. administrative horizon censoring versus collision/constraint/other terminal
    outcomes;
@@ -55,13 +55,14 @@ bounded time-to-establishment endpoint. At minimum it must define:
 4. episode-record fields and selector semantics; and
 5. whether a new explicit target-escape/mission-failure taxonomy is needed.
 
-Only after an author-approved implementation/protocol repair may the project
-repeat D0 and D1. Existing D1-R2 is retained as an engineering audit trail; it
-is not formal selection or scientific evidence.
+The authorized repair is limited to protocol/statistical code, deterministic
+regressions, D0, and fresh D1 engineering requalification. Existing D1-R2 is
+retained as an engineering audit trail; it is not formal selection or scientific
+evidence.
 
 ## Red-team verdict
 
-`P0_R2_PRETRAINING_RED_TEAM_BLOCKED_AT_P0_A__D2_NOT_AUTHORIZED`
+`P0_A_TERMINAL_OUTCOME_ESTIMAND_FROZEN__P0_A_REPAIR_AUTHORIZED__D2_NOT_AUTHORIZED`
 
 This verdict does not evaluate PCRF-R2 architecture, novelty, or performance.
 It identifies a statistical construct defect that must be resolved before those

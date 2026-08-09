@@ -1376,6 +1376,72 @@ def km_rmst_from_event_records(records: list[dict], tau: float) -> float:
     return float(area)
 
 
+def restricted_mean_time_to_establishment(records: list[dict], tau: float) -> float:
+    """Complete-follow-up RMTE for the frozen v1.9 terminal-outcome estimand.
+
+    There is no random loss to follow-up in a simulated episode.  An
+    establishment observed by ``tau`` contributes its event time; terminal
+    failure before establishment and an episode still active at the restriction
+    horizon both contribute ``tau``.  This deliberately does *not* censor an
+    irreversible collision/constraint outcome from later event risk sets.
+    """
+    if not records:
+        raise ValueError("event record set is empty")
+    values = []
+    for record in records:
+        event_time = float(record.get("event_time", -1))
+        event = bool(record.get("event_observed")) and 0.0 <= event_time <= tau
+        values.append(event_time if event else float(tau))
+    return float(np.mean(values))
+
+
+def establishment_cumulative_incidence(records: list[dict], tau: float) -> float:
+    """Observed cumulative incidence of establishment by ``tau``.
+
+    All simulated episodes are followed until establishment, a terminal outcome,
+    or their fixed horizon. Thus the empirical fraction is the appropriate CIF
+    for the current complete-follow-up environment; no ordinary KM censoring is
+    used.
+    """
+    if not records:
+        raise ValueError("event record set is empty")
+    return float(np.mean([
+        bool(record.get("event_observed"))
+        and 0.0 <= float(record.get("event_time", -1)) <= tau
+        for record in records
+    ]))
+
+
+def terminal_failure_cumulative_incidence(records: list[dict], tau: float) -> float:
+    if not records:
+        raise ValueError("event record set is empty")
+    return float(np.mean([
+        bool(record.get("terminal_failure_observed"))
+        and 0.0 <= float(record.get("terminal_failure_time", -1)) <= tau
+        for record in records
+    ]))
+
+
+def active_not_established_probability(records: list[dict], tau: float) -> float:
+    establishment = establishment_cumulative_incidence(records, tau)
+    terminal = terminal_failure_cumulative_incidence(records, tau)
+    active = 1.0 - establishment - terminal
+    if active < -1e-8:
+        raise ValueError("establishment and terminal outcomes overlap before tau")
+    return float(max(0.0, active))
+
+
+def rmte_selector_key(metrics: dict, update: int) -> tuple[float, float, float, float, int]:
+    """Frozen v1.9 P0-A selector; lower lexicographic tuple is preferred."""
+    return (
+        float(metrics["eval_rmte80"]),
+        -float(metrics["eval_establishment_probability80"]),
+        float(metrics["eval_terminal_failure_incidence80"]),
+        float(metrics["eval_rmte220"]),
+        int(update),
+    )
+
+
 def termination_reason(info: dict) -> str:
     if float(info.get("success", 0.0)) > 0.5:
         return "success"
@@ -1391,12 +1457,15 @@ def termination_reason(info: dict) -> str:
 def summarize_validation_event_records(records: list[dict]) -> dict:
     if not records:
         raise ValueError("validation event record set is empty")
-    establishment = float(np.mean([float(r["event_observed"]) for r in records]))
     return {
-        "eval_rmst80": km_rmst_from_event_records(records, 80.0),
-        "eval_establishment_probability": establishment,
-        "eval_censoring_rate": float(1.0 - establishment),
-        "eval_rmst220": km_rmst_from_event_records(records, 220.0),
+        "eval_rmte80": restricted_mean_time_to_establishment(records, 80.0),
+        "eval_establishment_probability80": establishment_cumulative_incidence(records, 80.0),
+        "eval_terminal_failure_incidence80": terminal_failure_cumulative_incidence(records, 80.0),
+        "eval_active_not_established_probability80": active_not_established_probability(records, 80.0),
+        "eval_rmte220": restricted_mean_time_to_establishment(records, 220.0),
+        "eval_establishment_probability220": establishment_cumulative_incidence(records, 220.0),
+        "eval_terminal_failure_incidence220": terminal_failure_cumulative_incidence(records, 220.0),
+        "eval_active_not_established_probability220": active_not_established_probability(records, 220.0),
     }
 
 
@@ -1418,8 +1487,8 @@ def write_immutable_validation_records(
         raise FileExistsError(f"refusing to overwrite immutable validation point: {point_dir}")
     fields = [
         "episode_seed", "failure_onset_step", "event_observed",
-        "first_stable_establishment_step", "event_time", "censor_time",
-        "termination_reason", "terminal_step",
+        "first_stable_establishment_step", "event_time", "termination_reason",
+        "terminal_failure_observed", "terminal_failure_time", "terminal_step",
     ]
     with records_path.open("x", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
@@ -1555,14 +1624,19 @@ def eval_policy(
                 onset = int(cfg.node_failure_start_step)
                 event_observed = post_failure_chain_step is not None
                 event_time = (post_failure_chain_step - onset) if event_observed else -1
+                reason = termination_reason(terminal_info)
+                terminal_failure = (not event_observed) and reason in {
+                    "collision", "constraint_violation", "target_escape", "mission_failure",
+                }
                 event_records.append({
                     "episode_seed": int(base_seed + ep),
                     "failure_onset_step": onset,
                     "event_observed": int(event_observed),
                     "first_stable_establishment_step": int(post_failure_chain_step) if event_observed else -1,
                     "event_time": int(event_time),
-                    "censor_time": int(max(0, terminal_step - onset)),
-                    "termination_reason": termination_reason(terminal_info),
+                    "termination_reason": reason,
+                    "terminal_failure_observed": int(terminal_failure),
+                    "terminal_failure_time": int(max(0, terminal_step - onset)) if terminal_failure else -1,
                     "terminal_step": terminal_step,
                 })
     agent.train()
@@ -1650,10 +1724,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "eval_avg_steps",
         "eval_avg_distance",
         "eval_intent_acc",
-        "eval_rmst80",
-        "eval_establishment_probability",
-        "eval_censoring_rate",
-        "eval_rmst220",
+        "eval_rmte80",
+        "eval_establishment_probability80",
+        "eval_terminal_failure_incidence80",
+        "eval_active_not_established_probability80",
+        "eval_rmte220",
+        "eval_establishment_probability220",
+        "eval_terminal_failure_incidence220",
+        "eval_active_not_established_probability220",
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
@@ -1697,15 +1775,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))
                 print(row, flush=True)
                 if cfg.validation_event_logging:
-                    # Frozen v1.8 selector: lower RMST80; then higher
-                    # establishment/lower censoring; then lower RMST220; then earlier update.
-                    selector_key = (
-                        float(row["eval_rmst80"]),
-                        -float(row["eval_establishment_probability"]),
-                        float(row["eval_censoring_rate"]),
-                        float(row["eval_rmst220"]),
-                        update,
-                    )
+                    # P0-A frozen selector: lower RMTE80; then higher
+                    # establishment incidence; lower terminal-failure incidence;
+                    # lower RMTE220; then earlier update.
+                    selector_key = rmte_selector_key(row, update)
                     incumbent_key = None if best_eval_key is None else (*best_eval_key, -1)
                     is_better = incumbent_key is None or selector_key < incumbent_key
                     new_best_eval_key = selector_key[:4]
@@ -1730,10 +1803,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                         "eval_avg_steps": "",
                         "eval_avg_distance": "",
                         "eval_intent_acc": "",
-                        "eval_rmst80": "",
-                        "eval_establishment_probability": "",
-                        "eval_censoring_rate": "",
-                        "eval_rmst220": "",
+                        "eval_rmte80": "",
+                        "eval_establishment_probability80": "",
+                        "eval_terminal_failure_incidence80": "",
+                        "eval_active_not_established_probability80": "",
+                        "eval_rmte220": "",
+                        "eval_establishment_probability220": "",
+                        "eval_terminal_failure_incidence220": "",
+                        "eval_active_not_established_probability220": "",
                     }
                 )
             writer.writerow(row)
