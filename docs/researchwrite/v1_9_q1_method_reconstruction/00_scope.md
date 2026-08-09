@@ -1,9 +1,10 @@
 # v1.9 Q1 Method Reconstruction — Scope
 
 **Mode:** compose.  
-**Status:** design-stage only; no v1.9 architecture implementation, training,
-validation, confirmatory evaluation, OOD evaluation, or manuscript claim is
-authorized by this document.
+**Status:** PCRF implementation, static audit, and D1 engineering feasibility
+gate are complete. D2 budget calibration is prepared but not launched; no
+formal training, confirmatory evaluation, OOD evaluation, or manuscript claim
+is authorized by this document.
 
 ## Objective
 
@@ -15,9 +16,9 @@ post-hoc attempt to make every metric favorable.
 ## Deliverable boundary
 
 This foundation package establishes the scientific question, evidence boundary,
-minimum candidate mechanism, falsification criteria, comparison hierarchy, and
-staged compute plan. It is not a paper draft and does not authorize any
-modification to the frozen v1.8 formal repair execution.
+candidate mechanism, falsification criteria, comparison hierarchy, and staged
+compute plan. It is not a paper draft and does not authorize any modification
+to the frozen v1.8 formal repair execution.
 
 ## Readers and language
 
@@ -42,7 +43,7 @@ modification to the frozen v1.8 formal repair execution.
 
 ## Deferred work
 
-- final architecture code;
+- architecture revisions beyond the audited PCRF candidate;
 - formal sample-size/power calculation from completed v1.8 variance;
 - exact v1.9 training budget and GPU cost;
 - full literature review and venue selection;

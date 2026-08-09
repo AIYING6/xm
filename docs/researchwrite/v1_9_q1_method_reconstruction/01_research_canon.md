@@ -38,6 +38,9 @@ writing must not silently upgrade a hypothesis to a result.
 6. The current v1.8 formal repair run is not complete and cannot support a
    method-performance claim until its immutable selection artifacts have passed
    the specified gate.
+7. PCRF D0 static tests passed 5/5 and the D1 four-run CUDA engineering pilot
+   reported `D1_ARTIFACT_GATE_PASS`. These are implementation and artifact
+   checks only; they are not performance evidence.
 
 ## Definitions
 

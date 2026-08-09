@@ -1,8 +1,9 @@
 # V1.9 Q1 Method Reconstruction Plan
 
-**Status: DESIGN DRAFT — no architecture implementation or v1.9 training is
-authorized.** This document opens a new line without changing the in-progress
-v1.8 repair execution.
+**Status: D0 static audit and D1 engineering gate passed; D2 budget calibration
+is prepared but not launched.** No v1.9 formal training, held-out evaluation,
+OOD evaluation, or manuscript performance claim is authorized. This document
+opens a new line without changing the in-progress v1.8 repair execution.
 
 ## 1. Decision
 
@@ -64,12 +65,13 @@ The closest single-graph actor is hidden width 168 with 195,837 parameters
 the same input-contract and runtime audit before it can be frozen for formal
 work.
 
-### Stage D2 — budget calibration (GPU; non-formal)
+### Stage D2 — budget calibration (GPU; non-formal; prepared, not launched)
 
-After one candidate method is fixed, use a small pilot to measure learning
-plateau, training-time variance, per-update runtime, validation runtime, disk
-usage, and GPU-memory demand. This produces a budget proposal, not a method
-comparison.
+After one candidate method is fixed, use a small PCRF-only pilot to measure
+learning plateau, training-time variance, per-update runtime, validation
+runtime, disk usage, and GPU-memory demand. This produces a budget proposal,
+not a method comparison. The prepared D2 protocol fixes three engineering seeds
+and a 100-update budget, but does not authorize the GPU launch.
 
 ### Stage F1 — frozen nominal core (formal)
 

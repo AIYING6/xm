@@ -4,12 +4,12 @@
   "text_type": "research_design_foundation",
   "language": "zh",
   "target_reader": "author team",
-  "current_round": 0,
+  "current_round": 1,
   "scores": [],
   "technical_debts": [
-    "PCRF is a hypothesis, not implemented evidence.",
+    "PCRF static audit and D1 engineering artifacts passed; PCRF remains a hypothesis, not performance evidence.",
     "Final seed count and training budget require a measured GPU pilot.",
     "v1.8 repair completion must be independently gated before it informs v1.9 decisions."
   ],
-  "status": "foundation"
+  "status": "d1_passed_d2_prepared"
 }

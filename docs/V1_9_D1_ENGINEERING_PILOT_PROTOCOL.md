@@ -1,8 +1,15 @@
 # v1.9 D1 Engineering Feasibility Pilot Protocol
 
-**Status: prepared, not launched.** D1 is an engineering gate, not formal
-evidence. Its output may not be used in a paper, to choose a final architecture,
-or to inspect a confirmatory population.
+**Status: completed — `D1_ARTIFACT_GATE_PASS` observed on 2026-08-09.** D1 is
+an engineering gate, not formal evidence. Its output may not be used in a
+paper, to choose a final architecture, or to inspect a confirmatory population.
+
+The completed cloud execution used the immutable source archive corresponding
+to commit `5a5d63e4a55eae2e3947b0b8a9dc37152a95f945`, with archive SHA256
+`64EEB12D1C6CA8E348D5D6DFA6DCFDB9113D106587208146BFDD7253F760EFAE`.
+The archive deployment has no `.git` directory; its runtime manifest therefore
+records `git_commit=UNAVAILABLE`, while the archive provenance is retained in
+`SOURCE_ARCHIVE_PROVENANCE_V1_9.txt` alongside the D1 artifacts.
 
 ## Purpose
 
