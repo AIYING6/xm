@@ -1,6 +1,6 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P0_R2_PRETRAINING_RED_TEAM_PASS__D2_R2_AUTHORIZED__F1_NOT_AUTHORIZED`.**
+**Status: `D2_R2_PROTOCOL_FROZEN__F1_FORMAL_TRAINING_AUTHORIZED__F2_NOT_AUTHORIZED`.**
 
 ## Scope and stop rule
 
@@ -12,7 +12,8 @@ passed. The author has frozen the end-to-end primary scope and a separately
 preregistered common-onset secondary diagnostic. The author then selected a
 secondary independent physical outcome while retaining RMTE as primary. The
 physical construct has passed read-only definition and independence checks.
-D2-R2 method-blind calibration is authorized; F1/F2 remain prohibited.
+D2-R2 completed with its artifact/stability gate passed. F1-R2 formal training
+is authorized; F2 remains prohibited until the F1 checkpoint manifest is frozen.
 
 ## P0-A — event and censoring semantics
 
