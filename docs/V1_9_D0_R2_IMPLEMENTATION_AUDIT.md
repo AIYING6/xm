@@ -1,6 +1,6 @@
 # v1.9 D0-R2 Implementation and Identifiability Audit
 
-**Status: `D0_R2_PASS__D1_R2_NOT_AUTHORIZED`.**
+**Status: `D0_R2_PASS__D1_R2_ENGINEERING_AUTHORIZED__PERFORMANCE_USE_PROHIBITED`.**
 
 **Scope:** source-separated PCRF-R2 implementation and deterministic integrity
 tests only.  No GPU, training, checkpoint selection, held-out evaluation, OOD,
@@ -59,6 +59,6 @@ integrity and identifiability scope.
 This audit establishes that the frozen R2 object is implementable without the
 identified source and global-truth bypasses.  It is **not** evidence that
 PCRF-R2 is useful, learns stably, improves any endpoint, or outperforms the
-single graph.  The next possible decision is whether to authorize D1-R2
-engineering-only runs.  D2, F1, confirmatory held-out evaluation, diagnostics,
-and OOD remain blocked.
+single graph.  The author has subsequently authorized the separate D1-R2
+engineering-only gate under `docs/V1_9_D1_R2_ENGINEERING_PROTOCOL.md`.  D2,
+F1, confirmatory held-out evaluation, diagnostics, and OOD remain blocked.
