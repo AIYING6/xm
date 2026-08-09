@@ -1,0 +1,15 @@
+{
+  "audit": "P0_R2_PRETRAINING_RED_TEAM",
+  "completed_component": "P0_A_EVENT_ESTIMAND",
+  "status": "P0_R2_PRETRAINING_RED_TEAM_BLOCKED_AT_P0_A__D2_NOT_AUTHORIZED",
+  "performance_use": "prohibited",
+  "finding": "Irreversible collision and constraint-violation outcomes are currently represented as ordinary right-censoring in the RMST risk set.",
+  "unstarted_components": [
+    "P0_B_FEATURE_LEVEL_PROVENANCE",
+    "P0_C_COMPARATOR_IDENTIFIABILITY",
+    "P1_NATURAL_CONFLICT_PREVALENCE",
+    "P1_ONSET_STATE",
+    "P1_ENDPOINT_CONSTRUCT_VALIDITY"
+  ],
+  "required_author_decision": "Freeze a terminal-outcome estimand and authorize a protocol/implementation repair before any new D0, D1, D2, F1, F2, mechanism, or OOD work."
+}
