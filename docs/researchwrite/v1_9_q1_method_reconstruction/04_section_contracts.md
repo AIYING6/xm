@@ -10,7 +10,9 @@
 - **Allowed claims:** the gate changes factor weighting under measurable legal
   disagreement; the construction cannot reveal unavailable teammate truth.
 - **Forbidden claims:** online “fault adaptation,” universal superiority,
-  static Role-Pair novelty, or information fields not shared by comparators.
+  static Role-Pair novelty, information fields not shared by comparators, or
+  being first to separate perception/communication, fuse conflict, or handle
+  stale messages.
 - **Validation:** R5-style leakage suite passes; parameter counts are matched;
   gate changes correlate with conflict descriptor rather than hidden global
   state; neutral behavior is checked under agreement.
@@ -27,6 +29,8 @@
 - **Forbidden claim:** attributing a MAPPO/HAPPO difference to PCRF structure.
 - **Validation:** raw feature hashes/masks match across graph methods; selected
   checkpoints come from immutable validation records only.
+  T2MAC, CDCMA, CoDe, Communication-Aware UAV MARL, and AsynCoMARL are
+  mandatory first-tier related-work comparators for the eventual manuscript.
 
 ## C. Secondary comparison contract
 

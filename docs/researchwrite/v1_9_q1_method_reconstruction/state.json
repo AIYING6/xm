@@ -4,12 +4,13 @@
   "text_type": "research_design_foundation",
   "language": "zh",
   "target_reader": "author team",
-  "current_round": 2,
+  "current_round": 3,
   "scores": [],
   "technical_debts": [
     "Three-relation PCRF-R1 was terminated after G0-R1 found Task-Support nonidentifiable from Communication.",
-    "PCRF-R2 requires a verified novelty kill-check and a source-separated P/C actor input contract before implementation or D0-R2.",
-    "v1.8 repair completion must be independently gated before it informs v1.9 decisions."
+    "PCRF-R2 novelty kill-check passed only with a narrow delivery-grounded provenance claim; source-separated P/C actor inputs remain unimplemented.",
+    "Numerical practical margin, seed rule, endpoint-adequacy bounds, F1 budget, and PCRF-Delta0 control remain unfrozen.",
+    "v1.8 confirmatory evidence remains separate from PCRF-R2 and is not authorized."
   ],
-  "status": "pcrf_r2_conceptual_protocol_frozen_pre_novelty_and_pre_d0"
+  "status": "g0_r2_theory_and_comparator_frozen__implementation_not_authorized"
 }

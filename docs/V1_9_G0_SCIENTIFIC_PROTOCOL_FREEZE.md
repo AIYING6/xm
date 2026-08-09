@@ -1,11 +1,12 @@
 # v1.9 G0 — Scientific and Protocol Freeze
 
-**Status: G0-R1 CLOSED; G0-R2 IS PENDING VERIFIED NOVELTY KILL-CHECK AND
-SOURCE-SEPARATED IMPLEMENTATION CONTRACT.**
+**Status: G0-R1 CLOSED; G0-R2 literature and theory/comparator gates CLOSED.
+Source-separated implementation/D0-R2 remain separately unauthorized.**
 
 This document records the pre-GPU hard gate that terminated PCRF-R1.  The
-author selected a narrower two-source successor; its current authority is
-defined in [PCRF-R2 theory/protocol freeze](V1_9_PCRF_R2_THEORY_AND_PROTOCOL_FREEZE.md).
+author selected a narrower two-source successor; its current theory and
+comparator authority is defined in [PCRF-R2 theory/protocol freeze](V1_9_PCRF_R2_THEORY_AND_PROTOCOL_FREEZE.md)
+and [G0-R2 final freeze](V1_9_G0_R2_FINAL_THEORY_COMPARATOR_FREEZE.md).
 It authorizes neither D1-R2, D2, F1, held-out evaluation, OOD, an ablation,
 nor a manuscript superiority claim.
 
@@ -193,17 +194,19 @@ confirmatory seed bank.
 ## 8. Novelty kill-check and formal release rule
 
 The nearest-work search and paper-by-paper overlap table are maintained in
-[`V1_9_G0_NOVELTY_KILLCHECK.md`](V1_9_G0_NOVELTY_KILLCHECK.md).  Its status is
-currently incomplete; no novelty conclusion is licensed.
+[`V1_9_G0_NOVELTY_KILLCHECK.md`](V1_9_G0_NOVELTY_KILLCHECK.md).  Its narrow-claim
+status is now `NOVELTY_KILLCHECK_PASS_WITH_NARROWED_CLAIM`; the final G0-R2
+theory/comparator release is recorded in
+[`V1_9_G0_R2_FINAL_THEORY_COMPARATOR_FREEZE.md`](V1_9_G0_R2_FINAL_THEORY_COMPARATOR_FREEZE.md).
 
 `G0_PASS` requires all of the following:
 
 1. independent task-support activation or an author-approved narrower theory;
 2. exact raw-input equality audit for PCRF, single graph, and non-graph;
-3. literature kill-check of 8--15 verified nearest papers;
+3. literature kill-check of 8--15 verified nearest papers (completed for R2);
 4. numerical \(\delta_{min}\), seed rule, and method-blind endpoint adequacy
    bounds written before D2/F1; and
 5. a revised three-method D2 protocol consistent with these locks.
 
-Until then, the only valid project status is
-`BLOCKED_BY_TASK_SUPPORT_NONIDENTIFIABILITY_AND_INCOMPLETE_NOVELTY_KILLCHECK`.
+The historical R1 gate remains closed.  For R2, the current valid status is
+`G0_R2_THEORY_AND_COMPARATOR_FROZEN__IMPLEMENTATION_NOT_AUTHORIZED`.

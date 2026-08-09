@@ -9,6 +9,11 @@ legal features, but it has no explicit requirement to preserve these sources
 before fusion. Conversely, named channels do not establish an inductive bias
 when they are redundant or bypassed by a common observation path.
 
+This is not a claim that source separation, evidence disagreement, or stale
+communication is new in itself.  T2MAC, CDCMA, CoDe, and other close work make
+those broad claims untenable.  The testable gap is instead the physical
+delivery-grounded P/C contract coupled to a matched unified-graph test.
+
 ## Central research question
 
 **When direct local perception and delivered/cache-valid communication disagree,

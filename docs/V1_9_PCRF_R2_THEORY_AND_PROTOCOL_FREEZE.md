@@ -1,12 +1,14 @@
 # v1.9 PCRF-R2 — Two-Source Theory and Protocol Freeze
 
-**Status: CONCEPTUAL_AND_PROTOCOL_FREEZE.  PCRF-R1 is terminated.**
+**Status: CONCEPTUAL_AND_PROTOCOL_FREEZE; G0-R2 theory/comparator release is
+recorded separately.  PCRF-R1 is terminated.**
 
 This document is the author-authorized successor to the three-relation
 PCRF-R1 line.  It freezes the R2 scientific object and the implementation
-contract necessary to test it.  It does **not** authorize implementation,
-D0-R2, D1-R2, D2, F1, held-out evaluation, OOD, or a manuscript claim.  The
-R2 novelty kill-check and final G0-R2 release conditions remain open.
+contract necessary to test it.  The novelty kill-check and final theory/
+comparator conditions are now closed in
+[G0-R2 final freeze](V1_9_G0_R2_FINAL_THEORY_COMPARATOR_FREEZE.md).  That
+release still authorizes no code or GPU work by itself.
 
 ## 1. Author decision and scientific scope
 
@@ -150,9 +152,9 @@ not be inferred from D1/D2/F1 performance.
 
 ```text
 R2 conceptual/protocol freeze (this document)
-  -> verified R2 novelty kill-check
-  -> G0-R2 final protocol release
-  -> source-separated R2 implementation + D0-R2
+  -> verified R2 novelty kill-check (completed, narrowed claim)
+  -> G0-R2 final protocol release (completed)
+  -> separately authorized source-separated R2 implementation + D0-R2
   -> D1-R2 engineering gate
   -> matched three-method D2
   -> F1 -> untouched F2 -> diagnostics -> graded OOD

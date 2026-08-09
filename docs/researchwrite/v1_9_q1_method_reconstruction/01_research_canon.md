@@ -42,12 +42,18 @@ writing must not silently upgrade a hypothesis to a result.
    It remains a structural risk, not evidence of an advantage.
 6. R6.5 found near-zero Role-Pair gate variation in the pilot. Role-Pair is not
    supported as a headline innovation on current evidence.
-7. The current v1.8 formal repair run is not complete and cannot support a
-   method-performance claim until its immutable selection artifacts have passed
-   the specified gate.
+7. The v1.8 9-run protocol-repair execution and selector integrity gate are
+   complete, but no v1.8 confirmatory held-out result exists.  It therefore
+   cannot support a method-performance claim and remains separate from v1.9
+   decision-making.
 8. PCRF D0 static tests passed 5/5 and the D1 four-run CUDA engineering pilot
    reported `D1_ARTIFACT_GATE_PASS`. These are implementation and artifact
    checks only; they are not performance evidence.
+9. The R2 novelty kill-check screened 12 primary-source-verified nearest
+   works.  No work was found with the complete `R+S+D+C+B` overlap, but
+   T2MAC, CDCMA, CoDe, Communication-Aware UAV MARL, and AsynCoMARL sharply
+   constrain the novelty claim.  Broad source-separation, conflict-fusion,
+   delay, graph-MARL, and UAV-communication claims are prior art.
 
 ## Definitions
 
@@ -78,6 +84,8 @@ writing must not silently upgrade a hypothesis to a result.
 
 - Whether a conflict-conditioned factorization has an advantage over a
   parameter-matched single graph under matched legal information.
+- Whether the narrow delivery-grounded provenance question adds value beyond
+  the closest evidence-integration and delay-aware communication methods.
 - Whether source-separated direct P and delivered C inputs can be implemented
   without a common-observation bypass.
 - Which P/C conflicts occur often enough in realistic UAV episodes to
