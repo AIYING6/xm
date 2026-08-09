@@ -1,6 +1,6 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P0_R2_PRETRAINING_RED_TEAM_PASS__READY_FOR_D2_AUTHORIZATION`.**
+**Status: `P0_R2_PRETRAINING_RED_TEAM_PASS__D2_R2_AUTHORIZED__F1_NOT_AUTHORIZED`.**
 
 ## Scope and stop rule
 
@@ -11,8 +11,8 @@ the cache-validity deviation below. P0-C and natural-conflict prevalence have
 passed. The author has frozen the end-to-end primary scope and a separately
 preregistered common-onset secondary diagnostic. The author then selected a
 secondary independent physical outcome while retaining RMTE as primary. The
-physical construct has passed read-only definition and independence checks;
-D2/F1/F2 remain prohibited pending a separate D2 authorization.
+physical construct has passed read-only definition and independence checks.
+D2-R2 method-blind calibration is authorized; F1/F2 remain prohibited.
 
 ## P0-A — event and censoring semantics
 

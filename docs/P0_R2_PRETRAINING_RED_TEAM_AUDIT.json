@@ -1,7 +1,7 @@
 {
   "audit": "P0_R2_PRETRAINING_RED_TEAM",
   "completed_component": "P1_INDEPENDENT_PHYSICAL_ENGAGEMENT_OUTCOME",
-  "status": "P0_R2_PRETRAINING_RED_TEAM_PASS__READY_FOR_D2_AUTHORIZATION",
+  "status": "P0_R2_PRETRAINING_RED_TEAM_PASS__D2_R2_AUTHORIZED__F1_NOT_AUTHORIZED",
   "performance_use": "prohibited",
   "finding": "The expired-C contract deviation was repaired: a target claim with age greater than max_target_message_age_steps is excluded from C node, adjacency, and actor C-branch construction before encoding.",
   "unstarted_components": [],
@@ -14,5 +14,5 @@
   "p1_endpoint_construct_validity": "PASS AFTER AUTHOR FREEZE: RMTE remains task-chain primary; a true-kinematic, evaluator-defined sustained physical engagement-readiness secondary outcome is frozen. Capture, neutralization, and mission-completion claims remain prohibited because the simulator lacks those transitions.",
   "p1_independent_physical_engagement": "PASS: five deterministic checks establish true-state-only definition, task-chain counterexample, physical-threshold necessity, evaluator-owned stability, and safe-range/collision separation.",
   "next_authorized_component": null,
-  "stop_reason": "Red-team is complete. D2 remains prohibited until separately authorized by the author."
+  "stop_reason": "D2-R2 method-blind budget/stability calibration is authorized. F1/F2 remain prohibited."
 }
