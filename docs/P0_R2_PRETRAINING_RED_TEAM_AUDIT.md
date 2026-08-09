@@ -1,14 +1,15 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P0_B_CACHE_VALIDITY_REPAIRED__D1_DELTA_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED`.**
+**Status: `P1_ONSET_STATE_PROTOCOL_BLOCKED__D2_NOT_AUTHORIZED`.**
 
 ## Scope and stop rule
 
 This red-team audit was authorized after D1-R2 as a falsification gate. It does
 not interpret D1 metrics or add a method experiment. P0-A was repaired and
 requalified. P0-B found and then, under an explicit author decision, repaired
-the cache-validity deviation below. P0-C/P1 are not yet audited and D2/F1/F2
-remain prohibited.
+the cache-validity deviation below. P0-C and natural-conflict prevalence have
+passed. P1 onset-state has found a protocol decision boundary; D2/F1/F2 remain
+prohibited pending the author's decision.
 
 ## P0-A — event and censoring semantics
 
@@ -137,3 +138,77 @@ it did not alter training, artifacts, the source commit, or their hashes.
 
 P0-C is the next permitted red-team component. This repair is not D2
 authorization and supplies no performance evidence.
+
+## P0-C — comparator identifiability
+
+### Verdict: `PASS`
+
+`scripts/audit_p0_c_comparator_identifiability_v1_9.py` passes 5/5 static
+checks. PCRF-R2, source-aware single-R2, and matched-information non-graph-R2
+consume the identical recipient-specific R2 P/C source contract. None can
+bypass it through the retained legacy observation tensors.
+
+The primary comparator, source-aware single-R2, deliberately has one shared
+source-aware graph path: its node and edge channels concatenate P and C before
+one encoder. PCRF-R2 alone factorizes the two source paths and uses its frozen
+baseline-plus-conflict-deviation fusion. PCRF-R2 includes neither an old union
+path, Task-Support, nor Role-Pair path. The primary capacity gap is 0.47%
+(169,977 versus 170,784 parameters).
+
+Therefore the frozen primary comparison identifies the value of PCRF-R2's
+source factorization/fusion relative to a source-aware unified representation;
+it does not compare different raw actor information or a material parameter
+increase. This is a static contract conclusion only, not performance evidence.
+
+## P1 — natural conflict prevalence
+
+### Verdict: `PASS` (development-only, method-independent)
+
+`scripts/audit_p1_natural_conflict_prevalence_v1_9.py` uses 32 fixed
+environment seeds (81--112) and pre-generated random actions, never an R2
+actor or a method comparison. Its predeclared adequacy rule requires every
+primary conflict state to have at least 30 records and at least 0.5% of
+failure-active actor steps.
+
+Across 7,680 failure-active actor steps, P/C availability mismatch occurred in
+4,627 (60.25%), C-only availability in 4,539 (59.10%), P-only availability in
+88 (1.15%), stale C in 5,661 (73.71%), and P/C disagreement while both were
+available in 1,122 (14.61%). Every predeclared primary state met the adequacy
+rule. The immutable development artifact is
+`results/v1_9_p1_natural_conflict_prevalence/natural_conflict_audit.json`.
+
+This supports the *existence* of heterogeneous P/C states under the frozen
+nominal failure configuration. It does not demonstrate that PCRF-R2 performs
+better in them.
+
+## P1 — onset-state audit
+
+### Verdict: `BLOCKED — author protocol decision required`
+
+`scripts/audit_p1_onset_state_v1_9.py` passes its static facts: the frozen
+failure window is steps 40--119; the current evaluator creates a new
+environment, calls `reset()`, and runs each policy from episode start; and the
+environment offers no `set_state`, `load_state`, `restore_state`, or
+`snapshot_state` intervention. Thus the present formal path is an **end-to-end
+reset-to-terminal policy evaluation**, not a common-onset-state intervention.
+
+That design is valid for the primary end-to-end question: which policy gives
+earlier establishment after the scheduled failure in the complete task. But it
+cannot, by itself, identify a stronger causal claim that a later difference is
+caused specifically by *post-onset* PCRF conflict processing rather than by
+policy-dependent spatial/task state formed before step 40.
+
+No trained R2 formal policy exists, so the requested method-specific
+pre-onset-state divergence cannot be measured without starting an evidence
+phase. The audit therefore cannot choose a scientific interpretation on the
+author's behalf. Before D2, the author must choose one of the following:
+
+1. freeze the primary claim as **end-to-end** only and prohibit a pure
+   post-onset causal/mechanism claim from the primary endpoint; or
+2. authorize a separately pre-registered common-onset-state diagnostic (with
+   shared stored states and equal legal information), which is secondary and
+   does not replace the primary evaluation.
+
+Until that choice is frozen, P1 endpoint construct validity is not started and
+D2 is not authorized. No architecture, reward, data source, training budget,
+or performance result was changed or inspected.

@@ -1,18 +1,16 @@
 {
   "audit": "P0_R2_PRETRAINING_RED_TEAM",
-  "completed_component": "P0_B_FEATURE_LEVEL_PROVENANCE",
-  "status": "P0_B_CACHE_VALIDITY_REPAIRED__D1_DELTA_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED",
+  "completed_component": "P1_ONSET_STATE",
+  "status": "P1_ONSET_STATE_PROTOCOL_BLOCKED__D2_NOT_AUTHORIZED",
   "performance_use": "prohibited",
   "finding": "The expired-C contract deviation was repaired: a target claim with age greater than max_target_message_age_steps is excluded from C node, adjacency, and actor C-branch construction before encoding.",
-  "unstarted_components": [
-    "P0_C_COMPARATOR_IDENTIFIABILITY",
-    "P1_NATURAL_CONFLICT_PREVALENCE",
-    "P1_ONSET_STATE",
-    "P1_ENDPOINT_CONSTRUCT_VALIDITY"
-  ],
+  "unstarted_components": ["P1_ENDPOINT_CONSTRUCT_VALIDITY"],
   "p0_a_requalification": "PASS: six engineering runs completed 180/180 updates with four immutable snapshots and four terminal-outcome event records per run, empty stderr, and a verified RMTE artifact gate.",
   "p0_b_verdict": "PASS AFTER AUTHORIZED REPAIR: deterministic P0-B 5/5, actor-boundary 14/14, D0-R2 12/12, P0-A 5/5, and three-run delta requalification gate PASS.",
   "p0_b_delta_source_commit": "b8670b49cfb84f2a21ae01855dd7cf29f16116f1",
-  "next_authorized_component": "P0_C_COMPARATOR_IDENTIFIABILITY",
-  "stop_reason": null
+  "p0_c_comparator_identifiability": "PASS: all R2 comparators use one identical P/C source contract, single-R2 is source-aware unified rather than factorized, legacy tensors cannot bypass R2, and primary capacity gap is 0.47%.",
+  "p1_natural_conflict_prevalence": "PASS: method-independent development rollout has 7,680 failure-active actor steps; all predeclared P/C conflict states exceed 30 records and 0.5% prevalence.",
+  "p1_onset_state": "BLOCKED: current evaluator is reset-to-terminal only and exposes no common-onset-state intervention, so the author must freeze either an end-to-end-only claim boundary or a separately pre-registered secondary common-onset diagnostic.",
+  "next_authorized_component": null,
+  "stop_reason": "P1 onset-state interpretation requires an author protocol decision before endpoint construct validity or D2."
 }
