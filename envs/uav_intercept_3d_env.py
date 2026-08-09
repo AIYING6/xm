@@ -1253,6 +1253,26 @@ class UAVIntercept3DEnv:
         p_node[0] = receiver_node
         c_node[0] = receiver_node
 
+        def cache_valid_target_packet(packet: dict[str, object] | None) -> bool:
+            """Return whether a delivered packet may enter the R2 C source.
+
+            R2 treats the sender-status packet carrying a target claim as one
+            C-source object.  Once that target claim expires, neither its
+            target payload nor its sender-status node/edge may remain as an
+            alternate C-branch route.
+            """
+            if packet is None or float(packet.get("validity", 0.0)) <= 0.5:
+                return False
+            generation = int(packet.get("target_generation_step", -1))
+            confidence = float(packet.get("target_confidence", 0.0))
+            age = max(0, int(self.step_count) - generation) if generation >= 0 else None
+            return bool(
+                generation >= 0
+                and age is not None
+                and age <= int(self.config.max_target_message_age_steps)
+                and confidence >= float(self.config.min_target_confidence)
+            )
+
         def target_node_from_claim(pos: np.ndarray, vel: np.ndarray) -> np.ndarray:
             result = np.zeros(self.node_feat_dim, dtype=np.float32)
             speed = float(np.linalg.norm(vel))
@@ -1315,8 +1335,11 @@ class UAVIntercept3DEnv:
         # Sender-status nodes are legal only when the exact recipient cache has
         # a delivered packet. Copying them from the recipient view preserves the
         # immutable packet snapshot rather than reading current sender truth.
+        recipient_node_ids = [receiver] + [node_id for node_id in range(n) if node_id != receiver]
         for node_index in range(1, target_index):
-            if recipient_node[node_index, -1] > 0.5:
+            sender = recipient_node_ids[node_index]
+            packet = self.sender_packet_cache[receiver].get(sender)
+            if cache_valid_target_packet(packet):
                 c_node[node_index] = recipient_node[node_index]
                 c_adj[0, node_index] = 1.0
                 c_edge[0, node_index] = recipient_edge[0, node_index]
@@ -1327,12 +1350,10 @@ class UAVIntercept3DEnv:
         # id. All candidate values originate in delivered packet snapshots.
         candidates: list[tuple[float, int, int, dict[str, object]]] = []
         for sender, packet in self.sender_packet_cache[receiver].items():
-            if float(packet.get("validity", 0.0)) <= 0.5:
+            if not cache_valid_target_packet(packet):
                 continue
-            generation = int(packet.get("target_generation_step", -1))
-            confidence = float(packet.get("target_confidence", 0.0))
-            if generation < 0 or confidence < float(self.config.min_target_confidence):
-                continue
+            generation = int(packet["target_generation_step"])
+            confidence = float(packet["target_confidence"])
             candidates.append((confidence, generation, int(sender), packet))
         if candidates:
             confidence, generation, _sender, packet = max(candidates, key=lambda row: (row[0], row[1], -row[2]))
