@@ -40,7 +40,10 @@ Every run must retain training logs, validation summaries, episode records,
 snapshot metadata/manifests, and SHA256 values. The launcher additionally
 records `/usr/bin/time -v` output per run and 10-second GPU utilization/memory
 telemetry for the whole D2 window. The runtime manifest must record CUDA and
-the immutable source-archive commit/SHA256 provenance.
+the immutable source-archive commit/SHA256 provenance. The operator must pass
+these two values explicitly as `SOURCE_COMMIT` and `SOURCE_ARCHIVE_SHA256` at
+launch; the launcher deliberately has no fallback value that could describe an
+older archive.
 
 ## D2 artifact gate
 
