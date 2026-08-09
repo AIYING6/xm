@@ -20,7 +20,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--hidden-dim", type=int, default=128)
     parser.add_argument("--role-dim", type=int, default=8)
     parser.add_argument("--intent-dim", type=int, default=8)
-    parser.add_argument("--graph-encoder", choices=("no_graph", "matched_nongraph", "single", "multi_relation"), default="single")
+    parser.add_argument("--graph-encoder", choices=("no_graph", "matched_nongraph", "single", "multi_relation", "pcrf"), default="single")
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")

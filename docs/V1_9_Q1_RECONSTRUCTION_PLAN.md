@@ -58,6 +58,12 @@ to detect NaN, incorrect actor boundary, inactive conflict gate, or grossly
 inadequate compute budget. Do not pick architecture variants from final scores;
 the decision criteria are correctness and feasibility.
 
+**D0 capacity result:** PCRF at hidden width 128 has 196,856 actor parameters.
+The closest single-graph actor is hidden width 168 with 195,837 parameters
+(0.52% difference). This pairing is the D1 candidate; it remains subject to
+the same input-contract and runtime audit before it can be frozen for formal
+work.
+
 ### Stage D2 — budget calibration (GPU; non-formal)
 
 After one candidate method is fixed, use a small pilot to measure learning

@@ -372,6 +372,124 @@ class MultiRelationGraphEncoder(nn.Module):
         return self._apply_layer(x, self.layer2, relation_adj, union_adj, edge_feat, role, self.fuse2)
 
 
+class ProvenanceConditionedRelationFactorEncoder(nn.Module):
+    """Relation factorization whose fusion is explicitly driven by legal conflict.
+
+    This candidate v1.9 encoder intentionally has no union/residual relation
+    channel and no static Role-Pair gate.  Its only fusion descriptor is
+    constructed from already-masked relation adjacency plus delivered-edge age
+    and confidence.  It therefore cannot turn a missing packet into actor
+    information.
+    """
+
+    def __init__(self, hidden_dim: int, edge_dim: int, num_relations: int = 3):
+        super().__init__()
+        self.num_relations = num_relations
+        self.layer1 = nn.ModuleList(
+            [GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim) for _ in range(num_relations)]
+        )
+        self.layer2 = nn.ModuleList(
+            [GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_dim) for _ in range(num_relations)]
+        )
+        # Relation support (R), pairwise disagreement (R choose 2), and two
+        # delivered-communication quality values (age/confidence).
+        self.descriptor_dim = num_relations + (num_relations * (num_relations - 1) // 2) + 2
+        self.gate_correction = nn.Sequential(
+            nn.Linear(self.descriptor_dim, hidden_dim),
+            nn.Tanh(),
+            nn.Linear(hidden_dim, num_relations),
+        )
+        # A zero correction has a meaningful, auditable base: equal legal
+        # relation evidence yields uniform fusion; disagreement changes it.
+        nn.init.zeros_(self.gate_correction[-1].weight)
+        nn.init.zeros_(self.gate_correction[-1].bias)
+
+    def conflict_descriptor(
+        self,
+        relation_adj: torch.Tensor,
+        edge_feat: torch.Tensor | None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        if relation_adj.ndim != 4 or relation_adj.shape[1] != self.num_relations:
+            raise ValueError(
+                f"Expected relation_adj [batch, {self.num_relations}, nodes, nodes], got {tuple(relation_adj.shape)}"
+            )
+        # In recipient-specific views, node 0 is the receiver.  The descriptor
+        # reads only its already legal outgoing relation rows.
+        receiver_rows = relation_adj[:, :, 0, :].clamp(0.0, 1.0)
+        support = receiver_rows.mean(dim=-1)
+        disagreements = []
+        for left in range(self.num_relations):
+            for right in range(left + 1, self.num_relations):
+                disagreements.append((receiver_rows[:, left] - receiver_rows[:, right]).abs().mean(dim=-1))
+        disagreement = torch.stack(disagreements, dim=-1)
+
+        communication = receiver_rows[:, RELATION_COMMUNICATION]
+        denom = communication.sum(dim=-1).clamp_min(1.0)
+        if edge_feat is None or edge_feat.shape[-1] <= 16:
+            mean_age = torch.zeros_like(denom)
+            mean_confidence = torch.ones_like(denom)
+        else:
+            # Index 15/16 are the v1.8 legal packet age/confidence fields. If
+            # no communication edge exists, their neutral values are used.
+            age = edge_feat[:, 0, :, 15].clamp(0.0, 1.0)
+            confidence = edge_feat[:, 0, :, 16].clamp(0.0, 1.0)
+            mean_age = (age * communication).sum(dim=-1) / denom
+            mean_confidence = (confidence * communication).sum(dim=-1) / denom
+            no_communication = communication.sum(dim=-1) <= 0.0
+            mean_age = torch.where(no_communication, torch.zeros_like(mean_age), mean_age)
+            mean_confidence = torch.where(no_communication, torch.ones_like(mean_confidence), mean_confidence)
+        descriptor = torch.cat([support, disagreement, mean_age.unsqueeze(-1), mean_confidence.unsqueeze(-1)], dim=-1)
+        return descriptor, support
+
+    def fusion_gate(
+        self,
+        relation_adj: torch.Tensor,
+        edge_feat: torch.Tensor | None,
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        descriptor, support = self.conflict_descriptor(relation_adj, edge_feat)
+        # Communication reliability is represented only by delivered legal
+        # fields.  Perception and task-support do not borrow packet confidence.
+        comm_confidence = descriptor[:, -1]
+        comm_age = descriptor[:, -2]
+        reliability = torch.ones_like(support)
+        reliability[:, RELATION_COMMUNICATION] = comm_confidence * (1.0 - comm_age)
+        base_logits = support * reliability
+        gate = torch.softmax(base_logits + self.gate_correction(descriptor), dim=-1)
+        return gate, {
+            "descriptor": descriptor,
+            "relation_support": support,
+            "pairwise_disagreement": descriptor[:, self.num_relations:-2],
+            "gate": gate,
+        }
+
+    def _apply_layer(
+        self,
+        x: torch.Tensor,
+        layers: nn.ModuleList,
+        relation_adj: torch.Tensor,
+        edge_feat: torch.Tensor | None,
+        gate: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        outputs, attentions = [], []
+        for relation_id, layer in enumerate(layers):
+            output, attention = layer(x, relation_adj[:, relation_id], edge_feat)
+            outputs.append(output * gate[:, relation_id].view(-1, 1, 1))
+            attentions.append(attention)
+        fused = torch.stack(outputs, dim=1).sum(dim=1)
+        return torch.tanh(fused + x), torch.stack(attentions, dim=1)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        relation_adj: torch.Tensor,
+        edge_feat: torch.Tensor | None,
+    ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+        gate, diagnostics = self.fusion_gate(relation_adj, edge_feat)
+        x, _ = self._apply_layer(x, self.layer1, relation_adj, edge_feat, gate)
+        x, attention = self._apply_layer(x, self.layer2, relation_adj, edge_feat, gate)
+        return x, attention, diagnostics
+
+
 OBS_ROLE_IDENTITY_SLICE = OBS3D_ROLE_IDENTITY_SLICE
 NODE_ROLE_IDENTITY_SLICE = NODE3D_ROLE_IDENTITY_SLICE
 
@@ -406,7 +524,7 @@ class RIActor(nn.Module):
         multi_relation_global_residual_weight: float = 1.0,
     ):
         super().__init__()
-        if graph_encoder not in {"no_graph", "matched_nongraph", "single", "multi_relation"}:
+        if graph_encoder not in {"no_graph", "matched_nongraph", "single", "multi_relation", "pcrf"}:
             raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
         if graph_message_ablation not in {"none", "no_role_pair_gate"}:
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
@@ -433,7 +551,7 @@ class RIActor(nn.Module):
         elif graph_encoder == "single":
             self.gat1 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
             self.gat2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
-        else:
+        elif graph_encoder == "multi_relation":
             self.multi_relation_graph = MultiRelationGraphEncoder(
                 hidden_dim,
                 edge_feat_dim,
@@ -442,6 +560,9 @@ class RIActor(nn.Module):
                 role_gate_prior_strength=role_gate_prior_strength,
                 global_residual_weight=multi_relation_global_residual_weight,
             )
+        else:
+            self.pcrf_graph = ProvenanceConditionedRelationFactorEncoder(hidden_dim, edge_feat_dim)
+        self.last_pcrf_diagnostics: dict[str, torch.Tensor] | None = None
         self.intent_head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.Tanh(),
@@ -535,10 +656,14 @@ class RIActor(nn.Module):
         elif self.graph_encoder == "single":
             x, _ = self.gat1(x, adj, edge_feat)
             x, attn = self.gat2(x, adj, edge_feat)
-        else:
+        elif self.graph_encoder == "multi_relation":
             if relation_adj is None:
                 raise ValueError("relation_adj is required when graph_encoder='multi_relation'")
             x, attn = self.multi_relation_graph(x, relation_adj, edge_feat, role, adj)
+        else:
+            if relation_adj is None:
+                raise ValueError("relation_adj is required when graph_encoder='pcrf'")
+            x, attn, self.last_pcrf_diagnostics = self.pcrf_graph(x, relation_adj, edge_feat)
 
         graph_feat = x[:, :num_agents]
         target_feat = x[:, num_agents:]
