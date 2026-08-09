@@ -1,14 +1,14 @@
 # P0-R2 Pretraining Red-Team Audit
 
-**Status: `P0_B_CACHE_VALIDITY_CONTRACT_DEVIATION__STOP__D2_NOT_AUTHORIZED`.**
+**Status: `P0_B_CACHE_VALIDITY_REPAIRED__D1_DELTA_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED`.**
 
 ## Scope and stop rule
 
 This red-team audit was authorized after D1-R2 as a falsification gate. It does
 not interpret D1 metrics or add a method experiment. P0-A was repaired and
-requalified. P0-B then found the contract deviation below. Per the stop rule,
-P0-C/P1 work is not started and D2/F1/F2 remain prohibited until the author
-decides whether and how to repair the frozen C-cache semantics.
+requalified. P0-B found and then, under an explicit author decision, repaired
+the cache-validity deviation below. P0-C/P1 are not yet audited and D2/F1/F2
+remain prohibited.
 
 ## P0-A — event and censoring semantics
 
@@ -73,7 +73,7 @@ questions can be tested fairly.
 
 ## P0-B — feature-level provenance and cache validity
 
-### Verdict: `FAIL / NEW P0`
+### Initial verdict: `FAIL / NEW P0`; final verdict: `PASS AFTER AUTHORIZED REPAIR`
 
 The frozen R2 contract permits C target evidence only from an actually
 delivered **and cache-valid** packet snapshot. It explicitly excludes expired
@@ -95,18 +95,45 @@ and evaluates at step three. The C target node and C adjacency remain active.
 This is a protocol/representation deviation, not merely a graph-attention
 masking issue: the expired target coordinates are constructed before encoding.
 
-The issue is not a newly discovered simulator-global information channel—the
-recipient did receive the packet historically—but it changes the frozen
-meaning of **cache-valid C evidence**, the intended stale/expired distinction,
-and the conflict-mechanism exposure. It is therefore P0 for the R2 scientific
-contract. No repair is made under this audit authorization.
+The issue was not a newly discovered simulator-global information channel—the
+recipient did receive the packet historically—but it changed the frozen meaning
+of **cache-valid C evidence**, the intended stale/expired distinction, and the
+conflict-mechanism exposure. It was therefore P0 for the R2 scientific
+contract.
 
-### Stop decision
+### Authorized minimal repair and requalification
 
-`P0_B_CACHE_VALIDITY_CONTRACT_DEVIATION__STOP__D2_NOT_AUTHORIZED`
+The author chose the frozen contract rather than amending the theory:
 
-Required author decision: either confirm that expired delivered target claims
-are intentionally legal C evidence (which would require a theory/protocol
-amendment and re-audit), or authorize a minimal pre-construction cache-age
-exclusion repair followed by the appropriate deterministic and engineering
-requalification. Neither option is taken automatically here.
+\[
+  C = \text{actually delivered} \cap \text{cache-valid communication evidence}.
+\]
+
+The canonical R2 construction now tests target-claim age before copying a
+sender-status packet into the C branch. At the boundary `age <=
+max_target_message_age_steps` the packet remains legal; at `age >
+max_target_message_age_steps` its C sender node, C target node, C adjacency,
+and actor C-branch route are all zeroed before encoding. Expired payload values
+therefore cannot remain as high-age/low-confidence evidence.
+
+`scripts/audit_p0_b_feature_provenance_v1_9.py` now verifies five conditions:
+the inclusive boundary, expiration at `max_age + 1`, absence of expired C nodes
+and adjacencies, actor invariance to changed expired payload, and unchanged
+fresh-packet visibility. It passes 5/5. The actor-boundary (14/14), D0-R2
+(12/12), and P0-A (5/5) regressions also pass.
+
+The author-authorized delta requalification then ran only three non-evidentiary
+15-update engineering runs, one per R2 method, at source commit `b8670b4`.
+All three have validation/snapshots at 1/5/10/15, empty stderr, finite training
+logs, immutable event records with recomputed RMTE selector fields, and
+verified SHA256/provenance. The manifest is
+`results/v1_9_d1_r2_p0b_delta_requalification_local/D1_R2_P0B_DELTA_REQUALIFICATION_GATE_MANIFEST.json`.
+The post-run gate verifier required a UTF-16 PowerShell-log decoding correction;
+it did not alter training, artifacts, the source commit, or their hashes.
+
+### P0-B decision
+
+`P0_B_CACHE_VALIDITY_REPAIRED__D1_DELTA_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED`
+
+P0-C is the next permitted red-team component. This repair is not D2
+authorization and supplies no performance evidence.

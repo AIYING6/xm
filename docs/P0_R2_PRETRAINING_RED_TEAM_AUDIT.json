@@ -1,9 +1,9 @@
 {
   "audit": "P0_R2_PRETRAINING_RED_TEAM",
   "completed_component": "P0_B_FEATURE_LEVEL_PROVENANCE",
-  "status": "P0_B_CACHE_VALIDITY_CONTRACT_DEVIATION__STOP__D2_NOT_AUTHORIZED",
+  "status": "P0_B_CACHE_VALIDITY_REPAIRED__D1_DELTA_REQUALIFIED__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED",
   "performance_use": "prohibited",
-  "finding": "An expired delivered target claim enters the R2 C branch because source construction checks packet validity, generation, and confidence but not max_target_message_age_steps.",
+  "finding": "The expired-C contract deviation was repaired: a target claim with age greater than max_target_message_age_steps is excluded from C node, adjacency, and actor C-branch construction before encoding.",
   "unstarted_components": [
     "P0_C_COMPARATOR_IDENTIFIABILITY",
     "P1_NATURAL_CONFLICT_PREVALENCE",
@@ -11,7 +11,8 @@
     "P1_ENDPOINT_CONSTRUCT_VALIDITY"
   ],
   "p0_a_requalification": "PASS: six engineering runs completed 180/180 updates with four immutable snapshots and four terminal-outcome event records per run, empty stderr, and a verified RMTE artifact gate.",
-  "p0_b_verdict": "FAIL / NEW P0: cache-valid C contract deviation confirmed by scripts/audit_p0_b_feature_provenance_v1_9.py.",
-  "next_authorized_component": null,
-  "stop_reason": "Author decision is required before any repair or later red-team component."
+  "p0_b_verdict": "PASS AFTER AUTHORIZED REPAIR: deterministic P0-B 5/5, actor-boundary 14/14, D0-R2 12/12, P0-A 5/5, and three-run delta requalification gate PASS.",
+  "p0_b_delta_source_commit": "b8670b49cfb84f2a21ae01855dd7cf29f16116f1",
+  "next_authorized_component": "P0_C_COMPARATOR_IDENTIFIABILITY",
+  "stop_reason": null
 }

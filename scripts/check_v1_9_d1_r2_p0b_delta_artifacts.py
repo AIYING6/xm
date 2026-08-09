@@ -35,6 +35,14 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def read_launcher_log(path: Path) -> str:
+    """Read PowerShell redirection output without treating UTF-16 as failure."""
+    raw = path.read_bytes()
+    if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+        return raw.decode("utf-16")
+    return raw.decode("utf-8")
+
+
 def check_run(root: Path, directory: str, method: str, encoder: str, hidden: int, commit: str) -> dict:
     run_dir = root / directory
     winner, candidates = verify_and_select(run_dir, method, 9401, PROTOCOL)
@@ -87,7 +95,7 @@ def main() -> None:
     if runtime.get("git_commit") != args.expected_source_commit:
         fail("runtime manifest source commit mismatch")
     preflight = args.root / "p0b_runtime_path.log"
-    if "P0_B_FEATURE_PROVENANCE_AUDIT_V1_9: PASS (5 tests)" not in preflight.read_text(encoding="utf-8"):
+    if "P0_B_FEATURE_PROVENANCE_AUDIT_V1_9: PASS (5 tests)" not in read_launcher_log(preflight):
         fail("missing passing P0-B runtime-path regression")
     result = {
         "status": "D1_R2_P0B_DELTA_REQUALIFICATION_GATE_PASS__P0_R2_RED_TEAM_CONTINUES__D2_NOT_AUTHORIZED",
