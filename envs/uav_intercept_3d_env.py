@@ -91,6 +91,13 @@ ACTION3D_TABLE = np.asarray(
     dtype=np.float32,
 )
 FLIGHT_ACTION_DIM = len(ACTION3D_TABLE)
+# Guidance-level commands expose only turn/climb trends.  A fixed controller
+# supplies the acceleration command from the controlled vehicle's own speed.
+GUIDANCE_ACTION_TABLE = np.asarray(
+    [[turn, climb] for turn in (-1.0, 0.0, 1.0) for climb in (-1.0, 0.0, 1.0)],
+    dtype=np.float32,
+)
+GUIDANCE_FLIGHT_ACTION_DIM = len(GUIDANCE_ACTION_TABLE)
 
 
 @dataclass(frozen=True)
@@ -156,6 +163,9 @@ class UAVIntercept3DConfig:
     # N2-repair switch.  The potential is disabled by default so legacy and
     # original N2 semantics remain unchanged unless the repair is explicit.
     mission_progress_shaping_enabled: bool = False
+    # N2 guidance repair: actor emits turn/climb guidance only; a deterministic
+    # own-state speed-hold controller supplies the low-level acceleration.
+    guidance_level_action_interface: bool = False
     # When set for the new mission, crossing this true XY radius before
     # neutralization is a terminal TARGET_ESCAPE. None preserves legacy motion.
     target_escape_radius: float | None = None
@@ -200,7 +210,8 @@ class UAVIntercept3DEnv:
         self.rng = np.random.default_rng(self.config.seed)
         self.dropout_rng = np.random.default_rng(None if self.config.seed is None else self.config.seed + 10_007)
         self.num_agents = self.config.num_blue
-        self.action_dim = FLIGHT_ACTION_DIM * (2 if self.config.mission_neutralization_enabled else 1)
+        flight_dim = GUIDANCE_FLIGHT_ACTION_DIM if self.config.guidance_level_action_interface else FLIGHT_ACTION_DIM
+        self.action_dim = flight_dim * (2 if self.config.mission_neutralization_enabled else 1)
         self.obs_dim = 34
         self.node_feat_dim = NODE3D_FEAT_DIM
         self.edge_feat_dim = EDGE3D_FEAT_DIM
@@ -417,8 +428,24 @@ class UAVIntercept3DEnv:
         """
         if not self.config.mission_neutralization_enabled:
             return actions.copy(), np.zeros(self.config.num_blue, dtype=bool)
-        flight_actions = actions % FLIGHT_ACTION_DIM
-        raw_commit = actions >= FLIGHT_ACTION_DIM
+        if self.config.guidance_level_action_interface:
+            guidance_actions = actions % GUIDANCE_FLIGHT_ACTION_DIM
+            raw_commit = actions >= GUIDANCE_FLIGHT_ACTION_DIM
+            flight_actions = np.empty_like(guidance_actions)
+            for i, guidance_action in enumerate(guidance_actions):
+                turn_cmd, climb_cmd = GUIDANCE_ACTION_TABLE[int(guidance_action)]
+                typ = self.config.blue_types[i]
+                # Fixed controller uses only own speed and role limits; it has
+                # no access to target/global state or communication variables.
+                speed_mid = 0.5 * (typ.min_speed + typ.max_speed)
+                speed_error = speed_mid - float(self.blue_speed[i])
+                accel_cmd = 1.0 if speed_error > 0.5 * typ.max_accel else (-1.0 if speed_error < -0.5 * typ.max_accel else 0.0)
+                flight_actions[i] = int(np.argmin(np.linalg.norm(
+                    ACTION3D_TABLE - np.asarray((turn_cmd, climb_cmd, accel_cmd), dtype=np.float32)[None, :], axis=1
+                )))
+        else:
+            flight_actions = actions % FLIGHT_ACTION_DIM
+            raw_commit = actions >= FLIGHT_ACTION_DIM
         legal_roles = np.asarray(
             [typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR} for typ in self.config.blue_types],
             dtype=bool,

@@ -118,6 +118,7 @@ class RIGMAPPOConfig:
     post_loss_chain_reclosure_min_step: int = 0
     # New-project N0/N1 task parameters. Defaults preserve the legacy task.
     mission_neutralization_enabled: bool = False
+    guidance_level_action_interface: bool = False
     engage_commit_hold_steps: int = 4
     mission_progress_shaping_enabled: bool = False
     target_escape_radius: float | None = None
@@ -1096,6 +1097,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 attack_geometry_reward_weight=cfg.attack_geometry_reward_weight,
                 attack_hold_steps=cfg.attack_hold_steps,
                 mission_neutralization_enabled=cfg.mission_neutralization_enabled,
+                guidance_level_action_interface=cfg.guidance_level_action_interface,
                 engage_commit_hold_steps=cfg.engage_commit_hold_steps,
                 mission_progress_shaping_enabled=cfg.mission_progress_shaping_enabled,
                 target_escape_radius=cfg.target_escape_radius,
