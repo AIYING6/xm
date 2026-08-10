@@ -124,6 +124,7 @@ class RIGMAPPOConfig:
     mission_neutralization_enabled: bool = False
     guidance_level_action_interface: bool = False
     continuous_guidance_action_interface: bool = False
+    role_specific_actor_heads: bool = False
     engage_commit_hold_steps: int = 4
     mission_progress_shaping_enabled: bool = False
     mission_reward_alignment_v1_enabled: bool = False
@@ -687,6 +688,7 @@ class RIActor(nn.Module):
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
         hybrid_action: bool = False,
+        role_specific_actor_heads: bool = False,
     ):
         super().__init__()
         if graph_encoder not in {
@@ -704,6 +706,7 @@ class RIActor(nn.Module):
         self.num_intents = num_intents
         self.use_intent_context = use_intent_context
         self.hybrid_action = hybrid_action
+        self.role_specific_actor_heads = role_specific_actor_heads
         self.role_emb = nn.Embedding(num_roles, role_dim)
         self.intent_emb = nn.Embedding(num_intents, intent_dim)
         self.obs_encoder = nn.Sequential(nn.Linear(obs_dim, hidden_dim), nn.Tanh())
@@ -750,11 +753,37 @@ class RIActor(nn.Module):
             nn.Tanh(),
             nn.Linear(hidden_dim, len(CHAIN_AUX_LABEL_NAMES)),
         )
-        self.policy_head = nn.Sequential(
-            nn.Linear(hidden_dim * 2 + intent_dim, hidden_dim),
-            nn.Tanh(),
-            nn.Linear(hidden_dim, 5 if hybrid_action else action_dim),
-        )
+        policy_out_dim = 5 if hybrid_action else action_dim
+        def make_policy_head():
+            return nn.Sequential(
+                nn.Linear(hidden_dim * 2 + intent_dim, hidden_dim),
+                nn.Tanh(),
+                nn.Linear(hidden_dim, policy_out_dim),
+            )
+        if role_specific_actor_heads:
+            self.policy_heads = nn.ModuleList([make_policy_head() for _ in range(num_roles)])
+        else:
+            self.policy_head = make_policy_head()
+
+    def _policy_logits(self, features: torch.Tensor, role: torch.Tensor) -> torch.Tensor:
+        """Apply a shared or role-specific policy head to actor features."""
+        if not self.role_specific_actor_heads:
+            return self.policy_head(features)
+        flat = features.reshape(-1, features.shape[-1])
+        roles = role.reshape(-1).long().clamp(0, len(self.policy_heads) - 1)
+        out_dim = self.policy_heads[0][-1].out_features
+        out = flat.new_zeros((flat.shape[0], out_dim))
+        for role_id, head in enumerate(self.policy_heads):
+            mask = roles == role_id
+            if torch.any(mask):
+                out[mask] = head(flat[mask])
+        return out.reshape(*features.shape[:-1], out_dim)
+
+    @staticmethod
+    def _policy_role(role: torch.Tensor, num_agents: int) -> torch.Tensor:
+        if role.ndim >= 3:
+            return role[:, :, 0] if role.shape[-1] == 1 else role[:, :, 0, 0]
+        return role[:, :num_agents]
 
     def forward(
         self,
@@ -814,7 +843,8 @@ class RIActor(nn.Module):
             intent_context = intent_context.mean(dim=1).unsqueeze(1).expand(-1, num_agents, -1)
             context_feat = self.r2_context_encoder(pcrf_r2["context"])
             graph_actor_feat = graph_feat.unsqueeze(1).expand(-1, num_agents, -1)
-            logits = self.policy_head(torch.cat([context_feat.unsqueeze(1).expand(-1, num_agents, -1), graph_actor_feat, intent_context], dim=-1))
+            policy_role = self._policy_role(r2_role, num_agents)
+            logits = self._policy_logits(torch.cat([context_feat.unsqueeze(1).expand(-1, num_agents, -1), graph_actor_feat, intent_context], dim=-1), policy_role)
             chain_aux_logits = self.chain_aux_head(graph_feat)
             if return_chain_aux:
                 return logits, attn, intent_logits, chain_aux_logits
@@ -858,7 +888,7 @@ class RIActor(nn.Module):
                 device=x.device,
             )
             obs_feat = self.obs_encoder(obs)
-            logits = self.policy_head(torch.cat([obs_feat, graph_feat, intent_context], dim=-1))
+            logits = self._policy_logits(torch.cat([obs_feat, graph_feat, intent_context], dim=-1), self._policy_role(role, num_agents))
             chain_aux_logits = self.chain_aux_head(graph_feat.mean(dim=1))
             if return_chain_aux:
                 return logits, attn, intent_logits, chain_aux_logits
@@ -915,7 +945,7 @@ class RIActor(nn.Module):
         intent_context = intent_context.mean(dim=1).unsqueeze(1).expand(-1, num_agents, -1)
 
         obs_feat = self.obs_encoder(obs)
-        logits = self.policy_head(torch.cat([obs_feat, graph_feat, intent_context], dim=-1))
+        logits = self._policy_logits(torch.cat([obs_feat, graph_feat, intent_context], dim=-1), self._policy_role(role, num_agents))
         chain_aux_logits = self.chain_aux_head(graph_feat.mean(dim=1))
         if return_chain_aux:
             return logits, attn, intent_logits, chain_aux_logits
@@ -942,6 +972,7 @@ class RIGMAPPOAgent(nn.Module):
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
         hybrid_action: bool = False,
+        role_specific_actor_heads: bool = False,
     ):
         super().__init__()
         self.num_agents = num_agents
@@ -963,6 +994,7 @@ class RIGMAPPOAgent(nn.Module):
             role_gate_prior_strength=role_gate_prior_strength,
             multi_relation_global_residual_weight=multi_relation_global_residual_weight,
             hybrid_action=hybrid_action,
+            role_specific_actor_heads=role_specific_actor_heads,
         )
         self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
 
@@ -1790,6 +1822,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         role_gate_prior_strength=cfg.role_gate_prior_strength,
         multi_relation_global_residual_weight=cfg.multi_relation_global_residual_weight,
         hybrid_action=cfg.continuous_guidance_action_interface,
+        role_specific_actor_heads=cfg.role_specific_actor_heads,
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     optimizer = make_optimizer(agent, cfg)
