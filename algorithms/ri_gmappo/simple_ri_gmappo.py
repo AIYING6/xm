@@ -32,6 +32,7 @@ from envs import (
     UAVPursuitEnv,
     physical_engagement_ready,
 )
+from envs.uav_intercept_3d_env import UAV3DType
 
 
 ROLE_SCOUT_ID = 0
@@ -53,6 +54,8 @@ CHAIN_AUX_LABEL_NAMES = (
 class RIGMAPPOConfig:
     env_name: str = "2d_pursuit"
     seed: int = 0
+    num_blue: int = 3
+    blue_types: list[UAV3DType] | None = None
     num_envs: int = 8
     rollout_steps: int = 128
     updates: int = 200
@@ -1061,9 +1064,9 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
             )
         )
     if cfg.env_name == "3d_intercept":
-        return UAVIntercept3DEnv(
-            UAVIntercept3DConfig(
+        env_kwargs = dict(
                 seed=seed,
+                num_blue=cfg.num_blue,
                 target_policy=cfg.target_policy,
                 communication_range_scale=sample_communication_range_scale(cfg) if training else cfg.communication_range_scale,
                 communication_dropout_prob=sample_float_curriculum(
@@ -1129,7 +1132,9 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 target_heading_amp=cfg.target_heading_amp,
                 target_break_turn_amp_rad=cfg.target_break_turn_amp_rad,
             )
-        )
+        if cfg.blue_types is not None:
+            env_kwargs["blue_types"] = cfg.blue_types
+        return UAVIntercept3DEnv(UAVIntercept3DConfig(**env_kwargs))
     raise ValueError(f"Unsupported env_name: {cfg.env_name}")
 
 
