@@ -10,6 +10,7 @@ import json
 import sys
 import tempfile
 import csv
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -107,11 +108,11 @@ def test_artifact_gate_recomputes_summary_from_raw_records() -> None:
         f1_root.mkdir()
         build_temporary_f1_root(f1_root)
         plan = build_f2_plan(f1_root, FAKE_F1_COMMIT, FAKE_EVALUATOR_COMMIT)
+        plan["evaluation_workers"] = 4
         f2_root = root / "f2"
         f2_root.mkdir()
         preflight_path = f2_root / "F2_R2_LAUNCH_PREFLIGHT_MANIFEST.json"
         preflight_path.write_text(json.dumps(plan), encoding="utf-8")
-        execution_runs = []
         for item in plan["checkpoint_plans"]:
             run_dir = f2_root / f"{item['method']}_seed{item['training_seed']}"
             run_dir.mkdir()
@@ -151,23 +152,13 @@ def test_artifact_gate_recomputes_summary_from_raw_records() -> None:
             }
             summary_path = run_dir / "summary.json"
             summary_path.write_text(json.dumps(summary), encoding="utf-8")
-            execution_runs.append({
-                "method": item["method"], "training_seed": item["training_seed"],
-                "episode_records_path": str(records_path.relative_to(f2_root)),
-                "episode_records_sha256": sha256_file(records_path),
-                "summary_path": str(summary_path.relative_to(f2_root)),
-                "summary_sha256": sha256_file(summary_path),
-            })
-        execution = {
-            "status": "F2_R2_CONFIRMATORY_EVALUATION_COMPLETE__ANALYSIS_PENDING",
-            "protocol_version": "V1_9_F2_R2_CONFIRMATORY",
-            "f1_source_commit": FAKE_F1_COMMIT,
-            "f2_evaluator_source_commit": FAKE_EVALUATOR_COMMIT,
-            "launch_preflight_sha256": sha256_file(preflight_path),
-            "confirmatory_heldout_accessed": True,
-            "runs": execution_runs,
-        }
-        (f2_root / "F2_R2_EXECUTION_MANIFEST.json").write_text(json.dumps(execution), encoding="utf-8")
+        subprocess.run([
+            sys.executable, str(ROOT / "scripts" / "finalize_v1_9_f2_r2_execution.py"),
+            "--out-root", str(f2_root),
+            "--expected-f1-source-commit", FAKE_F1_COMMIT,
+            "--expected-evaluator-source-commit", FAKE_EVALUATOR_COMMIT,
+            "--f2-workers", "4",
+        ], check=True)
         artifact = validate(f2_root, FAKE_F1_COMMIT, FAKE_EVALUATOR_COMMIT)
         assert artifact["status"] == "F2_R2_CONFIRMATORY_ARTIFACT_GATE_PASS"
         matrices = load_vectors(f2_root)

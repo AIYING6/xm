@@ -31,6 +31,23 @@ checkpoint bytes but does not create an F2 episode or report performance.
 | Total rollouts | 24 × 300 = 7,200 |
 | Policy action | Deterministic argmax action |
 
+## Pre-launch throughput calibration
+
+The simulator rollout and the small policy networks are CPU-dominated, so a
+single evaluator does not use a 4090 efficiently. Before F2 is opened, an
+engineering-only benchmark may test `1`, `2`, and `4` independent evaluator
+workers using random PCRF-R2 weights and seed IDs outside the confirmatory
+bank. It must not read an F1 selected checkpoint, use IDs `510000`--`510299`,
+write an endpoint, or make a method comparison.
+
+The benchmark's sole output is aggregate episodes/second. Its recommended
+worker count is frozen into the zero-result launch preflight as
+`evaluation_workers` before the first confirmatory rollout. Each worker then
+receives an isolated method/seed checkpoint plan; all workers still evaluate
+the exact same ordered 300-ID bank. A separate finalizer writes the root
+execution manifest only after all 24 isolated outputs exist. Thus concurrency
+changes wall-clock throughput only, never the 24 × 300 scientific matrix.
+
 The evaluation environment uses the frozen formal conditions: 3DOF intercept,
 strict target sensing and actor bottleneck, communication dropout `0.30`,
 message delay `2`, radar dropout `0.10`, relay agent `1` failure from step `40`

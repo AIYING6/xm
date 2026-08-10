@@ -9,7 +9,10 @@ F1_ROOT="${F1_ROOT:?set frozen F1 formal-output root}"
 OUT_ROOT="${OUT_ROOT:-results/v1_9_f2_r2_confirmatory}"
 EXPECTED_F1_SOURCE_COMMIT="${EXPECTED_F1_SOURCE_COMMIT:?set full F1 source commit}"
 EXPECTED_EVALUATOR_SOURCE_COMMIT="${EXPECTED_EVALUATOR_SOURCE_COMMIT:?set full F2 evaluator source commit}"
+F2_WORKERS="${F2_WORKERS:-1}"
 export OMP_NUM_THREADS=1
+
+[[ "$F2_WORKERS" =~ ^(1|2|4)$ ]] || { echo "F2_WORKERS must be 1, 2, or 4" >&2; exit 2; }
 
 [[ "$(git rev-parse HEAD)" == "$EXPECTED_EVALUATOR_SOURCE_COMMIT" ]] || { echo "F2 evaluator source commit mismatch" >&2; exit 2; }
 [[ -z "$(git status --porcelain --untracked-files=no)" ]] || { echo "tracked source tree is dirty" >&2; exit 2; }
@@ -34,12 +37,30 @@ PY
 "$PYTHON_BIN" scripts/prepare_v1_9_f2_r2_preflight.py \
   --f1-root "$F1_ROOT" --out-root "$OUT_ROOT" \
   --expected-f1-source-commit "$EXPECTED_F1_SOURCE_COMMIT" \
-  --expected-evaluator-source-commit "$EXPECTED_EVALUATOR_SOURCE_COMMIT"
+  --expected-evaluator-source-commit "$EXPECTED_EVALUATOR_SOURCE_COMMIT" \
+  --f2-workers "$F2_WORKERS"
 
-"$PYTHON_BIN" scripts/evaluate_v1_9_f2_r2.py \
-  --f1-root "$F1_ROOT" --out-root "$OUT_ROOT" \
-  --expected-f1-source-commit "$EXPECTED_F1_SOURCE_COMMIT" \
-  --expected-evaluator-source-commit "$EXPECTED_EVALUATOR_SOURCE_COMMIT" --device cuda
+trap 'jobs -pr | xargs -r kill; exit 1' ERR INT TERM
+for ((batch_start=0; batch_start<24; batch_start+=F2_WORKERS)); do
+  pids=()
+  for ((offset=0; offset<F2_WORKERS && batch_start+offset<24; offset++)); do
+    plan_index=$((batch_start + offset))
+    "$PYTHON_BIN" scripts/evaluate_v1_9_f2_r2.py \
+      --f1-root "$F1_ROOT" --out-root "$OUT_ROOT" \
+      --expected-f1-source-commit "$EXPECTED_F1_SOURCE_COMMIT" \
+      --expected-evaluator-source-commit "$EXPECTED_EVALUATOR_SOURCE_COMMIT" \
+      --device cuda --plan-index "$plan_index" \
+      > "$OUT_ROOT/f2_worker_${plan_index}.log" 2>&1 &
+    pids+=("$!")
+  done
+  for pid in "${pids[@]}"; do wait "$pid"; done
+done
+trap - ERR INT TERM
+
+"$PYTHON_BIN" scripts/finalize_v1_9_f2_r2_execution.py \
+  --out-root "$OUT_ROOT" --expected-f1-source-commit "$EXPECTED_F1_SOURCE_COMMIT" \
+  --expected-evaluator-source-commit "$EXPECTED_EVALUATOR_SOURCE_COMMIT" \
+  --f2-workers "$F2_WORKERS"
 
 "$PYTHON_BIN" scripts/check_v1_9_f2_r2_artifacts.py \
   --root "$OUT_ROOT" --expected-f1-source-commit "$EXPECTED_F1_SOURCE_COMMIT" \

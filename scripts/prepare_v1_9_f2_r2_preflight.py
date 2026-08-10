@@ -18,12 +18,18 @@ def main() -> None:
     parser.add_argument("--out-root", type=Path, required=True)
     parser.add_argument("--expected-f1-source-commit", required=True)
     parser.add_argument("--expected-evaluator-source-commit", required=True)
+    parser.add_argument("--f2-workers", type=int, default=1)
     args = parser.parse_args()
     if current_commit() != args.expected_evaluator_source_commit:
         raise SystemExit("F2 evaluator source commit mismatch")
     if args.out_root.exists():
         raise SystemExit(f"refusing to reuse F2 output root: {args.out_root}")
+    if args.f2_workers not in {1, 2, 4}:
+        raise SystemExit("F2 worker count must be one of 1, 2, or 4")
     plan = build_f2_plan(args.f1_root, args.expected_f1_source_commit, args.expected_evaluator_source_commit)
+    # This is an engineering execution setting, frozen before any confirmatory
+    # episode is opened. It never changes the 24 x 300 evaluation matrix.
+    plan["evaluation_workers"] = args.f2_workers
     write_new_json(args.out_root / "F2_R2_LAUNCH_PREFLIGHT_MANIFEST.json", plan)
     print("F2_R2_LAUNCH_PREFLIGHT_PASS: 24 frozen checkpoints; confirmatory episodes not accessed")
 

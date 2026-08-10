@@ -57,6 +57,8 @@ def validate(root: Path, expected_f1_source_commit: str, expected_evaluator_sour
         or execution.get("f2_evaluator_source_commit") != expected_evaluator_source_commit
         or execution.get("launch_preflight_sha256") != sha256_file(preflight_path)
         or execution.get("confirmatory_heldout_accessed") is not True
+        or int(execution.get("evaluation_workers", -1)) not in {1, 2, 4}
+        or int(execution.get("evaluation_workers", -1)) != int(preflight.get("evaluation_workers", -2))
     ):
         fail("execution manifest provenance mismatch")
 

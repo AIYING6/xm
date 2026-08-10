@@ -147,6 +147,7 @@ def main() -> None:
     parser.add_argument("--expected-f1-source-commit", required=True)
     parser.add_argument("--expected-evaluator-source-commit", required=True)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--plan-index", type=int)
     args = parser.parse_args()
 
     if current_commit() != args.expected_evaluator_source_commit:
@@ -165,8 +166,16 @@ def main() -> None:
     ):
         raise SystemExit("F2 launch preflight provenance mismatch")
     specs = {method: (encoder, hidden_dim) for method, encoder, hidden_dim in METHOD_SPECS}
+    checkpoint_plans = plan["checkpoint_plans"]
+    if args.plan_index is None:
+        selected_plans = list(enumerate(checkpoint_plans))
+    else:
+        if not 0 <= args.plan_index < len(checkpoint_plans):
+            raise SystemExit(f"F2 plan index must be in [0, {len(checkpoint_plans) - 1}]")
+        selected_plans = [(args.plan_index, checkpoint_plans[args.plan_index])]
+
     execution_runs = []
-    for index, checkpoint_plan in enumerate(plan["checkpoint_plans"], 1):
+    for plan_index, checkpoint_plan in selected_plans:
         method = str(checkpoint_plan["method"])
         encoder, hidden_dim = specs[method]
         if encoder != checkpoint_plan["encoder"] or int(hidden_dim) != int(checkpoint_plan["hidden_dim"]):
@@ -211,8 +220,17 @@ def main() -> None:
             "summary_path": str(summary_path.relative_to(args.out_root)),
             "summary_sha256": sha256_file(summary_path),
         })
-        print(f"F2 progress: {index}/24 checkpoint evaluations complete", flush=True)
+        print(
+            f"F2 checkpoint evaluation complete: plan {plan_index + 1}/24 "
+            f"({method}/seed{cfg.seed})",
+            flush=True,
+        )
 
+    # A parallel worker is intentionally unable to create the root manifest:
+    # only the post-worker finalizer can attest that all 24 immutable outputs
+    # exist exactly once.
+    if args.plan_index is not None:
+        return
     execution = {
         "status": "F2_R2_CONFIRMATORY_EVALUATION_COMPLETE__ANALYSIS_PENDING",
         "protocol_version": F2_PROTOCOL,
@@ -220,6 +238,7 @@ def main() -> None:
         "f2_evaluator_source_commit": args.expected_evaluator_source_commit,
         "launch_preflight_sha256": sha256_file(plan_path),
         "confirmatory_heldout_accessed": True,
+        "evaluation_workers": 1,
         "runs": execution_runs,
     }
     write_new_json(args.out_root / "F2_R2_EXECUTION_MANIFEST.json", execution)
