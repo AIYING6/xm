@@ -119,6 +119,7 @@ class RIGMAPPOConfig:
     # New-project N0/N1 task parameters. Defaults preserve the legacy task.
     mission_neutralization_enabled: bool = False
     engage_commit_hold_steps: int = 4
+    mission_progress_shaping_enabled: bool = False
     target_escape_radius: float | None = None
     mission_max_steps: int = 260
     failed_blue_agent: int = -1
@@ -1096,6 +1097,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 attack_hold_steps=cfg.attack_hold_steps,
                 mission_neutralization_enabled=cfg.mission_neutralization_enabled,
                 engage_commit_hold_steps=cfg.engage_commit_hold_steps,
+                mission_progress_shaping_enabled=cfg.mission_progress_shaping_enabled,
                 target_escape_radius=cfg.target_escape_radius,
                 max_steps=cfg.mission_max_steps,
                 min_success_step=cfg.min_success_step,

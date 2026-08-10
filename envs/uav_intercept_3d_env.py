@@ -153,6 +153,9 @@ class UAVIntercept3DConfig:
     # coordination task, observations, and action interface remain unchanged.
     mission_neutralization_enabled: bool = False
     engage_commit_hold_steps: int = 4
+    # N2-repair switch.  The potential is disabled by default so legacy and
+    # original N2 semantics remain unchanged unless the repair is explicit.
+    mission_progress_shaping_enabled: bool = False
     # When set for the new mission, crossing this true XY radius before
     # neutralization is a terminal TARGET_ESCAPE. None preserves legacy motion.
     target_escape_radius: float | None = None
@@ -330,6 +333,7 @@ class UAVIntercept3DEnv:
         flight_actions, engage_commit = self._decode_actions(actions)
         self.last_engage_commit = engage_commit.astype(np.float32)
         prev_range = self._mean_target_range()
+        prev_mission_potential = self._mission_progress_potential()
         prev_tracking = float(np.mean(self.detected_by))
         prev_window = float(np.max(self.attack_window))
 
@@ -394,7 +398,11 @@ class UAVIntercept3DEnv:
         self.history["detected_by"].append(self.detected_by.copy())
         self.history["attack_window"].append(self.attack_window.copy())
 
-        rewards = self._compute_rewards(prev_range, cur_range, prev_tracking, tracking, prev_window, window)
+        cur_mission_potential = self._mission_progress_potential()
+        rewards = self._compute_rewards(
+            prev_range, cur_range, prev_tracking, tracking, prev_window, window,
+            prev_mission_potential, cur_mission_potential,
+        )
         dones = np.full((self.config.num_blue, 1), self.done, dtype=np.float32)
         infos = self._info(timeout)
         return self._get_obs(), self._get_share_obs(), self._get_graph_obs(), rewards, dones, infos
@@ -802,6 +810,41 @@ class UAVIntercept3DEnv:
     def _mean_target_range(self) -> float:
         return float(np.mean(np.linalg.norm(self.blue_pos - self.red_pos[0], axis=1)))
 
+    def _mission_progress_potential(self) -> float:
+        """True-physics potential for the single authorized N2 repair.
+
+        This evaluator-side team reward uses only relative kinematics and the
+        physical four-step commit hold.  It deliberately does not inspect
+        sensing, packets, cache age, communication, graph relations,
+        ``chain_closed`` or any actor-visible proxy.  The hold component is
+        updated only by ``_neutralization_eligible`` in the mission transition.
+        """
+        if not self.config.mission_neutralization_enabled:
+            return 0.0
+        red_vel = velocity_from_state(
+            float(self.red_speed[0]), float(self.red_heading[0]), float(self.red_gamma[0])
+        )
+        terms: list[float] = []
+        for i, typ in enumerate(self.config.blue_types):
+            if typ.role not in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
+                continue
+            rel = self.red_pos[0] - self.blue_pos[i]
+            dist = float(np.linalg.norm(rel))
+            if dist <= 1e-6:
+                continue
+            los = unit(rel)
+            blue_vel = velocity_from_state(
+                float(self.blue_speed[i]), float(self.blue_heading[i]), float(self.blue_gamma[i])
+            )
+            heading = math.atan2(float(rel[1]), float(rel[0]))
+            alignment = math.cos(angle_diff(heading, float(self.blue_heading[i])))
+            closure = float(np.clip(np.dot(blue_vel - red_vel, los) / 300.0, -1.0, 1.0))
+            distance_progress = float(np.clip(1.0 - dist / self.config.world_radius, -1.0, 1.0))
+            terms.append(0.50 * distance_progress + 0.30 * alignment + 0.20 * closure)
+        geometric = float(np.mean(terms)) if terms else 0.0
+        hold_progress = float(self.engage_commit_hold) / max(1, self.config.engage_commit_hold_steps)
+        return 0.90 * geometric + 0.10 * float(np.clip(hold_progress, 0.0, 1.0))
+
     def _min_blue_red_distance(self) -> float:
         return float(np.min(np.linalg.norm(self.blue_pos - self.red_pos[0], axis=1)))
 
@@ -871,13 +914,31 @@ class UAVIntercept3DEnv:
             return True
         return False
 
-    def _compute_rewards(self, prev_range: float, cur_range: float, prev_tracking: float, tracking: float, prev_window: float, window: float) -> np.ndarray:
+    def _compute_rewards(
+        self,
+        prev_range: float,
+        cur_range: float,
+        prev_tracking: float,
+        tracking: float,
+        prev_window: float,
+        window: float,
+        prev_mission_potential: float | None = None,
+        cur_mission_potential: float | None = None,
+    ) -> np.ndarray:
         if self.config.mission_neutralization_enabled:
             # N2 task reward: physical range progress plus the frozen real
             # mission outcomes only.  In particular it must not reward chain,
             # packet, graph, sensing, or engagement-window proxy variables.
             progress = np.clip((prev_range - cur_range) / 1_000.0, -1.0, 1.0)
-            base = 0.12 * progress - 0.01
+            if self.config.mission_progress_shaping_enabled:
+                prev_phi = self._mission_progress_potential() if prev_mission_potential is None else prev_mission_potential
+                cur_phi = self._mission_progress_potential() if cur_mission_potential is None else cur_mission_potential
+                # Frozen repair: potential-based shaping only.  The terminal
+                # additions below are unchanged and remain the sole success
+                # signal for NEUTRALIZED.
+                base = 0.25 * (0.99 * cur_phi - prev_phi) - 0.01
+            else:
+                base = 0.12 * progress - 0.01
             if self.target_neutralized:
                 base += 5.0
             if self.collision:

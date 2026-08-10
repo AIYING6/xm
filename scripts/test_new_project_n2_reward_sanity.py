@@ -18,12 +18,13 @@ def _base_action() -> int:
     return int(np.flatnonzero(np.all(ACTION3D_TABLE == 0.0, axis=1))[0])
 
 
-def _env() -> UAVIntercept3DEnv:
+def _env(*, shaping: bool = False) -> UAVIntercept3DEnv:
     env = UAVIntercept3DEnv(
         UAVIntercept3DConfig(
             mission_neutralization_enabled=True,
             target_escape_radius=35_000.0,
             target_policy="straight",
+            mission_progress_shaping_enabled=shaping,
             seed=31,
         )
     )
@@ -84,17 +85,31 @@ def test_new_task_parameters_reach_3d_training_factory() -> None:
     assert env.config.strict_target_sensing and env.config.agent_target_info_bottleneck
 
 
+def test_potential_repair_is_physical_and_does_not_read_proxies() -> None:
+    env = _env(shaping=True)
+    env._comm_connectivity = lambda: (_ for _ in ()).throw(AssertionError("communication proxy read"))  # type: ignore[method-assign]
+    env._mean_message_age = lambda: (_ for _ in ()).throw(AssertionError("age proxy read"))  # type: ignore[method-assign]
+    prev_phi = env._mission_progress_potential()
+    env.blue_pos[2] += np.asarray([300.0, 0.0, 0.0], dtype=np.float32)
+    env.engage_commit_hold = 1
+    cur_phi = env._mission_progress_potential()
+    shaped = float(env._compute_rewards(20_000.0, 20_000.0, 0.0, 0.0, 0.0, 0.0, prev_phi, cur_phi)[0, 0])
+    assert np.isfinite(shaped)
+    assert shaped != -0.01
+
+
 def main() -> None:
     tests = [
         test_mission_reward_does_not_read_old_proxy_methods,
         test_chain_and_communication_cannot_change_mission_reward,
         test_only_frozen_terminal_outcomes_change_terminal_reward,
         test_new_task_parameters_reach_3d_training_factory,
+        test_potential_repair_is_physical_and_does_not_read_proxies,
     ]
     for test in tests:
         test()
         print(f"PASS {test.__name__}")
-    print("N2_REWARD_SANITY_TEST_REPORT: PASS (4 tests)")
+    print("N2_REWARD_SANITY_TEST_REPORT: PASS (5 tests)")
 
 
 if __name__ == "__main__":
