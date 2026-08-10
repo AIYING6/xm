@@ -16,17 +16,19 @@ from pathlib import Path
 METHODS = ("pcrf_r2", "single_r2", "matched_nongraph_r2")
 FORMAL_SEEDS = tuple(range(8))
 SYNTHETIC_EPISODES = tuple(f"synthetic-{index:03d}" for index in range(300))
+SYNTHETIC_SELECTED_UPDATES = (120, 180, 240, 300)
 
 
 def synthetic_selection_manifest() -> dict:
     selections = []
     for method in METHODS:
         for seed in FORMAL_SEEDS:
+            selected_update = SYNTHETIC_SELECTED_UPDATES[seed % len(SYNTHETIC_SELECTED_UPDATES)]
             selections.append(
                 {
                     "method": method,
                     "seed": seed,
-                    "selected_update": 300,
+                    "selected_update": selected_update,
                     "selected_checkpoint_sha256": hashlib.sha256(
                         f"synthetic:{method}:{seed}".encode("utf-8")
                     ).hexdigest(),
@@ -70,6 +72,9 @@ def main() -> None:
         assert loaded["episodes_per_checkpoint"] == 300
         assert len(loaded["checkpoint_plans"]) == 24
         assert all(row["episode_ids"] == list(SYNTHETIC_EPISODES) for row in loaded["checkpoint_plans"])
+        assert {
+            row["selected_update"] for row in manifest["selections"]
+        } == set(SYNTHETIC_SELECTED_UPDATES)
         assert not any("results" in str(value).lower() for value in loaded.values())
     print("F2_SYNTHETIC_PREFLIGHT_PASS: 24 checkpoint plans x 300 paired synthetic episodes")
 

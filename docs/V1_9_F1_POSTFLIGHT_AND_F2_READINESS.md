@@ -31,7 +31,7 @@ python scripts/select_v1_9_f1_r2_checkpoints.py \
 
 ## F2 合成数据烟雾测试的边界
 
-`scripts/test_v1_9_f2_synthetic_preflight.py` 只在临时目录生成虚构的 24 checkpoint 条目和 300 个 `synthetic-*` episode 标识，检查：
+`scripts/test_v1_9_f2_synthetic_preflight.py` 只在临时目录生成虚构的 24 checkpoint 条目和 300 个 `synthetic-*` episode 标识。虚构 selector winner 覆盖 update 120、180、240 和 300，以确保计划不假定每个正式 checkpoint 都来自最后一个 update。该测试检查：
 
 - 3 methods × 8 training seeds 的选择清单结构；
 - 每个 checkpoint 使用同一顺序的 300 个配对 episode 标识；
@@ -39,4 +39,3 @@ python scripts/select_v1_9_f1_r2_checkpoints.py \
 - 合成数据不会引用 `results/`、真实 episode generator、F2 seed 或 F2 hash。
 
 该测试不创建确认性 population、不运行 actor、不计算真实性能指标，也不构成 F2 pre-authorization。
-
