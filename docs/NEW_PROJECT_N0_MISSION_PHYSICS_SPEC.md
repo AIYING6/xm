@@ -1,6 +1,6 @@
-# N0 draft: an independently defined standoff-neutralization mission
+# N0 specification: an independently defined standoff-neutralization mission
 
-**Status:** `N0_MISSION_PHYSICS_SPEC_DRAFT__AUTHOR_REVIEW_REQUIRED`.
+**Status:** `N0_MISSION_PHYSICS_IMPLEMENTATION_PASS__READY_FOR_N1_TASK_PROTOCOL`.
 
 This document specifies a *new* task transition only.  It does not add an
 algorithm, reward, training run, information feature, or paper performance
@@ -37,9 +37,11 @@ observation value or a reward proxy.
 
 ## Proposed action and physical transition
 
-Only an attacker/interceptor role receives an additional binary action
-`engage_commit`.  It is a decision to initiate/maintain the abstract standoff
-engagement; it conveys no information and does not expose evaluator state.
+Only an attacker/interceptor role can produce an effective additional binary
+action `engage_commit`. It is a decision to initiate/maintain the abstract
+standoff engagement; it conveys no information and does not expose evaluator
+state. The existing flat discrete-action interface represents an attempted
+commit by another role as the corresponding flight action with a no-op commit.
 
 At step \(t\), evaluator-only eligibility for attacker \(a\) is
 
@@ -121,6 +123,16 @@ method-blind task feasibility work before an algorithm is trained.
 
 ## N0 verdict
 
-**Scientifically implementable as an abstract standoff-neutralization task,
-subject to author approval of this fidelity boundary.**  It is not yet an
-implemented simulator, a validated benchmark, or an authorized method study.
+**PASS — implemented as an abstract standoff-neutralization task.** The
+author-approved fidelity boundary is retained exactly: the simulator contains
+neither a missile model nor a kill-probability claim. The implementation is
+default-off for the legacy coordination environment. When enabled it adds only
+the evaluator-owned target lifecycle and attacker/interceptor `engage_commit`
+action semantics described above; it does not alter actor observations, graph
+features, reward shaping, or any training protocol.
+
+The deterministic N0 test suite passes all seven frozen conditions:
+four-step completion; three-step non-completion; each geometry condition;
+commit causality; cache/communication/graph invariance; old-chain
+non-equivalence; and collision precedence. N0 is a simulator-physics pass,
+not a validated benchmark or an authorized method study.

@@ -90,6 +90,7 @@ ACTION3D_TABLE = np.asarray(
     ],
     dtype=np.float32,
 )
+FLIGHT_ACTION_DIM = len(ACTION3D_TABLE)
 
 
 @dataclass(frozen=True)
@@ -148,6 +149,10 @@ class UAVIntercept3DConfig:
     target_break_turn_amp_rad: float = 0.5 * math.pi  # used only by target_policy="break_turn_param"
     seed: int | None = None
     attack_hold_steps: int = 4
+    # N0 mission-physics extension.  Disabled by default so the legacy
+    # coordination task, observations, and action interface remain unchanged.
+    mission_neutralization_enabled: bool = False
+    engage_commit_hold_steps: int = 4
     collision_radius: float = 120.0
     safety_proximity_distance: float = 0.0
     safety_proximity_penalty_weight: float = 0.0
@@ -182,10 +187,12 @@ class UAVIntercept3DEnv:
             raise ValueError("num_blue must match blue_types length in the first 3DOF implementation")
         if self.config.graph_relation_ablation not in {"none", "no_task_support"}:
             raise ValueError(f"Unsupported graph_relation_ablation: {self.config.graph_relation_ablation}")
+        if self.config.engage_commit_hold_steps < 1:
+            raise ValueError("engage_commit_hold_steps must be at least one")
         self.rng = np.random.default_rng(self.config.seed)
         self.dropout_rng = np.random.default_rng(None if self.config.seed is None else self.config.seed + 10_007)
         self.num_agents = self.config.num_blue
-        self.action_dim = len(ACTION3D_TABLE)
+        self.action_dim = FLIGHT_ACTION_DIM * (2 if self.config.mission_neutralization_enabled else 1)
         self.obs_dim = 34
         self.node_feat_dim = NODE3D_FEAT_DIM
         self.edge_feat_dim = EDGE3D_FEAT_DIM
@@ -205,6 +212,9 @@ class UAVIntercept3DEnv:
         self.collision = False
         self.constraint_violation = False
         self.attack_hold = 0
+        self.target_neutralized = False
+        self.engage_commit_hold = 0
+        self.last_engage_commit = np.zeros(cfg.num_blue, dtype=np.float32)
         self.post_loss_chain_lost = False
         self.post_loss_chain_reclosure_rewarded = False
         self.post_loss_chain_reclosure_bonus = 0.0
@@ -311,12 +321,14 @@ class UAVIntercept3DEnv:
 
         actions = np.asarray(actions, dtype=np.int64).reshape(self.config.num_blue)
         actions = np.clip(actions, 0, self.action_dim - 1)
+        flight_actions, engage_commit = self._decode_actions(actions)
+        self.last_engage_commit = engage_commit.astype(np.float32)
         prev_range = self._mean_target_range()
         prev_tracking = float(np.mean(self.detected_by))
         prev_window = float(np.max(self.attack_window))
 
         self.step_count += 1
-        self._move_blue(actions)
+        self._move_blue(flight_actions)
         self._move_red()
         self._update_sensing_and_comm()
 
@@ -343,9 +355,24 @@ class UAVIntercept3DEnv:
             self.post_loss_chain_reclosure_bonus = float(self.config.post_loss_chain_reclosure_reward_weight)
             self.post_loss_chain_reclosure_rewarded = True
 
-        self.success = chain_closed and self.step_count >= self.config.min_success_step
         self.collision = self._has_collision()
         self.constraint_violation = self._has_constraint_violation()
+        if self.config.mission_neutralization_enabled:
+            # Terminal safety outcomes have frozen precedence over a same-step
+            # neutralization candidate.  This path is intentionally independent
+            # of communication, caches, graphs, and chain_closed.
+            if self.collision or self.constraint_violation:
+                self.engage_commit_hold = 0
+                self.target_neutralized = False
+            elif self._neutralization_eligible(engage_commit):
+                self.engage_commit_hold += 1
+                self.target_neutralized = self.engage_commit_hold >= self.config.engage_commit_hold_steps
+            else:
+                self.engage_commit_hold = 0
+                self.target_neutralized = False
+            self.success = bool(self.target_neutralized)
+        else:
+            self.success = chain_closed and self.step_count >= self.config.min_success_step
         timeout = self.step_count >= self.config.max_steps
         self.done = bool(self.success or self.collision or self.constraint_violation or timeout)
 
@@ -358,6 +385,24 @@ class UAVIntercept3DEnv:
         dones = np.full((self.config.num_blue, 1), self.done, dtype=np.float32)
         infos = self._info(timeout)
         return self._get_obs(), self._get_share_obs(), self._get_graph_obs(), rewards, dones, infos
+
+    def _decode_actions(self, actions: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Split a N0 action into legacy flight control and engage commitment.
+
+        With the N0 extension disabled, this is exactly the legacy 27-action
+        interface.  With it enabled, actions 0--26 are flight-only and 27--53
+        represent the same flight action with ``engage_commit=1``.  Commitments
+        from non-attacker roles are ignored by the evaluator.
+        """
+        if not self.config.mission_neutralization_enabled:
+            return actions.copy(), np.zeros(self.config.num_blue, dtype=bool)
+        flight_actions = actions % FLIGHT_ACTION_DIM
+        raw_commit = actions >= FLIGHT_ACTION_DIM
+        legal_roles = np.asarray(
+            [typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR} for typ in self.config.blue_types],
+            dtype=bool,
+        )
+        return flight_actions, raw_commit & legal_roles
 
     def _move_blue(self, actions: np.ndarray) -> None:
         cfg = self.config
@@ -678,6 +723,10 @@ class UAVIntercept3DEnv:
     def _in_attack_window(self, i: int, typ: UAV3DType) -> bool:
         if typ.role not in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
             return False
+        return self._in_true_standoff_envelope(i, typ)
+
+    def _in_true_standoff_envelope(self, i: int, typ: UAV3DType) -> bool:
+        """Evaluator-only standoff geometry from true kinematic state only."""
         rel = self.red_pos[0] - self.blue_pos[i]
         dist = float(np.linalg.norm(rel))
         if dist < typ.attack_range_min or dist > typ.attack_range_max:
@@ -687,6 +736,18 @@ class UAVIntercept3DEnv:
         alt_err = abs(float(rel[2]))
         closure = float(np.dot(velocity_from_state(self.blue_speed[i], self.blue_heading[i], self.blue_gamma[i]) - velocity_from_state(self.red_speed[0], self.red_heading[0], self.red_gamma[0]), unit(rel)))
         return heading_err <= typ.attack_cone and alt_err <= 1_600.0 and closure > -30.0
+
+    def _neutralization_eligible(self, engage_commit: np.ndarray) -> bool:
+        """Return whether any legal role committed in the true standoff envelope.
+
+        Deliberately do not call chain, cache, packet, graph, or actor-visible
+        proxy predicates here: this is an evaluator-owned physical transition.
+        """
+        for i, typ in enumerate(self.config.blue_types):
+            if typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR} and bool(engage_commit[i]):
+                if self._in_true_standoff_envelope(i, typ):
+                    return True
+        return False
 
     def _in_local_attack_window(self, i: int, typ: UAV3DType) -> bool:
         """Actor-visible attack-window proxy computed from legal target estimates."""
@@ -930,6 +991,11 @@ class UAVIntercept3DEnv:
             "attack_window_rate": float(np.mean(self.attack_window)),
             "attack_geometry_score": self._attack_geometry_score(),
             "chain_closed": float(self.attack_hold >= self.config.attack_hold_steps),
+            "mission_neutralization_enabled": float(self.config.mission_neutralization_enabled),
+            "target_neutralized": float(self.target_neutralized),
+            "engage_commit_hold": float(self.engage_commit_hold),
+            "engage_commit_active": float(np.any(self.last_engage_commit > 0.5)),
+            "neutralization_eligible": float(self._neutralization_eligible(self.last_engage_commit > 0.5)),
             "min_success_step": float(self.config.min_success_step),
             "post_loss_chain_reclosure_bonus": float(self.post_loss_chain_reclosure_bonus),
             "post_loss_chain_reclosure_rewarded": float(self.post_loss_chain_reclosure_rewarded),

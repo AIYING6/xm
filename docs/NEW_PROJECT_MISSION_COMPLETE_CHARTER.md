@@ -78,11 +78,16 @@ project's algorithmic route rather than creating another version number.
 | actor information contract | recipient-specific data legally available at execution | critic shared state or simulator truth |
 | evaluator | procedure allowed to read true task state for scoring only | policy input |
 
-## Immediate next action
+## Current status and next action
 
-The N0 draft is recorded in
+N0 is complete and recorded in
 [NEW_PROJECT_N0_MISSION_PHYSICS_SPEC.md](NEW_PROJECT_N0_MISSION_PHYSICS_SPEC.md).
-It proposes an abstract standoff-neutralization transition that uses an
-attacker `engage_commit` action and evaluator-only true kinematics, while
-explicitly excluding high-fidelity weapon claims.  Until that specification is
-author-approved, no algorithm design or training begins.
+The independently evaluator-defined abstract standoff-neutralization
+transition, its default-off compatibility boundary, and all seven deterministic
+tests are frozen and passing. No algorithm design, reward change, training, or
+cloud execution has been authorized.
+
+The next gate is **N1 task protocol and actor-information specification**:
+define the task population, terminal-outcome taxonomy, administrative horizon,
+and recipient-specific execution information contract before selecting any
+method. N1 must not select an architecture or start learning.
