@@ -19,3 +19,10 @@
 ## 图形证据边界
 
 该图是实现/协议总览，不包含 F1 training-time validation 数值、checkpoint winner、F2 episode、性能排序、统计区间或机制结论。它只能支持“系统按何种信息合约和编码结构设计”，不能支持“PCRF-R2 已优于比较方法”。
+
+## Reference-asset-preserving 视觉审计
+
+- 用户提供的参考仅为 PNG；未提供可复制的 SVG/PDF/源矢量对象。因此最终图直接保留该 PNG 中的 Scout、Relay、Attacker、Target tower、山地、failure-X、面板边框与底部角色图例像素资产，而不重新绘制这些资产。
+- 只遮盖旧科学标签及已否定的第三来源槽位，再在同一坐标母版内写入 PCRF-R2 术语与模块。
+- `fig1_architecture_asset_preserving_metrics.json` 记录面板、图例、caption 的参考坐标与候选坐标；被保留角色资产的中心偏差为 0%，主面板 bounding-box 偏差为 0%，均低于本轮阈值。
+- 因输入资产为位图，SVG/PDF 是嵌入高保真 PNG 的论文容器；不把这些角色图标宣称为可编辑的原始矢量对象。

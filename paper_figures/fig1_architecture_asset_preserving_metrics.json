@@ -1,0 +1,193 @@
+{
+  "reference_asset_type": "user-provided raster image; no SVG/PDF/vector source supplied",
+  "reference_size_px": [
+    1491,
+    1055
+  ],
+  "panel_boxes_reference_px": {
+    "a": [
+      7,
+      9,
+      797,
+      421
+    ],
+    "b": [
+      797,
+      9,
+      1483,
+      421
+    ],
+    "c": [
+      7,
+      421,
+      797,
+      888
+    ],
+    "d": [
+      797,
+      421,
+      1483,
+      888
+    ],
+    "legend": [
+      7,
+      908,
+      1483,
+      982
+    ],
+    "caption": [
+      34,
+      1005,
+      1455,
+      1040
+    ]
+  },
+  "panel_boxes_candidate_px": {
+    "a": [
+      7,
+      9,
+      797,
+      421
+    ],
+    "b": [
+      797,
+      9,
+      1483,
+      421
+    ],
+    "c": [
+      7,
+      421,
+      797,
+      888
+    ],
+    "d": [
+      797,
+      421,
+      1483,
+      888
+    ],
+    "legend": [
+      7,
+      908,
+      1483,
+      982
+    ],
+    "caption": [
+      34,
+      1005,
+      1455,
+      1040
+    ]
+  },
+  "uav_icon_centers_reference_px": {
+    "a_scout": [
+      190,
+      104
+    ],
+    "a_relay": [
+      420,
+      105
+    ],
+    "a_attacker": [
+      190,
+      274
+    ],
+    "a_target": [
+      461,
+      296
+    ],
+    "b_normal_scout": [
+      848,
+      123
+    ],
+    "b_normal_relay": [
+      1018,
+      121
+    ],
+    "b_failed_scout": [
+      1183,
+      123
+    ],
+    "b_failed_relay": [
+      1340,
+      118
+    ],
+    "legend_scout": [
+      48,
+      934
+    ],
+    "legend_relay": [
+      197,
+      938
+    ],
+    "legend_attacker": [
+      349,
+      939
+    ],
+    "legend_target": [
+      524,
+      939
+    ]
+  },
+  "uav_icon_centers_candidate_px": {
+    "a_scout": [
+      190,
+      104
+    ],
+    "a_relay": [
+      420,
+      105
+    ],
+    "a_attacker": [
+      190,
+      274
+    ],
+    "a_target": [
+      461,
+      296
+    ],
+    "b_normal_scout": [
+      848,
+      123
+    ],
+    "b_normal_relay": [
+      1018,
+      121
+    ],
+    "b_failed_scout": [
+      1183,
+      123
+    ],
+    "b_failed_relay": [
+      1340,
+      118
+    ],
+    "legend_scout": [
+      48,
+      934
+    ],
+    "legend_relay": [
+      197,
+      938
+    ],
+    "legend_attacker": [
+      349,
+      939
+    ],
+    "legend_target": [
+      524,
+      939
+    ]
+  },
+  "max_uav_icon_center_deviation_percent": 0.0,
+  "max_panel_bbox_deviation_percent": 0.0,
+  "max_title_legend_baseline_deviation_percent": 0.0,
+  "thresholds": {
+    "uav_icon_center_percent": 2.0,
+    "panel_bbox_percent": 3.0,
+    "title_legend_baseline_percent": 2.0
+  },
+  "verdict": "PASS_REFERENCE_ASSET_PRESERVING",
+  "notes": "Role/tower/mountain/failure/legend pixel assets are retained at their reference coordinates. Only scientific text and module interiors are replaced."
+}
