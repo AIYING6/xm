@@ -17,6 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
+from algorithms.ri_gmappo.hybrid_action import TanhGaussianBernoulli
 
 from envs import (
     EDGE_FEAT_DIM,
@@ -122,6 +123,7 @@ class RIGMAPPOConfig:
     # New-project N0/N1 task parameters. Defaults preserve the legacy task.
     mission_neutralization_enabled: bool = False
     guidance_level_action_interface: bool = False
+    continuous_guidance_action_interface: bool = False
     engage_commit_hold_steps: int = 4
     mission_progress_shaping_enabled: bool = False
     mission_reward_alignment_v1_enabled: bool = False
@@ -684,6 +686,7 @@ class RIActor(nn.Module):
         use_intent_context: bool = True,
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
+        hybrid_action: bool = False,
     ):
         super().__init__()
         if graph_encoder not in {
@@ -700,6 +703,7 @@ class RIActor(nn.Module):
         self.graph_input_ablation = graph_input_ablation
         self.num_intents = num_intents
         self.use_intent_context = use_intent_context
+        self.hybrid_action = hybrid_action
         self.role_emb = nn.Embedding(num_roles, role_dim)
         self.intent_emb = nn.Embedding(num_intents, intent_dim)
         self.obs_encoder = nn.Sequential(nn.Linear(obs_dim, hidden_dim), nn.Tanh())
@@ -749,7 +753,7 @@ class RIActor(nn.Module):
         self.policy_head = nn.Sequential(
             nn.Linear(hidden_dim * 2 + intent_dim, hidden_dim),
             nn.Tanh(),
-            nn.Linear(hidden_dim, action_dim),
+            nn.Linear(hidden_dim, 5 if hybrid_action else action_dim),
         )
 
     def forward(
@@ -937,10 +941,12 @@ class RIGMAPPOAgent(nn.Module):
         use_intent_context: bool = True,
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
+        hybrid_action: bool = False,
     ):
         super().__init__()
         self.num_agents = num_agents
         self.num_roles = num_roles
+        self.hybrid_action = hybrid_action
         self.actor = RIActor(
             obs_dim,
             node_feat_dim,
@@ -956,6 +962,7 @@ class RIGMAPPOAgent(nn.Module):
             use_intent_context=use_intent_context,
             role_gate_prior_strength=role_gate_prior_strength,
             multi_relation_global_residual_weight=multi_relation_global_residual_weight,
+            hybrid_action=hybrid_action,
         )
         self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
 
@@ -1000,7 +1007,16 @@ class RIGMAPPOAgent(nn.Module):
                     for key, value in pcrf_r2.items()
                 }
             intent_actor = intent_label.reshape(batch_size * num_agents, -1) if intent_label is not None else None
-            action_actor = action.reshape(batch_size * num_agents, 1) if action is not None else None
+            if action is not None:
+                # Keep the recipient singleton dimension so hybrid distribution
+                # parameters [B*N, 1, ...] cannot broadcast against [B*N, ...].
+                action_actor = (
+                    action.reshape(batch_size * num_agents, 1, 3)
+                    if self.hybrid_action
+                    else action.reshape(batch_size * num_agents, 1)
+                )
+            else:
+                action_actor = None
             logits, attn, intent_logits, chain_aux_logits = self.actor(
                 obs_actor, node_actor, edge_actor, role_actor, adj_actor, 1,
                 relation_adj=relation_actor, intent_label=intent_actor,
@@ -1008,15 +1024,25 @@ class RIGMAPPOAgent(nn.Module):
                 detach_intent=detach_intent, oracle_intent=oracle_intent,
                 return_chain_aux=True,
             )
-            action_in = action_actor
-            dist = Categorical(logits=logits)
-            if action_in is None:
-                action_in = torch.argmax(logits, dim=-1) if deterministic else dist.sample()
-            log_prob = dist.log_prob(action_in)
-            entropy = dist.entropy()
+            if self.hybrid_action:
+                dist = TanhGaussianBernoulli(logits[..., :2], logits[..., 2:4], logits[..., 4])
+                if action_actor is None:
+                    continuous, commit, log_prob = dist.sample(deterministic=deterministic)
+                    action_in = torch.cat([continuous, commit.unsqueeze(-1)], dim=-1)
+                else:
+                    action_in = action_actor
+                    log_prob = dist.log_prob(action_in[..., :2], action_in[..., 2])
+                entropy = dist.entropy()
+            else:
+                action_in = action_actor
+                dist = Categorical(logits=logits)
+                if action_in is None:
+                    action_in = torch.argmax(logits, dim=-1) if deterministic else dist.sample()
+                log_prob = dist.log_prob(action_in)
+                entropy = dist.entropy()
             value = self.critic_value(share_obs, role)
             return (
-                action_in.reshape(batch_size, num_agents),
+                action_in.reshape(batch_size, num_agents, 3) if self.hybrid_action else action_in.reshape(batch_size, num_agents),
                 log_prob.reshape(batch_size, num_agents),
                 entropy.reshape(batch_size, num_agents),
                 value,
@@ -1038,11 +1064,20 @@ class RIGMAPPOAgent(nn.Module):
             oracle_intent=oracle_intent,
             return_chain_aux=True,
         )
-        dist = Categorical(logits=logits)
-        if action is None:
-            action = torch.argmax(logits, dim=-1) if deterministic else dist.sample()
-        log_prob = dist.log_prob(action)
-        entropy = dist.entropy()
+        if self.hybrid_action:
+            dist = TanhGaussianBernoulli(logits[..., :2], logits[..., 2:4], logits[..., 4])
+            if action is None:
+                continuous, commit, log_prob = dist.sample(deterministic=deterministic)
+                action = torch.cat([continuous, commit.unsqueeze(-1)], dim=-1)
+            else:
+                log_prob = dist.log_prob(action[..., :2], action[..., 2])
+            entropy = dist.entropy()
+        else:
+            dist = Categorical(logits=logits)
+            if action is None:
+                action = torch.argmax(logits, dim=-1) if deterministic else dist.sample()
+            log_prob = dist.log_prob(action)
+            entropy = dist.entropy()
         value = self.critic_value(share_obs, role)
         return action, log_prob, entropy, value, attn, intent_logits, chain_aux_logits
 
@@ -1102,6 +1137,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 attack_hold_steps=cfg.attack_hold_steps,
                 mission_neutralization_enabled=cfg.mission_neutralization_enabled,
                 guidance_level_action_interface=cfg.guidance_level_action_interface,
+                continuous_guidance_action_interface=cfg.continuous_guidance_action_interface,
                 engage_commit_hold_steps=cfg.engage_commit_hold_steps,
                 mission_progress_shaping_enabled=cfg.mission_progress_shaping_enabled,
                 mission_reward_alignment_v1_enabled=cfg.mission_reward_alignment_v1_enabled,
@@ -1753,6 +1789,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         use_intent_context=cfg.env_name != "3d_intercept",
         role_gate_prior_strength=cfg.role_gate_prior_strength,
         multi_relation_global_residual_weight=cfg.multi_relation_global_residual_weight,
+        hybrid_action=cfg.continuous_guidance_action_interface,
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     optimizer = make_optimizer(agent, cfg)
@@ -2022,7 +2059,7 @@ def collect_rollout(
         "relation_adj": np.asarray(relation_adj_buf, dtype=np.float32),
         "intent_label": np.asarray(intent_buf, dtype=np.int64),
         "has_intent_label": bool(np.all(graph_obs["has_intent_label"])),
-        "actions": np.asarray(action_buf, dtype=np.int64),
+        "actions": np.asarray(action_buf, dtype=np.float32 if cfg.continuous_guidance_action_interface else np.int64),
         "logp": np.asarray(logp_buf, dtype=np.float32),
         "values": values_np,
         "rewards": rewards_np,
@@ -2102,7 +2139,7 @@ def build_chain_aux_targets(node_feat: torch.Tensor, edge_feat: torch.Tensor, re
 
 
 def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict, cfg: RIGMAPPOConfig, device, update: int):
-    t_steps, n_envs, num_agents = batch["actions"].shape
+    t_steps, n_envs, num_agents = batch["actions"].shape[:3]
     num_graphs = t_steps * n_envs
     obs = torch.as_tensor(batch["obs"].reshape(num_graphs, num_agents, -1), dtype=torch.float32, device=device)
     node_feat = torch.as_tensor(batch["node_feat"].reshape(num_graphs, *batch["node_feat"].shape[2:]), dtype=torch.float32, device=device)
@@ -2124,7 +2161,8 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
         }
     intent_label = torch.as_tensor(batch["intent_label"].reshape(num_graphs, -1), dtype=torch.long, device=device)
     share_obs = torch.as_tensor(batch["share_obs"].reshape(num_graphs, num_agents, -1), dtype=torch.float32, device=device)
-    actions = torch.as_tensor(batch["actions"].reshape(num_graphs, num_agents), dtype=torch.long, device=device)
+    action_shape = 3 if cfg.continuous_guidance_action_interface else 1
+    actions = torch.as_tensor(batch["actions"].reshape(num_graphs, num_agents, action_shape), dtype=torch.float32 if cfg.continuous_guidance_action_interface else torch.long, device=device)
     old_logp = torch.as_tensor(batch["logp"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     advantages = torch.as_tensor(batch["advantages"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)

@@ -175,6 +175,7 @@ def load_agent(cfg: RIGMAPPOConfig, checkpoint: Path) -> RIGMAPPOAgent:
         use_intent_context=False,
         role_gate_prior_strength=cfg.role_gate_prior_strength,
         multi_relation_global_residual_weight=cfg.multi_relation_global_residual_weight,
+        hybrid_action=cfg.continuous_guidance_action_interface,
         num_roles=max(4, int(np.max(graph["role"])) + 1),
     )
     agent.load_state_dict(torch.load(checkpoint, map_location="cpu", weights_only=True))

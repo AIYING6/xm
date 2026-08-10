@@ -170,6 +170,7 @@ class UAVIntercept3DConfig:
     # N2 guidance repair: actor emits turn/climb guidance only; a deterministic
     # own-state speed-hold controller supplies the low-level acceleration.
     guidance_level_action_interface: bool = False
+    continuous_guidance_action_interface: bool = False
     # When set for the new mission, crossing this true XY radius before
     # neutralization is a terminal TARGET_ESCAPE. None preserves legacy motion.
     target_escape_radius: float | None = None
@@ -215,7 +216,7 @@ class UAVIntercept3DEnv:
         self.dropout_rng = np.random.default_rng(None if self.config.seed is None else self.config.seed + 10_007)
         self.num_agents = self.config.num_blue
         flight_dim = GUIDANCE_FLIGHT_ACTION_DIM if self.config.guidance_level_action_interface else FLIGHT_ACTION_DIM
-        self.action_dim = flight_dim * (2 if self.config.mission_neutralization_enabled else 1)
+        self.action_dim = 3 if self.config.continuous_guidance_action_interface else flight_dim * (2 if self.config.mission_neutralization_enabled else 1)
         self.obs_dim = 34
         self.node_feat_dim = NODE3D_FEAT_DIM
         self.edge_feat_dim = EDGE3D_FEAT_DIM
@@ -343,9 +344,13 @@ class UAVIntercept3DEnv:
         if self.done:
             raise RuntimeError("Call reset() before stepping a finished episode.")
 
-        actions = np.asarray(actions, dtype=np.int64).reshape(self.config.num_blue)
-        actions = np.clip(actions, 0, self.action_dim - 1)
-        flight_actions, engage_commit = self._decode_actions(actions)
+        if self.config.continuous_guidance_action_interface:
+            actions = np.asarray(actions, dtype=np.float32).reshape(self.config.num_blue, 3)
+            flight_actions, engage_commit = self._decode_continuous_guidance_actions(actions)
+        else:
+            actions = np.asarray(actions, dtype=np.int64).reshape(self.config.num_blue)
+            actions = np.clip(actions, 0, self.action_dim - 1)
+            flight_actions, engage_commit = self._decode_actions(actions)
         self.last_engage_commit = engage_commit.astype(np.float32)
         prev_range = self._mean_target_range()
         prev_mission_potential = self._mission_progress_potential()
@@ -421,6 +426,25 @@ class UAVIntercept3DEnv:
         dones = np.full((self.config.num_blue, 1), self.done, dtype=np.float32)
         infos = self._info(timeout)
         return self._get_obs(), self._get_share_obs(), self._get_graph_obs(), rewards, dones, infos
+
+    def _decode_continuous_guidance_actions(self, actions: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Decode [turn, climb, commit] without exposing extra state."""
+        if not self.config.mission_neutralization_enabled:
+            raise ValueError("continuous guidance requires mission neutralization mode")
+        flight_actions = np.empty(self.config.num_blue, dtype=np.int64)
+        commits = np.zeros(self.config.num_blue, dtype=bool)
+        for i, command in enumerate(np.asarray(actions, dtype=np.float32)):
+            turn = float(np.clip(command[0], -1.0, 1.0))
+            climb = float(np.clip(command[1], -1.0, 1.0))
+            commits[i] = float(command[2]) >= 0.0
+            typ = self.config.blue_types[i]
+            speed_mid = 0.5 * (typ.min_speed + typ.max_speed)
+            speed_error = speed_mid - float(self.blue_speed[i])
+            accel_cmd = 1.0 if speed_error > 0.5 * typ.max_accel else (-1.0 if speed_error < -0.5 * typ.max_accel else 0.0)
+            flight_actions[i] = int(np.argmin(np.linalg.norm(
+                ACTION3D_TABLE - np.asarray((turn, climb, accel_cmd), dtype=np.float32)[None, :], axis=1
+            )))
+        return flight_actions, commits
 
     def _decode_actions(self, actions: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Split a N0 action into legacy flight control and engage commitment.

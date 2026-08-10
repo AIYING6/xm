@@ -35,7 +35,10 @@ class TanhGaussianBernoulli:
         latent = 0.5 * (torch.log1p(bounded) - torch.log1p(-bounded))
         correction = torch.log(1.0 - bounded.square() + 1e-6)
         continuous_lp = (self.normal.log_prob(latent) - correction).sum(dim=-1)
-        return continuous_lp + self.commit.log_prob(commit).sum(dim=-1)
+        commit_lp = self.commit.log_prob(commit)
+        if commit_lp.ndim > continuous_lp.ndim:
+            commit_lp = commit_lp.sum(dim=-1)
+        return continuous_lp + commit_lp
 
     def entropy(self) -> torch.Tensor:
         # This is the standard tractable pre-squash proxy; PPO may use it as
