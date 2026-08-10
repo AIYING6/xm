@@ -80,14 +80,17 @@ project's algorithmic route rather than creating another version number.
 
 ## Current status and next action
 
-N0 is complete and recorded in
-[NEW_PROJECT_N0_MISSION_PHYSICS_SPEC.md](NEW_PROJECT_N0_MISSION_PHYSICS_SPEC.md).
+N0 and N1 are complete and recorded in
+[NEW_PROJECT_N0_MISSION_PHYSICS_SPEC.md](NEW_PROJECT_N0_MISSION_PHYSICS_SPEC.md)
+and [NEW_PROJECT_N1_TASK_PROTOCOL.md](NEW_PROJECT_N1_TASK_PROTOCOL.md).
 The independently evaluator-defined abstract standoff-neutralization
-transition, its default-off compatibility boundary, and all seven deterministic
-tests are frozen and passing. No algorithm design, reward change, training, or
-cloud execution has been authorized.
+transition, its default-off compatibility boundary, the N1 terminal taxonomy,
+the 180-transition primary window, and deterministic contract tests are frozen
+and passing. No algorithm design, reward change, training, or cloud execution
+has been authorized.
 
-The next gate is **N1 task protocol and actor-information specification**:
-define the task population, terminal-outcome taxonomy, administrative horizon,
-and recipient-specific execution information contract before selecting any
-method. N1 must not select an architecture or start learning.
+The next gate is **N2 learnability and baseline check**: establish, without a
+new claimed architecture, whether the frozen task yields non-saturated learning
+signals under transparent reference baselines and whether a future comparator
+can be scientifically identifiable. N2 must not alter N0/N1 task semantics or
+select a headline method in advance.

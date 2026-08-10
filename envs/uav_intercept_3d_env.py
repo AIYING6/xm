@@ -153,6 +153,9 @@ class UAVIntercept3DConfig:
     # coordination task, observations, and action interface remain unchanged.
     mission_neutralization_enabled: bool = False
     engage_commit_hold_steps: int = 4
+    # When set for the new mission, crossing this true XY radius before
+    # neutralization is a terminal TARGET_ESCAPE. None preserves legacy motion.
+    target_escape_radius: float | None = None
     collision_radius: float = 120.0
     safety_proximity_distance: float = 0.0
     safety_proximity_penalty_weight: float = 0.0
@@ -189,6 +192,8 @@ class UAVIntercept3DEnv:
             raise ValueError(f"Unsupported graph_relation_ablation: {self.config.graph_relation_ablation}")
         if self.config.engage_commit_hold_steps < 1:
             raise ValueError("engage_commit_hold_steps must be at least one")
+        if self.config.target_escape_radius is not None and self.config.target_escape_radius <= 0.0:
+            raise ValueError("target_escape_radius must be positive when enabled")
         self.rng = np.random.default_rng(self.config.seed)
         self.dropout_rng = np.random.default_rng(None if self.config.seed is None else self.config.seed + 10_007)
         self.num_agents = self.config.num_blue
@@ -213,6 +218,7 @@ class UAVIntercept3DEnv:
         self.constraint_violation = False
         self.attack_hold = 0
         self.target_neutralized = False
+        self.target_escaped = False
         self.engage_commit_hold = 0
         self.last_engage_commit = np.zeros(cfg.num_blue, dtype=np.float32)
         self.post_loss_chain_lost = False
@@ -371,10 +377,17 @@ class UAVIntercept3DEnv:
                 self.engage_commit_hold = 0
                 self.target_neutralized = False
             self.success = bool(self.target_neutralized)
+            self.target_escaped = bool(
+                not self.success
+                and not self.collision
+                and not self.constraint_violation
+                and self.config.target_escape_radius is not None
+                and float(np.linalg.norm(self.red_pos[0, :2])) >= float(self.config.target_escape_radius)
+            )
         else:
             self.success = chain_closed and self.step_count >= self.config.min_success_step
         timeout = self.step_count >= self.config.max_steps
-        self.done = bool(self.success or self.collision or self.constraint_violation or timeout)
+        self.done = bool(self.success or self.collision or self.constraint_violation or self.target_escaped or timeout)
 
         self.history["blue_pos"].append(self.blue_pos.copy())
         self.history["red_pos"].append(self.red_pos.copy())
@@ -981,7 +994,7 @@ class UAVIntercept3DEnv:
         ]
         return {
             "success": float(self.success),
-            "timeout": float(timeout and not self.success and not self.collision and not self.constraint_violation),
+            "timeout": float(timeout and not self.success and not self.collision and not self.constraint_violation and not self.target_escaped),
             "collision": float(self.collision),
             "constraint_violation": float(self.constraint_violation),
             "mean_range": self._mean_target_range(),
@@ -993,6 +1006,7 @@ class UAVIntercept3DEnv:
             "chain_closed": float(self.attack_hold >= self.config.attack_hold_steps),
             "mission_neutralization_enabled": float(self.config.mission_neutralization_enabled),
             "target_neutralized": float(self.target_neutralized),
+            "target_escape": float(self.target_escaped),
             "engage_commit_hold": float(self.engage_commit_hold),
             "engage_commit_active": float(np.any(self.last_engage_commit > 0.5)),
             "neutralization_eligible": float(self._neutralization_eligible(self.last_engage_commit > 0.5)),
