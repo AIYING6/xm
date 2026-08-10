@@ -116,6 +116,11 @@ class RIGMAPPOConfig:
     min_success_step: int = 0
     post_loss_chain_reclosure_reward_weight: float = 0.0
     post_loss_chain_reclosure_min_step: int = 0
+    # New-project N0/N1 task parameters. Defaults preserve the legacy task.
+    mission_neutralization_enabled: bool = False
+    engage_commit_hold_steps: int = 4
+    target_escape_radius: float | None = None
+    mission_max_steps: int = 260
     failed_blue_agent: int = -1
     node_failure_random_prob: float = 0.0
     node_failure_start_step: int = 0
@@ -1089,6 +1094,10 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 safety_proximity_penalty_weight=cfg.safety_proximity_penalty_weight,
                 attack_geometry_reward_weight=cfg.attack_geometry_reward_weight,
                 attack_hold_steps=cfg.attack_hold_steps,
+                mission_neutralization_enabled=cfg.mission_neutralization_enabled,
+                engage_commit_hold_steps=cfg.engage_commit_hold_steps,
+                target_escape_radius=cfg.target_escape_radius,
+                max_steps=cfg.mission_max_steps,
                 min_success_step=cfg.min_success_step,
                 post_loss_chain_reclosure_reward_weight=cfg.post_loss_chain_reclosure_reward_weight,
                 post_loss_chain_reclosure_min_step=cfg.post_loss_chain_reclosure_min_step,

@@ -872,6 +872,24 @@ class UAVIntercept3DEnv:
         return False
 
     def _compute_rewards(self, prev_range: float, cur_range: float, prev_tracking: float, tracking: float, prev_window: float, window: float) -> np.ndarray:
+        if self.config.mission_neutralization_enabled:
+            # N2 task reward: physical range progress plus the frozen real
+            # mission outcomes only.  In particular it must not reward chain,
+            # packet, graph, sensing, or engagement-window proxy variables.
+            progress = np.clip((prev_range - cur_range) / 1_000.0, -1.0, 1.0)
+            base = 0.12 * progress - 0.01
+            if self.target_neutralized:
+                base += 5.0
+            if self.collision:
+                base -= 5.0
+            if self.constraint_violation:
+                base -= 4.0
+            if self.target_escaped:
+                base -= 3.0
+            if self.done and not self.success and not self.collision and not self.constraint_violation and not self.target_escaped:
+                base -= 1.0
+            return np.full((self.config.num_blue, 1), base, dtype=np.float32)
+
         progress = np.clip((prev_range - cur_range) / 1_000.0, -1.0, 1.0)
         connectivity = self._comm_connectivity()
         age_penalty = min(1.0, self._mean_message_age() / 80.0)
