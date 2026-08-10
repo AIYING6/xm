@@ -1,8 +1,9 @@
-"""Draw Fig. 1 for the frozen v1.9 PCRF-R2 protocol.
+"""High-fidelity Fig. 1 reconstruction for the frozen v1.9 PCRF-R2 line.
 
-Scientific terms are taken from the v1.9 PCRF-R2 theory/protocol freeze and
-the F1 formal-training protocol.  This is a conceptual protocol figure, not a
-performance figure: it contains no experimental values or F2 data.
+The provided four-panel reference supplies only the visual master layout.
+All scientific labels and blocks are reconstructed from the PCRF-R2 theory
+freeze, the F1 protocol, and the current source-separated implementation.
+No training/F2 artifact is read by this script.
 """
 from __future__ import annotations
 
@@ -14,241 +15,243 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch, Polygon, Rectangle
 
 
-COLORS = {
-    "scout": "#2166AC",
-    "relay": "#3C8D40",
-    "attacker": "#C93F3F",
-    "target": "#7B4AA8",
-    "perception": "#2F6FB3",
-    "communication": "#3E8B4A",
-    "ink": "#252525",
-    "muted": "#707070",
-    "panel": "#FAFBFC",
-    "border": "#404040",
-    "critic": "#F2E7FB",
-    "actor": "#EAF3FC",
-    "warning": "#FDE9E7",
+C = {
+    "scout": "#0B559F", "relay": "#357A38", "attacker": "#C92828", "target": "#733F9D",
+    "p": "#165DAA", "c": "#3D843D", "conflict": "#B4671D", "critic": "#7B42A0",
+    "ink": "#121212", "gray": "#777777", "pale": "#F8FAFC", "pale_blue": "#EEF5FC",
+    "pale_green": "#F0F8F0", "pale_gold": "#FFF7EA", "pale_purple": "#F5EEFA",
 }
-
-mpl.rcParams.update(
-    {
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-        "svg.fonttype": "none",
-        "pdf.fonttype": 42,
-        "font.size": 8,
-        "axes.linewidth": 0.7,
-    }
-)
+mpl.rcParams.update({
+    "font.family": "sans-serif", "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "svg.fonttype": "none", "pdf.fonttype": 42, "font.size": 8,
+})
 
 
-def box(ax, x, y, w, h, text, *, fc="white", ec="#555555", fs=7.5, lw=0.8, radius=0.025, weight="normal"):
-    patch = FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0.010,rounding_size={radius}",
+def txt(ax, x, y, s, size=8, color=None, weight="normal", ha="center", va="center", **kw):
+    ax.text(x, y, s, fontsize=size, color=color or C["ink"], weight=weight, ha=ha, va=va, **kw)
+
+
+def rounded(ax, x, y, w, h, s, fc="white", ec="#555555", size=7.3, lw=.75, weight="normal"):
+    patch = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=.008,rounding_size=.018",
                            facecolor=fc, edgecolor=ec, linewidth=lw)
-    ax.add_patch(patch)
-    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=fs, color=COLORS["ink"], weight=weight)
+    ax.add_patch(patch); txt(ax, x + w/2, y + h/2, s, size=size, weight=weight)
     return patch
 
 
-def arrow(ax, start, end, *, color=COLORS["ink"], style="-", lw=1.2, mutation=10, alpha=1.0, connection="arc3"):
-    patch = FancyArrowPatch(start, end, arrowstyle="-|>", mutation_scale=mutation, linewidth=lw,
-                            linestyle=style, color=color, alpha=alpha, connectionstyle=connection)
-    ax.add_patch(patch)
-    return patch
+def arr(ax, a, b, color=C["ink"], lw=1.1, ls="-", alpha=1.0, rad=0.0, scale=9):
+    ax.add_patch(FancyArrowPatch(a, b, arrowstyle="-|>", mutation_scale=scale, color=color,
+                                 linewidth=lw, linestyle=ls, alpha=alpha,
+                                 connectionstyle=f"arc3,rad={rad}"))
 
 
-def drone(ax, x, y, color, label, *, scale=0.045, failed=False):
-    """A compact vector aircraft mark; no external artwork is used."""
-    body = Polygon([(x - 1.3 * scale, y), (x - 0.25 * scale, y + 0.30 * scale),
-                    (x + 1.45 * scale, y), (x - 0.25 * scale, y - 0.30 * scale)],
-                   closed=True, facecolor=color, edgecolor="white", linewidth=0.6, zorder=4)
-    wing = Polygon([(x - 0.40 * scale, y), (x - 0.95 * scale, y + 0.85 * scale),
-                    (x + 0.40 * scale, y + 0.20 * scale), (x + 0.65 * scale, y)],
-                   closed=True, facecolor=color, edgecolor="white", linewidth=0.5, zorder=3)
-    wing2 = Polygon([(x - 0.40 * scale, y), (x - 0.95 * scale, y - 0.85 * scale),
-                     (x + 0.40 * scale, y - 0.20 * scale), (x + 0.65 * scale, y)],
-                    closed=True, facecolor=color, edgecolor="white", linewidth=0.5, zorder=3)
-    ax.add_patch(wing); ax.add_patch(wing2); ax.add_patch(body)
-    ax.text(x, y - 1.55 * scale, label, ha="center", va="top", fontsize=8, color=color, weight="bold")
+def init(ax, label, title):
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
+    ax.add_patch(Rectangle((0, 0), 1, 1, facecolor="white", edgecolor="#222222", linewidth=.72))
+    txt(ax, .014, .965, f"({label})", size=12.5, weight="bold", ha="left", va="top")
+    txt(ax, .067, .965, title, size=10.7, weight="bold", ha="left", va="top")
+
+
+def fixed_wing(ax, x, y, color, label=None, s=.037, antenna=False, failed=False):
+    wing = Polygon([(x-1.35*s,y), (x-.25*s,y+.63*s), (x+.9*s,y+.15*s), (x+1.5*s,y),
+                    (x+.9*s,y-.15*s), (x-.25*s,y-.63*s)], closed=True, facecolor=color,
+                   edgecolor="white", linewidth=.55, zorder=4)
+    tail = Polygon([(x-.64*s,y), (x-1.03*s,y+.36*s), (x-.82*s,y), (x-1.03*s,y-.36*s)],
+                   closed=True, facecolor=color, edgecolor="white", linewidth=.45, zorder=4)
+    ax.add_patch(wing); ax.add_patch(tail)
+    if antenna:
+        ax.plot([x, x], [y+.3*s, y+1.25*s], color=color, lw=1.1)
+        for r in (.38, .62, .87):
+            ax.add_patch(Circle((x, y+1.0*s), r*s, fill=False, edgecolor=color, linewidth=.65))
     if failed:
-        ax.add_patch(Circle((x, y), 1.50 * scale, fill=False, edgecolor="#D62728", linewidth=1.3, linestyle="--", zorder=8))
-        ax.plot([x - .6 * scale, x + .6 * scale], [y - .6 * scale, y + .6 * scale], color="#D62728", lw=2.0, zorder=9)
-        ax.plot([x - .6 * scale, x + .6 * scale], [y + .6 * scale, y - .6 * scale], color="#D62728", lw=2.0, zorder=9)
+        ax.add_patch(Circle((x, y), 1.7*s, fill=False, edgecolor="#D62728", linewidth=1.3, linestyle="--", zorder=9))
+        ax.plot([x-.62*s,x+.62*s],[y-.62*s,y+.62*s], color="#D62728", lw=2.0, zorder=10)
+        ax.plot([x-.62*s,x+.62*s],[y+.62*s,y-.62*s], color="#D62728", lw=2.0, zorder=10)
+    if label: txt(ax, x, y-1.45*s, label, size=8.3, color=color, weight="bold", va="top")
 
 
-def target(ax, x, y, *, scale=0.047, label="Target (T)"):
-    ax.add_patch(Circle((x, y), scale, facecolor="#F4EFFA", edgecolor=COLORS["target"], linewidth=1.5, zorder=4))
-    ax.add_patch(Circle((x, y), scale * .55, fill=False, edgecolor=COLORS["target"], linewidth=1.0, zorder=5))
-    ax.plot([x - scale * 1.25, x + scale * 1.25], [y, y], color=COLORS["target"], lw=0.8)
-    ax.plot([x, x], [y - scale * 1.25, y + scale * 1.25], color=COLORS["target"], lw=0.8)
-    ax.text(x, y - 1.55 * scale, label, ha="center", va="top", fontsize=8, color=COLORS["target"], weight="bold")
+def quadrotor(ax, x, y, color, label=None, s=.036):
+    ax.add_patch(Polygon([(x-.46*s,y-.12*s),(x+.46*s,y-.12*s),(x+.28*s,y+.18*s),(x-.28*s,y+.18*s)],
+                         closed=True, facecolor=color, edgecolor="white", linewidth=.5, zorder=4))
+    for dx, dy in ((-.72,.48),(.72,.48),(-.72,-.48),(.72,-.48)):
+        ax.plot([x, x+dx*s], [y, y+dy*s], color=color, lw=1.2, zorder=3)
+        ax.add_patch(Circle((x+dx*s,y+dy*s), .27*s, fill=False, edgecolor=color, linewidth=1.0, zorder=4))
+    if label: txt(ax, x, y-1.55*s, label, size=8.3, color=color, weight="bold", va="top")
 
 
-def panel_title(ax, letter, title):
-    ax.text(0.015, 0.967, f"({letter})", transform=ax.transAxes, ha="left", va="top", fontsize=13, weight="bold")
-    ax.text(0.085, 0.967, title, transform=ax.transAxes, ha="left", va="top", fontsize=10.5, weight="bold")
+def target_tower(ax, x, y, label=None, s=.043):
+    ax.add_patch(Circle((x,y+.18*s), .66*s, fill=False, edgecolor=C["target"], linewidth=1.25))
+    ax.add_patch(Circle((x,y+.18*s), .38*s, fill=False, edgecolor=C["target"], linewidth=.85))
+    ax.plot([x,y*0+x],[y-.82*s,y+.18*s], color=C["target"], lw=1.1)
+    ax.plot([x-.52*s,x+.52*s],[y-.82*s,y-.82*s], color=C["target"], lw=1.1)
+    ax.plot([x-.52*s,x],[y-.82*s,y+.18*s], color=C["target"], lw=.8)
+    ax.plot([x+.52*s,x],[y-.82*s,y+.18*s], color=C["target"], lw=.8)
+    if label: txt(ax, x+.06, y-1.25*s, label, size=8.3, color=C["target"], weight="bold", va="top")
 
 
-def init_panel(ax, letter, title):
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    ax.add_patch(Rectangle((0, 0), 1, 1, facecolor=COLORS["panel"], edgecolor=COLORS["border"], linewidth=.75))
-    panel_title(ax, letter, title)
+def mountains(ax):
+    for base, height, left in ((.13,.16,.03), (.11,.12,.21), (.12,.15,.58)):
+        ax.add_patch(Polygon([(left,.09),(left+base/2,.09+height),(left+base,.09)], closed=True,
+                             facecolor="#EEF1F4", edgecolor="#D8DDE2", linewidth=.5, alpha=.9, zorder=0))
+        ax.add_patch(Polygon([(left+base*.25,.09+height*.43),(left+base/2,.09+height),(left+base*.66,.09+height*.25)],
+                             closed=True, facecolor="#FFFFFF", edgecolor="none", alpha=.8, zorder=0))
+    ax.plot([.01,.75],[.09,.09], color="#DCE2E8", lw=1.0, alpha=.8, zorder=0)
 
 
-def draw_a(ax):
-    init_panel(ax, "a", "Heterogeneous task scenario")
-    drone(ax, .20, .68, COLORS["scout"], "Scout (S)")
-    drone(ax, .55, .72, COLORS["relay"], "Relay (R)")
-    drone(ax, .28, .28, COLORS["attacker"], "Attacker (A)")
-    target(ax, .74, .30)
-    arrow(ax, (.23, .68), (.70, .32), color=COLORS["perception"], style=":", lw=1.6)
-    box(ax, .36, .48, .105, .075, "P: direct\nperception", fc="#F8FBFF", ec="none", fs=6.5, lw=0, radius=.01)
-    arrow(ax, (.25, .66), (.51, .71), color=COLORS["communication"], style="--", lw=1.4)
-    arrow(ax, (.55, .66), (.31, .31), color=COLORS["communication"], style="--", lw=1.4)
-    ax.text(.50, .43, "C: delivered / cache-valid\ncommunication evidence", color=COLORS["communication"], fontsize=7, ha="center")
-    box(ax, .73, .58, .22, .19, "Two legal sources\nP  direct local sensing\nC  delivered + cache-valid", fc="white", ec="#777777", fs=6.5)
-    ax.text(.06, .10, "Recipient-specific information only", fontsize=7.1, color=COLORS["muted"], weight="bold")
+def panel_a(ax):
+    init(ax, "a", "Heterogeneous task scenario")
+    mountains(ax)
+    quadrotor(ax, .23,.76,C["scout"],"Scout\n(S)",.043)
+    fixed_wing(ax,.54,.76,C["relay"],"Relay\n(R)",.050,antenna=True)
+    fixed_wing(ax,.23,.33,C["attacker"],"Attacker\n(A)",.052)
+    target_tower(ax,.58,.27,"Target\n(T)",.055)
+    # Preserve reference geometry; only P/C semantics occupy its relation slots.
+    arr(ax,(.27,.77),(.50,.77),C["p"],1.55,":")
+    arr(ax,(.25,.72),(.55,.32),C["p"],1.45,":")
+    arr(ax,(.52,.70),(.25,.38),C["c"],1.35,"--")
+    arr(ax,(.54,.69),(.54,.34),C["c"],1.35,"--")
+    rounded(ax,.75,.14,.21,.39,"Legal evidence sources\n\nP  direct perception\n\nC  delivered +\ncache-valid communication",fc="white",ec="#7A7A7A",size=7.8,lw=.8)
+    ax.plot([.77,.86],[.53,.53],color=C["p"],lw=1.5,linestyle=":")
+    ax.plot([.77,.86],[.37,.37],color=C["c"],lw=1.5,linestyle="--")
 
 
-def mini_chain(ax, x0, y0, w, disrupted=False):
-    names = [("S", COLORS["scout"]), ("R", COLORS["relay"]), ("A", COLORS["attacker"]), ("T", COLORS["target"])]
-    xs = [x0 + w * value for value in (.10, .37, .64, .90)]
-    for index, ((name, color), x) in enumerate(zip(names, xs)):
-        if disrupted and name == "R":
-            ax.add_patch(Circle((x, y0), .043, fill=False, edgecolor="#AAAAAA", linestyle="--", linewidth=1.1))
+def chain(ax,x,y,w=.40,broken=False):
+    vals=[("S",C["scout"]),("R",C["relay"]),("A",C["attacker"]),("T",C["target"])]
+    xs=[x+w*t for t in (.18,.40,.62,.84)]
+    for (name,col),xx in zip(vals,xs):
+        if broken and name=="R":
+            ax.add_patch(Circle((xx,y),.036,fill=False,edgecolor="#BFBFBF",linestyle="--",linewidth=1.0))
         else:
-            ax.add_patch(Circle((x, y0), .043, facecolor="#FFFFFF", edgecolor=color, linewidth=1.2))
-            ax.text(x, y0, name, color=color, ha="center", va="center", fontsize=7.5, weight="bold")
-    for start, end in zip(xs[:-1], xs[1:]):
-        color = COLORS["ink"] if not disrupted or start > xs[1] else "#A9A9A9"
-        alpha = 1.0 if not disrupted or start > xs[1] else .55
-        arrow(ax, (start + .045, y0), (end - .045, y0), color=color, lw=1.0, alpha=alpha)
-    if disrupted:
-        ax.text((xs[1] + xs[2]) / 2, y0 + .075, "C unavailable", color="#D62728", fontsize=6.5, ha="center")
+            ax.add_patch(Circle((xx,y),.036,facecolor="#F9FBFD",edgecolor=col,linewidth=1.0))
+            txt(ax,xx,y,name,size=7.0,color=col,weight="bold")
+    for i in range(3):
+        arr(ax,(xs[i]+.04,y),(xs[i+1]-.04,y),"#222222" if not(broken and i<2) else "#BDBDBD",.95,"-",alpha=1 if not(broken and i<2) else .5,scale=7)
+    if broken:
+        ax.plot([xs[2]-.035,xs[2]+.035],[y-.035,y+.035],color="#D62728",lw=1.5)
+        ax.plot([xs[2]-.035,xs[2]+.035],[y+.035,y-.035],color="#D62728",lw=1.5)
 
 
-def draw_b(ax):
-    init_panel(ax, "b", "Relay failure disrupts delivered communication")
-    ax.text(.23, .86, "Before failure", ha="center", fontsize=8.5, weight="bold")
-    ax.text(.76, .86, "After relay failure", ha="center", fontsize=8.5, weight="bold")
-    for x in (.04, .54): ax.add_patch(Rectangle((x, .36), .42, .43, facecolor="white", edgecolor="#9A9A9A", linewidth=.65))
-    # normal
-    drone(ax, .13, .66, COLORS["scout"], "S", scale=.028); drone(ax, .29, .68, COLORS["relay"], "R", scale=.028)
-    drone(ax, .14, .47, COLORS["attacker"], "A", scale=.028); target(ax, .38, .47, scale=.028, label="T")
-    arrow(ax, (.15, .64), (.28, .67), color=COLORS["communication"], style="--", lw=1.1)
-    arrow(ax, (.28, .65), (.15, .49), color=COLORS["communication"], style="--", lw=1.1)
-    arrow(ax, (.13, .64), (.37, .49), color=COLORS["perception"], style=":", lw=1.2)
-    mini_chain(ax, .05, .22, .40)
-    ax.text(.25, .10, "P and C available", ha="center", fontsize=7, color=COLORS["muted"])
-    # disrupted
-    drone(ax, .63, .66, COLORS["scout"], "S", scale=.028); drone(ax, .79, .68, COLORS["relay"], "R", scale=.028, failed=True)
-    drone(ax, .64, .47, COLORS["attacker"], "A", scale=.028); target(ax, .88, .47, scale=.028, label="T")
-    arrow(ax, (.65, .64), (.78, .67), color=COLORS["communication"], style="--", lw=1.1, alpha=.27)
-    arrow(ax, (.78, .65), (.65, .49), color=COLORS["communication"], style="--", lw=1.1, alpha=.27)
-    arrow(ax, (.63, .64), (.87, .49), color=COLORS["perception"], style=":", lw=1.2)
-    mini_chain(ax, .55, .22, .40, disrupted=True)
-    box(ax, .58, .055, .35, .10, "Failure changes C availability;\nP may remain locally available", fc=COLORS["warning"], ec="#D97D76", fs=6.7)
+def panel_b(ax):
+    init(ax,"b","Failure disrupts coordination")
+    txt(ax,.27,.85,"Before failure (normal)",size=8.6,weight="bold")
+    txt(ax,.74,.85,"After relay failure",size=8.6,weight="bold")
+    for x in (.03,.53): ax.add_patch(Rectangle((x,.35),.40,.41,facecolor="white",edgecolor="#9B9B9B",linewidth=.7))
+    quadrotor(ax,.09,.66,C["scout"],s=.026); fixed_wing(ax,.31,.67,C["relay"],s=.032,antenna=True)
+    fixed_wing(ax,.10,.45,C["attacker"],s=.032); target_tower(ax,.37,.43,s=.033)
+    arr(ax,(.12,.66),(.29,.67),C["p"],1.1,":",scale=7); arr(ax,(.11,.64),(.36,.46),C["p"],1.0,":",scale=7)
+    arr(ax,(.30,.63),(.12,.48),C["c"],1.0,"--",scale=7); arr(ax,(.31,.62),(.36,.46),C["c"],1.0,"--",scale=7)
+    quadrotor(ax,.59,.66,C["scout"],s=.026); fixed_wing(ax,.80,.67,C["relay"],s=.032,antenna=True,failed=True)
+    fixed_wing(ax,.60,.45,C["attacker"],s=.032); target_tower(ax,.87,.43,s=.033)
+    arr(ax,(.62,.64),(.86,.46),C["p"],1.0,":",scale=7); arr(ax,(.62,.65),(.79,.67),C["p"],1.0,":",alpha=.25,scale=7)
+    arr(ax,(.79,.62),(.62,.48),C["c"],1.0,"--",alpha=.22,scale=7); arr(ax,(.80,.62),(.86,.46),C["c"],1.0,"--",alpha=.22,scale=7)
+    rounded(ax,.03,.13,.40,.16,"Information flow (normal)",size=7.4); chain(ax,.03,.185,.40)
+    rounded(ax,.53,.13,.40,.16,"Information flow (disrupted)",size=7.4); chain(ax,.53,.185,.40,True)
+    rounded(ax,.55,.025,.36,.075,"Delivered communication becomes unavailable;\nlocal P may remain available",fc="#FFF1F0",ec="#EA8077",size=6.5)
 
 
-def node_pair(ax, x, y, p=True, c=True):
-    ax.add_patch(Circle((x, y), .025, facecolor="#E8F1FC", edgecolor=COLORS["scout"], lw=1.0))
-    ax.add_patch(Circle((x + .12, y), .025, facecolor="#F4EFFA", edgecolor=COLORS["target"], lw=1.0))
-    if p: arrow(ax, (x + .028, y + .005), (x + .088, y + .005), color=COLORS["perception"], style=":", lw=1.1, mutation=7)
-    if c: arrow(ax, (x + .025, y - .025), (x + .09, y - .025), color=COLORS["communication"], style="--", lw=1.0, mutation=7, connection="arc3,rad=-.35")
+def mini_graph(ax,x,y,w=.15,h=.17):
+    pts=[(x+.025,y+.035),(x+w*.62,y+h*.72),(x+w*.30,y+h*.24),(x+w*.83,y+h*.28)]
+    for (px,py),col in zip(pts,[C["scout"],C["relay"],C["attacker"],C["target"]]): ax.add_patch(Circle((px,py),.012,facecolor=col,edgecolor="white",lw=.4))
+    arr(ax,pts[0],pts[1],C["p"],.8,":",scale=5); arr(ax,pts[1],pts[2],C["c"],.7,"--",scale=5); arr(ax,pts[1],pts[3],C["c"],.7,"--",scale=5)
 
 
-def draw_c(ax):
-    init_panel(ax, "c", "Overall pipeline: CTDE with recipient-specific execution")
-    ax.text(.05, .84, "Execution (decentralized)", fontsize=8.5, weight="bold")
-    box(ax, .05, .60, .19, .15, "Recipient i\nself state + local context", fc="white", fs=7.0)
-    box(ax, .05, .42, .19, .13, "P: direct local\nperception claim", fc="#F1F6FC", ec=COLORS["perception"], fs=7)
-    box(ax, .05, .25, .19, .13, "C: delivered +\ncache-valid packet\nage / confidence", fc="#F1F8F1", ec=COLORS["communication"], fs=6.7)
-    arrow(ax, (.24, .68), (.31, .68)); arrow(ax, (.24, .48), (.31, .55)); arrow(ax, (.24, .31), (.31, .43))
-    box(ax, .32, .40, .18, .30, "P/C source\nconstruction\n\nlegal masks +\nedge geometry", fc="#FFFFFF", fs=7.3)
-    node_pair(ax, .35, .49)
-    arrow(ax, (.50, .55), (.58, .55))
-    box(ax, .59, .42, .16, .26, "PCRF-R2\nencoder +\nsource-preserving\nfusion", fc=COLORS["actor"], ec="#4E83B9", fs=7.2, weight="bold")
-    arrow(ax, (.75, .55), (.81, .55))
-    box(ax, .82, .44, .10, .22, "Actor\npolicy\n$\\pi_i$", fc="#EAF3FC", ec="#4E83B9", fs=7.6, weight="bold")
-    arrow(ax, (.92, .61), (.95, .74), mutation=7); ax.text(.945, .68, "action", fontsize=5.8, ha="center")
-    box(ax, .89, .76, .09, .10, "3DOF\nenvironment", fc="#F7F7F7", ec="#777777", fs=5.8)
-    arrow(ax, (.89, .80), (.24, .74), color="#777777", style="--", lw=.7, mutation=6, connection="arc3,rad=.12")
-    ax.text(.55, .80, "next recipient-specific P/C", fontsize=5.9, color=COLORS["muted"], ha="center")
-    ax.plot([.03, .97], [.18, .18], color="#6C4AA1", lw=1.0, linestyle="--")
-    ax.text(.50, .195, "CTDE boundary", fontsize=7.2, color="#6C4AA1", ha="center", va="bottom", weight="bold")
-    ax.text(.05, .10, "Training only", fontsize=8, weight="bold", color="#6C4AA1")
-    box(ax, .19, .025, .24, .11, "Centralized state\n(shared critic input only)", fc=COLORS["critic"], ec="#9363B8", fs=6.8)
-    box(ax, .53, .025, .20, .11, "Centralized critic\n$V_\\phi(s_t)$", fc=COLORS["critic"], ec="#9363B8", fs=7.1, weight="bold")
-    arrow(ax, (.43, .08), (.53, .08), color="#6C4AA1")
-    ax.text(.80, .08, "critic-only state\nnever enters actor", fontsize=6.5, color="#6C4AA1", va="center")
+def panel_c(ax):
+    init(ax,"c","Overall method pipeline (PCRF-R2)")
+    txt(ax,.16,.86,"Local observations",size=8.1,weight="bold")
+    txt(ax,.75,.86,"Execution (Decentralized)",size=8.4,weight="bold")
+    # top execution row: keep reference slots and density.
+    for yy,label,col in ((.74,"Scout",C["scout"]),(.61,"Relay",C["relay"]),(.48,"Attacker",C["attacker"])):
+        fixed_wing(ax,.10,yy,col,s=.020)
+        txt(ax,.028,yy,label,size=6.7,ha="left")
+        rounded(ax,.16,yy-.037,.06,.074,"$o_i$",size=8.0)
+        arr(ax,(.13,yy),(.16,yy),scale=6)
+    rounded(ax,.27,.47,.20,.39,"P/C legal-source\ngraph construction",size=8.2,weight="bold")
+    mini_graph(ax,.29,.51,.16,.23)
+    rounded(ax,.50,.54,.11,.20,"PCRF-R2\nencoder",fc="#EEF5FC",ec="#4C83B9",size=8.7,weight="bold")
+    rounded(ax,.64,.54,.11,.20,"Actor\nPolicy\n$\\pi_i$",fc="#EEF5FC",ec="#4C83B9",size=8.6,weight="bold")
+    txt(ax,.78,.67,"Actions\n$(a_i^t)$",size=7.3)
+    rounded(ax,.82,.43,.14,.25,"3DOF\nEnvironment",fc="#F8FAFC",ec="#777777",size=8.0,weight="bold")
+    for yy in (.74,.61,.48): arr(ax,(.22,yy),(.27,.65),scale=6)
+    arr(ax,(.47,.65),(.50,.65)); arr(ax,(.61,.65),(.64,.65)); arr(ax,(.75,.65),(.81,.60)); arr(ax,(.88,.43),(.88,.33),color=C["critic"],lw=1.0,scale=6)
+    # faithful CTDE separator and bottom training path.
+    ax.plot([.02,.98],[.40,.40],color="#5F3B91",linewidth=1.0,linestyle="--")
+    txt(ax,.72,.385,"CTDE boundary",size=8.5,color="#5F3B91",weight="bold",va="top")
+    txt(ax,.84,.07,"Training (Centralized)",size=8.5,color="#5F3B91",weight="bold")
+    rounded(ax,.03,.20,.16,.11,"Centralized state\n(training only)",fc="#F3FBF0",ec="#4A9652",size=7.0)
+    rounded(ax,.03,.055,.16,.11,"Global reward\n(training only)",fc="#FFF8E8",ec="#C08A25",size=7.0)
+    rounded(ax,.27,.05,.20,.29,"Centralized\ntraining graph",fc="#FBFBFB",size=7.7,weight="bold"); mini_graph(ax,.30,.085,.14,.18)
+    rounded(ax,.50,.10,.11,.18,"Shared\ncritic\nencoder",fc=C["pale_purple"],ec="#9B63C0",size=7.6,weight="bold")
+    rounded(ax,.64,.10,.13,.18,"Centralized\ncritic\n$V_\\phi(s_t)$",fc="#FFF7E7",ec="#C18B27",size=7.7,weight="bold")
+    txt(ax,.81,.19,"Value\n(training only)",size=7.2,color="#3561A8",weight="bold")
+    arr(ax,(.19,.255),(.27,.255)); arr(ax,(.19,.11),(.27,.11)); arr(ax,(.47,.19),(.50,.19)); arr(ax,(.61,.19),(.64,.19)); arr(ax,(.77,.19),(.81,.19),color="#3561A8")
 
 
-def draw_d(ax):
-    init_panel(ax, "d", "PCRF-R2 encoder and source-preserving fusion")
-    box(ax, .04, .64, .20, .19, "P source\ndirect local target claim\navailability + quality", fc="#F1F6FC", ec=COLORS["perception"], fs=7.0)
-    box(ax, .04, .37, .20, .19, "C source\ndelivered + cache-valid\npacket, age, confidence", fc="#F1F8F1", ec=COLORS["communication"], fs=6.8)
-    arrow(ax, (.24, .735), (.32, .735), color=COLORS["perception"])
-    arrow(ax, (.24, .465), (.32, .465), color=COLORS["communication"])
-    box(ax, .33, .65, .17, .17, "P encoder\n$F_P(G_i^P)$", fc="#F4F8FC", ec=COLORS["perception"], fs=7.6, weight="bold")
-    box(ax, .33, .38, .17, .17, "C encoder\n$F_C(G_i^C)$", fc="#F4F9F3", ec=COLORS["communication"], fs=7.6, weight="bold")
-    arrow(ax, (.50, .735), (.58, .67), color=COLORS["perception"])
-    arrow(ax, (.50, .465), (.58, .61), color=COLORS["communication"])
-    box(ax, .59, .60, .20, .19, "Source-preserving fusion\n$\\beta + \\Delta(c)-\\Delta(0)$\nconflict-conditioned deviation\n$\\Delta(0)=0$", fc="#FFFDF6", ec="#B98732", fs=6.5, weight="bold")
-    ax.text(.69, .51, "$c=[a^P-a^C, d_{PC}, age_C, 1-confidence_C]$", fontsize=5.8, ha="center", color="#6B5A32")
-    arrow(ax, (.79, .695), (.86, .695), color="#B98732")
-    box(ax, .87, .60, .10, .19, "availability-\nmasked\nweighted sum\n$h_i$", fc="#FFFDF6", ec="#B98732", fs=6.3)
-    ax.text(.47, .22, "Two-source R2 only • no cross-source residual bypass", fontsize=7.0, color="#8A3434", ha="center", weight="bold")
-    ax.text(.47, .12, "One legal source → unit weight; neither legal source → actor uses only local context", fontsize=6.8, color=COLORS["muted"], ha="center")
+def little_source(ax,x,y,w,h,color,title,formula=None):
+    rounded(ax,x,y,w,h,title,fc="white",ec=color,size=7.1,lw=.9)
+    ax.add_patch(Circle((x+w*.75,y+h*.52),.014,facecolor="white",edgecolor=color,lw=.8))
+    ax.add_patch(Circle((x+w*.88,y+h*.30),.011,facecolor="white",edgecolor=color,lw=.8))
+    arr(ax,(x+w*.77,y+h*.49),(x+w*.86,y+h*.33),color,.7,"-",scale=4)
+    if formula: txt(ax,x+w/2,y-.027,formula,size=6.7,color=color)
 
 
-def draw_legend(ax):
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    ax.add_patch(FancyBboxPatch((.01, .12), .98, .76, boxstyle="round,pad=0.008,rounding_size=.018", facecolor="white", edgecolor="#555555", linewidth=.7))
-    items = [("Scout", COLORS["scout"]), ("Relay", COLORS["relay"]), ("Attacker", COLORS["attacker"]), ("Target", COLORS["target"])]
-    x = .05
-    for label, color in items:
-        ax.add_patch(FancyBboxPatch((x - .018, .505), .036, .09, boxstyle="round,pad=.002,rounding_size=.025", facecolor=color, edgecolor="white", lw=.5))
-        ax.text(x + .028, .55, label, color=color, fontsize=7.3, va="center", weight="bold")
-        x += .16
-    ax.plot([.62, .68], [.55, .55], color=COLORS["perception"], lw=1.5, linestyle=":")
-    ax.text(.69, .55, "P: direct perception", fontsize=7.3, va="center")
-    ax.plot([.81, .87], [.55, .55], color=COLORS["communication"], lw=1.5, linestyle="--")
-    ax.text(.88, .55, "C: delivered/cache-valid communication", fontsize=7.3, va="center")
-    ax.add_patch(Circle((.42, .28), .022, fill=False, edgecolor="#D62728", lw=1.0, linestyle="--"))
-    ax.text(.45, .28, "failed relay / unavailable C path", fontsize=7.0, va="center", color="#6B3333")
+def panel_d(ax):
+    init(ax,"d","PCRF-R2 encoder (zoom-in)")
+    # Reference-master left three slots. Third is a descriptor, not an evidence source.
+    little_source(ax,.035,.70,.19,.16,C["p"],"P source\nDirect perception",r"$G_i^P$")
+    little_source(ax,.035,.46,.19,.16,C["c"],"C source\nDelivered + cache-valid",r"$G_i^C$")
+    rounded(ax,.035,.22,.19,.16,"Conflict descriptor\n$[a^P-a^C,d_{PC},age_C,$\n$1-confidence_C]$",fc=C["pale_gold"],ec=C["conflict"],size=6.4,lw=.9)
+    # Feature blocks occupy the same visual column as reference edge features.
+    rounded(ax,.255,.73,.09,.11,"P edge\nfeatures",fc=C["pale_blue"],ec=C["p"],size=6.5)
+    rounded(ax,.255,.49,.09,.11,"C edge\nfeatures",fc=C["pale_green"],ec=C["c"],size=6.5)
+    rounded(ax,.255,.25,.09,.11,"legal masks\n+ context",fc="#F7F7F7",ec="#777777",size=6.3)
+    # One central module is visually large but explicitly contains two real encoders.
+    rounded(ax,.375,.25,.28,.52,"Source-specific\nP/C encoders",fc="#F7FBFF",ec="#4C83B9",size=9.0,lw=1.0,weight="bold")
+    rounded(ax,.415,.56,.20,.09,"$h_i^P=m_i^P F_P(G_i^P)$",fc=C["pale_blue"],ec=C["p"],size=7.0)
+    rounded(ax,.415,.39,.20,.09,"$h_i^C=m_i^C F_C(G_i^C)$",fc=C["pale_green"],ec=C["c"],size=7.0)
+    arr(ax,(.225,.78),(.255,.78),C["p"],.9); arr(ax,(.225,.54),(.255,.54),C["c"],.9); arr(ax,(.225,.30),(.255,.30),C["conflict"],.9)
+    arr(ax,(.345,.78),(.375,.62),C["p"],.9); arr(ax,(.345,.54),(.375,.45),C["c"],.9); arr(ax,(.345,.30),(.375,.35),C["conflict"],.9)
+    rounded(ax,.69,.43,.13,.19,"Baseline +\nconflict deviation\n$\\beta+\\Delta(c)-\\Delta(0)$\n$\\Delta(0)=0$",fc="#FFFDF7",ec=C["conflict"],size=6.8,lw=.9,weight="bold")
+    rounded(ax,.845,.43,.10,.19,"Availability-\nmasked fusion",fc="#F7F7F7",ec="#555555",size=6.3)
+    arr(ax,(.655,.52),(.69,.52),C["ink"],1.0); arr(ax,(.82,.52),(.845,.52),C["ink"],1.0)
+    txt(ax,.955,.70,"Actor\nembedding",size=7.4,weight="bold")
+    for yy,col in zip((.61,.51,.41,.31),(C["scout"],C["relay"],C["attacker"],C["target"])):
+        ax.add_patch(Circle((.955,yy),.018,facecolor=col,edgecolor="#555555",lw=.5))
+    txt(ax,.955,.23,"$h_i\\in\\mathbb{R}^{d_h}$",size=6.7)
+    # Reference-like symbol legend, with only current operations.
+    rounded(ax,.05,.055,.77,.09,"Source-preserving combination   |   Availability masking   |   Baseline + conflict deviation",fc="white",ec="#777777",size=6.3)
 
 
-def make_figure(version: str):
-    fig = plt.figure(figsize=(16.4, 10.6), facecolor="white")
-    # V2 uses a tighter gap and larger lower panels for readable encoder labels.
-    if version == "v1":
-        top_y, bottom_y, h_top, h_bottom = .56, .15, .37, .35
-    else:
-        top_y, bottom_y, h_top, h_bottom = .55, .15, .39, .37
-    axes = [
-        fig.add_axes((.035, top_y, .47, h_top)), fig.add_axes((.505, top_y, .46, h_top)),
-        fig.add_axes((.035, bottom_y, .58, h_bottom)), fig.add_axes((.615, bottom_y, .35, h_bottom)),
-        fig.add_axes((.035, .035, .93, .085)),
-    ]
-    draw_a(axes[0]); draw_b(axes[1]); draw_c(axes[2]); draw_d(axes[3]); draw_legend(axes[4])
-    fig.text(.035, .004, "Fig. 1 | PCRF-R2 architecture overview for recipient-specific UAV coordination under relay failure.",
-             fontsize=9.5, weight="bold")
+def legend(ax):
+    ax.set_xlim(0,1);ax.set_ylim(0,1);ax.axis("off")
+    ax.add_patch(FancyBboxPatch((.01,.10),.98,.78,boxstyle="round,pad=.007,rounding_size=.018",facecolor="white",edgecolor="#333333",lw=.75))
+    quadrotor(ax,.035,.55,C["scout"],s=.019); txt(ax,.075,.55,"Scout (S)",size=7.6,color=C["scout"],weight="bold",ha="left")
+    fixed_wing(ax,.155,.55,C["relay"],s=.021,antenna=True); txt(ax,.195,.55,"Relay (R)",size=7.6,color=C["relay"],weight="bold",ha="left")
+    fixed_wing(ax,.285,.55,C["attacker"],s=.021); txt(ax,.325,.55,"Attacker (A)",size=7.6,color=C["attacker"],weight="bold",ha="left")
+    target_tower(ax,.42,.54,s=.021); txt(ax,.455,.55,"Target (T)",size=7.6,color=C["target"],weight="bold",ha="left")
+    ax.plot([.55,.60],[.55,.55],color=C["p"],lw=1.55,linestyle=":"); txt(ax,.61,.55,"P: direct perception",size=7.4,ha="left")
+    ax.plot([.72,.77],[.55,.55],color=C["c"],lw=1.55,linestyle="--"); txt(ax,.78,.55,"C: delivered/cache-valid communication",size=7.4,ha="left")
+    ax.add_patch(Circle((.87,.25),.026,fill=False,edgecolor="#D62728",linestyle="--",lw=1.0)); txt(ax,.91,.25,"failed relay",size=6.7,color="#8A3333",ha="left")
+
+
+def draw(version):
+    fig=plt.figure(figsize=(16.4,10.6),facecolor="white")
+    # Ratios follow the visual master: left panels 52%, right panels 44%.
+    top_y,top_h=.575,.385; bottom_y,bottom_h=.155,.415
+    a=fig.add_axes((.025,top_y,.515,top_h)); b=fig.add_axes((.540,top_y,.435,top_h))
+    c=fig.add_axes((.025,bottom_y,.515,bottom_h)); d=fig.add_axes((.540,bottom_y,.435,bottom_h))
+    l=fig.add_axes((.025,.045,.95,.085))
+    panel_a(a);panel_b(b);panel_c(c);panel_d(d);legend(l)
+    fig.text(.025,.008,"Fig. 1 | PCRF-R2: architecture overview for heterogeneous UAV coordination under relay failure and communication constraints.",fontsize=9.6,weight="bold")
     return fig
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--output-prefix", type=Path, default=Path("paper_figures/fig1_architecture"))
-    parser.add_argument("--version", choices=("v1", "v2"), default="v2")
-    args = parser.parse_args()
-    args.output_prefix.parent.mkdir(parents=True, exist_ok=True)
-    figure = make_figure(args.version)
-    figure.savefig(args.output_prefix.with_suffix(".svg"), bbox_inches="tight")
-    figure.savefig(args.output_prefix.with_suffix(".pdf"), bbox_inches="tight")
-    figure.savefig(args.output_prefix.with_suffix(".png"), dpi=600, bbox_inches="tight")
-    plt.close(figure)
-    print(f"FIG1_{args.version.upper()}_WRITTEN: {args.output_prefix}")
+    parser=argparse.ArgumentParser(); parser.add_argument("--version",choices=("fidelity_v1","fidelity_v2"),default="fidelity_v2")
+    parser.add_argument("--output-prefix",type=Path,default=Path("paper_figures/fig1_architecture")); args=parser.parse_args()
+    args.output_prefix.parent.mkdir(parents=True,exist_ok=True); fig=draw(args.version)
+    fig.savefig(args.output_prefix.with_suffix(".svg"),bbox_inches="tight")
+    fig.savefig(args.output_prefix.with_suffix(".pdf"),bbox_inches="tight")
+    fig.savefig(args.output_prefix.with_suffix(".png"),dpi=600,bbox_inches="tight")
+    plt.close(fig); print(f"FIG1_{args.version.upper()}_WRITTEN: {args.output_prefix}")
 
 
-if __name__ == "__main__":
-    main()
+if __name__=="__main__": main()
