@@ -74,6 +74,32 @@ can the strong temporal comparator receive the same legal information. No code
 for the candidate policy and no GPU training is authorized before four PASS
 answers.
 
+## R3-0 selection decision (2026-08-10): no candidate may enter implementation
+
+This is a time-bounded, method-free selection decision.  It closes the R3
+algorithmic restart under the present simulator rather than opening an R4.
+
+| Candidate main question | Task / mission meaning | Literature distinction | Legal actor information | Identifiable strong comparator | Non-saturated primary endpoint | Decision |
+|---|---|---|---|---|---|---|
+| Source-specific temporal belief from P/C evidence | only the current task-chain and engagement-readiness constructs | **Fail:** delay-aware MARL and communication-aware target-state fusion already cover delay, uncertainty and state prediction | Pass | Pass in principle | **Fail:** the current 80-step primary window saturated in F2 | **NO-GO** |
+| Learned communication scheduling for engagement-critical packets | meaningful only after adding a real bandwidth/resource-allocation task | **Fail:** learned communication scheduling is an established MARL topic | not defined by the current fixed packet contract | would require scheduling-aware baselines and a changed environment | not established | **NO-GO** |
+| Multi-target assignment / capture-completion coordination | would require multiple targets and a capture/neutralization transition absent from the 3DOF simulator | crowded existing UAV-MARL problem class | would require a new task contract | would require a new benchmark family | not established | **NO-GO** |
+
+The targeted prior-art check found direct overlap with delay-aware MARL
+([DACOM](https://ojs.aaai.org/index.php/AAAI/article/view/26389)), learned
+communication scheduling ([SchedNet](https://arxiv.org/abs/1902.01554)), and
+communication-aware multi-UAV target-state fusion
+([Fu et al., 2018](https://www.mdpi.com/2076-3417/8/6/870)).  Recipient-specific
+information legality remains a necessary scientific control, not a standalone
+algorithmic novelty claim.
+
+**Result:** `R3_0_CANDIDATE_NO_GO__NO_NEW_METHOD_IMPLEMENTATION`.
+Do not implement, train, rent GPU for, or extend any of the three candidates.
+The only two remaining author-level choices are: (i) write v1.9 as a bounded
+fairness/information-contract and confirmatory-negative-result study; or (ii)
+explicitly authorize a genuinely new task/mission model outside this contract.
+The latter is a new project-design decision, not an automatic continuation.
+
 ## Terminology ledger
 
 | Canonical term | Meaning in R3 planning | Status |
