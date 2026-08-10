@@ -80,7 +80,9 @@ project's algorithmic route rather than creating another version number.
 
 ## Immediate next action
 
-Draft the **N0 mission-physics specification only**.  It must decide whether a
-credible capture/neutralization transition can be implemented in the existing
-3DOF kinematic model without pretending it is a high-fidelity weapon model.
-Until that specification is reviewed, no algorithm design or training begins.
+The N0 draft is recorded in
+[NEW_PROJECT_N0_MISSION_PHYSICS_SPEC.md](NEW_PROJECT_N0_MISSION_PHYSICS_SPEC.md).
+It proposes an abstract standoff-neutralization transition that uses an
+attacker `engage_commit` action and evaluator-only true kinematics, while
+explicitly excluding high-fidelity weapon claims.  Until that specification is
+author-approved, no algorithm design or training begins.
