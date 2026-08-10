@@ -163,6 +163,10 @@ class UAVIntercept3DConfig:
     # N2-repair switch.  The potential is disabled by default so legacy and
     # original N2 semantics remain unchanged unless the repair is explicit.
     mission_progress_shaping_enabled: bool = False
+    # TLI1 reward-only repair.  When enabled, the potential is a bounded,
+    # higher-is-better score for the physical neutralization envelope.  It is
+    # deliberately opt-in so prior N2/L0 evidence remains reproducible.
+    mission_reward_alignment_v1_enabled: bool = False
     # N2 guidance repair: actor emits turn/climb guidance only; a deterministic
     # own-state speed-hold controller supplies the low-level acceleration.
     guidance_level_action_interface: bool = False
@@ -848,6 +852,8 @@ class UAVIntercept3DEnv:
         """
         if not self.config.mission_neutralization_enabled:
             return 0.0
+        if self.config.mission_reward_alignment_v1_enabled:
+            return self._mission_reward_alignment_potential()
         red_vel = velocity_from_state(
             float(self.red_speed[0]), float(self.red_heading[0]), float(self.red_gamma[0])
         )
@@ -871,6 +877,56 @@ class UAVIntercept3DEnv:
         geometric = float(np.mean(terms)) if terms else 0.0
         hold_progress = float(self.engage_commit_hold) / max(1, self.config.engage_commit_hold_steps)
         return 0.90 * geometric + 0.10 * float(np.clip(hold_progress, 0.0, 1.0))
+
+    def _mission_reward_alignment_potential(self) -> float:
+        """Bounded physical progress potential for TLI1.
+
+        The value is higher when the attacker is closer to the *legal*
+        neutralization envelope, not merely closer to the target.  It uses
+        only evaluator-side relative kinematics and the existing physical
+        hold counter; no graph, communication, chain, or sensing predicate is
+        consulted.  The smooth margins avoid rewarding an overshoot through
+        the minimum attack range.
+        """
+        red_vel = velocity_from_state(
+            float(self.red_speed[0]), float(self.red_heading[0]), float(self.red_gamma[0])
+        )
+        scores: list[float] = []
+        for i, typ in enumerate(self.config.blue_types):
+            if typ.role not in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
+                continue
+            rel = self.red_pos[0] - self.blue_pos[i]
+            dist = float(np.linalg.norm(rel))
+            if dist <= 1e-6:
+                continue
+            los = unit(rel)
+            blue_vel = velocity_from_state(
+                float(self.blue_speed[i]), float(self.blue_heading[i]), float(self.blue_gamma[i])
+            )
+            heading = math.atan2(float(rel[1]), float(rel[0]))
+            heading_score = 0.5 * (1.0 + math.cos(angle_diff(heading, float(self.blue_heading[i]))))
+            range_width = max(float(typ.attack_range_max - typ.attack_range_min), 1.0)
+            range_scale = max(0.25 * range_width, 1.0)
+            if dist < typ.attack_range_min:
+                range_violation = float(typ.attack_range_min - dist)
+            elif dist > typ.attack_range_max:
+                range_violation = float(dist - typ.attack_range_max)
+            else:
+                range_violation = 0.0
+            range_score = math.exp(-((range_violation / range_scale) ** 2))
+            altitude_scale = 1_600.0
+            altitude_score = math.exp(-abs(float(rel[2])) / altitude_scale)
+            closure = float(np.dot(blue_vel - red_vel, los))
+            closure_score = float(np.clip((closure + 30.0) / 120.0, 0.0, 1.0))
+            scores.append(
+                0.40 * range_score
+                + 0.30 * heading_score
+                + 0.20 * altitude_score
+                + 0.10 * closure_score
+            )
+        geometric = float(max(scores)) if scores else 0.0
+        hold_progress = float(self.engage_commit_hold) / max(1, self.config.engage_commit_hold_steps)
+        return float(np.clip(0.90 * geometric + 0.10 * np.clip(hold_progress, 0.0, 1.0), 0.0, 1.0))
 
     def _min_blue_red_distance(self) -> float:
         return float(np.min(np.linalg.norm(self.blue_pos - self.red_pos[0], axis=1)))
