@@ -97,23 +97,41 @@ def restore_target_asset(img: Image.Image, source: Image.Image, crop_box: tuple[
     img.alpha_composite(asset, (crop_box[0], crop_box[1]))
 
 
+def erase_legacy_orange_relation(img: Image.Image, bounds: tuple[int, int, int, int]):
+    """Erase the reference-only orange Task-Support strokes, never a R2 source."""
+    pixels = img.load()
+    x0, y0, x1, y1 = bounds
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            r, g, b, a = pixels[x, y]
+            # Reference Task-Support is orange; red attacker assets and green C are retained.
+            # Include the very pale anti-aliased orange pixels left by the
+            # raster reference.  White/grey background and red aircraft remain.
+            if ((r > 180 and r - g > 15 and g - b > 10) or
+                    (r > 230 and g > 220 and r - g > 2 and g - b > 4)) and a:
+                pixels[x, y] = (255, 255, 255, 255)
+
+
 def replacement_a(img: Image.Image, source: Image.Image, draw: ImageDraw.ImageDraw):
     # Remove the reference's old three-relation strokes without touching source assets.
     draw.line([(224, 101), (364, 101)], fill="white", width=10)
     draw.line([(210, 128), (419, 278)], fill="white", width=10)
     draw.line([(399, 133), (205, 255)], fill="white", width=10)
     draw.line([(420, 132), (420, 274)], fill="white", width=10)
-    draw.line([(448, 128), (519, 278)], fill="white", width=13)
-    draw.line([(222, 286), (423, 320)], fill="white", width=13)
+    erase_legacy_orange_relation(img, (15, 45, 590, 369))
     # Re-paste role assets so none is recreated by drawing primitives.
     for crop_box in [(137, 72, 246, 137), (355, 70, 486, 139), (132, 239, 251, 306)]:
         img.paste(source.crop(crop_box), (crop_box[0], crop_box[1]))
     restore_target_asset(img, source, (415, 258, 510, 365))
+    # Some old relation segments fall inside the preserved role crop margins.
+    # Remove those segments only after the original glyphs have been re-pasted.
+    erase_legacy_orange_relation(img, (15, 45, 590, 369))
+    draw.line([(226, 101), (355, 101)], fill="white", width=10)
     # P is a receiver-to-target sensing ray; C is a sender-to-receiver packet.
     arrow(draw, (228, 125), (420, 278), BLUE, 2, True)
     arrow(draw, (400, 132), (424, 278), BLUE, 2, True)
     arrow(draw, (232, 275), (418, 312), BLUE, 2, True)
-    arrow(draw, (233, 111), (356, 111), GREEN, 2, True)
+    arrow(draw, (240, 111), (356, 111), GREEN, 2, True)
     arrow(draw, (393, 133), (246, 250), GREEN, 2, True)
     whiteout(draw, (603, 213, 765, 377)); box(draw, (599, 211, 768, 379), radius=12)
     text(draw, (684, 235), "Legal evidence sources", 14, bold=True)
@@ -139,7 +157,8 @@ def flow_box(draw: ImageDraw.ImageDraw, rect: tuple[int, int, int, int], title: 
         col = "#BDBDBD" if broken and k < 2 else "#262626"
         arrow(draw, (centers[k][0]+18, centers[k][1]), (centers[k+1][0]-18, centers[k+1][1]), col, 2)
     if broken:
-        x, y = centers[2]
+        # The scenario is a relay failure; mark the relay node, not the attacker.
+        x, y = centers[1]
         draw.line((x-13, y-13, x+13, y+13), fill="#D62728", width=3)
         draw.line((x-13, y+13, x+13, y-13), fill="#D62728", width=3)
 
@@ -152,6 +171,7 @@ def replacement_b(img: Image.Image, source: Image.Image, draw: ImageDraw.ImageDr
     draw.line([(1210, 245), (1383, 250)], fill="white", width=13)
     restore_target_asset(img, source, (1000, 218, 1070, 281))
     restore_target_asset(img, source, (1360, 218, 1435, 281))
+    erase_legacy_orange_relation(img, (810, 80, 1440, 282))
     # Last residual of the old after-failure Task-Support stroke; stop before target source pixels.
     draw.line([(1208, 255), (1368, 255)], fill="white", width=14)
     whiteout(draw, (816, 289, 1075, 359)); whiteout(draw, (1120, 289, 1440, 359))
@@ -196,7 +216,7 @@ def replacement_c(img: Image.Image, source: Image.Image, draw: ImageDraw.ImageDr
     module(draw, (405, 722, 491, 831), "MLP\ncritic", "#F5EEFA", "#9D60CE", 15)
     module(draw, (520, 722, 624, 831), "Vψ(share_obs,\nroleᵢ)", "#FFF8E8", "#D29B3B", 14)
     module(draw, (34, 716, 182, 764), "Centralized share_obs\n(training only)", "#F0F8F0", "#5EAA5F", 12)
-    module(draw, (34, 786, 182, 834), "Current-agent roleᵢ\none-hot (training only)", "#F6F6F6", "#888888", 11)
+    module(draw, (34, 786, 182, 834), "Agent roleᵢ one-hot\nused by actor and critic", "#F6F6F6", "#888888", 11)
     arrow(draw, (184, 740), (221, 740)); arrow(draw, (184, 810), (221, 810)); arrow(draw, (389, 776), (404, 776)); arrow(draw, (492, 776), (519, 776))
     text(draw, (697, 772), "reward → return /\nadvantage → PPO loss", 11, GOLD)
     text(draw, (683, 844), "Training (Centralized)", 14, PURPLE, True, anchor="mm")
@@ -209,7 +229,7 @@ def replacement_d(img: Image.Image, draw: ImageDraw.ImageDraw):
     text(draw, (848, 445), "PCRF-R2 encoder (zoom-in)", 20, bold=True, anchor="lm")
     # Exact source-block / edge-block / central-encoder / fusion / embeddings skeleton of reference.
     module(draw, (812, 522, 951, 589), "P graph input\nreceiver direct perception", PALE_BLUE, "#4B86BF", 12)
-    module(draw, (812, 604, 951, 671), "Delivered packet\ntarget snapshot", PALE_GREEN, "#5EAA5F", 13)
+    module(draw, (812, 604, 951, 671), "Delivered sender-status\npacket + target snapshot", PALE_GREEN, "#5EAA5F", 12)
     module(draw, (812, 686, 951, 753), "expired / dropped / pending / invalid\n→ zero C node, edge, adjacency", "#F8F8F8", "#888888", 10)
     module(draw, (977, 522, 1040, 589), "P nodes /\nedges / adj\n+ role", PALE_BLUE, "#4B86BF", 11)
     module(draw, (977, 604, 1040, 671), "age/confidence\nvalidity check", PALE_GREEN, "#5EAA5F", 10)
@@ -225,10 +245,11 @@ def replacement_d(img: Image.Image, draw: ImageDraw.ImageDraw):
     arrow(draw, (1041, 555), (1084, 590), BLUE); arrow(draw, (1041, 719), (1084, 692), GREEN)
     arrow(draw, (1164, 531), (1340, 574), GOLD, 1, True)
     arrow(draw, (1245, 666), (1301, 666)); arrow(draw, (1393, 656), (1401, 656))
-    module(draw, (816, 775, 950, 815), "z_ctx source-free\n(no target/cache/payload)", "#F6F6F6", "#888888", 10)
+    module(draw, (816, 775, 950, 815), "z_ctx: self / role / local task\n(no target/cache/payload)", "#F6F6F6", "#888888", 10)
     module(draw, (973, 775, 1082, 815), "context\nencoder", "#F6F6F6", "#888888", 11)
     module(draw, (1104, 775, 1285, 815), "Actor: πᵢ([hᵢ PCRF || Enc(z_ctx)])", "#EEF5FC", "#4B86BF", 10)
     arrow(draw, (951, 795), (972, 795), "#666666", 1); arrow(draw, (1083, 795), (1103, 795), "#666666", 1)
+    module(draw, (1305, 775, 1470, 815), "mᴾ=mᶜ=0 ⇒ hᵢ PCRF=0\npolicy uses z_ctx only", "#F6F6F6", "#888888", 10)
     box(draw, (817, 832, 1445, 870), radius=10)
     text(draw, (1131, 845), "Comparator parity: PCRF-R2 = separate P/C encoders + gated fusion  |  single-R2 = same P/C raw fields + source tag, unified graph", 8)
     text(draw, (1131, 859), "matched-nongraph-R2 = same P/C raw fields, no graph message passing  |  approximately parameter matched", 8)
