@@ -98,16 +98,29 @@ def restore_target_asset(img: Image.Image, source: Image.Image, crop_box: tuple[
 
 
 def replacement_a(img: Image.Image, source: Image.Image, draw: ImageDraw.ImageDraw):
-    # Remove the old orange-only relation strokes without touching source UAV/tower assets.
+    # Remove the reference's old three-relation strokes without touching source assets.
+    draw.line([(224, 101), (364, 101)], fill="white", width=10)
+    draw.line([(210, 128), (419, 278)], fill="white", width=10)
+    draw.line([(399, 133), (205, 255)], fill="white", width=10)
+    draw.line([(420, 132), (420, 274)], fill="white", width=10)
     draw.line([(448, 128), (519, 278)], fill="white", width=13)
     draw.line([(222, 286), (423, 320)], fill="white", width=13)
+    # Re-paste role assets so none is recreated by drawing primitives.
+    for crop_box in [(137, 72, 246, 137), (355, 70, 486, 139), (132, 239, 251, 306)]:
+        img.paste(source.crop(crop_box), (crop_box[0], crop_box[1]))
     restore_target_asset(img, source, (415, 258, 510, 365))
+    # P is a receiver-to-target sensing ray; C is a sender-to-receiver packet.
+    arrow(draw, (228, 125), (420, 278), BLUE, 2, True)
+    arrow(draw, (400, 132), (424, 278), BLUE, 2, True)
+    arrow(draw, (232, 275), (418, 312), BLUE, 2, True)
+    arrow(draw, (233, 111), (356, 111), GREEN, 2, True)
+    arrow(draw, (393, 133), (246, 250), GREEN, 2, True)
     whiteout(draw, (603, 213, 765, 377)); box(draw, (599, 211, 768, 379), radius=12)
     text(draw, (684, 235), "Legal evidence sources", 14, bold=True)
     source_line(draw, (608, 272), (654, 272), BLUE, "dotted")
-    text(draw, (664, 272), "P  direct perception", 13, anchor="lm")
+    text(draw, (654, 272), "P sensing\n(receiver → target)", 11, anchor="lm")
     source_line(draw, (608, 312), (654, 312), GREEN, "dashed")
-    text(draw, (664, 312), "C  delivered +\ncache-valid communication", 13, anchor="lm")
+    text(draw, (654, 312), "C packet\n(delivered + cache-valid)", 11, anchor="lm")
 
 
 def flow_box(draw: ImageDraw.ImageDraw, rect: tuple[int, int, int, int], title: str, broken: bool = False):
@@ -145,7 +158,7 @@ def replacement_b(img: Image.Image, source: Image.Image, draw: ImageDraw.ImageDr
     flow_box(draw, (819, 290, 1073, 358), "Information flow (normal)")
     flow_box(draw, (1123, 290, 1436, 358), "Information flow (disrupted)", True)
     whiteout(draw, (1123, 365, 1438, 411)); box(draw, (1125, 366, 1436, 409), fill="#FFF1F0", outline="#E77770", radius=6)
-    text(draw, (1280, 387), "Delivered communication becomes unavailable;\nlocal P may remain available.", 11)
+    text(draw, (1280, 387), "New delivery through the failed path is unavailable;\npreviously delivered cache-valid C remains until expiry.", 10)
 
 
 def module(draw: ImageDraw.ImageDraw, xy, label, fill="white", outline="#777777", size=15):
@@ -164,25 +177,28 @@ def replacement_c(img: Image.Image, source: Image.Image, draw: ImageDraw.ImageDr
     text(draw, (17, 435), "(c)", 23, bold=True, anchor="la")
     text(draw, (64, 445), "Overall method pipeline (PCRF-R2)", 20, bold=True, anchor="lm")
     for y, lab in [(528, "Scout"), (576, "Relay"), (634, "Attacker")]: text(draw, (30, y), lab, 11, anchor="lm")
-    text(draw, (144, 488), "Recipient-specific observations", 12, bold=True)
+    text(draw, (132, 488), "Recipient-specific observations", 11, bold=True)
     text(draw, (677, 488), "Execution (Decentralized)", 14, bold=True)
     draw.line([(30, 684), (785, 684)], fill="#7652B5", width=2)
     # Top and bottom module regions occupy the original reference slots.
-    module(draw, (222, 477, 388, 656), "P/C legal-source\ngraph construction", "#FFFFFF", "#777777", 15)
+    module(draw, (222, 477, 388, 656), "P/C legal-source\ngraph construction\n+ role", "#FFFFFF", "#777777", 14)
     # Use original source coloured nodes only as abstract graph marks, not as new role icons.
     for x, y, col in [(257, 610, BLUE), (322, 544, GREEN), (344, 620, RED), (369, 584, PURPLE)]:
         draw.ellipse((x-9, y-9, x+9, y+9), fill=col, outline="white")
     arrow(draw, (287, 604), (318, 552), GREEN, 2, True); arrow(draw, (322, 553), (342, 611), GREEN, 2, True)
     module(draw, (406, 525, 494, 634), "PCRF-R2\nencoder", PALE_BLUE, "#4B86BF", 16)
+    module(draw, (518, 477, 612, 513), "z_ctx source-free", "#F6F6F6", "#888888", 10)
     module(draw, (520, 525, 610, 634), "Actor\nPolicy\nπᵢ", PALE_BLUE, "#4B86BF", 16)
     arrow(draw, (389, 580), (405, 580)); arrow(draw, (495, 580), (519, 580)); arrow(draw, (611, 580), (650, 610))
+    arrow(draw, (565, 514), (565, 524), "#666666", 1)
     text(draw, (632, 558), "Actions\n(aᵢᵗ)", 12, anchor="mm")
-    module(draw, (222, 702, 388, 851), "Centralized\ntraining graph", "#FFFFFF", "#777777", 15)
-    module(draw, (405, 722, 491, 831), "Shared\ncritic encoder", "#F5EEFA", "#9D60CE", 14)
-    module(draw, (520, 722, 624, 831), "Centralized\ncritic\nVψ(sₜ)", "#FFF8E8", "#D29B3B", 14)
-    module(draw, (34, 716, 182, 764), "Centralized state\n(training only)", "#F0F8F0", "#5EAA5F", 12)
-    module(draw, (34, 786, 182, 834), "Global reward\n(training only)", "#FFF8E8", "#D29B3B", 12)
+    module(draw, (222, 702, 388, 851), "concat\n[share_obs, roleᵢ one-hot]", "#FFFFFF", "#777777", 14)
+    module(draw, (405, 722, 491, 831), "MLP\ncritic", "#F5EEFA", "#9D60CE", 15)
+    module(draw, (520, 722, 624, 831), "Vψ(share_obs,\nroleᵢ)", "#FFF8E8", "#D29B3B", 14)
+    module(draw, (34, 716, 182, 764), "Centralized share_obs\n(training only)", "#F0F8F0", "#5EAA5F", 12)
+    module(draw, (34, 786, 182, 834), "Current-agent roleᵢ\none-hot (training only)", "#F6F6F6", "#888888", 11)
     arrow(draw, (184, 740), (221, 740)); arrow(draw, (184, 810), (221, 810)); arrow(draw, (389, 776), (404, 776)); arrow(draw, (492, 776), (519, 776))
+    text(draw, (697, 772), "reward → return /\nadvantage → PPO loss", 11, GOLD)
     text(draw, (683, 844), "Training (Centralized)", 14, PURPLE, True, anchor="mm")
     text(draw, (528, 698), "CTDE boundary", 14, PURPLE, True, anchor="mm")
 
@@ -192,21 +208,30 @@ def replacement_d(img: Image.Image, draw: ImageDraw.ImageDraw):
     text(draw, (806, 435), "(d)", 23, bold=True, anchor="la")
     text(draw, (848, 445), "PCRF-R2 encoder (zoom-in)", 20, bold=True, anchor="lm")
     # Exact source-block / edge-block / central-encoder / fusion / embeddings skeleton of reference.
-    module(draw, (812, 522, 951, 589), "P source\nDirect perception", PALE_BLUE, "#4B86BF", 14)
-    module(draw, (812, 604, 951, 671), "C source\nDelivered + cache-valid", PALE_GREEN, "#5EAA5F", 14)
-    module(draw, (812, 686, 951, 753), "Conflict descriptor\n[aᴾ − aᶜ, dₚc, ageᶜ,\n1 − confidenceᶜ]", "#FFF7EA", "#CA7D24", 13)
-    module(draw, (977, 522, 1040, 589), "P edge\nfeatures", PALE_BLUE, "#4B86BF", 12)
-    module(draw, (977, 604, 1040, 671), "C edge\nfeatures", PALE_GREEN, "#5EAA5F", 12)
-    module(draw, (977, 686, 1040, 753), "legal masks\n+ context", "#F6F6F6", "#888888", 11)
-    module(draw, (1085, 550, 1244, 782), "Source-specific\nP/C encoders\n\nhᵢᴾ = mᵢᴾFᴾ(Gᵢᴾ)\n\nhᵢᶜ = mᵢᶜFᶜ(Gᵢᶜ)", PALE_BLUE, "#4B86BF", 16)
-    module(draw, (1302, 597, 1392, 716), "Baseline +\nconflict deviation\nβ + Δ(c) − Δ(0)\nΔ(0)=0", "#FFFDF7", "#CA7D24", 13)
-    module(draw, (1408, 620, 1465, 692), "Availability-\nmasked fusion", "#F7F7F7", "#777777", 10)
-    for y, col in [(566, BLUE), (622, GREEN), (678, RED), (735, PURPLE)]: draw.ellipse((1450, y-10, 1470, y+10), fill=col, outline="white")
-    text(draw, (1430, 524), "Actor\nembedding", 13, bold=True)
-    for y in (555, 637, 719): arrow(draw, (952, y), (976, y), BLUE if y == 555 else GREEN if y == 637 else GOLD)
-    arrow(draw, (1041, 555), (1084, 590)); arrow(draw, (1041, 637), (1084, 682)); arrow(draw, (1041, 719), (1084, 738), GOLD)
-    arrow(draw, (1245, 666), (1301, 666)); arrow(draw, (1393, 656), (1407, 656)); arrow(draw, (1466, 656), (1450, 622))
-    box(draw, (817, 832, 1445, 870), radius=10); text(draw, (1131, 851), "Source-preserving combination   |   Availability masking   |   Baseline + conflict deviation", 11)
+    module(draw, (812, 522, 951, 589), "P graph input\nreceiver direct perception", PALE_BLUE, "#4B86BF", 12)
+    module(draw, (812, 604, 951, 671), "Delivered packet\ntarget snapshot", PALE_GREEN, "#5EAA5F", 13)
+    module(draw, (812, 686, 951, 753), "expired / dropped / pending / invalid\n→ zero C node, edge, adjacency", "#F8F8F8", "#888888", 10)
+    module(draw, (977, 522, 1040, 589), "P nodes /\nedges / adj\n+ role", PALE_BLUE, "#4B86BF", 11)
+    module(draw, (977, 604, 1040, 671), "age/confidence\nvalidity check", PALE_GREEN, "#5EAA5F", 10)
+    module(draw, (977, 686, 1040, 753), "C nodes /\nedges / adj\n+ role", PALE_GREEN, "#5EAA5F", 11)
+    module(draw, (1085, 470, 1244, 530), "conflict descriptor c = [aᴾ−aᶜ, dₚc, ageᶜ, 1−confidenceᶜ]", "#FFF7EA", "#CA7D24", 10)
+    module(draw, (1085, 550, 1244, 782), "Source-specific encoders\n\nP encoder Fᴾ(Gᵢᴾ)\n\nC encoder Fᶜ(Gᵢᶜ)\n\n(source-preserving)", PALE_BLUE, "#4B86BF", 15)
+    module(draw, (1302, 575, 1392, 735), "δ(c)=g(c)−g(0)\nδ(0)=0\n\nw = availability-\nmasked softmax\n(β+δ(c);mᴾ,mᶜ)", "#FFFDF7", "#CA7D24", 10)
+    module(draw, (1402, 610, 1470, 700), "hᵢ\nPCRF\nfused\nembedding", "#F7F7F7", "#777777", 12)
+    text(draw, (1436, 544), "Actor graph\nembedding", 12, bold=True)
+    arrow(draw, (952, 555), (976, 555), BLUE)
+    arrow(draw, (952, 637), (976, 637), GREEN)
+    arrow(draw, (1008, 672), (1008, 685), GREEN)
+    arrow(draw, (1041, 555), (1084, 590), BLUE); arrow(draw, (1041, 719), (1084, 692), GREEN)
+    arrow(draw, (1164, 531), (1340, 574), GOLD, 1, True)
+    arrow(draw, (1245, 666), (1301, 666)); arrow(draw, (1393, 656), (1401, 656))
+    module(draw, (816, 775, 950, 815), "z_ctx source-free\n(no target/cache/payload)", "#F6F6F6", "#888888", 10)
+    module(draw, (973, 775, 1082, 815), "context\nencoder", "#F6F6F6", "#888888", 11)
+    module(draw, (1104, 775, 1285, 815), "Actor: πᵢ([hᵢ PCRF || Enc(z_ctx)])", "#EEF5FC", "#4B86BF", 10)
+    arrow(draw, (951, 795), (972, 795), "#666666", 1); arrow(draw, (1083, 795), (1103, 795), "#666666", 1)
+    box(draw, (817, 832, 1445, 870), radius=10)
+    text(draw, (1131, 845), "Comparator parity: PCRF-R2 = separate P/C encoders + gated fusion  |  single-R2 = same P/C raw fields + source tag, unified graph", 8)
+    text(draw, (1131, 859), "matched-nongraph-R2 = same P/C raw fields, no graph message passing  |  approximately parameter matched", 8)
 
 
 def replacement_legend_caption(img: Image.Image, draw: ImageDraw.ImageDraw):
