@@ -52,13 +52,30 @@ def main() -> int:
     if expired.available:
         failures.append("expired cache was exposed")
 
+    # Evidence is recipient-specific: a cache held by agent 0 cannot appear
+    # in agent 1's view.
+    env.target_cache_valid[1] = 0.0
+    env.target_cache_valid[0] = 1.0
+    env.target_cache_generation_step[0] = env.step_count
+    env.target_cache_confidence[0] = 1.0
+    env.target_cache_source[0] = 0
+    if legal.target_evidence(1).available:
+        failures.append("recipient-0 cache leaked to recipient 1")
+
+    # A legal local sensing event is private to the sensing recipient.
+    env.target_cache_valid[:] = 0.0
+    env.detected_by[:] = 0.0
+    env.detected_by[0] = 1.0
+    if legal.target_evidence(1).available:
+        failures.append("recipient-0 sensing leaked to recipient 1")
+
     graph = legal.recipient_graph(1)
     if graph["relation_adj"].shape != (2, cfg.num_blue + cfg.num_red, cfg.num_blue + cfg.num_red):
         failures.append("recipient graph shape mismatch")
     if not np.isfinite(graph["node"]).all() or not np.isfinite(graph["edge"]).all():
         failures.append("graph contains non-finite values")
 
-    print(f"checks={7}, failed={len(failures)}")
+    print(f"checks={9}, failed={len(failures)}")
     for failure in failures:
         print(f"FAIL: {failure}")
     return 1 if failures else 0

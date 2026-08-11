@@ -20,7 +20,7 @@
 PYTHONPATH=. D:/Anaconda/envs/.conda/envs/cac/python.exe \
   -m scripts.test_v16r_legal_observation_interface
 
-checks=7, failed=0
+   checks=9, failed=0
 ```
 
 已覆盖：
@@ -32,6 +32,8 @@ checks=7, failed=0
 5. recipient graph 形状和有限值；
 6. graph 不使用全局 target fallback；
 7. source/provenance relation 可追溯。
+8. recipient-0 cache 不泄漏到 recipient-1；
+9. recipient-0 local sensing 不泄漏到 recipient-1。
 
 ## 尚未通过的门
 
