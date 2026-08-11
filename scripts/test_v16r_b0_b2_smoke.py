@@ -13,7 +13,7 @@ from envs.v16r_env_adapter import V16RIntercept3DEnv
 
 
 def run_one(seed: int, graph_conditioned: bool) -> dict[str, float]:
-    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=8))
+    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=8, v16r_mission_mode=True))
     actor = (RecipientGraphGuidanceActor(env.obs_dim, hidden_dim=32) if graph_conditioned else ContinuousGuidanceActor(env.obs_dim, hidden_dim=32))
     critic = CentralizedValueCritic(env.share_obs_dim, hidden_dim=32)
     batch = collect_v16r_rollout(env, actor, horizon=4, graph_conditioned=graph_conditioned)

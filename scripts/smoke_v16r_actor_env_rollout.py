@@ -11,7 +11,7 @@ from envs.v16r_env_adapter import V16RIntercept3DEnv
 
 def main() -> int:
     torch.manual_seed(17066)
-    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=17066, max_steps=8))
+    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=17066, max_steps=8, v16r_mission_mode=True))
     actor = ContinuousGuidanceActor(env.obs_dim, hidden_dim=32)
     obs, share, graph = env.reset()
     failures: list[str] = []

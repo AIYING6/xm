@@ -8,7 +8,7 @@ from envs.v16r_env_adapter import V16RIntercept3DEnv
 
 
 def main() -> int:
-    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=17063, max_steps=5))
+    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=17063, max_steps=5, v16r_mission_mode=True))
     failures: list[str] = []
     obs, share, graph = env.reset()
     if obs.shape != (env.num_agents, env.obs_dim):
