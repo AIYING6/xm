@@ -1,6 +1,6 @@
 # New Algorithm Project V2: scientific-problem-first charter
 
-Status: `NEW_ALGORITHM_PROJECT_V2__SCIENTIFIC_PROBLEM_FIRST__CURRENT_UAV_PLATFORM_OPTIONAL`
+Status: `PROJECT_V2_MAJOR_REDESIGN_AUTHORIZED__PAPER_FIRST__NO_MORE_MICRO_PATCHING`
 
 The next paper project is independent of the current UAV benchmark.  The
 scientific problem must be selected before choosing an environment or reusing
@@ -23,9 +23,15 @@ be changed rather than distorting the problem to fit existing code.
 
 ## Current authorization
 
-No algorithm implementation, training, or formal experiment is authorized by
-this charter.  The next stage is a bounded literature-first selection of at
-most three mechanism-level research problems, followed by a single selection
-decision.  A candidate that fails novelty, identifiability, or benchmark-fit
-review is closed rather than repaired indefinitely.
+The previous literature-first candidate search is closed.  The next stage is
+`V2-R0_MULTI_TASK_HETEROGENEOUS_UAV_MAJOR_REDESIGN`: freeze a larger
+multi-task, capability-constrained, physically completed UAV specification
+before implementation or training.  This is a major redesign, not a repair of
+the single-target task.  The detailed specification is in
+`docs/V2_R0_MULTI_TASK_HETEROGENEOUS_UAV_MAJOR_REDESIGN.md`.
 
+No algorithm implementation or training is authorized at R0.  After the
+specification is frozen, exactly one direct-neighbor review (R1) and one
+scripted/oracle feasibility review (R2) are allowed before baseline
+learnability.  If the task construct fails, close or redesign it once; do not
+re-enter an unbounded micro-patch loop.
