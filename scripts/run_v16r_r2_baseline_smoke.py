@@ -39,7 +39,7 @@ def evaluate(env: V16RIntercept3DEnv, actor, graph_conditioned: bool, episodes: 
 def run(seed: int, graph_conditioned: bool, updates: int, horizon: int) -> dict[str, object]:
     torch.manual_seed(seed)
     env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=60, strict_target_sensing=True, agent_target_info_bottleneck=True, v16r_mission_mode=True))
-    actor = RecipientGraphGuidanceActor(env.obs_dim, hidden_dim=64) if graph_conditioned else ContinuousGuidanceActor(env.obs_dim, hidden_dim=64)
+    actor = RecipientGraphGuidanceActor(env.obs_dim, hidden_dim=64, role_specific=True) if graph_conditioned else ContinuousGuidanceActor(env.obs_dim, hidden_dim=64, role_specific=True)
     critic = CentralizedValueCritic(env.share_obs_dim, hidden_dim=64)
     optimizer = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=3e-4)
     cfg = V16RPPOConfig(epochs=1)

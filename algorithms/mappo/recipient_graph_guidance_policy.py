@@ -10,11 +10,13 @@ from .continuous_guidance_distribution import TanhGaussianGuidance
 class RecipientGraphGuidanceActor(nn.Module):
     """Mean-pool legal recipient graph evidence with no temporal alignment."""
 
-    def __init__(self, obs_dim: int, node_dim: int = 20, relation_dim: int = 2, hidden_dim: int = 128):
+    def __init__(self, obs_dim: int, node_dim: int = 20, relation_dim: int = 2, hidden_dim: int = 128, role_specific: bool = False):
         super().__init__()
         self.encoder = nn.Sequential(nn.Linear(node_dim + relation_dim, hidden_dim), nn.Tanh())
         self.fuse = nn.Sequential(nn.Linear(obs_dim + hidden_dim, hidden_dim), nn.Tanh())
+        self.role_specific = role_specific
         self.mean_head = nn.Linear(hidden_dim, 2)
+        self.role_heads = nn.ModuleList([nn.Linear(hidden_dim, 2) for _ in range(4)]) if role_specific else None
         self.log_std = nn.Parameter(torch.full((2,), -0.5))
 
     def distribution(self, obs: Tensor, graph_node: Tensor, graph_relation_adj: Tensor) -> TanhGaussianGuidance:
@@ -24,7 +26,13 @@ class RecipientGraphGuidanceActor(nn.Module):
         node_aug = torch.cat([graph_node, relation_summary.unsqueeze(1).expand(-1, graph_node.shape[1], -1)], dim=-1)
         pooled = self.encoder(node_aug).mean(dim=1)
         hidden = self.fuse(torch.cat([obs, pooled], dim=-1))
-        mean = self.mean_head(hidden)
+        if self.role_specific:
+            role_start = (obs.shape[-1] - 34) + 24 if obs.shape[-1] >= 34 else 24
+            role_ids = obs[..., role_start:role_start + 4].argmax(dim=-1)
+            means = torch.stack([head(hidden) for head in self.role_heads], dim=-2)
+            mean = means.gather(-2, role_ids.unsqueeze(-1).unsqueeze(-1).expand(*role_ids.shape, 1, 2)).squeeze(-2)
+        else:
+            mean = self.mean_head(hidden)
         return TanhGaussianGuidance(mean, self.log_std.expand_as(mean).clamp(-5.0, 2.0))
 
     def forward(self, obs: Tensor, graph_node: Tensor, graph_relation_adj: Tensor, deterministic: bool = False):

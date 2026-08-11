@@ -30,6 +30,7 @@
 - 新增 `scripts/test_v16r_recipient_graph_actor.py`。
 - 增加独立 `v16r_mission_mode`：物理攻击几何连续 4 步后才 `NEUTRALIZED`，legacy mode 不变；
 - 新增 `scripts/test_v16r_mission_endpoint.py` 与 `scripts/test_v16r_oracle_guidance.py`。
+- 新增 `scripts/test_v16r_legal_scripted_controller.py`，验证严格合法信息下的 scripted 可达性。
 - rollout/PPO 显式支持 `graph_conditioned` 模式；
 - 新增 `scripts/test_v16r_b0_b2_smoke.py`。
 - rollout 支持固定合法 history window；
@@ -131,6 +132,14 @@ oracle episodes=8, oracle_neutralized=8
 R2 只读诊断显示：未训练 actor 仍有正的 range-progress reward（mean reward 约 0.06–0.08），target evidence 出现比例约 0.52–0.72，动作没有边界饱和；但四组轨迹的 attack geometry score 最大值均为 0。当前解释是“基础接近信号存在，但尚未进入物理攻击几何”，不能把短预算 0% 写成 benchmark NO-GO。
 
 PPO 梯度诊断进一步确认实现链正常：4-update smoke 中 B0/B2 的 `actor_grad_norm` 均为正，`actor_param_delta` 约 0.009–0.015；因此当前 0% 不是“actor 没有更新”的工程 bug。仍不能据此判定任务不可学，下一步应完成 B1 history-matched baseline，并分析 acquisition 轨迹。
+
+补充的合法 scripted controller 只使用 local sensing/delivered cache，在 8 个 episode 中 `7/8 neutralized`。因此严格信息任务物理可完成；但 B0/B1/B2 在冻结的 60-update、2-seed protocol 下均为 `0` neutralization。当前状态冻结为：
+
+```text
+R2_NO_GO__BASELINE_LEARNABILITY_NOT_ESTABLISHED__FAILURE_LOCALIZATION_REQUIRED
+```
+
+这不是 TEAR 的性能结论，也不是立即修改 reward/训练预算的授权。下一步只允许用已有 rollout/新增透明诊断定位 acquisition 前的 policy-gradient 失败阶段；在 baseline learnability 建立前不实现 TEAR。
 
 已覆盖：
 
