@@ -32,7 +32,7 @@ def evaluate(env, actor, episodes=8):
 
 def run(seed, updates, horizon):
     torch.manual_seed(seed)
-    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=60, strict_target_sensing=True, agent_target_info_bottleneck=True, v16r_mission_mode=True))
+    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=180, strict_target_sensing=True, agent_target_info_bottleneck=True, v16r_mission_mode=True))
     actor = LegalEvidenceRoleActor(env.obs_dim, hidden_dim=64)
     critic = CentralizedValueCritic(env.share_obs_dim, hidden_dim=64)
     opt = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=3e-4)
