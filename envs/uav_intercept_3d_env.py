@@ -171,6 +171,12 @@ class UAVIntercept3DConfig:
     # own-state speed-hold controller supplies the low-level acceleration.
     guidance_level_action_interface: bool = False
     continuous_guidance_action_interface: bool = False
+    # Relay-path redesign (development-only, opt-in).  This establishes a
+    # physical Scout -> Relay -> Attacker communication formation under the
+    # existing range/packet/cache rules; it does not create an information
+    # shortcut or change legacy initial conditions.
+    relay_identifiable_initial_formation: bool = False
+    relay_identifiable_target_initial_position: Tuple[float, float, float] | None = None
     # When set for the new mission, crossing this true XY radius before
     # neutralization is a terminal TARGET_ESCAPE. None preserves legacy motion.
     target_escape_radius: float | None = None
@@ -212,6 +218,11 @@ class UAVIntercept3DEnv:
             raise ValueError("engage_commit_hold_steps must be at least one")
         if self.config.target_escape_radius is not None and self.config.target_escape_radius <= 0.0:
             raise ValueError("target_escape_radius must be positive when enabled")
+        if self.config.relay_identifiable_initial_formation:
+            roles = [typ.role for typ in self.config.blue_types]
+            required = {ROLE_SCOUT, ROLE_RELAY, ROLE_ATTACKER}
+            if self.config.num_blue != 3 or set(roles) != required:
+                raise ValueError("relay_identifiable_initial_formation requires one Scout, Relay, and Attacker")
         self.rng = np.random.default_rng(self.config.seed)
         self.dropout_rng = np.random.default_rng(None if self.config.seed is None else self.config.seed + 10_007)
         self.num_agents = self.config.num_blue
@@ -261,6 +272,19 @@ class UAVIntercept3DEnv:
         self.blue_speed = np.asarray([185.0, 175.0, 205.0], dtype=np.float32)
         self.blue_heading = np.asarray([0.10, 0.0, -0.10], dtype=np.float32)
         self.blue_gamma = np.asarray([0.02, 0.0, -0.02], dtype=np.float32)
+        if cfg.relay_identifiable_initial_formation:
+            # At range scale 0.5, the 4.2 km Scout--Relay and Relay--Attacker
+            # gaps are within their legal pairwise ranges, while the 8.4 km
+            # Scout--Attacker gap is outside its direct range. Equal kinematic
+            # initialization avoids creating this path only for one reset step.
+            by_role = {typ.role: i for i, typ in enumerate(cfg.blue_types)}
+            self.blue_pos = np.zeros((cfg.num_blue, 3), dtype=np.float32)
+            self.blue_pos[by_role[ROLE_SCOUT]] = (-14_000.0, -4_200.0, 5_000.0)
+            self.blue_pos[by_role[ROLE_RELAY]] = (-14_000.0, 0.0, 5_000.0)
+            self.blue_pos[by_role[ROLE_ATTACKER]] = (-14_000.0, 4_200.0, 5_000.0)
+            self.blue_speed = np.full(cfg.num_blue, 185.0, dtype=np.float32)
+            self.blue_heading = np.zeros(cfg.num_blue, dtype=np.float32)
+            self.blue_gamma = np.zeros(cfg.num_blue, dtype=np.float32)
         self.blue_energy = np.ones(cfg.num_blue, dtype=np.float32)
 
         # --- G1: blue formation spacing/rotation about centroid (default no-op) ---
@@ -279,6 +303,8 @@ class UAVIntercept3DEnv:
 
         target_y = float(self.rng.uniform(-2_000.0, 2_000.0))
         self.red_pos = np.asarray([[10_000.0, target_y, 5_000.0]], dtype=np.float32)
+        if cfg.relay_identifiable_target_initial_position is not None:
+            self.red_pos = np.asarray([cfg.relay_identifiable_target_initial_position], dtype=np.float32)
         # --- G2: target relative range/bearing from blue centroid (default no-op) ---
         if cfg.target_init_range_scale != 1.0 or cfg.target_init_bearing_offset_deg != 0.0:
             centroid = self.blue_pos.mean(axis=0)

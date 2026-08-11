@@ -124,6 +124,8 @@ class RIGMAPPOConfig:
     mission_neutralization_enabled: bool = False
     guidance_level_action_interface: bool = False
     continuous_guidance_action_interface: bool = False
+    relay_identifiable_initial_formation: bool = False
+    relay_identifiable_target_initial_position: tuple[float, float, float] | None = None
     role_specific_actor_heads: bool = False
     engage_commit_hold_steps: int = 4
     mission_progress_shaping_enabled: bool = False
@@ -1170,6 +1172,8 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 mission_neutralization_enabled=cfg.mission_neutralization_enabled,
                 guidance_level_action_interface=cfg.guidance_level_action_interface,
                 continuous_guidance_action_interface=cfg.continuous_guidance_action_interface,
+                relay_identifiable_initial_formation=cfg.relay_identifiable_initial_formation,
+                relay_identifiable_target_initial_position=cfg.relay_identifiable_target_initial_position,
                 engage_commit_hold_steps=cfg.engage_commit_hold_steps,
                 mission_progress_shaping_enabled=cfg.mission_progress_shaping_enabled,
                 mission_reward_alignment_v1_enabled=cfg.mission_reward_alignment_v1_enabled,
