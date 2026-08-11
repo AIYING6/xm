@@ -197,6 +197,8 @@ actor_param_delta ≈ 0.007–0.011
 
 冻结 checkpoint 的动作健康审计也已完成。B0/B1/B2 两个 seed 的 deterministic turn/climb 均未出现边界饱和（`max_abs_action_fraction_gt_0.95 = 0`），连续动作仍有非零方差；learned `exp(log_std)` 约为 `0.60–0.61`，未塌缩为近零熵。由此可排除“最终 checkpoint 因动作边界或探索方差塌缩而失败”的简单解释。结合前面的动作对齐结果，当前更接近：策略输出虽然数值健康，但方向性 pursuit control 与物理几何进展不一致。
 
+进一步进行了同一物理初态下的单步反事实动作比较。对每个 checkpoint，在合法 evidence 出现后分别执行 learned action 与 legal scripted pursuit action，比较 v1.6R reward 和几何分数。6 个 checkpoint 的 learned-minus-scripted 单步 reward gap 均为负，范围约 `-0.0020` 至 `-0.0036`；例如 B0-17101 为 `-0.00359`，B1-17101 为 `-0.00347`。该结果说明 learned action 并非被 reward 直接偏好，且 scripted action 在相同状态下稳定取得更高即时物理进展。它支持“策略方向性与任务进展不一致”的定位，但仍不能单独证明 reward 设计错误，因为差异也可能来自多步控制和动作后果的时序信用分配。
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
