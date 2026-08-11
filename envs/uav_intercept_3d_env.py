@@ -331,6 +331,61 @@ class UAVIntercept3DEnv:
         infos = self._info(timeout)
         return self._get_obs(), self._get_share_obs(), self._get_graph_obs(), rewards, dones, infos
 
+    def step_guidance(
+        self, guidance: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray], np.ndarray, np.ndarray, Dict[str, float]]:
+        """Advance with continuous normalized ``[turn, climb]`` guidance.
+
+        This is an additive v1.6R interface; legacy ``step(int_actions)`` is
+        intentionally unchanged.  Acceleration is held at zero so the
+        guidance interface cannot silently become a third learned control head.
+        """
+        if self.done:
+            raise RuntimeError("Call reset() before stepping a finished episode.")
+        guidance = np.asarray(guidance, dtype=np.float32)
+        expected = (self.config.num_blue, 2)
+        if guidance.shape != expected:
+            raise ValueError(f"guidance must have shape {expected}, got {guidance.shape}")
+        if not np.isfinite(guidance).all():
+            raise ValueError("guidance contains NaN/Inf")
+        guidance = np.clip(guidance, -1.0, 1.0)
+        prev_range = self._mean_target_range()
+        prev_tracking = float(np.mean(self.detected_by))
+        prev_window = float(np.max(self.attack_window))
+        self.step_count += 1
+        self._move_blue_guidance(guidance)
+        self._move_red()
+        self._update_sensing_and_comm()
+
+        cur_range = self._mean_target_range()
+        tracking = float(np.mean(self.detected_by))
+        window = float(np.max(self.attack_window))
+        if window > 0.5 and tracking > 0.0 and self._comm_has_chain_to_attacker():
+            self.attack_hold += 1
+        else:
+            self.attack_hold = 0
+        chain_closed = self.attack_hold >= self.config.attack_hold_steps
+        failure_active = any(self._is_comm_failed(i) for i in range(self.config.num_blue))
+        self.post_loss_chain_reclosure_bonus = 0.0
+        if failure_active and not chain_closed:
+            self.post_loss_chain_lost = True
+        if failure_active and chain_closed and self.post_loss_chain_lost and not self.post_loss_chain_reclosure_rewarded and self.step_count >= self.config.post_loss_chain_reclosure_min_step:
+            self.post_loss_chain_reclosure_bonus = float(self.config.post_loss_chain_reclosure_reward_weight)
+            self.post_loss_chain_reclosure_rewarded = True
+        self.success = chain_closed and self.step_count >= self.config.min_success_step
+        self.collision = self._has_collision()
+        self.constraint_violation = self._has_constraint_violation()
+        timeout = self.step_count >= self.config.max_steps
+        self.done = bool(self.success or self.collision or self.constraint_violation or timeout)
+        self.history["blue_pos"].append(self.blue_pos.copy())
+        self.history["red_pos"].append(self.red_pos.copy())
+        self.history["detected_by"].append(self.detected_by.copy())
+        self.history["attack_window"].append(self.attack_window.copy())
+        rewards = self._compute_rewards(prev_range, cur_range, prev_tracking, tracking, prev_window, window)
+        dones = np.full((self.config.num_blue, 1), self.done, dtype=np.float32)
+        infos = self._info(timeout)
+        return self._get_obs(), self._get_share_obs(), self._get_graph_obs(), rewards, dones, infos
+
     def _move_blue(self, actions: np.ndarray) -> None:
         cfg = self.config
         for i, action in enumerate(actions):
@@ -353,6 +408,28 @@ class UAVIntercept3DEnv:
             self.blue_speed[i] = float(np.clip(self.blue_speed[i] + accel_cmd * typ.max_accel * cfg.dt, typ.min_speed, typ.max_speed))
             self.blue_pos[i] += velocity_from_state(self.blue_speed[i], self.blue_heading[i], self.blue_gamma[i]) * cfg.dt
             self.blue_energy[i] = max(0.0, self.blue_energy[i] - typ.energy_coef * (0.0005 + abs(turn_cmd) * 0.0008 + abs(climb_cmd) * 0.0008 + abs(accel_cmd) * 0.0005))
+
+    def _move_blue_guidance(self, guidance: np.ndarray) -> None:
+        """Continuous turn/climb execution with the same deterministic dynamics."""
+        cfg = self.config
+        for i, (turn_cmd, climb_cmd) in enumerate(guidance):
+            typ = cfg.blue_types[i]
+            accel_cmd = 0.0
+            self.blue_heading[i] = wrap_angle(self.blue_heading[i] + float(turn_cmd) * typ.max_turn_rate * cfg.dt)
+            xy_radius = float(np.linalg.norm(self.blue_pos[i, :2]))
+            if xy_radius >= cfg.world_radius - cfg.boundary_protection_margin:
+                desired_heading = math.atan2(float(-self.blue_pos[i, 1]), float(-self.blue_pos[i, 0]))
+                heading_error = angle_diff(desired_heading, float(self.blue_heading[i]))
+                self.blue_heading[i] = wrap_angle(self.blue_heading[i] + float(np.clip(heading_error, -typ.max_turn_rate * cfg.dt, typ.max_turn_rate * cfg.dt)))
+                accel_cmd = -1.0
+            self.blue_gamma[i] = float(np.clip(self.blue_gamma[i] + float(climb_cmd) * 0.35 * typ.max_gamma * cfg.dt, -typ.max_gamma, typ.max_gamma))
+            if self.blue_pos[i, 2] <= cfg.min_altitude + cfg.altitude_protection_margin and self.blue_gamma[i] < 0.0:
+                self.blue_gamma[i] = 0.25 * typ.max_gamma
+            elif self.blue_pos[i, 2] >= cfg.max_altitude - cfg.altitude_protection_margin and self.blue_gamma[i] > 0.0:
+                self.blue_gamma[i] = -0.25 * typ.max_gamma
+            self.blue_speed[i] = float(np.clip(self.blue_speed[i] + accel_cmd * typ.max_accel * cfg.dt, typ.min_speed, typ.max_speed))
+            self.blue_pos[i] += velocity_from_state(self.blue_speed[i], self.blue_heading[i], self.blue_gamma[i]) * cfg.dt
+            self.blue_energy[i] = max(0.0, self.blue_energy[i] - typ.energy_coef * (0.0005 + abs(float(turn_cmd)) * 0.0008 + abs(float(climb_cmd)) * 0.0008 + abs(accel_cmd) * 0.0005))
 
     def _move_red(self) -> None:
         target = self.config.target_type
