@@ -30,9 +30,9 @@ def evaluate(env, actor, episodes=8):
             "mean_terminal_step": float(np.mean(terms)) if terms else float(env.config.max_steps)}
 
 
-def run(seed, updates, horizon):
+def run(seed, updates, horizon, target_policy):
     torch.manual_seed(seed)
-    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=180, strict_target_sensing=True, agent_target_info_bottleneck=True, v16r_mission_mode=True))
+    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=180, target_policy=target_policy, strict_target_sensing=True, agent_target_info_bottleneck=True, v16r_mission_mode=True))
     actor = LegalEvidenceRoleActor(env.obs_dim, hidden_dim=64)
     critic = CentralizedValueCritic(env.share_obs_dim, hidden_dim=64)
     opt = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=3e-4)
@@ -45,8 +45,8 @@ def run(seed, updates, horizon):
 
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--updates", type=int, default=12); ap.add_argument("--horizon", type=int, default=32); ap.add_argument("--output", default="results/ler_mappo_pilot.json"); args = ap.parse_args()
-    out = {"status": "development_only", "method": "LER-MAPPO", "results": [run(s, args.updates, args.horizon) for s in (51001, 51002)]}
+    ap = argparse.ArgumentParser(); ap.add_argument("--updates", type=int, default=12); ap.add_argument("--horizon", type=int, default=32); ap.add_argument("--target-policy", default="evasive"); ap.add_argument("--output", default="results/ler_mappo_pilot.json"); args = ap.parse_args()
+    out = {"status": "development_only", "method": "LER-MAPPO", "target_policy": args.target_policy, "results": [run(s, args.updates, args.horizon, args.target_policy) for s in (51001, 51002)]}
     Path(args.output).parent.mkdir(parents=True, exist_ok=True); Path(args.output).write_text(json.dumps(out, indent=2), encoding="utf-8"); print(json.dumps(out, indent=2))
 
 
