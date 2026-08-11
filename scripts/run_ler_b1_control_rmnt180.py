@@ -22,9 +22,9 @@ def evaluate(env, actor, episodes=8):
                 success += int(float(info.get("success", 0.0)) > 0.5); break
     return {"neutralization_rate": success / episodes, "entry_episode_count": entries}
 
-def run(seed, updates, horizon, target_policy):
+def run(seed, updates, horizon, target_policy, bottleneck):
     torch.manual_seed(seed)
-    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=180, target_policy=target_policy, strict_target_sensing=True, agent_target_info_bottleneck=True, v16r_mission_mode=True))
+    env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=180, target_policy=target_policy, strict_target_sensing=True, agent_target_info_bottleneck=bottleneck, v16r_mission_mode=True))
     actor = ContinuousGuidanceActor(env.obs_dim, hidden_dim=64, role_specific=True)
     critic = CentralizedValueCritic(env.share_obs_dim, hidden_dim=64)
     opt = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=3e-4)
@@ -36,7 +36,7 @@ def run(seed, updates, horizon, target_policy):
     return {"seed": seed, "updates": updates, "horizon": horizon, "evaluation": evaluate(env, actor), "last_metrics": last}
 
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument('--updates',type=int,default=60); ap.add_argument('--horizon',type=int,default=180); ap.add_argument('--seeds',type=int,nargs='+',default=[51001,51002]); ap.add_argument('--target-policy',default='evasive'); ap.add_argument('--output',default='results/ler_b1_control_rmnt180.json'); a=ap.parse_args()
-    out={"status":"development_only","method":"B1_role_specific","target_policy":a.target_policy,"results":[run(s,a.updates,a.horizon,a.target_policy) for s in a.seeds]}
+    ap=argparse.ArgumentParser(); ap.add_argument('--updates',type=int,default=60); ap.add_argument('--horizon',type=int,default=180); ap.add_argument('--seeds',type=int,nargs='+',default=[51001,51002]); ap.add_argument('--target-policy',default='evasive'); ap.add_argument('--no-bottleneck',action='store_true'); ap.add_argument('--output',default='results/ler_b1_control_rmnt180.json'); a=ap.parse_args()
+    out={"status":"development_only","method":"B1_role_specific","target_policy":a.target_policy,"agent_target_info_bottleneck":not a.no_bottleneck,"results":[run(s,a.updates,a.horizon,a.target_policy,not a.no_bottleneck) for s in a.seeds]}
     Path(a.output).parent.mkdir(parents=True,exist_ok=True); Path(a.output).write_text(json.dumps(out,indent=2),encoding='utf-8'); print(json.dumps(out,indent=2))
 if __name__=='__main__': main()
