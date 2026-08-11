@@ -195,6 +195,8 @@ actor_param_delta ≈ 0.007–0.011
 
 因此当前短更新路径没有出现 ratio 爆炸或 clipping 饱和；优势也不是全零，actor 确实发生更新。该结果将“单步 PPO ratio/clip 数值失稳”从主要嫌疑中降级，但不能排除多轮 rollout 分布漂移、优势方向与 pursuit 目标错配或动作熵退化。后续若继续，只允许基于已有 checkpoint 做训练轨迹对齐分析，不授权调参或增加预算。
 
+冻结 checkpoint 的动作健康审计也已完成。B0/B1/B2 两个 seed 的 deterministic turn/climb 均未出现边界饱和（`max_abs_action_fraction_gt_0.95 = 0`），连续动作仍有非零方差；learned `exp(log_std)` 约为 `0.60–0.61`，未塌缩为近零熵。由此可排除“最终 checkpoint 因动作边界或探索方差塌缩而失败”的简单解释。结合前面的动作对齐结果，当前更接近：策略输出虽然数值健康，但方向性 pursuit control 与物理几何进展不一致。
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
