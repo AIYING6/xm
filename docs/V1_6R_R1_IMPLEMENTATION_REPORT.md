@@ -32,6 +32,7 @@
 - 新增 `scripts/test_v16r_mission_endpoint.py` 与 `scripts/test_v16r_oracle_guidance.py`。
 - 新增 `scripts/test_v16r_legal_scripted_controller.py`，验证严格合法信息下的 scripted 可达性。
 - 新增 `scripts/diagnose_v16r_r2_failure_stages.py`，对保存的 R2 checkpoint 做 evidence→geometry→neutralization 阶段定位。
+- 新增 `scripts/diagnose_v16r_action_alignment.py`，比较合法 scripted pursuit 与 checkpoint guidance。
 - rollout/PPO 显式支持 `graph_conditioned` 模式；
 - 新增 `scripts/test_v16r_b0_b2_smoke.py`。
 - rollout 支持固定合法 history window；
@@ -156,6 +157,8 @@ neutralization_rate = 0.0
 ```text
 R2_PARTIAL__EVIDENCE_TO_GEOMETRY_ACQUISITION_BOTTLENECK_IDENTIFIED
 ```
+
+动作对齐诊断进一步显示：evidence 到达后，checkpoint policy 与同一合法状态下 scripted pursuit guidance 的二维动作误差约为 `1.1–1.7`（归一化 turn/climb）；range 仍有缓慢下降，但没有稳定进入 attack geometry。该结果支持“合法证据到达后，policy 没有学会将证据转换为正确 pursuit control”的 failure localization，不构成新方法结果。
 
 已覆盖：
 
