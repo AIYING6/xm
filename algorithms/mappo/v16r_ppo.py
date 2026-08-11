@@ -64,6 +64,7 @@ def ppo_update(
     retention_coef: float = 0.0,
     adaptive_retention: bool = False,
     retention_beta: float = 1.0,
+    legal_evidence_actor: bool = False,
 ) -> dict[str, float]:
     cfg = cfg or V16RPPOConfig()
     actor.to(device)
@@ -77,6 +78,7 @@ def ppo_update(
     flat_share = share.reshape(t_steps * n_agents, -1)
     flat_actions = actions.reshape(t_steps * n_agents, 2)
     evidence_mask = torch.as_tensor(batch.get("evidence_mask", np.ones((t_steps, n_agents))), dtype=torch.float32, device=device).reshape(-1)
+    role_ids = torch.as_tensor(batch.get("role_ids", np.zeros((t_steps, n_agents))), dtype=torch.long, device=device).reshape(-1)
     graph_node = torch.as_tensor(batch["node"], dtype=torch.float32, device=device) if graph_conditioned else None
     graph_relation = torch.as_tensor(batch["relation_adj"], dtype=torch.float32, device=device) if graph_conditioned else None
     values = critic(flat_share).reshape(t_steps, n_agents)
@@ -89,7 +91,9 @@ def ppo_update(
         optimizer = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=cfg.learning_rate)
     metrics: dict[str, float] = {}
     for _ in range(cfg.epochs):
-        if graph_conditioned:
+        if legal_evidence_actor:
+            dist = actor.distribution(flat_obs, role_ids, evidence_mask)
+        elif graph_conditioned:
             dist = actor.distribution(flat_obs, graph_node.reshape(t_steps * n_agents, graph_node.shape[2], graph_node.shape[3]), graph_relation.reshape(t_steps * n_agents, graph_relation.shape[2], graph_relation.shape[3], graph_relation.shape[4]))
         else:
             dist = actor.distribution(flat_obs)

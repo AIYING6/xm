@@ -35,7 +35,7 @@ def collect_v16r_rollout(
         raise TypeError("legal_evidence_actor requires an actor with evidence-gated distribution")
     obs_history = np.repeat(obs[:, None, :], history_len, axis=1)
     records: dict[str, list[np.ndarray]] = {key: [] for key in (
-        "obs", "share_obs", "node", "edge", "relation_adj", "actions", "logp", "rewards", "dones", "reset_mask", "evidence_mask"
+        "obs", "share_obs", "node", "edge", "relation_adj", "actions", "logp", "rewards", "dones", "reset_mask", "evidence_mask", "role_ids"
     )}
     actor.eval()
     for _ in range(horizon):
@@ -72,6 +72,7 @@ def collect_v16r_rollout(
             ("actions", action), ("logp", logp_t.cpu().numpy()),
             ("rewards", rewards), ("dones", dones.reshape(-1)),
             ("evidence_mask", evidence_mask),
+            ("role_ids", np.asarray([int(env.base.config.blue_types[i].role) for i in range(env.num_agents)], dtype=np.int64)),
             ("reset_mask", np.ones(env.num_agents, dtype=np.float32) if bool(dones.all()) else np.zeros(env.num_agents, dtype=np.float32)),
         ):
             records[key].append(np.asarray(value).copy())

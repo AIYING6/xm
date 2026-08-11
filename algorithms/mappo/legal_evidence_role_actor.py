@@ -26,9 +26,12 @@ class LegalEvidenceRoleActor(nn.Module):
         if obs.shape[0] != role_ids.shape[0] or obs.shape[0] != evidence_mask.shape[0]:
             raise ValueError("recipient dimensions must match")
         h = self.encoder(obs)
-        # Evidence gate only scales the legal actor representation; it cannot
-        # create evidence or alter the binary engage_commit head.
-        h = h * self.gate(evidence_mask.float().unsqueeze(-1))
+        # Valid evidence is identity-preserving.  Only the no-evidence branch
+        # is gated; this prevents an untrained gate from weakening legal target
+        # information and keeps the mechanism causally tied to evidence loss.
+        learned_gate = self.gate(evidence_mask.float().unsqueeze(-1))
+        scale = evidence_mask.float().unsqueeze(-1) + (1.0 - evidence_mask.float().unsqueeze(-1)) * learned_gate
+        h = h * scale
         means = torch.stack([head(h) for head in self.role_heads], dim=1)
         mean = means[torch.arange(obs.shape[0], device=obs.device), role_ids.long()]
         return TanhGaussianGuidance(mean, self.log_std.expand_as(mean).clamp(-5.0, 2.0))
