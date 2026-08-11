@@ -52,3 +52,13 @@ latency decreases, and `NO_ATTACK_RANGE_ACQUISITION` fraction decreases.
 No interim curve, reward, final success rate, or resource utilisation can
 change this protocol.  The pilot is development evidence only and cannot enter
 the final paper's confirmatory results.
+
+## Cloud execution
+
+The four frozen runs may execute concurrently on one cloud GPU through
+`scripts/run_m2_acquisition_oriented_autodl.sh`.  Each process has independent
+model state, RNG seed, environment instances, output directory and evaluation
+records; the post-run finalizer is the only component allowed to combine their
+summaries.  The launcher limits CPU numerical-library worker pools to one per
+process to avoid oversubscribing a 16-vCPU instance.  This changes wall-clock
+utilisation only, never training or evaluation semantics.

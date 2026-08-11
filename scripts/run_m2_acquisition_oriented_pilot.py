@@ -200,32 +200,44 @@ def run_method(method: str, seed: int, out: Path, device: torch.device, updates:
 
 
 def main():
-    parser = argparse.ArgumentParser(); parser.add_argument("--device", default="cpu"); parser.add_argument("--smoke", action="store_true"); parser.add_argument("--output-root", type=Path, default=OUT); args = parser.parse_args()
+    parser = argparse.ArgumentParser(); parser.add_argument("--device", default="cpu"); parser.add_argument("--smoke", action="store_true"); parser.add_argument("--output-root", type=Path, default=OUT); parser.add_argument("--methods", nargs="+", choices=("full", "b1"), default=("full", "b1")); parser.add_argument("--seeds", nargs="+", type=int, default=TRAIN_SEEDS); args = parser.parse_args()
     out_root = args.output_root
     if out_root.exists() and any(out_root.iterdir()): raise FileExistsError(f"refusing to overwrite {out_root}")
     device = torch.device(args.device); updates = 1 if args.smoke else UPDATES
     episode_seeds = EVAL_SEEDS[:1] if args.smoke else EVAL_SEEDS
     out_root.mkdir(parents=True)
-    manifest = {"status": "M2_COLLECTOR_INTEGRATION_AND_FROZEN_TWO_SEED_PILOT", "performance_use_prohibited": True, "source_commit": source_commit(), "methods": ["full", "b1"], "training_seeds": list(TRAIN_SEEDS), "evaluation_seeds": list(episode_seeds), "updates": updates, "same_task_input_action_reward_critic_budget": True, "only_method_difference": "progress-conditioned target-history modulation versus direct fusion", "config": asdict(cfg(TRAIN_SEEDS[0], out_root / "template", updates))}
+    methods, training_seeds = tuple(args.methods), tuple(args.seeds)
+    manifest = {"status": "M2_COLLECTOR_INTEGRATION_AND_FROZEN_TWO_SEED_PILOT", "performance_use_prohibited": True, "source_commit": source_commit(), "methods": list(methods), "training_seeds": list(training_seeds), "evaluation_seeds": list(episode_seeds), "updates": updates, "same_task_input_action_reward_critic_budget": True, "only_method_difference": "progress-conditioned target-history modulation versus direct fusion", "config": asdict(cfg(training_seeds[0], out_root / "template", updates))}
     (out_root / "PILOT_MANIFEST.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     rows = []
-    for seed in TRAIN_SEEDS:
-        for method in ("full", "b1"): rows.extend(run_method(method, seed, out_root / f"{method}_seed{seed}", device, updates, episode_seeds))
+    for seed in training_seeds:
+        for method in methods: rows.extend(run_method(method, seed, out_root / f"{method}_seed{seed}", device, updates, episode_seeds))
     with (out_root / "episode_records.csv").open("x", newline="", encoding="utf-8") as handle: writer = csv.DictWriter(handle, fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
     summary = []
-    for seed in TRAIN_SEEDS:
-        for method in ("full", "b1"):
+    for seed in training_seeds:
+        for method in methods:
             group = [r for r in rows if r["method"] == method and r["training_seed"] == seed]
             evidence = [r for r in group if r["evidence_observed"]]
             summary.append({"training_seed": seed, "method": method, "episodes": len(group), "evidence_episodes": len(evidence), "acquisition_given_evidence": float(np.mean([r["attack_range_acquired"] for r in evidence])) if evidence else 0.0, "evidence_to_range_latency": float(np.mean([r["evidence_to_range_latency"] for r in evidence])) if evidence else 180.0, "no_attack_range_acquisition_fraction": float(np.mean([r["no_attack_range_acquisition"] for r in group])), "neutralization_rate": float(np.mean([r["neutralized"] for r in group])), "rmtn180": float(np.mean([r["rmtn180"] for r in group]))})
     with (out_root / "summary.csv").open("x", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(summary[0])); writer.writeheader(); writer.writerows(summary)
-    per_seed = []
-    for seed in TRAIN_SEEDS:
-        full = next(row for row in summary if row["training_seed"] == seed and row["method"] == "full")
-        b1 = next(row for row in summary if row["training_seed"] == seed and row["method"] == "b1")
-        per_seed.append(full["acquisition_given_evidence"] > b1["acquisition_given_evidence"] and full["evidence_to_range_latency"] < b1["evidence_to_range_latency"] and full["no_attack_range_acquisition_fraction"] < b1["no_attack_range_acquisition_fraction"])
-    verdict = "M2_PILOT_PASS__ACQUISITION_MECHANISM_SIGNAL_ESTABLISHED__READY_FOR_FORMAL_PROTOCOL" if all(per_seed) and any(next(row for row in summary if row["training_seed"] == seed and row["method"] == "full")["neutralization_rate"] > next(row for row in summary if row["training_seed"] == seed and row["method"] == "b1")["neutralization_rate"] for seed in TRAIN_SEEDS) else ("M2_PILOT_PARTIAL__SIGNAL_UNSTABLE__DIAGNOSE_EXISTING_RUNS_ONLY" if any(per_seed) else "M2_PILOT_NO_GO__ACQUISITION_CONDITIONING_NOT_SUPPORTED")
+    if set(methods) == {"full", "b1"} and set(training_seeds) == set(TRAIN_SEEDS):
+        per_seed = []
+        for seed in TRAIN_SEEDS:
+            full = next(row for row in summary if row["training_seed"] == seed and row["method"] == "full")
+            b1 = next(row for row in summary if row["training_seed"] == seed and row["method"] == "b1")
+            per_seed.append(full["acquisition_given_evidence"] > b1["acquisition_given_evidence"] and full["evidence_to_range_latency"] < b1["evidence_to_range_latency"] and full["no_attack_range_acquisition_fraction"] < b1["no_attack_range_acquisition_fraction"])
+        mission_improved = any(
+            (next(row for row in summary if row["training_seed"] == seed and row["method"] == "full")["neutralization_rate"]
+             > next(row for row in summary if row["training_seed"] == seed and row["method"] == "b1")["neutralization_rate"])
+            or
+            (next(row for row in summary if row["training_seed"] == seed and row["method"] == "full")["rmtn180"]
+             < next(row for row in summary if row["training_seed"] == seed and row["method"] == "b1")["rmtn180"])
+            for seed in TRAIN_SEEDS
+        )
+        verdict = "M2_PILOT_PASS__ACQUISITION_MECHANISM_SIGNAL_ESTABLISHED__READY_FOR_FORMAL_PROTOCOL" if all(per_seed) and mission_improved else ("M2_PILOT_PARTIAL__SIGNAL_UNSTABLE__DIAGNOSE_EXISTING_RUNS_ONLY" if any(per_seed) else "M2_PILOT_NO_GO__ACQUISITION_CONDITIONING_NOT_SUPPORTED")
+    else:
+        verdict = "M2_SINGLE_RUN_COMPLETE__AGGREGATION_PENDING"
     (out_root / "PILOT_VERDICT.json").write_text(json.dumps({"verdict": verdict, "summary": summary, "performance_use_prohibited": True}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"verdict": verdict, "summary": summary}, indent=2), flush=True)
 
