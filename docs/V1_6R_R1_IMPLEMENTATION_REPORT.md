@@ -15,6 +15,8 @@
 - 新增 `scripts/test_v16r_legal_observation_interface.py`。
 - 新增 legacy-safe 的 `step_guidance()` continuous turn/climb 接口；旧 `step(int_actions)` 保持不变；
 - 新增 `scripts/test_v16r_continuous_guidance.py`。
+- 新增 `envs/v16r_env_adapter.py`，将 continuous guidance 与 recipient-specific graph 接入标准 reset/step 外观；
+- 新增 `scripts/test_v16r_env_adapter.py`。
 
 ## 当前验证
 
@@ -26,6 +28,12 @@ PYTHONPATH=. D:/Anaconda/envs/.conda/envs/cac/python.exe \
 ```
 
 Continuous guidance 回归：
+
+```text
+checks=5, failed=0
+```
+
+Adapter 端到端回归：
 
 ```text
 checks=5, failed=0
@@ -52,7 +60,7 @@ checks=5, failed=0
 同时发现两个明确的 R1 集成阻塞：
 
 1. legacy collector 仍接收环境返回的共享 graph，而不是 `[recipient, node, node, feature]` 的 recipient-specific graph；
-2. legacy 3DOF 环境默认仍使用离散 27-action；已增加独立 `step_guidance()`，但 collector 尚未接入该路径。
+2. legacy 3DOF 环境默认仍使用离散 27-action；已通过 `V16RIntercept3DEnv` 提供独立 continuous guidance 路径，但 MAPPO collector 尚未接入该路径。
 
 这两个差异不能通过字段别名掩盖，必须在 R1 适配层中显式解决。仍需补充 graph provenance 对照、neutralization precedence 和 continuous-action 接口回归。全部通过前禁止 B0/B1/B2 训练。
 
