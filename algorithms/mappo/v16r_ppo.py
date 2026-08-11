@@ -58,6 +58,7 @@ def ppo_update(
     batch: dict[str, np.ndarray],
     cfg: V16RPPOConfig | None = None,
     device: torch.device | str = "cpu",
+    graph_conditioned: bool = False,
 ) -> dict[str, float]:
     cfg = cfg or V16RPPOConfig()
     actor.to(device)
@@ -70,6 +71,8 @@ def ppo_update(
     flat_obs = obs.reshape(t_steps * n_agents, -1)
     flat_share = share.reshape(t_steps * n_agents, -1)
     flat_actions = actions.reshape(t_steps * n_agents, 2)
+    graph_node = torch.as_tensor(batch["node"], dtype=torch.float32, device=device) if graph_conditioned else None
+    graph_relation = torch.as_tensor(batch["relation_adj"], dtype=torch.float32, device=device) if graph_conditioned else None
     values = critic(flat_share).reshape(t_steps, n_agents)
     next_value = critic(torch.as_tensor(batch["next_share_obs"], dtype=torch.float32, device=device)).detach()
     advantages, returns = compute_gae(batch, values.detach(), next_value, cfg)
@@ -79,7 +82,10 @@ def ppo_update(
     optimizer = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=cfg.learning_rate)
     metrics: dict[str, float] = {}
     for _ in range(cfg.epochs):
-        dist = actor.distribution(flat_obs)
+        if graph_conditioned:
+            dist = actor.distribution(flat_obs, graph_node.reshape(t_steps * n_agents, graph_node.shape[2], graph_node.shape[3]), graph_relation.reshape(t_steps * n_agents, graph_relation.shape[2], graph_relation.shape[3], graph_relation.shape[4]))
+        else:
+            dist = actor.distribution(flat_obs)
         new_logp = dist.log_prob(flat_actions)
         ratio = torch.exp(new_logp - old_logp.reshape(-1))
         clipped = torch.clamp(ratio, 1.0 - cfg.clip_eps, 1.0 + cfg.clip_eps)
@@ -94,4 +100,3 @@ def ppo_update(
         optimizer.step()
         metrics = {"loss": float(loss.detach()), "policy_loss": float(policy_loss.detach()), "value_loss": float(value_loss.detach()), "entropy": float(entropy.detach()), "ratio_mean": float(ratio.detach().mean())}
     return metrics
-

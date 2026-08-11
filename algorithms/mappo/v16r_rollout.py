@@ -15,6 +15,7 @@ def collect_v16r_rollout(
     actor: ContinuousGuidanceActor,
     horizon: int,
     device: torch.device | str = "cpu",
+    graph_conditioned: bool = False,
 ) -> dict[str, Any]:
     """Collect one rollout without updating parameters.
 
@@ -32,7 +33,15 @@ def collect_v16r_rollout(
     actor.eval()
     for _ in range(horizon):
         with torch.no_grad():
-            action_t, logp_t = actor(torch.as_tensor(obs, dtype=torch.float32, device=device))
+            obs_t = torch.as_tensor(obs, dtype=torch.float32, device=device)
+            if graph_conditioned:
+                action_t, logp_t = actor(
+                    obs_t,
+                    torch.as_tensor(graph["node"], dtype=torch.float32, device=device),
+                    torch.as_tensor(graph["relation_adj"], dtype=torch.float32, device=device),
+                )
+            else:
+                action_t, logp_t = actor(obs_t)
         action = action_t.cpu().numpy().astype(np.float32)
         next_obs, next_share, next_graph, rewards, dones, _info = env.step(action)
         for key, value in (

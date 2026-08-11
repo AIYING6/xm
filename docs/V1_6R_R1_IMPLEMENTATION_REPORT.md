@@ -28,6 +28,8 @@
 - 新增 `scripts/test_v16r_ppo_update.py`。
 - 新增透明 B2 `RecipientGraphGuidanceActor`（统一图池化，不含 TEAR 机制）；
 - 新增 `scripts/test_v16r_recipient_graph_actor.py`。
+- rollout/PPO 显式支持 `graph_conditioned` 模式；
+- 新增 `scripts/test_v16r_b0_b2_smoke.py`。
 
 ## 当前验证
 
@@ -95,6 +97,14 @@ checks=3, failed=0
 ```
 
 该 baseline 只做 legal graph pooling，不包含 temporal alignment 或 conflict-aware fusion。
+
+B0/B2 one-update smoke：
+
+```text
+checks=2, failed=0
+```
+
+B0 flat actor 与 B2 unified-graph actor 均完成一次无正式结论的 PPO update。
 
 已覆盖：
 
