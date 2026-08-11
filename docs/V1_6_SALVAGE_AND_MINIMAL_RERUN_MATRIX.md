@@ -52,6 +52,8 @@
 
 ## 4. 最小重跑方案（只做资格判断，不立即启动）
 
+可执行冻结版本见 `docs/V1_6_MINIMAL_QUALIFICATION_PROTOCOL.md`。
+
 ### 4.1 Development qualification
 
 固定一个 primary scenario、同一 evaluation population、同一 reward/episode horizon，比较四个方法：
