@@ -91,6 +91,7 @@ def ppo_update(
         new_logp = dist.log_prob(flat_actions)
         ratio = torch.exp(new_logp - old_logp.reshape(-1))
         clipped = torch.clamp(ratio, 1.0 - cfg.clip_eps, 1.0 + cfg.clip_eps)
+        clip_fraction = ((ratio < 1.0 - cfg.clip_eps) | (ratio > 1.0 + cfg.clip_eps)).float().mean()
         policy_loss = -torch.minimum(ratio * adv_norm, clipped * adv_norm).mean()
         value_pred = critic(flat_share)
         value_loss = 0.5 * (value_pred - ret_flat).square().mean()
@@ -103,5 +104,5 @@ def ppo_update(
         torch.nn.utils.clip_grad_norm_(list(actor.parameters()) + list(critic.parameters()), 0.5)
         optimizer.step()
         actor_delta = torch.sqrt(sum((p.detach() - old).square().sum() for p, old in zip(actor.parameters(), actor_before)))
-        metrics = {"loss": float(loss.detach()), "policy_loss": float(policy_loss.detach()), "value_loss": float(value_loss.detach()), "entropy": float(entropy.detach()), "ratio_mean": float(ratio.detach().mean()), "actor_grad_norm": actor_grad_norm, "actor_param_delta": float(actor_delta)}
+        metrics = {"loss": float(loss.detach()), "policy_loss": float(policy_loss.detach()), "value_loss": float(value_loss.detach()), "entropy": float(entropy.detach()), "ratio_mean": float(ratio.detach().mean()), "ratio_std": float(ratio.detach().std(unbiased=False)), "clip_fraction": float(clip_fraction.detach()), "adv_mean": float(adv_flat.detach().mean()), "adv_std": float(adv_flat.detach().std(unbiased=False)), "adv_norm_abs_mean": float(adv_norm.detach().abs().mean()), "actor_grad_norm": actor_grad_norm, "actor_param_delta": float(actor_delta)}
     return metrics

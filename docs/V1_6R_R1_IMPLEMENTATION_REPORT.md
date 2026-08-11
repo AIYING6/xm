@@ -182,6 +182,19 @@ actor-only PPO: 0/2 neutralized
 R2_PARTIAL__PPO_UPDATE_STABILITY_BOTTLENECK_IDENTIFIED
 ```
 
+为避免把问题误判为 PPO clipping 数值故障，又在现有 smoke/update 路径中加入只读稳定性指标：`adv_mean/std`、`ratio_std`、`clip_fraction` 与归一化优势绝对均值。12-update baseline smoke 的最后一次更新显示：
+
+```text
+ratio_mean ≈ 1.0
+ratio_std < 2.3e-7
+clip_fraction = 0
+adv_std ≈ 0.56–0.59
+actor_grad_norm > 0
+actor_param_delta ≈ 0.007–0.011
+```
+
+因此当前短更新路径没有出现 ratio 爆炸或 clipping 饱和；优势也不是全零，actor 确实发生更新。该结果将“单步 PPO ratio/clip 数值失稳”从主要嫌疑中降级，但不能排除多轮 rollout 分布漂移、优势方向与 pursuit 目标错配或动作熵退化。后续若继续，只允许基于已有 checkpoint 做训练轨迹对齐分析，不授权调参或增加预算。
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
