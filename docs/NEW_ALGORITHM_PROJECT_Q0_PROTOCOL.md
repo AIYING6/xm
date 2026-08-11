@@ -39,3 +39,23 @@
 - 不租正式训练资源；
 - 不把 literature proximity 误写成 novelty；
 - 若 Q0 失败，直接停止算法搜索并保留平台资产。
+
+## 第一轮近邻筛选结果
+
+### P1：policy improvement / behavior retention
+
+判定：`PARTIAL`。已有 demonstration-regularized RL 与 KL/behavior regularization 近邻，不能把普通 reference KL 或 BC penalty 直接作为新算法。当前 UAV 的 EG-BR pilot 也没有产生稳定 mission gain，因此 P1 暂不进入标准 benchmark。
+
+### P2：latent agent-scoped uncertainty
+
+判定：`PASS_PENDING_FORMALIZATION`。现有 robust MARL 已覆盖 agent-specific uncertainty sets，部分工作也覆盖 adversarial targeting；但“部署时受影响 agent subset 是隐变量、各 agent 只能从局部历史推断 scope，并据此进行协同 robust control”仍需进一步检查是否只是 POMDP belief 的直接重述。P2 进入下一关：数学定义与标准 benchmark phenomenon audit。
+
+### P3：unseen-partner / zero-shot coordination
+
+判定：`NO_GO_FOR_CURRENT_PROJECT`。已有 ZSC-Eval、cross-environment cooperation、异构 zero-shot scalable collaboration 等直接 benchmark 与方法，当前没有足够清楚的应用型结构差异，不再作为候选。
+
+当前唯一保留候选：
+
+```text
+P2_LATENT_AGENT_SCOPED_UNCERTAINTY__FORMALIZATION_PENDING
+```
