@@ -26,6 +26,8 @@
 - 新增 `scripts/test_v16r_rollout_collector.py`。
 - 新增 `algorithms/mappo/v16r_ppo.py`，包含 GAE、clipped PPO loss 和 centralized critic；
 - 新增 `scripts/test_v16r_ppo_update.py`。
+- 新增透明 B2 `RecipientGraphGuidanceActor`（统一图池化，不含 TEAR 机制）；
+- 新增 `scripts/test_v16r_recipient_graph_actor.py`。
 
 ## 当前验证
 
@@ -85,6 +87,14 @@ checks=2, failed=0
 ```
 
 已验证 GAE、clipped ratio、centralized critic、梯度更新和有限数值。该测试使用合成 batch，不代表环境 learnability。
+
+B2 graph actor 回归：
+
+```text
+checks=3, failed=0
+```
+
+该 baseline 只做 legal graph pooling，不包含 temporal alignment 或 conflict-aware fusion。
 
 已覆盖：
 
