@@ -118,6 +118,8 @@ oracle episodes=8, oracle_neutralized=8
 
 这证明 v1.6R 物理任务可达。随后 B0/B2 各 2 个 seed、12 updates、horizon=32 的短初筛均为 `0/8` neutralization。该结果不是 NO-GO：预算是初筛预算，B1 尚未加入，且需要先检查 reward/trajectory learning signal。当前不追加训练、不改变超参数，先做现有 rollout 的 reward 与动作诊断。
 
+R2 只读诊断显示：未训练 actor 仍有正的 range-progress reward（mean reward 约 0.06–0.08），target evidence 出现比例约 0.52–0.72，动作没有边界饱和；但四组轨迹的 attack geometry score 最大值均为 0。当前解释是“基础接近信号存在，但尚未进入物理攻击几何”，不能把短预算 0% 写成 benchmark NO-GO。
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
