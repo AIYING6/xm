@@ -1,6 +1,6 @@
 # New Algorithm Project V2: scientific-problem-first charter
 
-Status: `PROJECT_V2_MAJOR_REDESIGN_AUTHORIZED__PAPER_FIRST__NO_MORE_MICRO_PATCHING`
+Status: `R1_PARTIAL__PROBLEM_COMBINATION_DISTINCT_BUT_METHOD_GAP_UNCLEAR`
 
 The next paper project is independent of the current UAV benchmark.  The
 scientific problem must be selected before choosing an environment or reusing
@@ -23,15 +23,16 @@ be changed rather than distorting the problem to fit existing code.
 
 ## Current authorization
 
-The previous literature-first candidate search is closed.  The next stage is
-`V2-R0_MULTI_TASK_HETEROGENEOUS_UAV_MAJOR_REDESIGN`: freeze a larger
+The previous literature-first candidate search is closed.  The current stage
+is `V2-R1_DIRECT_NEIGHBOR_AND_INNOVATION_BOUNDARY_AUDIT`: review a larger
 multi-task, capability-constrained, physically completed UAV specification
-before implementation or training.  This is a major redesign, not a repair of
-the single-target task.  The detailed specification is in
+before implementation or training.  R0 is frozen as a major redesign, not a
+repair of the single-target task.  The detailed specification is in
 `docs/V2_R0_MULTI_TASK_HETEROGENEOUS_UAV_MAJOR_REDESIGN.md`.
 
-No algorithm implementation or training is authorized at R0.  After the
-specification is frozen, exactly one direct-neighbor review (R1) and one
-scripted/oracle feasibility review (R2) are allowed before baseline
-learnability.  If the task construct fails, close or redesign it once; do not
-re-enter an unbounded micro-patch loop.
+R1 found a potentially distinct problem combination, but no defensible method
+gap yet.  The matrix is in `docs/V2_R1_DIRECT_NEIGHBOR_MATRIX.md`.  No
+algorithm implementation, environment construction, or training is authorized.
+Only one method-boundary redesign is allowed; if it cannot separate the core
+mechanism from the strongest direct neighbors, close V2 rather than adding
+modules or another audit loop.
