@@ -59,6 +59,7 @@ def ppo_update(
     cfg: V16RPPOConfig | None = None,
     device: torch.device | str = "cpu",
     graph_conditioned: bool = False,
+    optimizer: torch.optim.Optimizer | None = None,
 ) -> dict[str, float]:
     cfg = cfg or V16RPPOConfig()
     actor.to(device)
@@ -79,7 +80,8 @@ def ppo_update(
     adv_flat = advantages.reshape(-1)
     ret_flat = returns.reshape(-1)
     adv_norm = (adv_flat - adv_flat.mean()) / (adv_flat.std(unbiased=False) + 1e-8)
-    optimizer = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=cfg.learning_rate)
+    if optimizer is None:
+        optimizer = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=cfg.learning_rate)
     metrics: dict[str, float] = {}
     for _ in range(cfg.epochs):
         if graph_conditioned:
@@ -96,7 +98,10 @@ def ppo_update(
         loss = policy_loss + cfg.value_coef * value_loss - cfg.entropy_coef * entropy
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
+        actor_grad_norm = float(torch.sqrt(sum((p.grad.detach().square().sum() for p in actor.parameters() if p.grad is not None))).detach())
+        actor_before = [p.detach().clone() for p in actor.parameters()]
         torch.nn.utils.clip_grad_norm_(list(actor.parameters()) + list(critic.parameters()), 0.5)
         optimizer.step()
-        metrics = {"loss": float(loss.detach()), "policy_loss": float(policy_loss.detach()), "value_loss": float(value_loss.detach()), "entropy": float(entropy.detach()), "ratio_mean": float(ratio.detach().mean())}
+        actor_delta = torch.sqrt(sum((p.detach() - old).square().sum() for p, old in zip(actor.parameters(), actor_before)))
+        metrics = {"loss": float(loss.detach()), "policy_loss": float(policy_loss.detach()), "value_loss": float(value_loss.detach()), "entropy": float(entropy.detach()), "ratio_mean": float(ratio.detach().mean()), "actor_grad_norm": actor_grad_norm, "actor_param_delta": float(actor_delta)}
     return metrics

@@ -120,6 +120,8 @@ oracle episodes=8, oracle_neutralized=8
 
 R2 只读诊断显示：未训练 actor 仍有正的 range-progress reward（mean reward 约 0.06–0.08），target evidence 出现比例约 0.52–0.72，动作没有边界饱和；但四组轨迹的 attack geometry score 最大值均为 0。当前解释是“基础接近信号存在，但尚未进入物理攻击几何”，不能把短预算 0% 写成 benchmark NO-GO。
 
+PPO 梯度诊断进一步确认实现链正常：4-update smoke 中 B0/B2 的 `actor_grad_norm` 均为正，`actor_param_delta` 约 0.009–0.015；因此当前 0% 不是“actor 没有更新”的工程 bug。仍不能据此判定任务不可学，下一步应完成 B1 history-matched baseline，并分析 acquisition 轨迹。
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；

@@ -30,7 +30,9 @@ def main() -> int:
         failures.append("PPO metrics non-finite")
     if abs(metrics["ratio_mean"] - 1.0) > 1e-4:
         failures.append("old-policy ratio is not initially one")
-    print(f"checks=2, failed={len(failures)}")
+    if metrics["actor_grad_norm"] <= 0.0 or metrics["actor_param_delta"] <= 0.0:
+        failures.append("actor received no gradient/update")
+    print(f"checks=3, failed={len(failures)}")
     for failure in failures:
         print(f"FAIL: {failure}")
     return 1 if failures else 0
