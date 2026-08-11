@@ -17,6 +17,8 @@
 - 新增 `scripts/test_v16r_continuous_guidance.py`。
 - 新增 `envs/v16r_env_adapter.py`，将 continuous guidance 与 recipient-specific graph 接入标准 reset/step 外观；
 - 新增 `scripts/test_v16r_env_adapter.py`。
+- 新增 `algorithms/mappo/continuous_guidance_distribution.py`，采用 tanh-squashed Gaussian 与 Jacobian 修正；
+- 新增 `scripts/test_v16r_continuous_distribution.py`。
 
 ## 当前验证
 
@@ -38,6 +40,14 @@ Adapter 端到端回归：
 ```text
 checks=5, failed=0
 ```
+
+Continuous distribution 回归：
+
+```text
+checks=4, failed=0
+```
+
+已验证 sampled action 与重算 log-prob 一致、动作有界、梯度有限。该分布尚未接入 PPO collector。
 
 已覆盖：
 
