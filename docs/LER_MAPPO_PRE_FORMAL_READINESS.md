@@ -26,3 +26,5 @@ LER 与 B1 在当前 strict actor-contract 配置下均为：
 只有当 B1 在同一 RMTN180、同一 strict actor contract 下出现稳定非零 geometry/mission signal，LER 才有资格进入正式实验。不得通过增加正式训练预算、改变 evaluation seeds 或加入新模块绕过该门。
 
 下一步只允许做配置/任务可学习性差异定位，重点核对历史 L0 可学习运行与当前 pilot 的 reward、初始状态、target maneuver、action scaling 和终止语义；在该门通过前，正式论文实验保持冻结。
+
+2026-08-12 已完成目标运动配置诊断，见 `docs/LER_BASELINE_LEARNABILITY_DIAGNOSIS_20260812.md`：`straight` 在 12 updates 的单点信号未能在 60 updates 保留，因此不能将问题归因于 target maneuver 单一因素。下一步回到最小 L0 可学习性重建，再逐层恢复异构团队因素。
