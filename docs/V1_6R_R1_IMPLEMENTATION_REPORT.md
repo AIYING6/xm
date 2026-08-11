@@ -24,6 +24,8 @@
 - 新增 `scripts/smoke_v16r_actor_env_rollout.py`，完成 actor→adapter→environment 无训练 rollout smoke。
 - 新增 `algorithms/mappo/v16r_rollout.py`，保存 recipient graph、continuous action、old log-prob 和 reset mask；
 - 新增 `scripts/test_v16r_rollout_collector.py`。
+- 新增 `algorithms/mappo/v16r_ppo.py`，包含 GAE、clipped PPO loss 和 centralized critic；
+- 新增 `scripts/test_v16r_ppo_update.py`。
 
 ## 当前验证
 
@@ -71,10 +73,18 @@ checks=4, failed=0
 Collector 回归：
 
 ```text
-checks=5, failed=0
+checks=6, failed=0
 ```
 
 已验证 collector old log-prob 可重算、recipient graph 维度保留、reset mask 为二值。该 collector 目前只收集，不执行 PPO update。
+
+PPO synthetic update 回归：
+
+```text
+checks=2, failed=0
+```
+
+已验证 GAE、clipped ratio、centralized critic、梯度更新和有限数值。该测试使用合成 batch，不代表环境 learnability。
 
 已覆盖：
 
@@ -97,7 +107,7 @@ checks=5, failed=0
 同时发现两个明确的 R1 集成阻塞：
 
 1. legacy collector 仍接收环境返回的共享 graph，而不是 `[recipient, node, node, feature]` 的 recipient-specific graph；
-2. legacy 3DOF 环境默认仍使用离散 27-action；v1.6R 已有独立 continuous guidance collector，但 legacy MAPPO collector 仍不改动。
+2. legacy 3DOF 环境默认仍使用离散 27-action；v1.6R 已有独立 continuous guidance collector/PPO update，但 legacy MAPPO collector 仍不改动。
 
 这两个差异不能通过字段别名掩盖，必须在 R1 适配层中显式解决。仍需补充 graph provenance 对照、neutralization precedence 和 continuous-action 接口回归。全部通过前禁止 B0/B1/B2 训练。
 

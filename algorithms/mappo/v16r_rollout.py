@@ -47,5 +47,10 @@ def collect_v16r_rollout(
         if bool(dones.all()):
             obs, share_obs, graph = env.reset()
 
-    return {key: np.stack(values, axis=0) for key, values in records.items()}
-
+    batch = {key: np.stack(values, axis=0) for key, values in records.items()}
+    batch["next_obs"] = np.asarray(obs, dtype=np.float32).copy()
+    batch["next_share_obs"] = np.asarray(share_obs, dtype=np.float32).copy()
+    batch["next_graph_node"] = np.asarray(graph["node"], dtype=np.float32).copy()
+    batch["next_graph_edge"] = np.asarray(graph["edge"], dtype=np.float32).copy()
+    batch["next_graph_relation_adj"] = np.asarray(graph["relation_adj"], dtype=np.float32).copy()
+    return batch

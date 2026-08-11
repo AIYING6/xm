@@ -20,6 +20,8 @@ def main() -> int:
         failures.append("obs batch shape mismatch")
     if batch["node"].shape[1] != env.num_agents:
         failures.append("recipient graph dimension missing")
+    if batch["next_obs"].shape != (env.num_agents, env.obs_dim):
+        failures.append("next_obs shape mismatch")
     if batch["actions"].shape[-1] != 2:
         failures.append("continuous action dimension mismatch")
     if not np.isfinite(batch["logp"]).all() or not np.isfinite(batch["actions"]).all():
@@ -31,7 +33,7 @@ def main() -> int:
         failures.append("collector old_logp mismatch")
     if not np.all(np.isin(batch["reset_mask"], [0.0, 1.0])):
         failures.append("reset mask is not binary")
-    print(f"checks=5, failed={len(failures)}")
+    print(f"checks=6, failed={len(failures)}")
     for failure in failures:
         print(f"FAIL: {failure}")
     return 1 if failures else 0

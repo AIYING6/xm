@@ -1,0 +1,97 @@
+"""Minimal PPO update for the v1.6R continuous actor and CTDE critic."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+import numpy as np
+import torch
+from torch import Tensor, nn
+
+from .continuous_guidance_policy import ContinuousGuidanceActor
+
+
+class CentralizedValueCritic(nn.Module):
+    def __init__(self, share_obs_dim: int, hidden_dim: int = 128):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(share_obs_dim, hidden_dim), nn.Tanh(),
+            nn.Linear(hidden_dim, hidden_dim), nn.Tanh(),
+            nn.Linear(hidden_dim, 1),
+        )
+
+    def forward(self, share_obs: Tensor) -> Tensor:
+        return self.net(share_obs).squeeze(-1)
+
+
+@dataclass(frozen=True)
+class V16RPPOConfig:
+    gamma: float = 0.99
+    gae_lambda: float = 0.95
+    clip_eps: float = 0.2
+    value_coef: float = 0.5
+    entropy_coef: float = 0.0
+    learning_rate: float = 3e-4
+    epochs: int = 1
+
+
+def compute_gae(batch: dict[str, np.ndarray], values: Tensor, next_value: Tensor, cfg: V16RPPOConfig) -> tuple[Tensor, Tensor]:
+    rewards = torch.as_tensor(batch["rewards"], dtype=torch.float32, device=values.device)
+    if rewards.ndim == 3:
+        rewards = rewards.squeeze(-1)
+    dones = torch.as_tensor(batch["dones"], dtype=torch.float32, device=values.device)
+    advantages = torch.zeros_like(values)
+    gae = torch.zeros_like(values[-1])
+    for t in range(values.shape[0] - 1, -1, -1):
+        bootstrap = next_value if t == values.shape[0] - 1 else values[t + 1]
+        not_done = 1.0 - dones[t]
+        delta = rewards[t] + cfg.gamma * bootstrap * not_done - values[t]
+        gae = delta + cfg.gamma * cfg.gae_lambda * not_done * gae
+        advantages[t] = gae
+    returns = advantages + values
+    return advantages, returns
+
+
+def ppo_update(
+    actor: ContinuousGuidanceActor,
+    critic: CentralizedValueCritic,
+    batch: dict[str, np.ndarray],
+    cfg: V16RPPOConfig | None = None,
+    device: torch.device | str = "cpu",
+) -> dict[str, float]:
+    cfg = cfg or V16RPPOConfig()
+    actor.to(device)
+    critic.to(device)
+    obs = torch.as_tensor(batch["obs"], dtype=torch.float32, device=device)
+    share = torch.as_tensor(batch["share_obs"], dtype=torch.float32, device=device)
+    actions = torch.as_tensor(batch["actions"], dtype=torch.float32, device=device)
+    old_logp = torch.as_tensor(batch["logp"], dtype=torch.float32, device=device)
+    t_steps, n_agents = obs.shape[:2]
+    flat_obs = obs.reshape(t_steps * n_agents, -1)
+    flat_share = share.reshape(t_steps * n_agents, -1)
+    flat_actions = actions.reshape(t_steps * n_agents, 2)
+    values = critic(flat_share).reshape(t_steps, n_agents)
+    next_value = critic(torch.as_tensor(batch["next_share_obs"], dtype=torch.float32, device=device)).detach()
+    advantages, returns = compute_gae(batch, values.detach(), next_value, cfg)
+    adv_flat = advantages.reshape(-1)
+    ret_flat = returns.reshape(-1)
+    adv_norm = (adv_flat - adv_flat.mean()) / (adv_flat.std(unbiased=False) + 1e-8)
+    optimizer = torch.optim.Adam(list(actor.parameters()) + list(critic.parameters()), lr=cfg.learning_rate)
+    metrics: dict[str, float] = {}
+    for _ in range(cfg.epochs):
+        dist = actor.distribution(flat_obs)
+        new_logp = dist.log_prob(flat_actions)
+        ratio = torch.exp(new_logp - old_logp.reshape(-1))
+        clipped = torch.clamp(ratio, 1.0 - cfg.clip_eps, 1.0 + cfg.clip_eps)
+        policy_loss = -torch.minimum(ratio * adv_norm, clipped * adv_norm).mean()
+        value_pred = critic(flat_share)
+        value_loss = 0.5 * (value_pred - ret_flat).square().mean()
+        entropy = dist.entropy_proxy().mean()
+        loss = policy_loss + cfg.value_coef * value_loss - cfg.entropy_coef * entropy
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(list(actor.parameters()) + list(critic.parameters()), 0.5)
+        optimizer.step()
+        metrics = {"loss": float(loss.detach()), "policy_loss": float(policy_loss.detach()), "value_loss": float(value_loss.detach()), "entropy": float(entropy.detach()), "ratio_mean": float(ratio.detach().mean())}
+    return metrics
+
