@@ -1,6 +1,6 @@
 # v1.6R 应用型算法论文主线
 
-状态：`APPLIED_ALGORITHM_TRACK_SELECTED__METHOD_PROTOCOL_PENDING_IMPLEMENTATION`
+状态：`APPLIED_ALGORITHM_TRACK_CLOSED__EG_BR_NO_GO`
 
 ## 论文目标
 
@@ -42,3 +42,13 @@ R2/R2R 已确认：合法 target evidence 能够到达 actor，BC policy 能在�
 则关闭当前 v1.6R 算法线，不再做 EG-BR-MAPPO-v2、换系数或增加模块。
 
 在方法接口和 deterministic regression 完成前，不进入正式 F1/F2，也不把 R3 partial 结果包装成方法性能证据。
+
+## EG-BR pilot 裁决
+
+EG-BR-MAPPO 已完成一次新 development pilot（training seeds `17501/17502`，60 updates，matched evaluation）。两个 seed 的 update-60 neutralization 均为 `0/8`；部分中间 checkpoint 的 geometry acquisition 改善未转化为稳定 mission endpoint 增益。因此裁决为：
+
+```text
+EG_BR_NO_GO__NO_STABLE_MISSION_GAIN
+```
+
+不再调整 retention/gate 系数、不追加 seed/update、不添加第二个行为保持模块。当前 v1.6R 算法论文线关闭，平台与诊断成果保留供后续独立算法项目验证使用。

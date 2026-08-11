@@ -253,6 +253,18 @@ R3_PARTIAL__ACQUISITION_RETENTION_WITHOUT_MISSION_GAIN
 
 按预冻结止损条件，不再调 `retention_coef`、追加 seed/update 或增加第二个 retention 模块。若没有新的外部研究决策，v1.6R 算法线应在此关闭，转为平台/诊断成果或路线 C。
 
+## EG-BR-MAPPO 最终 pilot
+
+在路线 1 的最后一次应用型算法机会中，实施了 advantage-conditioned evidence-gated retention，并使用新 seeds `17501/17502` 做 60-update pilot。EG-BR 在部分中间 checkpoint 上改善 geometry acquisition（例如 seed 17502、update 30 为 `1.00` geometry / `0.625` neutralization），但 update 60 两个 seed 的 neutralization 均为 `0/8`，没有稳定的 mission-level 增益。
+
+因此最终裁决为：
+
+```text
+EG_BR_NO_GO__NO_STABLE_MISSION_GAIN
+```
+
+不再继续修改 gate、系数、reward、环境或训练预算。v1.6R 算法线正式关闭；其环境、严格信息合约、物理终点、训练框架和诊断工具保留为后续独立算法项目的验证平台。
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
