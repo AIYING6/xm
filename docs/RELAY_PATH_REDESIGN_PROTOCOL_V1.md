@@ -1,6 +1,6 @@
 # Relay information-path redesign protocol v1
 
-**Status:** `RELAY_PATH_REDESIGN_AUTHORIZED__IDENTIFIABILITY_ONLY__NO_L5_TRAINING__NO_N3`
+**Status:** `L5_FAILURE_ONSET_NO_GO__RELAY_FAILURE_TASK_NOT_IDENTIFIABLE`
 
 This development-only redesign gives the existing Scout, Relay, and Attacker a
 physical two-hop communication geometry. It changes neither reward, mission
@@ -47,3 +47,19 @@ trajectories exactly identical. The scripted/oracle controller neutralized in
 all eight active-Relay episodes. The resulting verdict is
 `RELAY_PATH_IDENTIFIED__READY_FOR_L5_FAILURE_CALIBRATION`; L5 training remains
 unauthorized.
+
+## Failure-onset calibration outcome
+
+The method-independent calibration tested persistent Relay failures at onset
+steps 20, 24, and 28 over eight paired scripted/oracle seeds. For every
+candidate, relay-only evidence preceded the failure, Relay-to-Attacker delivery
+stopped after onset, and a fixed oracle action trace preserved the physical
+trajectory exactly. Oracle reachability also remained 8/8, so none of the
+candidates made the physical task intrinsically impossible.
+
+However, the transparent *legal-information* scripted controller achieved
+0/8 neutralization already in the no-failure condition. It therefore cannot
+establish the required nontrivial-but-not-total failure effect. Selecting an
+onset from learning results would violate the pretraining rule. No candidate is
+frozen, and the Relay-failure learning line is stopped:
+`L5_FAILURE_ONSET_NO_GO__RELAY_FAILURE_TASK_NOT_IDENTIFIABLE`.
