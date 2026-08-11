@@ -43,7 +43,7 @@ def evaluate(env, actor, method: str, episodes: int = 8):
     return success / episodes
 
 
-def run(seed: int, method: str, updates: int = 12, horizon: int = 32):
+def run(seed: int, method: str, updates: int = 12, horizon: int = 32, save_dir: Path | None = None):
     torch.manual_seed(seed)
     env = V16RIntercept3DEnv(UAVIntercept3DConfig(seed=seed, max_steps=60, v16r_mission_mode=True))
     actor = make_actor(method, env.obs_dim)
@@ -53,12 +53,16 @@ def run(seed: int, method: str, updates: int = 12, horizon: int = 32):
     for _ in range(updates):
         batch = collect_v16r_rollout(env, actor, horizon, graph_conditioned=method == "B2_unified_graph", history_len=4 if method == "B1_history4" else 1)
         ppo_update(actor, critic, batch, cfg, graph_conditioned=method == "B2_unified_graph", optimizer=optimizer)
+    if save_dir is not None:
+        save_dir.mkdir(parents=True, exist_ok=True)
+        torch.save({"actor": actor.state_dict(), "critic": critic.state_dict(), "method": method, "seed": seed}, save_dir / f"{method}_{seed}.pt")
     return {"seed": seed, "method": method, "updates": updates, "horizon": horizon, "eval_success_rate": evaluate(env, actor, method)}
 
 
 def main() -> int:
     updates = 60
-    rows = [run(seed, method, updates=updates) for seed in (17101, 17102) for method in ("B0_flat", "B1_history4", "B2_unified_graph")]
+    save_dir = Path("results/v1_6r_r2_checkpoints")
+    rows = [run(seed, method, updates=updates, save_dir=save_dir) for seed in (17101, 17102) for method in ("B0_flat", "B1_history4", "B2_unified_graph")]
     payload = {"status": "development_only", "protocol": {"seeds": [17101, 17102], "updates": updates, "horizon": 32}, "results": rows}
     path = Path("results/v1_6r_r2_three_baselines.json")
     path.parent.mkdir(parents=True, exist_ok=True)

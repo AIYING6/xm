@@ -31,6 +31,7 @@
 - 增加独立 `v16r_mission_mode`：物理攻击几何连续 4 步后才 `NEUTRALIZED`，legacy mode 不变；
 - 新增 `scripts/test_v16r_mission_endpoint.py` 与 `scripts/test_v16r_oracle_guidance.py`。
 - 新增 `scripts/test_v16r_legal_scripted_controller.py`，验证严格合法信息下的 scripted 可达性。
+- 新增 `scripts/diagnose_v16r_r2_failure_stages.py`，对保存的 R2 checkpoint 做 evidence→geometry→neutralization 阶段定位。
 - rollout/PPO 显式支持 `graph_conditioned` 模式；
 - 新增 `scripts/test_v16r_b0_b2_smoke.py`。
 - rollout 支持固定合法 history window；
@@ -140,6 +141,21 @@ R2_NO_GO__BASELINE_LEARNABILITY_NOT_ESTABLISHED__FAILURE_LOCALIZATION_REQUIRED
 ```
 
 这不是 TEAR 的性能结论，也不是立即修改 reward/训练预算的授权。下一步只允许用已有 rollout/新增透明诊断定位 acquisition 前的 policy-gradient 失败阶段；在 baseline learnability 建立前不实现 TEAR。
+
+R2 checkpoint 阶段定位结果：
+
+```text
+evidence_rate = 1.0（所有 B0/B1/B2 checkpoint）
+seed 17101 geometry_entry_rate ≈ 0.5
+seed 17102 geometry_entry_rate = 0.0
+neutralization_rate = 0.0
+```
+
+因此失败发生在 `legal evidence → attack geometry acquisition`，不是 target evidence 获取失败，也不是 physical endpoint 不可达。当前状态细化为：
+
+```text
+R2_PARTIAL__EVIDENCE_TO_GEOMETRY_ACQUISITION_BOTTLENECK_IDENTIFIED
+```
 
 已覆盖：
 
