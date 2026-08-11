@@ -350,8 +350,10 @@ class UAVIntercept3DEnv:
         """Advance with continuous normalized ``[turn, climb]`` guidance.
 
         This is an additive v1.6R interface; legacy ``step(int_actions)`` is
-        intentionally unchanged.  Acceleration is held at zero so the
-        guidance interface cannot silently become a third learned control head.
+        intentionally unchanged.  Acceleration is supplied by the fixed
+        deterministic closure controller (currently ``accel_cmd=1.0`` away
+        from the boundary), so it cannot silently become a third learned
+        control head.
         """
         if self.done:
             raise RuntimeError("Call reset() before stepping a finished episode.")
