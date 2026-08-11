@@ -62,6 +62,8 @@ def ppo_update(
     optimizer: torch.optim.Optimizer | None = None,
     reference_actor: ContinuousGuidanceActor | None = None,
     retention_coef: float = 0.0,
+    adaptive_retention: bool = False,
+    retention_beta: float = 1.0,
 ) -> dict[str, float]:
     cfg = cfg or V16RPPOConfig()
     actor.to(device)
@@ -104,8 +106,12 @@ def ppo_update(
             with torch.no_grad():
                 ref_mean = reference_actor.distribution(flat_obs).deterministic()
             retention_error = (dist.deterministic() - ref_mean).square().mean(dim=-1)
-            active = evidence_mask > 0.5
-            retention_loss = retention_error[active].mean() if bool(active.any()) else retention_error.mean() * 0.0
+            if adaptive_retention:
+                gate = torch.sigmoid(-float(retention_beta) * adv_norm.detach()) * (evidence_mask > 0.5).float()
+                retention_loss = (retention_error * gate).sum() / gate.sum().clamp_min(1.0)
+            else:
+                active = evidence_mask > 0.5
+                retention_loss = retention_error[active].mean() if bool(active.any()) else retention_error.mean() * 0.0
         loss = policy_loss + cfg.value_coef * value_loss - cfg.entropy_coef * entropy + retention_coef * retention_loss
         optimizer.zero_grad(set_to_none=True)
         loss.backward()

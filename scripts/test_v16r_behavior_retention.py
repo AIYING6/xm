@@ -13,5 +13,7 @@ def main() -> int:
         for p in actor.parameters(): p.add_(0.1)
     m2=ppo_update(actor,critic,batch,V16RPPOConfig(epochs=1),reference_actor=ref,retention_coef=1.0)
     assert np.isfinite(m2["retention_loss"]) and m2["retention_loss"] > 0.0
-    print("checks=2, failed=0"); return 0
+    m3=ppo_update(actor,critic,batch,V16RPPOConfig(epochs=1),reference_actor=ref,retention_coef=1.0,adaptive_retention=True,retention_beta=1.0)
+    assert np.isfinite(m3["retention_loss"])
+    print("checks=3, failed=0"); return 0
 if __name__=="__main__": raise SystemExit(main())

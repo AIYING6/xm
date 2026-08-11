@@ -16,12 +16,12 @@ R2/R2R 已确认：合法 target evidence 能够到达 actor，BC policy 能在�
 
 核心不是增加图、memory、stage 或新 reward，而是在 PPO policy improvement 与已有 pursuit 行为之间建立状态选择性的约束：
 
-1. 只在合法 target evidence 存在且 reference pursuit action 显示出正向物理进展的状态启用 retention；
-2. 当当前策略已经取得不低于 reference 的合法进展时，retention 自动减弱，避免把策略永久锁死在 BC 行为；
+1. 只在合法 target evidence 存在的状态启用 retention 门控；
+2. 门控强度由当前 PPO 的 detached normalized advantage 决定：估计表现较差时加强 reference 保护，估计表现较好时自动减弱，避免把策略永久锁死在 BC 行为；
 3. retention 只作用于 continuous turn/climb guidance，不改变 mission physics、reward 或 actor information；
 4. critic 仍可使用训练期 share observation，但任何 privileged 字段不得流入 actor。
 
-这与 R3 固定 evidence-mask retention 的区别是：R3 对所有 evidence 状态使用固定约束；EG-BR-MAPPO 只保护“reference 确实有物理进展、当前策略尚未超过”的 acquisition-critical 状态，并允许已改善状态进行 policy improvement。
+这与 R3 固定 evidence-mask retention 的区别是：R3 对所有 evidence 状态使用固定约束；EG-BR-MAPPO 使用 evidence mask × advantage-conditioned gate，使 policy improvement 与行为保护在同一更新中自适应平衡。
 
 ## 严格比较
 
