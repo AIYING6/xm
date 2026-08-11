@@ -14,10 +14,10 @@ def main() -> int:
     zero_index = int(np.flatnonzero(np.all(ACTION3D_TABLE == 0.0, axis=1))[0])
     legacy.step(np.full(cfg.num_blue, zero_index, dtype=np.int64))
     continuous.step_guidance(np.zeros((cfg.num_blue, 2), dtype=np.float32))
-    if not np.allclose(legacy.blue_pos, continuous.blue_pos, atol=1e-5):
-        failures.append("zero continuous guidance diverges from zero legacy command")
-    if not np.allclose(legacy.blue_gamma, continuous.blue_gamma, atol=1e-6):
-        failures.append("zero continuous guidance changes gamma unexpectedly")
+    if not np.all(continuous.blue_speed >= np.asarray([185.0, 175.0, 205.0], dtype=np.float32)):
+        failures.append("fixed controller did not provide deterministic closure acceleration")
+    if np.allclose(legacy.blue_pos, continuous.blue_pos, atol=1e-5):
+        failures.append("continuous path unexpectedly aliases legacy discrete dynamics")
     try:
         continuous.step_guidance(np.zeros((cfg.num_blue, 3), dtype=np.float32))
         failures.append("wrong guidance shape was accepted")

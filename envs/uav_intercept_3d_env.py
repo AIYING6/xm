@@ -124,6 +124,7 @@ class UAVIntercept3DConfig:
     target_break_turn_amp_rad: float = 0.5 * math.pi  # used only by target_policy="break_turn_param"
     seed: int | None = None
     attack_hold_steps: int = 4
+    v16r_mission_mode: bool = False
     collision_radius: float = 120.0
     safety_proximity_distance: float = 0.0
     safety_proximity_penalty_weight: float = 0.0
@@ -181,6 +182,8 @@ class UAVIntercept3DEnv:
         self.collision = False
         self.constraint_violation = False
         self.attack_hold = 0
+        self.neutralization_hold = 0
+        self.neutralized = False
         self.post_loss_chain_lost = False
         self.post_loss_chain_reclosure_rewarded = False
         self.post_loss_chain_reclosure_bonus = 0.0
@@ -295,10 +298,18 @@ class UAVIntercept3DEnv:
         cur_range = self._mean_target_range()
         tracking = float(np.mean(self.detected_by))
         window = float(np.max(self.attack_window))
-        if window > 0.5 and tracking > 0.0 and self._comm_has_chain_to_attacker():
-            self.attack_hold += 1
+        if self.config.v16r_mission_mode:
+            physical_window = any(
+                typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR} and self._in_attack_window(i, typ)
+                for i, typ in enumerate(self.config.blue_types)
+            )
+            self.neutralization_hold = self.neutralization_hold + 1 if physical_window else 0
+            self.neutralized = self.neutralization_hold >= self.config.attack_hold_steps
         else:
-            self.attack_hold = 0
+            if window > 0.5 and tracking > 0.0 and self._comm_has_chain_to_attacker():
+                self.attack_hold += 1
+            else:
+                self.attack_hold = 0
 
         chain_closed = self.attack_hold >= self.config.attack_hold_steps
         failure_active = any(self._is_comm_failed(i) for i in range(self.config.num_blue))
@@ -315,9 +326,11 @@ class UAVIntercept3DEnv:
             self.post_loss_chain_reclosure_bonus = float(self.config.post_loss_chain_reclosure_reward_weight)
             self.post_loss_chain_reclosure_rewarded = True
 
-        self.success = chain_closed and self.step_count >= self.config.min_success_step
+        self.success = (self.neutralized if self.config.v16r_mission_mode else chain_closed) and self.step_count >= self.config.min_success_step
         self.collision = self._has_collision()
         self.constraint_violation = self._has_constraint_violation()
+        if self.config.v16r_mission_mode and (self.collision or self.constraint_violation):
+            self.success = False
         timeout = self.step_count >= self.config.max_steps
         self.done = bool(self.success or self.collision or self.constraint_violation or timeout)
 
@@ -360,10 +373,18 @@ class UAVIntercept3DEnv:
         cur_range = self._mean_target_range()
         tracking = float(np.mean(self.detected_by))
         window = float(np.max(self.attack_window))
-        if window > 0.5 and tracking > 0.0 and self._comm_has_chain_to_attacker():
-            self.attack_hold += 1
+        if self.config.v16r_mission_mode:
+            physical_window = any(
+                typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR} and self._in_attack_window(i, typ)
+                for i, typ in enumerate(self.config.blue_types)
+            )
+            self.neutralization_hold = self.neutralization_hold + 1 if physical_window else 0
+            self.neutralized = self.neutralization_hold >= self.config.attack_hold_steps
         else:
-            self.attack_hold = 0
+            if window > 0.5 and tracking > 0.0 and self._comm_has_chain_to_attacker():
+                self.attack_hold += 1
+            else:
+                self.attack_hold = 0
         chain_closed = self.attack_hold >= self.config.attack_hold_steps
         failure_active = any(self._is_comm_failed(i) for i in range(self.config.num_blue))
         self.post_loss_chain_reclosure_bonus = 0.0
@@ -372,9 +393,11 @@ class UAVIntercept3DEnv:
         if failure_active and chain_closed and self.post_loss_chain_lost and not self.post_loss_chain_reclosure_rewarded and self.step_count >= self.config.post_loss_chain_reclosure_min_step:
             self.post_loss_chain_reclosure_bonus = float(self.config.post_loss_chain_reclosure_reward_weight)
             self.post_loss_chain_reclosure_rewarded = True
-        self.success = chain_closed and self.step_count >= self.config.min_success_step
+        self.success = (self.neutralized if self.config.v16r_mission_mode else chain_closed) and self.step_count >= self.config.min_success_step
         self.collision = self._has_collision()
         self.constraint_violation = self._has_constraint_violation()
+        if self.config.v16r_mission_mode and (self.collision or self.constraint_violation):
+            self.success = False
         timeout = self.step_count >= self.config.max_steps
         self.done = bool(self.success or self.collision or self.constraint_violation or timeout)
         self.history["blue_pos"].append(self.blue_pos.copy())
@@ -414,7 +437,10 @@ class UAVIntercept3DEnv:
         cfg = self.config
         for i, (turn_cmd, climb_cmd) in enumerate(guidance):
             typ = cfg.blue_types[i]
-            accel_cmd = 0.0
+            # The v1.6R guidance head controls turn/climb only.  The fixed
+            # low-level controller supplies a deterministic closure policy so
+            # the interface does not make the attacker slower than the target.
+            accel_cmd = 1.0
             self.blue_heading[i] = wrap_angle(self.blue_heading[i] + float(turn_cmd) * typ.max_turn_rate * cfg.dt)
             xy_radius = float(np.linalg.norm(self.blue_pos[i, :2]))
             if xy_radius >= cfg.world_radius - cfg.boundary_protection_margin:
@@ -788,6 +814,17 @@ class UAVIntercept3DEnv:
         return False
 
     def _compute_rewards(self, prev_range: float, cur_range: float, prev_tracking: float, tracking: float, prev_window: float, window: float) -> np.ndarray:
+        if self.config.v16r_mission_mode:
+            progress = float(np.clip((prev_range - cur_range) / 1_000.0, -1.0, 1.0))
+            geometry = self._attack_geometry_score()
+            base = 0.35 * progress + 0.65 * geometry
+            if self.success:
+                base += 2.0
+            if self.collision:
+                base -= 2.0
+            if self.constraint_violation:
+                base -= 1.5
+            return np.full((self.config.num_blue, 1), base, dtype=np.float32)
         progress = np.clip((prev_range - cur_range) / 1_000.0, -1.0, 1.0)
         connectivity = self._comm_connectivity()
         age_penalty = min(1.0, self._mean_message_age() / 80.0)

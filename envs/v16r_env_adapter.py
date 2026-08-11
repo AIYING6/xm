@@ -13,7 +13,9 @@ class V16RIntercept3DEnv:
     """Non-invasive v1.6R facade; legacy environment remains untouched."""
 
     def __init__(self, config: UAVIntercept3DConfig | None = None):
-        self.base = UAVIntercept3DEnv(config or UAVIntercept3DConfig(strict_target_sensing=True, agent_target_info_bottleneck=True))
+        self.base = UAVIntercept3DEnv(config or UAVIntercept3DConfig(strict_target_sensing=True, agent_target_info_bottleneck=True, v16r_mission_mode=True))
+        if not self.base.config.v16r_mission_mode:
+            raise ValueError("V16RIntercept3DEnv requires config.v16r_mission_mode=True")
         self.legal = LegalObservationInterface(self.base)
         self.num_agents = self.base.num_agents
         self.obs_dim = self.base.obs_dim
@@ -38,4 +40,3 @@ class V16RIntercept3DEnv:
 
     def legal_snapshot(self, recipient_id: int) -> dict[str, Any]:
         return self.legal.snapshot(recipient_id)
-

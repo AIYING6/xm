@@ -28,6 +28,8 @@
 - 新增 `scripts/test_v16r_ppo_update.py`。
 - 新增透明 B2 `RecipientGraphGuidanceActor`（统一图池化，不含 TEAR 机制）；
 - 新增 `scripts/test_v16r_recipient_graph_actor.py`。
+- 增加独立 `v16r_mission_mode`：物理攻击几何连续 4 步后才 `NEUTRALIZED`，legacy mode 不变；
+- 新增 `scripts/test_v16r_mission_endpoint.py` 与 `scripts/test_v16r_oracle_guidance.py`。
 - rollout/PPO 显式支持 `graph_conditioned` 模式；
 - 新增 `scripts/test_v16r_b0_b2_smoke.py`。
 
@@ -105,6 +107,16 @@ checks=2, failed=0
 ```
 
 B0 flat actor 与 B2 unified-graph actor 均完成一次无正式结论的 PPO update。
+
+## R2 初筛（development-only）
+
+在修正 continuous guidance 的 deterministic closure controller 后，scripted guidance 校准为：
+
+```text
+oracle episodes=8, oracle_neutralized=8
+```
+
+这证明 v1.6R 物理任务可达。随后 B0/B2 各 2 个 seed、12 updates、horizon=32 的短初筛均为 `0/8` neutralization。该结果不是 NO-GO：预算是初筛预算，B1 尚未加入，且需要先检查 reward/trajectory learning signal。当前不追加训练、不改变超参数，先做现有 rollout 的 reward 与动作诊断。
 
 已覆盖：
 
