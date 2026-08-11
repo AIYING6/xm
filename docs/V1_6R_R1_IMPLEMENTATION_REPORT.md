@@ -199,6 +199,8 @@ actor_param_delta ≈ 0.007–0.011
 
 进一步进行了同一物理初态下的单步反事实动作比较。对每个 checkpoint，在合法 evidence 出现后分别执行 learned action 与 legal scripted pursuit action，比较 v1.6R reward 和几何分数。6 个 checkpoint 的 learned-minus-scripted 单步 reward gap 均为负，范围约 `-0.0020` 至 `-0.0036`；例如 B0-17101 为 `-0.00359`，B1-17101 为 `-0.00347`。该结果说明 learned action 并非被 reward 直接偏好，且 scripted action 在相同状态下稳定取得更高即时物理进展。它支持“策略方向性与任务进展不一致”的定位，但仍不能单独证明 reward 设计错误，因为差异也可能来自多步控制和动作后果的时序信用分配。
 
+该反事实审计的实现为 `scripts/diagnose_v16r_one_step_action_value.py`，只读取冻结 checkpoint，不改变环境、奖励或训练协议。当前 R2 诊断链已覆盖：可达性、合法 evidence、动作接口可表达性、PPO 梯度更新、ratio/clipping 数值、动作熵/边界健康，以及同状态 learned-vs-scripted 即时物理价值差异。综合证据支持将 R2 归纳为：**任务可达且接口合法，但标准 PPO 尚未学会把合法 target evidence 转换为方向正确的持续 pursuit control。**
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
