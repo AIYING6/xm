@@ -113,3 +113,35 @@ This is development-only ladder evidence and does not quantify a causal
 performance decrement relative to L2-R, because the training seeds differ.
 It does not revalidate historical L4, or authorize delay, Relay-path redesign,
 a new algorithm, or formal training without separate authorization.
+
+## L4 corrected-contract message-delay requalification result
+
+The delay-only requalification retained the corrected L3 range and dropout
+settings, then added only the pre-calibrated `8`-step message delay.  The
+strict-contract mechanics check reproduced the original delay calibration:
+mean delivered-message age `50.54`, mean cache-valid age `31.46`, p95
+fresh-message gap `186` steps, and `1479` cache-valid records.  The delay was
+therefore retained without a severity search.
+
+The development run used seeds `8901` and `8902`, 60 updates each, and the 32
+frozen L4 evaluation episodes.
+
+| Condition | Geometry entry | Neutralization | RMTN180 |
+| --- | ---: | ---: | ---: |
+| Corrected-contract seed 8901 | 34.38% | 25.00% | 147.63 |
+| Corrected-contract seed 8902 | 34.38% | 25.00% | 147.63 |
+| Random | 40.63% | 0% | 180.00 |
+| Scripted | 100% | 100% | 57.00 |
+| Oracle | 100% | 100% | 53.19 |
+
+Both learned seeds retain nonzero neutralization above the frozen random
+reference and RMTN180 below the horizon, with no collision or
+constraint-failure outcomes.  The frozen gate is:
+
+`L4_CORRECTED_CONTRACT_DELAY_LEARNING_SIGNAL_RETAINED__READY_FOR_RELAY_PATH_REDESIGN`
+
+This completes the strict-contract L1–L4 development requalification ladder.
+It is not a causal cross-rung performance comparison, does not revalidate the
+historical Relay claim, and does not authorize L5 training, a new algorithm,
+or formal training.  The only next eligible work is separately authorized
+Relay-path redesign and identifiability validation.
