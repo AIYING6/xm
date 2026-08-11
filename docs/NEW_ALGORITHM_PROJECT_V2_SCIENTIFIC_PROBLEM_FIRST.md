@@ -1,6 +1,6 @@
 # New Algorithm Project V2: scientific-problem-first charter
 
-Status: `R1_PARTIAL__PROBLEM_COMBINATION_DISTINCT_BUT_METHOD_GAP_UNCLEAR`
+Status: `PROJECT_RECOVERY_MODE__V1_6_PAPER_FIRST__NO_NEW_ALGORITHM_MINING`
 
 The next paper project is independent of the current UAV benchmark.  The
 scientific problem must be selected before choosing an environment or reusing
@@ -23,16 +23,12 @@ be changed rather than distorting the problem to fit existing code.
 
 ## Current authorization
 
-The previous literature-first candidate search is closed.  The current stage
-is `V2-R1_DIRECT_NEIGHBOR_AND_INNOVATION_BOUNDARY_AUDIT`: review a larger
-multi-task, capability-constrained, physically completed UAV specification
-before implementation or training.  R0 is frozen as a major redesign, not a
-repair of the single-target task.  The detailed specification is in
-`docs/V2_R0_MULTI_TASK_HETEROGENEOUS_UAV_MAJOR_REDESIGN.md`.
+The V2/R1 redesign and all other new-algorithm searches are frozen.  The
+project returns to the existing v1.6 EA-RG paper as a salvage effort.  The
+authoritative plan is in
+`docs/V1_6_SALVAGE_AND_MINIMAL_RERUN_MATRIX.md`.
 
-R1 found a potentially distinct problem combination, but no defensible method
-gap yet.  The matrix is in `docs/V2_R1_DIRECT_NEIGHBOR_MATRIX.md`.  No
-algorithm implementation, environment construction, or training is authorized.
-Only one method-boundary redesign is allowed; if it cannot separate the core
-mechanism from the strongest direct neighbors, close V2 rather than adding
-modules or another audit loop.
+No new algorithm, benchmark, or V2 environment work is authorized.  The only
+next gate is the strict actor-contract repair audit followed by an 8-run
+development qualification (four methods × two seeds).  Formal retraining is
+authorized only if that qualification is positive.
