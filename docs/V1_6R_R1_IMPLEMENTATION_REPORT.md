@@ -201,6 +201,32 @@ actor_param_delta ≈ 0.007–0.011
 
 该反事实审计的实现为 `scripts/diagnose_v16r_one_step_action_value.py`，只读取冻结 checkpoint，不改变环境、奖励或训练协议。当前 R2 诊断链已覆盖：可达性、合法 evidence、动作接口可表达性、PPO 梯度更新、ratio/clipping 数值、动作熵/边界健康，以及同状态 learned-vs-scripted 即时物理价值差异。综合证据支持将 R2 归纳为：**任务可达且接口合法，但标准 PPO 尚未学会把合法 target evidence 转换为方向正确的持续 pursuit control。**
 
+## R2R：competent-policy retention test
+
+按照一次性冻结协议，从同一 behavior-cloning policy 出发，比较 BC-Frozen 与原 PPO 在 update `0/10/30/60` 的闭环表现。环境、reward、physics、PPO 超参数、评估 seeds 均未改变；该实验不实现 TEAR，也不追加正式训练资源。
+
+关键结果（每个 checkpoint 8 个 matched evaluation episodes）：
+
+```text
+seed 17101: BC-Frozen geometry=1.00, neutralization=0.25
+            PPO-10/30/60 geometry=0.25/0.25/0.25,
+                         neutralization=0.00/0.00/0.00
+
+seed 17102: BC-Frozen geometry=1.00, neutralization=0.125
+            PPO-10/30/60 geometry=0.25/1.00/0.25,
+                         neutralization=0.125/0.25/0.00
+```
+
+BC-Frozen 本身能够在闭环中进入 geometry，说明此前的 one-step BC 拟合并非完全虚假；而 PPO 更新后 geometry acquisition 在两个 seed 都明显下降，并在 update 60 时 neutralization 均为 `0/8`。因此 R2R 支持：**当前核心瓶颈更接近 PPO policy improvement 对已有物理上有用 pursuit 行为的破坏，而不是单纯无法发现任何 pursuit 行为。**
+
+状态升级为：
+
+```text
+R2R_PASS__PPO_COMPETENT_BEHAVIOR_RETENTION_FAILURE_IDENTIFIED
+```
+
+该状态只授权一次后续学习机制设计；不授权 reward、physics、actor contract、horizon、evaluation protocol 或 TEAR 上游模块修改。
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
