@@ -20,7 +20,7 @@
 PYTHONPATH=. D:/Anaconda/envs/.conda/envs/cac/python.exe \
   -m scripts.test_v16r_legal_observation_interface
 
-   checks=9, failed=0
+   checks=11, failed=0
 ```
 
 已覆盖：
@@ -34,10 +34,19 @@ PYTHONPATH=. D:/Anaconda/envs/.conda/envs/cac/python.exe \
 7. source/provenance relation 可追溯。
 8. recipient-0 cache 不泄漏到 recipient-1；
 9. recipient-0 local sensing 不泄漏到 recipient-1。
+10. recipient graph stack 显式保留 recipient 维度；
+11. relation 维度与 graph schema 一致。
 
 ## 尚未通过的门
 
-这不是 R1 完成。仍需补充真实 collector/replay 路径的 hidden-state expiry/reset、现有 actor-boundary 回归、graph provenance 对照、neutralization precedence 和 continuous-action 接口回归。全部通过前禁止 B0/B1/B2 训练。
+这不是 R1 完成。静态检查现有 MAPPO collector 后确认：当前 rollout 是前馈的，没有 recurrent hidden state；因此现阶段没有 hidden-state 绕过 expiry 的实际路径，但未来接入 GRU/recurrent actor 时必须显式加入 reset mask。
+
+同时发现两个明确的 R1 集成阻塞：
+
+1. legacy collector 仍接收环境返回的共享 graph，而不是 `[recipient, node, node, feature]` 的 recipient-specific graph；
+2. legacy 3DOF 环境仍使用离散 27-action，而 v1.6R 规格要求 continuous guidance。
+
+这两个差异不能通过字段别名掩盖，必须在 R1 适配层中显式解决。仍需补充 graph provenance 对照、neutralization precedence 和 continuous-action 接口回归。全部通过前禁止 B0/B1/B2 训练。
 
 ## 备注
 

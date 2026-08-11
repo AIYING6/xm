@@ -150,3 +150,16 @@ class LegalObservationInterface:
                 relation[1, evidence.source, target] = 1.0
         return {"node": node, "edge": edge, "relation_adj": relation}
 
+
+def stack_recipient_graphs(interface: LegalObservationInterface) -> dict[str, np.ndarray]:
+    """Stack one legal graph per recipient for a future v1.6R collector.
+
+    The leading dimension is the recipient dimension.  This intentionally does
+    not imitate the legacy shared graph shape, so accidental information
+    broadcasting fails loudly at the adapter boundary.
+    """
+    graphs = [interface.recipient_graph(i) for i in range(interface.env.num_agents)]
+    return {
+        key: np.stack([graph[key] for graph in graphs], axis=0)
+        for key in ("node", "edge", "relation_adj")
+    }

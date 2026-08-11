@@ -5,7 +5,7 @@ import copy
 import numpy as np
 
 from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv
-from envs.v16r_legal_interface import LegalObservationInterface
+from envs.v16r_legal_interface import LegalObservationInterface, stack_recipient_graphs
 
 
 def main() -> int:
@@ -74,8 +74,13 @@ def main() -> int:
         failures.append("recipient graph shape mismatch")
     if not np.isfinite(graph["node"]).all() or not np.isfinite(graph["edge"]).all():
         failures.append("graph contains non-finite values")
+    stacked = stack_recipient_graphs(legal)
+    if stacked["node"].shape[0] != cfg.num_blue:
+        failures.append("recipient graph stack lacks recipient dimension")
+    if stacked["relation_adj"].shape[1] != 2:
+        failures.append("recipient graph relation dimension mismatch")
 
-    print(f"checks={9}, failed={len(failures)}")
+    print(f"checks={11}, failed={len(failures)}")
     for failure in failures:
         print(f"FAIL: {failure}")
     return 1 if failures else 0
