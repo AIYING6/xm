@@ -166,6 +166,22 @@ Behavior-cloning 对照显示：scripted 合法动作在当前 actor observation
 
 BC warm-start 后接原 PPO 20 updates 的诊断为 `0/4 neutralized`（BC fit loss 约 `0.007`）。这表明当前 PPO update 会破坏有限的 pursuit 控制，而不是稳定保留它；该结果只用于定位 optimization pathology，不授权增加模块或正式方法训练。
 
+随后进行 actor-only 对照：从同一合法 behavior-cloning 起点复制两份 actor，一份执行完整 joint PPO update（actor+centralized critic），另一份仅更新 actor 参数，其他 batch、动作分布与环境条件完全一致。结果为：
+
+```text
+bc_loss = 0.00735
+joint PPO:      1/2 neutralized
+actor-only PPO: 0/2 neutralized
+```
+
+该结果不能支持“critic 更新单独造成退化”的解释；在本次小样本诊断中，actor-only 更新并未比 joint update 更稳定，反而未完成 neutralization。因此当前更保守的定位是：**原 PPO actor update / on-policy distribution shift 与 acquisition pursuit 控制之间存在不稳定耦合**，但尚未区分具体是 clipping、优势尺度、动作熵衰减还是 rollout 分布漂移。该诊断仍不授权调参、增加训练预算或实现新方法。
+
+当前 R2 状态维持：
+
+```text
+R2_PARTIAL__PPO_UPDATE_STABILITY_BOTTLENECK_IDENTIFIED
+```
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
