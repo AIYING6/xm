@@ -21,6 +21,7 @@
 - 新增 `scripts/test_v16r_continuous_distribution.py`。
 - 新增最小 `ContinuousGuidanceActor` vanilla actor；
 - 新增 `scripts/test_v16r_continuous_policy.py`。
+- 新增 `scripts/smoke_v16r_actor_env_rollout.py`，完成 actor→adapter→environment 无训练 rollout smoke。
 
 ## 当前验证
 
@@ -58,6 +59,12 @@ checks=4, failed=0
 ```
 
 已验证 stochastic/deterministic 输出、log-prob 和梯度；该 actor 尚未进入训练循环。
+
+Actor→环境 rollout：
+
+```text
+checks=4, failed=0
+```
 
 已覆盖：
 
