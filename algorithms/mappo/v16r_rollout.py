@@ -32,7 +32,7 @@ def collect_v16r_rollout(
     obs, share_obs, graph = env.reset()
     obs_history = np.repeat(obs[:, None, :], history_len, axis=1)
     records: dict[str, list[np.ndarray]] = {key: [] for key in (
-        "obs", "share_obs", "node", "edge", "relation_adj", "actions", "logp", "rewards", "dones", "reset_mask"
+        "obs", "share_obs", "node", "edge", "relation_adj", "actions", "logp", "rewards", "dones", "reset_mask", "evidence_mask"
     )}
     actor.eval()
     for _ in range(horizon):
@@ -48,12 +48,17 @@ def collect_v16r_rollout(
             else:
                 action_t, logp_t = actor(obs_t)
         action = action_t.cpu().numpy().astype(np.float32)
+        evidence_mask = np.asarray([
+            float(env.legal.target_evidence(i).available)
+            for i in range(env.num_agents)
+        ], dtype=np.float32)
         next_obs, next_share, next_graph, rewards, dones, _info = env.step(action)
         for key, value in (
             ("obs", model_obs), ("share_obs", share_obs), ("node", graph["node"]),
             ("edge", graph["edge"]), ("relation_adj", graph["relation_adj"]),
             ("actions", action), ("logp", logp_t.cpu().numpy()),
             ("rewards", rewards), ("dones", dones.reshape(-1)),
+            ("evidence_mask", evidence_mask),
             ("reset_mask", np.ones(env.num_agents, dtype=np.float32) if bool(dones.all()) else np.zeros(env.num_agents, dtype=np.float32)),
         ):
             records[key].append(np.asarray(value).copy())

@@ -60,6 +60,8 @@ def ppo_update(
     device: torch.device | str = "cpu",
     graph_conditioned: bool = False,
     optimizer: torch.optim.Optimizer | None = None,
+    reference_actor: ContinuousGuidanceActor | None = None,
+    retention_coef: float = 0.0,
 ) -> dict[str, float]:
     cfg = cfg or V16RPPOConfig()
     actor.to(device)
@@ -72,6 +74,7 @@ def ppo_update(
     flat_obs = obs.reshape(t_steps * n_agents, -1)
     flat_share = share.reshape(t_steps * n_agents, -1)
     flat_actions = actions.reshape(t_steps * n_agents, 2)
+    evidence_mask = torch.as_tensor(batch.get("evidence_mask", np.ones((t_steps, n_agents))), dtype=torch.float32, device=device).reshape(-1)
     graph_node = torch.as_tensor(batch["node"], dtype=torch.float32, device=device) if graph_conditioned else None
     graph_relation = torch.as_tensor(batch["relation_adj"], dtype=torch.float32, device=device) if graph_conditioned else None
     values = critic(flat_share).reshape(t_steps, n_agents)
@@ -96,7 +99,14 @@ def ppo_update(
         value_pred = critic(flat_share)
         value_loss = 0.5 * (value_pred - ret_flat).square().mean()
         entropy = dist.entropy_proxy().mean()
-        loss = policy_loss + cfg.value_coef * value_loss - cfg.entropy_coef * entropy
+        retention_loss = torch.zeros((), dtype=torch.float32, device=device)
+        if reference_actor is not None and retention_coef > 0.0:
+            with torch.no_grad():
+                ref_mean = reference_actor.distribution(flat_obs).deterministic()
+            retention_error = (dist.deterministic() - ref_mean).square().mean(dim=-1)
+            active = evidence_mask > 0.5
+            retention_loss = retention_error[active].mean() if bool(active.any()) else retention_error.mean() * 0.0
+        loss = policy_loss + cfg.value_coef * value_loss - cfg.entropy_coef * entropy + retention_coef * retention_loss
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         actor_grad_norm = float(torch.sqrt(sum((p.grad.detach().square().sum() for p in actor.parameters() if p.grad is not None))).detach())
@@ -104,5 +114,5 @@ def ppo_update(
         torch.nn.utils.clip_grad_norm_(list(actor.parameters()) + list(critic.parameters()), 0.5)
         optimizer.step()
         actor_delta = torch.sqrt(sum((p.detach() - old).square().sum() for p, old in zip(actor.parameters(), actor_before)))
-        metrics = {"loss": float(loss.detach()), "policy_loss": float(policy_loss.detach()), "value_loss": float(value_loss.detach()), "entropy": float(entropy.detach()), "ratio_mean": float(ratio.detach().mean()), "ratio_std": float(ratio.detach().std(unbiased=False)), "clip_fraction": float(clip_fraction.detach()), "adv_mean": float(adv_flat.detach().mean()), "adv_std": float(adv_flat.detach().std(unbiased=False)), "adv_norm_abs_mean": float(adv_norm.detach().abs().mean()), "actor_grad_norm": actor_grad_norm, "actor_param_delta": float(actor_delta)}
+        metrics = {"loss": float(loss.detach()), "policy_loss": float(policy_loss.detach()), "value_loss": float(value_loss.detach()), "retention_loss": float(retention_loss.detach()), "entropy": float(entropy.detach()), "ratio_mean": float(ratio.detach().mean()), "ratio_std": float(ratio.detach().std(unbiased=False)), "clip_fraction": float(clip_fraction.detach()), "adv_mean": float(adv_flat.detach().mean()), "adv_std": float(adv_flat.detach().std(unbiased=False)), "adv_norm_abs_mean": float(adv_norm.detach().abs().mean()), "actor_grad_norm": actor_grad_norm, "actor_param_delta": float(actor_delta)}
     return metrics

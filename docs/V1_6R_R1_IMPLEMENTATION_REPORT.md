@@ -227,6 +227,32 @@ R2R_PASS__PPO_COMPETENT_BEHAVIOR_RETENTION_FAILURE_IDENTIFIED
 
 该状态只授权一次后续学习机制设计；不授权 reward、physics、actor contract、horizon、evaluation protocol 或 TEAR 上游模块修改。
 
+## R3：evidence-masked behavior-retention pilot
+
+R3 实现了唯一授权的 behavior-retention 机制：在合法 evidence mask 为 1 的状态，对当前 PPO actor 与冻结 BC reference actor 的 deterministic guidance 施加 retention loss，`retention_coef=1.0` 预先冻结。所有其他训练与环境条件保持不变。collector、PPO 和 retention 单元回归均通过。
+
+两 seed、8 个 matched evaluation episodes 的关键结果：
+
+```text
+seed 17301:
+  vanilla PPO  geometry 1.00 → 0.625 → 0.00 → 0.00
+  retention    geometry 1.00 → 0.00  → 0.00 → 0.875
+  neutralization: vanilla 0.00 at update 60; retention 0.00
+
+seed 17302:
+  vanilla PPO  geometry 1.00 → 0.00 → 0.00 → 0.625
+  retention    geometry 1.00 → 1.00 → 1.00 → 1.00
+  neutralization: vanilla 0.00 at update 60; retention 0.00
+```
+
+R3 表明 evidence-masked retention 可以在部分 seed/阶段保留 geometry acquisition，但两个 seed 的 early trajectory 仍不稳定，且最终没有 neutralization endpoint 改善。因此不能判定 behavior-retention 机制已被支持，也不能进入正式 F1。当前状态更新为：
+
+```text
+R3_PARTIAL__ACQUISITION_RETENTION_WITHOUT_MISSION_GAIN
+```
+
+按预冻结止损条件，不再调 `retention_coef`、追加 seed/update 或增加第二个 retention 模块。若没有新的外部研究决策，v1.6R 算法线应在此关闭，转为平台/诊断成果或路线 C。
+
 已覆盖：
 
 1. 无合法 evidence 时改变 global target 不改变 actor evidence；
