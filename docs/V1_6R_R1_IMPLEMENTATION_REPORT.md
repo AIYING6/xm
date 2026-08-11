@@ -19,6 +19,8 @@
 - 新增 `scripts/test_v16r_env_adapter.py`。
 - 新增 `algorithms/mappo/continuous_guidance_distribution.py`，采用 tanh-squashed Gaussian 与 Jacobian 修正；
 - 新增 `scripts/test_v16r_continuous_distribution.py`。
+- 新增最小 `ContinuousGuidanceActor` vanilla actor；
+- 新增 `scripts/test_v16r_continuous_policy.py`。
 
 ## 当前验证
 
@@ -48,6 +50,14 @@ checks=4, failed=0
 ```
 
 已验证 sampled action 与重算 log-prob 一致、动作有界、梯度有限。该分布尚未接入 PPO collector。
+
+Continuous actor 回归：
+
+```text
+checks=4, failed=0
+```
+
+已验证 stochastic/deterministic 输出、log-prob 和梯度；该 actor 尚未进入训练循环。
 
 已覆盖：
 
