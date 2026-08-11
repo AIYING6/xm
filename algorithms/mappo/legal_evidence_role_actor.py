@@ -35,5 +35,7 @@ class LegalEvidenceRoleActor(nn.Module):
 
     def forward(self, obs: Tensor, role_ids: Tensor, evidence_mask: Tensor, deterministic: bool = False):
         dist = self.distribution(obs, role_ids, evidence_mask)
-        action = dist.deterministic() if deterministic else dist.sample()
-        return action, dist.log_prob(action)
+        if deterministic:
+            action = dist.deterministic()
+            return action, dist.log_prob(action)
+        return dist.sample()

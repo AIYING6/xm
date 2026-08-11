@@ -17,6 +17,7 @@ def collect_v16r_rollout(
     device: torch.device | str = "cpu",
     graph_conditioned: bool = False,
     history_len: int = 1,
+    legal_evidence_actor: bool = False,
 ) -> dict[str, Any]:
     """Collect one rollout without updating parameters.
 
@@ -30,6 +31,8 @@ def collect_v16r_rollout(
     if history_len <= 0:
         raise ValueError("history_len must be positive")
     obs, share_obs, graph = env.reset()
+    if legal_evidence_actor and not hasattr(actor, "distribution"):
+        raise TypeError("legal_evidence_actor requires an actor with evidence-gated distribution")
     obs_history = np.repeat(obs[:, None, :], history_len, axis=1)
     records: dict[str, list[np.ndarray]] = {key: [] for key in (
         "obs", "share_obs", "node", "edge", "relation_adj", "actions", "logp", "rewards", "dones", "reset_mask", "evidence_mask"
@@ -39,7 +42,17 @@ def collect_v16r_rollout(
         with torch.no_grad():
             model_obs = obs_history.reshape(env.num_agents, -1)
             obs_t = torch.as_tensor(model_obs, dtype=torch.float32, device=device)
-            if graph_conditioned:
+            evidence_mask_t = torch.as_tensor(
+                [float(env.legal.target_evidence(i).available) for i in range(env.num_agents)],
+                dtype=torch.float32, device=device,
+            )
+            role_ids_t = torch.as_tensor(
+                [int(env.base.config.blue_types[i].role) for i in range(env.num_agents)],
+                dtype=torch.long, device=device,
+            ) if legal_evidence_actor else None
+            if legal_evidence_actor:
+                action_t, logp_t = actor(obs_t, role_ids_t, evidence_mask_t)
+            elif graph_conditioned:
                 action_t, logp_t = actor(
                     obs_t,
                     torch.as_tensor(graph["node"], dtype=torch.float32, device=device),
