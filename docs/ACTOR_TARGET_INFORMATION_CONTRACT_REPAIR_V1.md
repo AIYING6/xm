@@ -82,3 +82,34 @@ performance claim.  It restores the scientific eligibility of a separately
 authorized, strict-contract L3 packet-dropout rung.  It does not authorize
 L3 automatically, does not revalidate historical L3/L4 data, and does not
 authorize delay, Relay-path redesign, a new algorithm, or formal training.
+
+## L3 corrected-contract packet-loss requalification result
+
+The packet-loss requalification retained the corrected L2 range setting and
+all learned-interface settings, then added only the previously calibrated
+`0.3` packet dropout.  A method-independent mechanics check with the repaired
+contract reproduced the original calibration exactly: mean delivery ratio
+`0.04176`, mean cache age `39.6`, and p95 no-delivery streak `193` steps.  The
+dropout probability was therefore retained without retuning.
+
+The development run used seeds `8701` and `8702`, 60 updates each, and the 32
+frozen L3 evaluation episodes.
+
+| Condition | Geometry entry | Neutralization | RMTN180 |
+| --- | ---: | ---: | ---: |
+| Corrected-contract seed 8701 | 71.88% | 59.38% | 103.75 |
+| Corrected-contract seed 8702 | 100% | 96.88% | 56.00 |
+| Random | 40.63% | 6.25% | 172.22 |
+| Scripted | 100% | 100% | 54.41 |
+| Oracle | 100% | 100% | 52.25 |
+
+Both learned seeds have nonzero geometry entry, neutralization above the
+frozen random reference, and RMTN180 below the horizon, with no collision or
+constraint-failure outcomes.  The frozen gate is:
+
+`L3_CORRECTED_CONTRACT_PACKET_LOSS_LEARNING_SIGNAL_RETAINED__READY_FOR_L4_AUTHORIZATION`
+
+This is development-only ladder evidence and does not quantify a causal
+performance decrement relative to L2-R, because the training seeds differ.
+It does not revalidate historical L4, or authorize delay, Relay-path redesign,
+a new algorithm, or formal training without separate authorization.
