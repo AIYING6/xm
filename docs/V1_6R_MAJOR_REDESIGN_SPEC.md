@@ -1,6 +1,6 @@
 # v1.6R：严格信息边界下的证据融合与物理中和
 
-状态：`V1_6R_MAJOR_SCIENTIFIC_AND_ALGORITHMIC_REDESIGN_PROPOSED`
+状态：`R2_PARTIAL__PPO_UPDATE_STABILITY_BOTTLENECK_IDENTIFIED`
 
 日期：2026-08-11
 
@@ -156,10 +156,8 @@ role-specific heads 仅作为异构动作语义的透明工程配置，不单独
 
 ## 11. 当前下一步
 
-1. 先提交 R0 文档与字段/schema 清单；
-2. 停止旧 salvage/旧训练启动；
-3. 实现 R1 的 LegalObservationInterface 与 RecipientSpecificGraphBuilder；
-4. 通过回归后再做 B0/B1/B2 小规模 learnability；
-5. 未完成 R1/R2 前不实现 TEAR、不租正式训练资源、不写正式论文结论。
+R0/R1 已完成，R2 development 已完成并进入失败定位收束。当前不进入 TEAR/M0 正式实现，也不租正式训练资源。R2 的冻结证据与诊断明细见 `docs/V1_6R_R1_IMPLEMENTATION_REPORT.md` 和 `docs/V1_6R_R2_DIAGNOSTIC_SUMMARY.md`。
+
+后续若继续，只能在新的预注册协议下处理“合法 evidence 到方向性 pursuit control 的 PPO 学习失败”；不得把现有 R2 结果包装成 TEAR 性能证据，也不得通过追加 updates、seed 或调参救结果。
 
 这条路线的原则是：复用工程，重建证据；复用失败经验，删除旧叙事；只允许一次结构性修复，不再进行无限 v1.6.x 试错。
