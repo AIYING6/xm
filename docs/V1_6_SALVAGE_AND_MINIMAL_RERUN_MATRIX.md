@@ -92,3 +92,12 @@
 * 禁止为了恢复旧 headline 修改 endpoint、population 或 actor contract；
 * 禁止把所有旧实验全部重跑。
 
+## 7. 当前合约门结果（2026-08-11）
+
+已在配置的 `cac` Python 环境完成只读回归：
+
+* `scripts/test_actor_target_information_contract.py`：4/4 PASS；
+* `scripts/test_actor_boundary_v1_8.py`：14/14 PASS；
+* `scripts/audit_a0_information_compatible_ctde.py`：严格 actor 输入反事实不变率 1.0，两个 checkpoint 均观察到 training-only privileged critic mismatch（TD sign conflict 约 0.584/0.625）。该 A0 结果只作为信息合约风险记录，不作为 v1.6 性能或新算法证据。
+
+本门已证明当前修复后的 actor contract 回归基础通过，但尚未证明旧 v1.6 训练 checkpoint 在该合约下仍可作为正式结果。因此下一步仍是准备 8-run qualification，而不是直接复用旧 checkpoint 或启动正式训练。
