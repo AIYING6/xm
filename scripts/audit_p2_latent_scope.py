@@ -85,8 +85,24 @@ def main():
                 rows.append({"task": task, "scope": scope_name, "controller": controller,
                              "success_rate": float(np.mean([x["success"] for x in trials])),
                              "mean_steps": float(np.mean([x["steps"] for x in trials]))})
+    by = {(r["task"], r["scope"], r["controller"]): r for r in rows}
+    oracle_ok = all(by[(task, scope, "oracle")]["success_rate"] >= 0.75
+                    for task in ("navigation", "formation")
+                    for scope in ("single_scope", "switching_scope"))
+    local_gap = any(by[(task, scope, "local_history")]["success_rate"] <
+                    by[(task, scope, "oracle")]["success_rate"]
+                    for task in ("navigation", "formation")
+                    for scope in ("single_scope", "switching_scope"))
+    mask_not_equivalent = any(
+        by[(task, scope, "mask")]["success_rate"] < 0.75
+        for task in ("navigation", "formation")
+        for scope in ("single_scope", "switching_scope"))
+    status = ("P2_PRELIMINARY_SIGNAL_PRESENT__STANDARD_BENCHMARK_VALIDATION_REQUIRED"
+              if oracle_ok and local_gap and mask_not_equivalent
+              else "P2_NO_GO__PRELIMINARY_SCOPE_EFFECT_NOT_ESTABLISHED")
     out = {"protocol": "P2_PHENOMENON_AUDIT_PROTOCOL_FROZEN", "training": False,
-           "rows": rows, "status": "AUDIT_DATA_GENERATED__INTERPRETATION_REQUIRED"}
+           "rows": rows, "checks": {"oracle_ok": oracle_ok, "local_gap": local_gap,
+           "mask_not_equivalent": mask_not_equivalent}, "status": status}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(out, indent=2), encoding="utf-8")
     print(json.dumps(out, indent=2))
