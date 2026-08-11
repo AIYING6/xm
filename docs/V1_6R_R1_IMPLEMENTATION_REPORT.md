@@ -32,6 +32,8 @@
 - 新增 `scripts/test_v16r_mission_endpoint.py` 与 `scripts/test_v16r_oracle_guidance.py`。
 - rollout/PPO 显式支持 `graph_conditioned` 模式；
 - 新增 `scripts/test_v16r_b0_b2_smoke.py`。
+- rollout 支持固定合法 history window；
+- 新增 `scripts/test_v16r_b1_history_smoke.py`。
 
 ## 当前验证
 
@@ -107,6 +109,14 @@ checks=2, failed=0
 ```
 
 B0 flat actor 与 B2 unified-graph actor 均完成一次无正式结论的 PPO update。
+
+B1 history baseline smoke：
+
+```text
+checks=2, failed=0
+```
+
+B1 当前使用固定 4-step legal observation history，仅作为透明 baseline，不含 latent stage 或 progress conditioning。
 
 ## R2 初筛（development-only）
 
