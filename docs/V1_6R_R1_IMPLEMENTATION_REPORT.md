@@ -34,6 +34,7 @@
 - 新增 `scripts/diagnose_v16r_r2_failure_stages.py`，对保存的 R2 checkpoint 做 evidence→geometry→neutralization 阶段定位。
 - 新增 `scripts/diagnose_v16r_action_alignment.py`，比较合法 scripted pursuit 与 checkpoint guidance。
 - 新增 `scripts/diagnose_v16r_behavior_cloning.py`，用合法 scripted action 做接口可表达性诊断。
+- 新增 `scripts/diagnose_v16r_bc_warmstart_ppo.py`，检查 unchanged PPO 对合法 BC 初始策略的影响。
 - rollout/PPO 显式支持 `graph_conditioned` 模式；
 - 新增 `scripts/test_v16r_b0_b2_smoke.py`。
 - rollout 支持固定合法 history window；
@@ -162,6 +163,8 @@ R2_PARTIAL__EVIDENCE_TO_GEOMETRY_ACQUISITION_BOTTLENECK_IDENTIFIED
 动作对齐诊断进一步显示：evidence 到达后，checkpoint policy 与同一合法状态下 scripted pursuit guidance 的二维动作误差约为 `1.1–1.7`（归一化 turn/climb）；range 仍有缓慢下降，但没有稳定进入 attack geometry。该结果支持“合法证据到达后，policy 没有学会将证据转换为正确 pursuit control”的 failure localization，不构成新方法结果。
 
 Behavior-cloning 对照显示：scripted 合法动作在当前 actor observation/action 接口上可拟合（平均绝对动作误差约 `0.024`），4 个新 episode 中有 `1` 个 neutralized。该诊断支持“接口可表达、PPO exploration/credit assignment 失败”的判断，但 BC 不属于 v1.6R baseline 或论文方法证据。
+
+BC warm-start 后接原 PPO 20 updates 的诊断为 `0/4 neutralized`（BC fit loss 约 `0.007`）。这表明当前 PPO update 会破坏有限的 pursuit 控制，而不是稳定保留它；该结果只用于定位 optimization pathology，不授权增加模块或正式方法训练。
 
 已覆盖：
 
