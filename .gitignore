@@ -25,6 +25,36 @@ env/
 *.err
 *.out
 
+# Local one-off analysis and push transcripts
+_tmp_*
+push_*.log
+
+# Local vendored runtime bundles (not source or paper evidence)
+.vendor/
+.vendor2/
+
+# LaTeX build products
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+*.out
+paper_latex_3d_en/*.pdf
+
+# Local PDF visual-review workspaces
+submission_packaging/pdf_review/
+submission_packaging/pdf_review_v2/
+
+# Development-only v1.6R/LER and exploratory audit outputs
+results/ler_*.json
+results/v1_6r_*.json
+results/p1_*.json
+results/p2_*.json
+results/paper_config_runs/formal_budget_post_sixth_freeze_v1.4_formal_main_20260802/
+
 # Local rehearsal run outputs
 results/paper_config_runs/freeze_rehearsal/
 results/paper_config_runs/freeze_rehearsal_formal_main/
