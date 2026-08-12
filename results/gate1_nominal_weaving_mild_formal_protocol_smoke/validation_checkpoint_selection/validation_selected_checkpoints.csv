@@ -1,2 +1,0 @@
-split,method,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,selection_score,success_mean,attack_window_formed_mean,tracking_rate_mean,comm_connectivity_mean,collision_mean,episodes
-validation,no_graph,no_graph,0,1,results/gate1_nominal_weaving_mild_formal_protocol_smoke/stage2_weaving_mild_ppo/runs/no_graph/bc_ppo_seed0/actor_critic_update_0001.pt,0.929487,0,0,0.0929487,0.259615,0,2

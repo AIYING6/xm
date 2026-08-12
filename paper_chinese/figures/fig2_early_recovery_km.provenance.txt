@@ -1,5 +1,0 @@
-Claim: EA-RG is earlier than MAPPO within pre-specified RMST80; pooled KM is descriptive.
-Raw source: sibling frozen held-out v1.5 worktree, read-only.
-Selection: Early + Nominal; 4 Fig. 2 contract methods; 3 seeds; 200 exposures/method/seed.
-Script: scripts/render_zh_early_recovery_figure.py
-SHA256(path+content, 12 inputs): 995e13022f4534e2a836503547db55e721513ae1dbd07cd32dd1bbcd128a0eae

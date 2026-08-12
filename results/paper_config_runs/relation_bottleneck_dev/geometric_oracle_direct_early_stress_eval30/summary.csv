@@ -1,2 +1,0 @@
-case,oracle_mode,target_policy,episodes,success_rate,timeout_rate,collision_rate,mean_steps,mean_initial_range,mean_final_range,mean_min_range,mean_range_reduction,mean_tracking_rate,mean_attack_window_rate,mean_max_attack_geometry_score,episodes_with_attack_geometry_gt_025,episodes_with_attack_geometry_gt_050,episodes_with_attack_window
-straight_direct,direct,straight,30,1.0,0.0,0.0,45.266666666666666,24700.567838541665,5125.512459309896,5125.512459309896,19575.05537923177,0.43335571840409154,0.029476589147843516,0.894653183756104,1.0,1.0,1.0

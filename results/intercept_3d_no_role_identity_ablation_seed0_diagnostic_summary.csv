@@ -1,3 +1,0 @@
-scenario,n,full_success,ablated_success,delta_success,lo_success,hi_success,full_recovery,ablated_recovery,delta_recovery,lo_recovery,hi_recovery,delta_recovery_steps,lo_recovery_steps,hi_recovery_steps,delta_steps,lo_steps,hi_steps
-relay_failure,30,1,0.9,0.1,0,0.2,1,0.9,0.1,0,0.2,-21.9,-43.3666666667,-0.6333333333,-21.9,-43.3666666667,-0.6333333333
-scout_failure,30,1,0.9333333333,0.0666666667,0,0.1666666667,1,0.9333333333,0.0666666667,0,0.1666666667,-14.7666666667,-36.0333333333,-0.5,-14.7666666667,-36.0333333333,-0.5

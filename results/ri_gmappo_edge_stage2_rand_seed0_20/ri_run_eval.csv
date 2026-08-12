@@ -1,9 +1,0 @@
-run_dir,checkpoint,radius,success_rate,collision_rate,timeout_rate,avg_steps,avg_mean_distance,intent_accuracy
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_stage2_rand_seed0_20,best,4.0,0.93,0.04,0.03,65.15,3.248611555298169,0.5903300076745971
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_stage2_rand_seed0_20,best,6.0,0.9,0.05,0.05,60.02,3.1754476465781534,0.5838053982005998
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_stage2_rand_seed0_20,best,8.0,0.88,0.11,0.02,63.32,3.333684372107188,0.5885975994946304
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_stage2_rand_seed0_20,best,10.0,0.78,0.13,0.09,77.67,3.921767679850261,0.5901892622634222
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_stage2_rand_seed0_20,latest,4.0,0.9,0.08,0.02,68.97,3.084288012584051,0.5912715673481224
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_stage2_rand_seed0_20,latest,6.0,0.91,0.08,0.01,56.0,3.01000108619531,0.5894642857142857
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_stage2_rand_seed0_20,latest,8.0,0.87,0.11,0.02,59.71,3.1456765059630074,0.5910232791827165
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_stage2_rand_seed0_20,latest,10.0,0.86,0.1,0.05,68.19,3.4508050731817876,0.5899692036955565

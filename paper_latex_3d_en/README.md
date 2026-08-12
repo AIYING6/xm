@@ -1,8 +1,6 @@
 # 3DOF English LaTeX Draft
 
-This directory is the separate 3DOF manuscript path for the heterogeneous UAV kill-chain recovery study.
-
-It does not replace the older 2D LaTeX drafts in `paper_latex/` or `paper_latex_en/`.
+This is the only maintained manuscript source for the 3DOF EA-RG-MAPPO-S study.
 
 ## Main File
 
@@ -26,11 +24,7 @@ The draft uses generated figures from:
 ../results/figures/
 ```
 
-The maintained figure inventory is:
-
-```text
-../docs/intercept_3d_manuscript_figures.md
-```
+The maintained tables and figures are under `../results/`.
 
 ## Static Check
 

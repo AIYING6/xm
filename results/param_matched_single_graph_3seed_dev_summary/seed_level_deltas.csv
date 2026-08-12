@@ -1,8 +1,0 @@
-metric,mean_delta_full_minus_param_single,seed_deltas
-success,0.9,0.8;0.9;1
-post_failure_chain_recovered,0.9,0.8;0.9;1
-timeout,-0.9,-0.8;-0.9;-1
-collision,0.0,0;0;0
-steps,-193.5,-171.8;-193.5;-215.2
-tracking_during_failure_rate,0.904583332290252,0.882083;0.915417;0.91625
-chain_closed_during_failure_rate,0.15461640211640207,0.132619;0.155397;0.175833

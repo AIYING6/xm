@@ -1,5 +1,0 @@
-method,selected_update,success,recovery,recovery_steps,collision,selection_score,checkpoint
-EA-RG-MAPPO,1600,0.94,0.94,19.7447,0,1014.26,results/paper_config_runs/dev_1m/runs/ea_rg_mappo/bc_ppo_seed0/actor_critic_update_1600.pt
-Single-Graph MAPPO,3907,0.82,0.82,19.2927,0,882.707,results/paper_config_runs/dev_1m/runs/single_graph/bc_ppo_seed0/actor_critic_update_3907.pt
-MAPPO/no-graph,3800,0.62,0.62,17.8065,0,664.194,results/paper_config_runs/dev_1m/runs/mappo/bc_ppo_seed0/actor_critic_update_3800.pt
-HAPPO,900,0.14,0.14,81.2857,0,72.7143,results/paper_config_runs/dev_1m/runs/happo_standard/bc_ppo_seed0/happo_update_0900.pt

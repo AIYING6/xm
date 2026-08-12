@@ -1,3 +1,0 @@
-split,scenario,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,strict_target_sensing,agent_target_info_bottleneck,selection_score,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,success_mean,episodes
-test,dropout030_relay_failure,multi_relation,0,3,results/intercept_3d_gate1_post_change_retrain_smoke/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0003.pt,True,True,1094.2,1,5.8,1,10
-test,dropout030_relay_failure,single,0,3,results/intercept_3d_gate1_post_change_retrain_smoke/runs/single/bc_ppo_seed0/actor_critic_update_0003.pt,True,True,984.778,0.9,5.22222,0.9,10

@@ -1,2 +1,0 @@
-{'update': 1, 'loss': 0.03698266576975584, 'policy_loss': -0.0030654116223258754, 'value_loss': 0.08667977154254913, 'entropy': 3.2918070554733276, 'intent_loss': 0.0, 'intent_acc': 0.0, 'train_avg_reward': 0.10150256007909775, 'eval_success_rate': 0.0, 'eval_collision_rate': 0.0, 'eval_timeout_rate': 1.0, 'eval_avg_steps': 260.0, 'eval_avg_distance': 25484.232421875, 'eval_intent_acc': nan}
-training log: C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\paper_config_runs\smoke\runs\mappo\bc_ppo_seed0\train_log.csv

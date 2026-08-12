@@ -1,2 +1,0 @@
-split,scenario,graph_encoder,train_seed,checkpoint_update,checkpoint,episodes,success_mean,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,chain_closed_during_failure_rate_mean,tracking_during_failure_rate_mean,connectivity_during_failure_mean,steps_mean,timeout_mean,collision_mean,constraint_violation_mean,selection_score
-test,relay_failure,single,0,1,results/intercept_3d_strict_sensing_formal_smoke/runs/single/bc_ppo_seed0/actor_critic_update_0001.pt,1,1,1,4,0.2,1,0.466667,44,0,0,0,1096

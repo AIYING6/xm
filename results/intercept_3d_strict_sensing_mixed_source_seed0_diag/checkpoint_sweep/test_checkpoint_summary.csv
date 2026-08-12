@@ -1,4 +1,0 @@
-split,scenario,graph_encoder,train_seed,checkpoint_update,checkpoint,episodes,success_mean,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,chain_closed_during_failure_rate_mean,tracking_during_failure_rate_mean,connectivity_during_failure_mean,steps_mean,timeout_mean,collision_mean,constraint_violation_mean,selection_score
-test,relay_failure,multi_relation,0,10,results/intercept_3d_strict_sensing_mixed_source_seed0_diag/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0010.pt,10,1,1,6.3,0.145754,1,0.430503,46.3,0,0,0,1093.7
-test,relay_failure,no_graph,0,10,results/intercept_3d_strict_sensing_mixed_source_seed0_diag/runs/no_graph/bc_ppo_seed0/actor_critic_update_0010.pt,10,0.3,0.3,5.66667,0.0452381,0.257917,0.179325,195.7,0.7,0,0,324.333
-test,relay_failure,single,0,10,results/intercept_3d_strict_sensing_mixed_source_seed0_diag/runs/single/bc_ppo_seed0/actor_critic_update_0010.pt,10,1,1,5.8,0.153571,1,0.435714,45.8,0,0,0,1094.2

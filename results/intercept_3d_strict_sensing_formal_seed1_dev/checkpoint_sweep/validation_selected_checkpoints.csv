@@ -1,3 +1,0 @@
-split,scenario,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,selection_score,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,success_mean,episodes
-validation,relay_failure,multi_relation,1,110,results/intercept_3d_strict_sensing_formal_seed1_dev/runs/multi_relation/bc_ppo_seed1/actor_critic_update_0110.pt,1094.86,1,5.14,1,50
-validation,relay_failure,single,1,10,results/intercept_3d_strict_sensing_formal_seed1_dev/runs/single/bc_ppo_seed1/actor_critic_update_0010.pt,1006.48,0.92,5.52174,0.92,50

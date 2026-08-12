@@ -1,9 +1,0 @@
-{
-  "method": "w/o Role-Pair Gate",
-  "paper_role": "mechanism ablation",
-  "graph_encoder": "multi_relation",
-  "graph_relation_ablation": "none",
-  "graph_message_ablation": "no_role_pair_gate",
-  "graph_input_ablation": "none",
-  "inherit_hyperparameters_from": "ea_rg_mappo"
-}

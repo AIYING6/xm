@@ -1,7 +1,0 @@
-stage,graph_encoder,seed,source,available,update,eval_success_rate,eval_timeout_rate,eval_avg_steps,eval_avg_distance
-stage2_nominal,multi_relation,0,train_log,1,5,0.0,1.0,260.0,47372.140625
-stage3_curriculum,multi_relation,0,train_log,1,5,0.0,1.0,260.0,47364.3984375
-stage4_strict_validation,multi_relation,0,validation_selected_checkpoints,1,3,0,1.0,inf,
-stage2_nominal,single,0,train_log,1,5,0.0,1.0,260.0,44505.595703125
-stage3_curriculum,single,0,train_log,1,5,0.0,1.0,260.0,40894.03515625
-stage4_strict_validation,single,0,validation_selected_checkpoints,1,3,0,1.0,inf,

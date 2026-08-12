@@ -1,3 +1,0 @@
-method,metric,unit,n_recovered_episodes,mean,note
-single,recovered_only_recovery_steps,steps,21,5.047619048,Conditional on episodes that recovered; use capped_recovery_steps for a comparable recovery-time proxy.
-multi_relation,recovered_only_recovery_steps,steps,57,5.403508772,Conditional on episodes that recovered; use capped_recovery_steps for a comparable recovery-time proxy.

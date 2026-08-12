@@ -1,2 +1,0 @@
-epoch,loss,action_accuracy,attacker_action_accuracy,support_action_accuracy,samples,demo_success_rate,balanced_loss,geometric_policy_mode,attacker_action_weight
-1,4.657607316970825,0.06292517006802721,0.030612244897959183,0.07908163265306123,196,0.5,1,offset,2.0

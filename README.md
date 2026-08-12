@@ -1,4 +1,4 @@
-# EA-RG-MAPPO UAV Kill-Chain Recovery
+# EA-RG-MAPPO UAV 3DOF Interception
 
 This repository studies heterogeneous UAV cooperative decision-making under strict intermittent sensing, limited communication, message uncertainty, and relay-node failure.
 
@@ -8,7 +8,7 @@ The current paper-facing method is:
 EA-RG-MAPPO: Edge-Aware Multi-Relation Role-Graph MAPPO
 ```
 
-The project is not a complete 6DOF red-blue air-combat system. The main statistical evidence is a lightweight 3DOF, 3v1 heterogeneous UAV kill-chain recovery task. Small 4v2/5v2 and LAG/JSBSim replay studies are planned only as controlled scenario-depth supplements after the main 3v1 evidence is hardened.
+This repository is the focused implementation and paper package for a lightweight 3DOF, 3v1 heterogeneous UAV interception task. It is not a complete 6DOF or JSBSim air-combat system.
 
 ## Research Question
 
@@ -121,22 +121,13 @@ Check current long-run progress:
 D:/Anaconda/envs/.conda/envs/cac/python.exe scripts/check_training_progress.py --mode dev_1m --methods ea_rg_mappo single_graph mappo happo --seeds 0
 ```
 
-## Current Experiment Status
+## Current Deliverable
 
-The active formalization path is:
+The deliverable is the EA-RG-MAPPO-S 3DOF paper package. The paper claim is limited to early post-relay-failure recovery under the locked nominal held-out protocol. The repository intentionally excludes failed alternative algorithm lines, old manuscript routes, LAG/JSBSim migration experiments, and raw development runs.
 
-1. Re-run/continue dev-1M training with the corrected HAPPO baseline and keep pre-correction HAPPO-style outputs out of formal comparisons.
-2. Run validation checkpoint sweeps only.
-3. Freeze checkpoint-selection and training-budget decisions.
-4. Expand to more training seeds.
-5. Run final test once after all protocol choices are frozen.
+The selected paper tables and figures are under `results/`; the current manuscript source is under `paper_latex_3d_en/`.
 
-Training-time online evaluations use only 5 episodes and are noisy monitors. They are not paper evidence. Current progress and audit status are recorded in:
-
-```text
-docs/PROJECT_STATE.md
-docs/dev1m_seed0_progress.md
-```
+Use `docs/SCIENTIFIC_CLAIM_STATE_LEDGER.md` and `docs/claim_evidence_matrix.md` for claim boundaries.
 
 ## Target-Prior Risk
 

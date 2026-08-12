@@ -1,4 +1,0 @@
-Schematic fact source: docs/figure_contracts/FACT_MANIFEST_METHOD_FIGURE.md
-SHA256: 434592aa0f284e3f31e9d9b26d8b012ac9eafd03af357c0795c25468f291e7b8
-Script: scripts/render_zh_three_relation_method_figure.py
-Relations shown: perception, communication, task-support only.

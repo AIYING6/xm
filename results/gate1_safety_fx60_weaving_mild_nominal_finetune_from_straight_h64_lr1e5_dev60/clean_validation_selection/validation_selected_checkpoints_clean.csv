@@ -1,4 +1,0 @@
-train_seed,checkpoint_update,checkpoint,episodes,success_mean,timeout_mean,collision_mean,steps_mean,selection_score
-0,60,results/gate1_safety_fx60_weaving_mild_nominal_finetune_from_straight_h64_lr1e5_dev60/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0060.pt,30,0.633333,0.366667,0.0,173.2,596.4931000000001
-1,60,results\gate1_safety_fx60_weaving_mild_nominal_finetune_from_straight_h64_lr1e5_dev60\runs\multi_relation\bc_ppo_seed1\actor_critic_update_0060.pt,30,0.0,1.0,0.0,260.0,-100.26
-2,30,results\gate1_safety_fx60_weaving_mild_nominal_finetune_from_straight_h64_lr1e5_dev60\runs\multi_relation\bc_ppo_seed2\actor_critic_update_0030.pt,30,0.26666666666666666,0.7333333333333333,0.0,238.86666666666667,193.0944666666667

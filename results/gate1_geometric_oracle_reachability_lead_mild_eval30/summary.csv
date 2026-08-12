@@ -1,2 +1,0 @@
-case,oracle_mode,target_policy,episodes,success_rate,timeout_rate,collision_rate,mean_steps,mean_initial_range,mean_final_range,mean_min_range,mean_range_reduction,mean_tracking_rate,mean_attack_window_rate,mean_max_attack_geometry_score,episodes_with_attack_geometry_gt_025,episodes_with_attack_geometry_gt_050,episodes_with_attack_window
-weaving_mild_lead,lead,weaving_mild,30,1.0,0.0,0.0,159.7,24699.7525390625,8778.411246744792,8778.411246744792,15921.341292317707,0.5146936108848086,0.008767425632774844,0.5655360076369066,1.0,0.9666666666666667,1.0

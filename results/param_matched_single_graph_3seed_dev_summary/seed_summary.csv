@@ -1,7 +1,0 @@
-variant,train_seed,success,post_failure_chain_recovered,timeout,collision,steps,tracking_during_failure_rate,chain_closed_during_failure_rate
-full_multi_update60,0,0.9,0.9,0.1,0.0,66.7,0.9162500001490116,0.14928571428571427
-full_multi_update60,1,0.9,0.9,0.1,0.0,66.5,0.9170833336189389,0.15539682539682537
-full_multi_update60,2,1.0,1.0,0.0,0.0,44.8,1.0,0.1758333333333333
-param_matched_single_h240,0,0.1,0.1,0.9,0.0,238.5,0.03416666768491268,0.01666666666666666
-param_matched_single_h240,1,0.0,0.0,1.0,0.0,260.0,0.0016666667163371999,0.0
-param_matched_single_h240,2,0.0,0.0,1.0,0.0,260.0,0.08375000249594447,0.0

@@ -1,5 +1,0 @@
-run_dir,checkpoint,radius,success_rate,collision_rate,timeout_rate,avg_steps,avg_mean_distance,intent_accuracy
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_rand_radius_seed2_30,best,4.0,1.0,0.0,0.0,68.33333333333333,2.703659150335524,0.5804878048780487
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_rand_radius_seed2_30,best,8.0,1.0,0.0,0.0,59.666666666666664,2.539667858017815,0.5642458100558659
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_rand_radius_seed2_30,latest,4.0,1.0,0.0,0.0,82.66666666666667,2.0980727010303073,0.5846774193548387
-C:\Users\96251\Documents\Codex\2026-07-12\ni\work\ri_gmappo_uav\results\ri_gmappo_edge_rand_radius_seed2_30,latest,8.0,0.6666666666666666,0.3333333333333333,0.0,70.66666666666667,2.6645623445510864,0.5660377358490566

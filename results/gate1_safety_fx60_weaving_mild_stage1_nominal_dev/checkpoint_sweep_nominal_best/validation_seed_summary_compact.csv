@@ -1,7 +1,0 @@
-graph_encoder,train_seed,scenario,episodes,success_mean,timeout_mean,collision_mean,constraint_violation_mean,steps_mean,episode_min_blue_red_distance_mean,episode_min_blue_blue_distance_mean
-single,0,nominal,20,0.0,1.0,0,0,260.0,8879.05,1585.31
-single,1,nominal,20,0.2,0.8,0,0,254.0,6021.98,1618.98
-single,2,nominal,20,0.2,0.8,0,0,244.55,7878.37,913.008
-multi_relation,0,nominal,20,0.0,1.0,0,0,260.0,10230.2,1053.1
-multi_relation,1,nominal,20,0.0,1.0,0,0,260.0,8747.57,1708.38
-multi_relation,2,nominal,20,0.05,0.95,0,0,259.0,8474.42,2075.76

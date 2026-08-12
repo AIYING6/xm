@@ -1,4 +1,0 @@
-split,scenario,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,selection_score,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,success_mean,episodes
-validation,relay_failure,multi_relation,0,10,results/intercept_3d_strict_sensing_mixed_source_seed0_diag/runs/multi_relation/bc_ppo_seed0/actor_critic_update_0010.pt,1093.1,1,6.9,1,10
-validation,relay_failure,no_graph,0,10,results/intercept_3d_strict_sensing_mixed_source_seed0_diag/runs/no_graph/bc_ppo_seed0/actor_critic_update_0010.pt,545.2,0.5,4.8,0.5,10
-validation,relay_failure,single,0,10,results/intercept_3d_strict_sensing_mixed_source_seed0_diag/runs/single/bc_ppo_seed0/actor_critic_update_0010.pt,874.25,0.8,5.75,0.8,10

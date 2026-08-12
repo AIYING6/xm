@@ -1,7 +1,0 @@
-Publication figure redesign bundle
-Fig. 1 fact source: MF01--MF10 only; no experimental numeric inputs.
-Fig. 2 source: frozen held-out inputs, Early + Nominal, 4 contract methods, 3 seeds, 200 matched exposures/method/seed.
-RMST80 forest values: seed deltas -2.64/-7.27/-1.21; pooled mean -3.71; hierarchical paired-bootstrap CI [-7.16, -1.05].
-Output width: 7.205 in (183 mm); SVG first, PDF and 600-dpi PNG fallback.
-Raw input SHA256(path+content, 12 inputs): 995e13022f4534e2a836503547db55e721513ae1dbd07cd32dd1bbcd128a0eae
-Files: fig1_method_overview_publication.svg, fig1_method_overview_publication.pdf, fig1_method_overview_publication.png, fig1_method_overview_publication.tiff, fig2_primary_recovery_publication.svg, fig2_primary_recovery_publication.pdf, fig2_primary_recovery_publication.png, fig2_primary_recovery_publication.tiff, publication_figure_contact_sheet.svg, publication_figure_contact_sheet.pdf, publication_figure_contact_sheet.png, publication_figure_contact_sheet.tiff

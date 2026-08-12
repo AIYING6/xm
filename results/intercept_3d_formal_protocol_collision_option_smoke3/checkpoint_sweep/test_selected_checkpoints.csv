@@ -1,2 +1,0 @@
-split,scenario,graph_encoder,train_seed,selected_checkpoint_update,selected_checkpoint,strict_target_sensing,agent_target_info_bottleneck,selection_score,post_failure_chain_recovered_mean,post_failure_chain_recovery_steps_mean,success_mean,collision_mean,constraint_violation_mean,episodes
-test,dropout030_relay_failure,single,0,1,results/intercept_3d_formal_protocol_collision_option_smoke3/runs/single/bc_ppo_seed0/actor_critic_update_0001.pt,True,True,1096,1,4,1,0,0,1

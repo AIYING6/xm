@@ -1,2 +1,0 @@
-mode,method,seed,update,rows,last_train_avg_reward,mean_train_avg_reward_last_20,last_eval_update,last_eval_success_rate,last_eval_timeout_rate,last_eval_avg_distance,loss,value_loss,entropy
-dev_1m,happo,0,1400,1400,0.13401125371456146,0.0096373,1400,0.0,1.0,49151.93671875,0.5332477192083994,1.0729818095763524,3.238970617453257

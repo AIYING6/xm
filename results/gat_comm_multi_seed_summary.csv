@@ -1,5 +1,0 @@
-method,result_type,radius,success_mean,success_std,collision_mean,collision_std,timeout_mean,timeout_std,avg_steps_mean,avg_steps_std,n
-GAT-MAPPO,mean_std,4,0.840,0.037,0.127,0.012,0.040,0.042,70.21,14.32,3
-GAT-MAPPO,mean_std,6,0.873,0.045,0.097,0.031,0.030,0.022,64.53,17.87,3
-GAT-MAPPO,mean_std,8,0.777,0.052,0.183,0.040,0.043,0.048,67.52,15.51,3
-GAT-MAPPO,mean_std,10,0.797,0.029,0.170,0.033,0.033,0.029,69.51,11.50,3

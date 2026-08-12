@@ -1,2 +1,0 @@
-split,method,graph_encoder,train_seed,checkpoint_update,checkpoint,episodes,success_mean,attack_window_formed_mean,tracking_rate_mean,comm_connectivity_mean,timeout_mean,collision_mean,constraint_violation_mean,selection_score
-validation,multi_relation,multi_relation,1,30,results/gate1_oracle_bc_ppo_weaving_mild_seed1_cont30/actor_critic_update_0030.pt,2,0.5,0.5,0.519038,0.641538,0.5,0,0,555.19
