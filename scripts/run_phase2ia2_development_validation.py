@@ -195,10 +195,9 @@ def write_report(path: Path, per_seed: list[dict], comparisons: list[dict], trai
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def run(args: argparse.Namespace) -> None:
+def validate_units(args: argparse.Namespace) -> tuple[list[dict], dict]:
     if any(seed not in SEEDS for seed in args.seeds):
         raise ValueError("Phase 2I-A2 accepts only frozen development seeds 101, 202, 303")
-    out = args.out_dir
     raw: list[dict] = []
     manifest = {"artifact_class": "DEVELOPMENT_ONLY", "checkpoint_rule": "fixed_final_actor_critic_latest", "episodes_per_seed_scenario": args.episodes, "arms": {}, "scenarios": [name for name, _ in SCENARIOS]}
     for arm in args.arms:
@@ -209,10 +208,17 @@ def run(args: argparse.Namespace) -> None:
                 raise FileNotFoundError(f"Missing fixed final checkpoint: {checkpoint}")
             manifest["arms"][arm]["seeds"][str(seed)] = {"checkpoint": str(checkpoint.relative_to(ROOT)), "sha256": sha256(checkpoint)}
             for scenario_index, (scenario, failure_start) in enumerate(SCENARIOS):
+                if args.scenario_indices is not None and scenario_index not in args.scenario_indices:
+                    continue
                 rows = evaluate(eval_args(checkpoint, arm, seed, scenario_index, failure_start, args.episodes, args.device))
                 for row in rows:
                     row.update({"artifact_class": "DEVELOPMENT_ONLY", "arm": arm, "train_seed": seed, "scenario": scenario, "scenario_index": scenario_index, "development_episode_id": episode_id(seed, scenario_index, int(row["episode"]))})
                     raw.append(row)
+    return raw, manifest
+
+
+def write_final_artifacts(raw: list[dict], manifest: dict, args: argparse.Namespace) -> None:
+    out = args.out_dir
     raw.sort(key=lambda r: (r["arm"], r["train_seed"], r["scenario_index"], r["episode"]))
     raw_path = out / "raw_validation" / "episode_metrics.csv"
     write_csv(raw_path, raw)
@@ -232,6 +238,44 @@ def run(args: argparse.Namespace) -> None:
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     write_report(ROOT / "docs" / "PHASE2IA2_ROLE_GATE_EFFICACY_REPORT.md", per_seed, comparisons, args.training_root)
     print(out / "manifest.json")
+
+
+def run(args: argparse.Namespace) -> None:
+    raw, manifest = validate_units(args)
+    write_final_artifacts(raw, manifest, args)
+
+
+def stage(args: argparse.Namespace) -> None:
+    raw, manifest = validate_units(args)
+    if len(args.arms) != 1 or len(args.seeds) != 1 or args.scenario_indices is None or len(args.scenario_indices) != 4:
+        raise ValueError("stage mode requires exactly one arm, one seed, and all four frozen scenarios")
+    stage_dir = args.stage_dir / args.arms[0] / f"seed{args.seeds[0]}"
+    stage_dir.mkdir(parents=True, exist_ok=True)
+    write_csv(stage_dir / "episode_metrics.csv", raw)
+    (stage_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    print(stage_dir / "manifest.json")
+
+
+def merge_staged(args: argparse.Namespace) -> None:
+    raw: list[dict] = []
+    manifest = {"artifact_class": "DEVELOPMENT_ONLY", "checkpoint_rule": "fixed_final_actor_critic_latest", "episodes_per_seed_scenario": args.episodes, "arms": {}, "scenarios": [name for name, _ in SCENARIOS]}
+    for arm in args.arms:
+        manifest["arms"][arm] = {"role_gate_mode": ARMS[arm], "seeds": {}}
+        for seed in args.seeds:
+            stage_dir = args.stage_dir / arm / f"seed{seed}"
+            source = stage_dir / "episode_metrics.csv"
+            source_manifest = stage_dir / "manifest.json"
+            if not source.exists() or not source_manifest.exists():
+                raise FileNotFoundError(f"missing completed validation stage: {stage_dir}")
+            with source.open(newline="", encoding="utf-8") as handle:
+                rows = list(csv.DictReader(handle))
+            expected_rows = args.episodes * len(SCENARIOS)
+            if len(rows) != expected_rows:
+                raise ValueError(f"stage row count mismatch at {stage_dir}: {len(rows)} != {expected_rows}")
+            raw.extend(rows)
+            stage_manifest = json.loads(source_manifest.read_text(encoding="utf-8"))
+            manifest["arms"][arm]["seeds"][str(seed)] = stage_manifest["arms"][arm]["seeds"][str(seed)]
+    write_final_artifacts(raw, manifest, args)
 
 
 def self_test(device: str) -> None:
@@ -264,10 +308,20 @@ def main() -> None:
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--arms", nargs="+", choices=tuple(ARMS), default=list(ARMS))
     parser.add_argument("--seeds", nargs="+", type=int, default=list(SEEDS))
+    parser.add_argument("--scenario-indices", nargs="+", type=int, choices=range(len(SCENARIOS)))
+    parser.add_argument("--stage-dir", type=Path, default=OUT / "_validation_staging")
+    parser.add_argument("--stage", action="store_true")
+    parser.add_argument("--merge-staged", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         self_test(args.device)
+        return
+    if args.stage:
+        stage(args)
+        return
+    if args.merge_staged:
+        merge_staged(args)
         return
     run(args)
 
