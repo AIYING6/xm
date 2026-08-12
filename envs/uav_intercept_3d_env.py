@@ -947,6 +947,24 @@ class UAVIntercept3DEnv:
         comm_window_info_ids = [
             i for i in attacker_window_info_ids if self.target_cache_hop_count[i] > 0
         ]
+        attacker_direct_ids = [
+            i for i in attacker_ids if self.detected_by[i] > 0.5
+        ]
+        attacker_cache_ids = [
+            i
+            for i in attacker_ids
+            if self.detected_by[i] <= 0.5 and self._has_fresh_target_cache(i)
+        ]
+        attacker_cache_paths = [list(self.target_cache_path[i]) for i in attacker_cache_ids]
+        cache_sources = [int(self.target_cache_source[i]) for i in attacker_cache_ids]
+        cache_paths_text = ";".join("-".join(str(node) for node in path) for path in attacker_cache_paths)
+        cache_sources_text = ";".join(str(source) for source in cache_sources)
+        relay_in_any_cache_path = any(1 in path for path in attacker_cache_paths)
+        support = (
+            float(np.max(self.attack_window)) > 0.5
+            and float(np.mean(self.detected_by)) > 0.0
+            and self._comm_has_chain_to_attacker()
+        )
         return {
             "success": float(self.success),
             "timeout": float(timeout and not self.success and not self.collision and not self.constraint_violation),
@@ -962,10 +980,16 @@ class UAVIntercept3DEnv:
             # to advance attack_hold in default (non-v16) task execution.
             # It is logged only; dynamics, reward, success, and termination
             # remain unchanged.
-            "chain_support_t": float(
-                float(np.max(self.attack_window)) > 0.5
-                and float(np.mean(self.detected_by)) > 0.0
-                and self._comm_has_chain_to_attacker()
+            "chain_support_t": float(support),
+            # Phase2IA9 read-only source/path telemetry. No transition,
+            # reward, termination, or policy input consumes these fields.
+            "attacker_direct_target_information_t": float(bool(attacker_direct_ids)),
+            "attacker_fresh_cache_information_t": float(bool(attacker_cache_ids)),
+            "attacker_cache_source_ids_t": cache_sources_text,
+            "attacker_cache_paths_t": cache_paths_text,
+            "attacker_cache_path_includes_relay1_t": float(relay_in_any_cache_path),
+            "attacker_support_path_relay1_required_t": float(
+                support and not attacker_direct_ids and bool(attacker_cache_paths) and all(1 in path for path in attacker_cache_paths)
             ),
             "chain_closed": float(self.attack_hold >= self.config.attack_hold_steps),
             "min_success_step": float(self.config.min_success_step),
