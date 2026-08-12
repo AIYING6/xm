@@ -32,6 +32,7 @@ push_*.log
 # Local vendored runtime bundles (not source or paper evidence)
 .vendor/
 .vendor2/
+archival/provenance/legacy_e02a753/
 
 # LaTeX build products
 *.aux

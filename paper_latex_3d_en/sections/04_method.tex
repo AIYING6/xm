@@ -24,17 +24,17 @@ The task graph represents task dependency structure; it is not itself the physic
 \subsection{Multi-Relation Graph Representation}
 \label{sec:graph_rep}
 
-Each relation channel is processed by an independent graph attention layer, and the encoder stacks two such layers, each containing the three relation channels, so that relation-specific reasoning is carried out separately before fusion. For receiver node $i$ and sender node $j$, relation $r$ has adjacency $A^r_{ij}$ and edge feature $e^r_{ij}$. The message passed from $j$ to $i$ in the first layer is
+Each relation channel is processed by an independent role-conditioned graph-attention layer, and the encoder stacks two such layers, each containing the three relation channels. Each layer also contains a separate union-graph attention branch whose output is fused with the relation outputs as a global residual information path. For receiver node $i$ and sender node $j$, relation $r$ has adjacency $A^r_{ij}$, where $A^r_{ij}=1$ means that sender $j$ is available to receiver $i$. The projected sender representation is $h'_j=W h_j$; edge features do not concatenate to the message payload. Instead, they modulate the attention score, while the role-pair gate modulates the sender message. The relation message is
 \begin{equation}
-    m^r_{ij} = A^r_{ij} \, g^r\left(h_i, h_j, e^r_{ij}\right),
+    m^r_{ij} = A^r_{ij}\,\alpha^r_{ij}\,\mu^r_{ij}\,h'_j,
 \label{eq:message}
 \end{equation}
-where $h_i, h_j$ are node embeddings and $g^r$ is the relation-specific message function that combines the sender representation with the relation's edge features. The receiver update aggregates relation-specific messages as
+where $\alpha^r_{ij}$ is the relation-specific attention weight and $\mu^r_{ij}$ is the learned receiver--sender role-pair modulation. The receiver update aggregates the relation-specific outputs and the union-branch output as
 \begin{equation}
-    \tilde{h}_i = \phi\left(h_i, \sum_{r\in\mathcal{R}}\sum_{j} \alpha^r_{ij} m^r_{ij}\right),
+    \tilde{h}_i = \phi\left(h_i, \operatorname{Fuse}\left(\left\{\sum_j m^r_{ij}\right\}_{r\in\mathcal{R}},\;m^{\mathrm{union}}_i\right)\right),
 \label{eq:aggregate}
 \end{equation}
-where $\alpha^r_{ij}$ is an edge-aware attention weight defined in Section~\ref{sec:attention} and $\phi$ is a non-linear update (with a global residual connection across relations). The single-graph baseline replaces $\mathcal{R}$ with one merged adjacency and shared message parameters; the multi-relation structure, rather than any single channel, is the key distinction from a homogeneous encoder.
+where $\phi$ is a non-linear update with a residual addition of the input node representation. The single-graph baseline replaces the relation-specific encoder and union branch with ordinary graph-attention layers over the merged adjacency. The no-graph ablation disables graph aggregation within the RI-MAPPO actor pipeline, whereas canonical MAPPO is an independently configured no-graph CTDE baseline.
 
 \begin{figure}[t]
     \centering
@@ -46,17 +46,17 @@ where $\alpha^r_{ij}$ is an edge-aware attention weight defined in Section~\ref{
 \subsection{State-Dependent Edge-Feature-Modulated Attention}
 \label{sec:attention}
 
-The attention weight in Eq.~\eqref{eq:aggregate} is state-dependent and edge-feature-modulated. For relation $r$, the raw attention score between receiver $i$ and sender $j$ is computed from the query of the receiver and the key of the sender, augmented by a learned projection of the edge feature,
+The attention weight in Eq.~\eqref{eq:aggregate} is state-dependent and edge-feature-modulated. The implementation uses one shared node projection $W$ within each attention layer rather than independent query and key projections. For relation $r$, the raw attention score between receiver $i$ and sender $j$ is
 \begin{equation}
-    s^r_{ij} = \mathrm{LeakyReLU}\big(a^r \cdot [W_q h_i \,\|\, W_k h_j]\big) + \mathrm{MLP}_r(e^r_{ij}),
+    s^r_{ij} = \mathrm{LeakyReLU}\big(a^r \cdot [W h_i \,\|\, W h_j]\big) + b(e_{ij}),
 \label{eq:score}
 \end{equation}
-where $e^r_{ij}$ is the edge feature for relation $r$ (relative position, velocity, altitude, bearing, communication reachability, message age, information confidence, sensing source, and kill-chain stage). The graph edge-feature dimension ($17$) describes \emph{graph computation} only; it is not the communication payload. The relation adjacency acts as a hard mask before the softmax: scores of disconnected pairs are set to $-\infty$, and
+where $e_{ij}$ is the edge feature vector (relative position, velocity, altitude, bearing, communication reachability, message age, information confidence, sensing source, and kill-chain stage) and $b(\cdot)$ is a learned scalar edge-score network. The graph edge-feature dimension ($17$) describes \emph{graph computation} only; it is not the communication payload. The relation adjacency acts as a hard mask before the softmax: scores of disconnected pairs are set to $-\infty$, and
 \begin{equation}
     \alpha^r_{ij} = \mathrm{softmax}_j\big( s^r_{ij} + \log \hat{A}^r_{ij}\big), \qquad \hat{A}^r_{ij}=\begin{cases}1,& A^r_{ij}=1 \text{ or } i=j,\\0,&\text{otherwise.}\end{cases}
 \label{eq:softmax}
 \end{equation}
-Physical message delivery is governed separately by the environment's $\mathrm{comm\_adj}$; the attention mask reflects graph-relation availability and may include the task-support channel, but it does not itself decide which bytes are transmitted. Consequently, dynamic adaptation in EA-RG arises primarily from state-dependent graph attention, relation masks, edge features, and environment-driven communication availability, rather than from the static role-pair modulation.
+Physical message delivery is governed separately by the environment's $\mathrm{comm\_adj}$; the attention mask reflects graph-relation availability and may include the task-support channel, but it does not itself decide which bytes are transmitted. Consequently, dynamic adaptation in EA-RG arises primarily from state-dependent graph attention, relation masks, edge-score biases, and environment-driven communication availability; the role-pair modulation is static with respect to the input state and is not a communication-pruning mechanism.
 
 \subsection{Task-Support Relation}
 \label{sec:task_support}
