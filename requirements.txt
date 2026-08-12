@@ -1,4 +1,5 @@
-numpy==1.24.4
-torch==2.4.1
-matplotlib==3.7.5
-pytest==8.3.5
+numpy
+pandas
+scipy
+torch
+pytest
