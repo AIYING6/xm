@@ -2,8 +2,8 @@
 
 **Artifact class:** DEVELOPMENT_ONLY  
 **Branch:** `scientific_recovery_v2`  
-**Commit:** `4df63ec`  
-**Tag:** `PHASE2IA2_DEVELOPMENT_READY`  
+**Commit:** `943dbbf`  
+**Tag:** `PHASE2IA2_DEVELOPMENT_READY_R1`  
 **Date:** 2026-08-12 (Asia/Shanghai)
 
 ## Authority and boundary
@@ -34,3 +34,7 @@ Seeds are exactly `101, 202, 303`. Each run uses 4 environments × 64 rollout st
 - Arm-config/hash and writable telemetry-directory gate: PASS.
 
 The previous seed-0 smoke deviation remains documented separately. It was not used for any architecture decision; this seed-909 smoke emitted no reward, success, recovery, or episode-performance fields.
+
+## Launch incident before run creation
+
+The first launcher invocation terminated before creating a run manifest or training artifact because the host PowerShell did not expose `Get-FileHash`. This objective technical fault is recorded in `results/development/role_gate_phase2ia2/run_incident_log.csv`. The launcher now uses a .NET SHA256 implementation; no completed result was discarded and all six runs will start from zero under the replacement tag above.
