@@ -105,6 +105,9 @@ class UAVIntercept3DConfig:
     radar_dropout_prob: float = 0.0
     strict_target_sensing: bool = False
     agent_target_info_bottleneck: bool = False
+    # Phase2IB relay-dependent task semantics. This remains opt-in so legacy
+    # configurations preserve their original sensing and cache behavior.
+    relay_dependent_task: bool = False
     max_target_message_age_steps: int = 80
     min_target_confidence: float = 0.2
     # --- P3-A OOD eval-side extensions (default no-op; do not change prior behavior) ---
@@ -159,6 +162,13 @@ class UAVIntercept3DEnv:
             raise ValueError("num_blue must match blue_types length in the first 3DOF implementation")
         if self.config.graph_relation_ablation not in {"none", "no_task_support"}:
             raise ValueError(f"Unsupported graph_relation_ablation: {self.config.graph_relation_ablation}")
+        if self.config.relay_dependent_task and not (
+            self.config.strict_target_sensing and self.config.agent_target_info_bottleneck
+        ):
+            raise ValueError(
+                "relay_dependent_task requires strict_target_sensing=True "
+                "and agent_target_info_bottleneck=True"
+            )
         self.rng = np.random.default_rng(self.config.seed)
         self.dropout_rng = np.random.default_rng(None if self.config.seed is None else self.config.seed + 10_007)
         self.num_agents = self.config.num_blue
@@ -683,6 +693,10 @@ class UAVIntercept3DEnv:
         return cfg.node_failure_start_step <= self.step_count < cfg.node_failure_start_step + cfg.node_failure_duration_steps
 
     def _radar_visible(self, i: int, typ: UAV3DType) -> bool:
+        # Phase2IB models an emission-constrained terminal attacker.  This is
+        # a task-level sensing policy and is a no-op for legacy configurations.
+        if self.config.relay_dependent_task and typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
+            return False
         rel = self.red_pos[0] - self.blue_pos[i]
         dist = float(np.linalg.norm(rel))
         if dist > typ.radar_range:
@@ -895,7 +909,28 @@ class UAVIntercept3DEnv:
             return False
         if float(self.target_cache_confidence[agent_id]) < float(self.config.min_target_confidence):
             return False
+        if self._is_relay_dependent_attacker(agent_id):
+            if not self._attacker_cache_uses_required_relay(agent_id):
+                return False
+            # The relay is a live targeting service in the new task. A cache
+            # is retained for provenance, but is not actionable while its
+            # required relay is in the frozen fault window.
+            if self._is_comm_failed(self._required_relay_id()):
+                return False
         return True
+
+    def _required_relay_id(self) -> int:
+        """Return the Phase2IB-designated relay ID (frozen as relay 1)."""
+        return 1
+
+    def _is_relay_dependent_attacker(self, agent_id: int) -> bool:
+        return (
+            self.config.relay_dependent_task
+            and self.config.blue_types[agent_id].role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}
+        )
+
+    def _attacker_cache_uses_required_relay(self, agent_id: int) -> bool:
+        return self._required_relay_id() in self.target_cache_path[agent_id]
 
     def _target_cache_stale_rate(self) -> float:
         valid_ids = [i for i in range(self.config.num_blue) if self.target_cache_valid[i] > 0.5]
@@ -965,6 +1000,13 @@ class UAVIntercept3DEnv:
             and float(np.mean(self.detected_by)) > 0.0
             and self._comm_has_chain_to_attacker()
         )
+        relay_dependency_eligible = (
+            self.config.relay_dependent_task
+            and float(np.max(self.attack_window)) > 0.5
+            and bool(self.detected_by[0] > 0.5)
+            and bool(attacker_cache_ids)
+            and all(self._attacker_cache_uses_required_relay(i) for i in attacker_cache_ids)
+        )
         return {
             "success": float(self.success),
             "timeout": float(timeout and not self.success and not self.collision and not self.constraint_violation),
@@ -981,10 +1023,14 @@ class UAVIntercept3DEnv:
             # It is logged only; dynamics, reward, success, and termination
             # remain unchanged.
             "chain_support_t": float(support),
+            "relay_dependency_eligible_t": float(relay_dependency_eligible),
             # Phase2IA9 read-only source/path telemetry. No transition,
             # reward, termination, or policy input consumes these fields.
             "attacker_direct_target_information_t": float(bool(attacker_direct_ids)),
             "attacker_fresh_cache_information_t": float(bool(attacker_cache_ids)),
+            "attacker_relay_required_fresh_information_t": float(
+                any(self._attacker_cache_uses_required_relay(i) for i in attacker_cache_ids)
+            ),
             "attacker_cache_source_ids_t": cache_sources_text,
             "attacker_cache_paths_t": cache_paths_text,
             "attacker_cache_path_includes_relay1_t": float(relay_in_any_cache_path),
@@ -1001,6 +1047,7 @@ class UAVIntercept3DEnv:
             "communication_range_scale": float(self.config.communication_range_scale),
             "strict_target_sensing": float(self.config.strict_target_sensing),
             "agent_target_info_bottleneck": float(self.config.agent_target_info_bottleneck),
+            "relay_dependent_task": float(self.config.relay_dependent_task),
             "target_estimate_age": float(self.step_count - self.last_detection_step) if self.last_detection_step >= 0 else float(self.config.max_steps),
             "target_estimate_is_prior": float(self.config.strict_target_sensing and self.last_detected_target_pos is None),
             "target_cache_age_mean": float(np.mean(local_cache_ages)),
@@ -1303,6 +1350,10 @@ class UAVIntercept3DEnv:
         return False
 
     def _has_target_information(self, agent_id: int) -> bool:
+        if self._is_relay_dependent_attacker(agent_id):
+            # Direct attacker sensing is disabled in this task; freshness
+            # additionally enforces an approved scout->relay->attacker path.
+            return self._has_fresh_target_cache(agent_id)
         if self.detected_by[agent_id] > 0.5:
             return True
         if self._has_fresh_target_cache(agent_id):
@@ -1337,6 +1388,11 @@ class UAVIntercept3DEnv:
         confidence: float,
         path: list[int],
     ) -> None:
+        if self._is_relay_dependent_attacker(agent_id) and self._required_relay_id() not in path:
+            # Generic geometry may allow a scout->attacker bypass, but such a
+            # message is not a legal targeting source in Phase2IB. Reject it
+            # before it can displace a valid relay-routed cache.
+            return
         current_generation = int(self.target_cache_generation_step[agent_id])
         current_hops = int(self.target_cache_hop_count[agent_id])
         if (
