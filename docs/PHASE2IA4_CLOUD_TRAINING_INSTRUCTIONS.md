@@ -13,6 +13,8 @@ CUDA_VISIBLE_DEVICES=0 PYTHON_BIN=python DEVICE=cuda nohup bash scripts/launch_p
 echo $! > phase2ia4.pid
 ```
 
+The launcher keeps the frozen protocol (`num_envs=4`, `rollout_steps=64`) and uses CPU environment parallelism plus CUDA. It runs the six fixed runs sequentially to avoid GPU-memory contention and protocol drift. After all six runs complete successfully, it executes `shutdown -h now`. To disable automatic shutdown, set `AUTO_SHUTDOWN=0` before launching. A failed run exits before shutdown and preserves the error log.
+
 The launcher performs exactly six fresh runs: `full_gate`/`no_role_gate` × seeds `101/202/303`, each with 3907 updates and 1,000,192 environment steps. It refuses to overwrite an existing run directory and never resumes.
 
 ## Monitor without inspecting performance

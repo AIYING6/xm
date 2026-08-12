@@ -3,11 +3,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-python}"
 DEVICE="${DEVICE:-cuda}"
+CPU_THREADS="${CPU_THREADS:-16}"
+AUTO_SHUTDOWN="${AUTO_SHUTDOWN:-1}"
 RESULT_ROOT="$ROOT/results/development/role_gate_phase2ia4"
 CONFIG_ROOT="$ROOT/configs/development"
 mkdir -p "$RESULT_ROOT"
 GIT_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo packaged-source)"
 sha256_file() { sha256sum "$1" | awk '{print $1}'; }
+export OMP_NUM_THREADS="$CPU_THREADS"
+export MKL_NUM_THREADS="$CPU_THREADS"
+export CUDA_DEVICE_MAX_CONNECTIONS="32"
 for arm_mode in "full_gate:relation_conditioned" "no_role_gate:none"; do
   arm="${arm_mode%%:*}"; gate_mode="${arm_mode##*:}"
   for seed in 101 202 303; do
@@ -23,3 +28,8 @@ for arm_mode in "full_gate:relation_conditioned" "no_role_gate:none"; do
     "$PYTHON_BIN" -c 'import hashlib,json,sys; h=hashlib.sha256(); f=open(sys.argv[2],"rb"); [h.update(x) for x in iter(lambda:f.read(1048576),b"")]; f.close(); p=sys.argv[1]; d=json.load(open(p)); d.update({"completion_status":"completed","checkpoint_sha256":h.hexdigest()}); json.dump(d,open(p,"w"),indent=2)' "$out/run_manifest.json" "$checkpoint"
   done
 done
+
+if [[ "$AUTO_SHUTDOWN" == "1" ]]; then
+  sync
+  shutdown -h now
+fi
