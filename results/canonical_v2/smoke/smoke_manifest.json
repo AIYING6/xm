@@ -1,0 +1,50 @@
+[
+  {
+    "artifact_class": "ENGINEERING_SMOKE_TEST_ONLY",
+    "method_key": "full",
+    "method": "EA-RG-MAPPO-S",
+    "seed": 0,
+    "checkpoint": "results\\canonical_v2\\smoke\\full\\seed0\\actor_critic_latest.pt",
+    "checkpoint_sha256": "d053f838fbefdeae5342e9fcf71b9d3abff07c9ae6463b72dcc6d46e068e13ef",
+    "raw_episode_csv": "results\\canonical_v2\\smoke\\full\\seed0\\raw_episode_metrics.csv",
+    "raw_episode_sha256": "4970bae501f291984f6a8efa15daf9c2f0aa5cdfabf3188baf88ed9c96d87094",
+    "graph_encoder": "multi_relation",
+    "residual_weight": "1.0"
+  },
+  {
+    "artifact_class": "ENGINEERING_SMOKE_TEST_ONLY",
+    "method_key": "mappo",
+    "method": "MAPPO",
+    "seed": 0,
+    "checkpoint": "results\\canonical_v2\\smoke\\mappo\\seed0\\actor_critic_latest.pt",
+    "checkpoint_sha256": "9a14c5818c13e7ffc792595d13a72e2ffffc4bf4565c73c9c82159d2bf078973",
+    "raw_episode_csv": "results\\canonical_v2\\smoke\\mappo\\seed0\\raw_episode_metrics.csv",
+    "raw_episode_sha256": "87725f8a32107fccf2a4dc1b20fdda6a535d10b4c26c9f9ddaf9a63527ec0246",
+    "graph_encoder": "no_graph",
+    "residual_weight": "1.0"
+  },
+  {
+    "artifact_class": "ENGINEERING_SMOKE_TEST_ONLY",
+    "method_key": "single_graph",
+    "method": "Single-Graph",
+    "seed": 0,
+    "checkpoint": "results\\canonical_v2\\smoke\\single_graph\\seed0\\actor_critic_latest.pt",
+    "checkpoint_sha256": "f55b6d769c374b01fbefdfa39d5e23affe7be4c5dda39b6132ec5b703cddd6e6",
+    "raw_episode_csv": "results\\canonical_v2\\smoke\\single_graph\\seed0\\raw_episode_metrics.csv",
+    "raw_episode_sha256": "c35ea7b032025c92f89e35c35e3f665816f50ad6bad177d24273034de307d724",
+    "graph_encoder": "single",
+    "residual_weight": "1.0"
+  },
+  {
+    "artifact_class": "ENGINEERING_SMOKE_TEST_ONLY",
+    "method_key": "no_union_residual",
+    "method": "EA-RG-MAPPO-S-no-union-residual",
+    "seed": 0,
+    "checkpoint": "results\\canonical_v2\\smoke\\no_union_residual\\seed0\\actor_critic_latest.pt",
+    "checkpoint_sha256": "2faf745b0ab89fb4b8476abc0788ebb87282270b0eb8f27b7591ca51e2544ea9",
+    "raw_episode_csv": "results\\canonical_v2\\smoke\\no_union_residual\\seed0\\raw_episode_metrics.csv",
+    "raw_episode_sha256": "da6cbacaffef1950638a1d384ea62a6d65f18eb77f68438d3c3dceb959c7461e",
+    "graph_encoder": "multi_relation",
+    "residual_weight": "0.0"
+  }
+]

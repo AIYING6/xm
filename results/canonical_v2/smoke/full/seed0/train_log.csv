@@ -1,0 +1,2 @@
+update,loss,policy_loss,value_loss,entropy,intent_loss,intent_acc,chain_aux_loss,chain_aux_acc,chain_aux_effective_coef,approx_kl,clip_fraction,grad_norm,explained_variance,ppo_epochs_ran,critic_warmup_active,train_avg_reward,eval_success_rate,eval_collision_rate,eval_timeout_rate,eval_avg_steps,eval_avg_distance,eval_intent_acc
+1,-0.051996156107634306,-0.03431591158732772,0.03039067704230547,3.287558436393738,0.0,0.0,0.0,0.0,0.0,0.0011037327276426367,0.0,0.7811785042285919,-0.17147889733314514,4,0.0,0.09707152843475342,0.0,0.0,1.0,260.0,34599.41015625,nan

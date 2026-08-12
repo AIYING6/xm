@@ -66,6 +66,7 @@ CSV_COLUMNS = (
     "post_failure_chain_maintained",
     "post_failure_chain_recovered_after_loss",
     "pre_failure_chain_established",
+    "chain_lost_after_failure",
     "pre_failure_chain_maintained",
     "pre_failure_chain_recovered_after_loss",
     "post_failure_chain_first_established",
@@ -80,6 +81,12 @@ CSV_COLUMNS = (
     "post_failure_post_delivered_old_info_recovered",
     "post_failure_stale_cache_recovered",
     "post_failure_first_chain_step",
+    "t_failure",
+    "t_loss",
+    "t_recovery",
+    "delta_t_loss_to_recovery",
+    "event",
+    "censor_time",
     "chain_closed_during_failure_rate",
     "tracking_during_failure_rate",
     "connectivity_during_failure",
@@ -395,6 +402,40 @@ def post_failure_recovery_metrics(step_infos: list[dict[str, float]], args: argp
     }
 
 
+def strict_endpoint_metrics(step_infos: list[dict[str, float]], args: argparse.Namespace) -> dict[str, float]:
+    """Emit the frozen v2 strict endpoint fields without changing cohort rules."""
+    censor_time = float(step_infos[-1]["step"]) if step_infos else 0.0
+    t_failure = -1.0
+    t_loss = -1.0
+    t_recovery = -1.0
+    pre_established = False
+    loss_seen = False
+    for info in step_infos:
+        step = float(info["step"])
+        chain_closed = float(info.get("chain_closed", 0.0)) > 0.5
+        failure_active = float(info.get("node_failure_active", 0.0)) > 0.5
+        if failure_active and t_failure < 0.0:
+            t_failure = step
+        if t_failure < 0.0 and chain_closed:
+            pre_established = True
+        if t_failure >= 0.0 and not chain_closed and t_loss < 0.0:
+            t_loss = step
+            loss_seen = True
+        elif loss_seen and chain_closed and t_recovery < 0.0:
+            t_recovery = step
+    strict_event = float(pre_established and t_loss >= 0.0 and t_recovery >= t_loss)
+    duration = t_recovery - t_loss if strict_event > 0.5 else -1.0
+    return {
+        "t_failure": t_failure,
+        "t_loss": t_loss,
+        "t_recovery": t_recovery,
+        "chain_lost_after_failure": float(t_loss >= 0.0),
+        "delta_t_loss_to_recovery": float(duration),
+        "event": strict_event,
+        "censor_time": censor_time,
+    }
+
+
 def display_path(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT).as_posix()
@@ -413,7 +454,7 @@ def build_episode_row(
 ) -> dict[str, float | int | str | bool]:
     recovery = post_failure_recovery_metrics(step_infos, args)
     return {
-        "method": "EA-RG-MAPPO-S",
+        "method": getattr(args, "method", "EA-RG-MAPPO-S"),
         "checkpoint": display_path(args.checkpoint),
         "policy_source": policy_source,
         "seed": seed,
@@ -451,6 +492,7 @@ def build_episode_row(
         "first_attack_window_step": first_step_where(step_infos, "attack_window_rate"),
         "first_chain_close_step": first_step_where(step_infos, "chain_closed", threshold=0.5),
         **recovery,
+        **strict_endpoint_metrics(step_infos, args),
         "avg_mean_range": mean_metric(step_infos, "mean_range"),
         "final_mean_range": float(final["mean_range"]),
         "episode_min_blue_red_distance": float(min(info["min_blue_red_distance"] for info in step_infos)),
@@ -633,6 +675,7 @@ def write_summary(rows: list[dict[str, float | int | str | bool]], out_md: Path,
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=Path, default=ROOT / "results" / "ri_gmappo_3d_smoke" / "actor_critic_latest.pt")
+    parser.add_argument("--method", type=str, default="EA-RG-MAPPO-S")
     parser.add_argument("--episodes", type=int, default=3)
     parser.add_argument("--eval-batch-size", type=int, default=1)
     parser.add_argument("--seed", type=int, default=0)

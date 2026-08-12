@@ -1,0 +1,37 @@
+name: survival-reference-validation
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "analysis/survival_v2/**"
+      - ".github/workflows/survival-reference-validation.yml"
+
+jobs:
+  b1-reference:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install independent reference and scientific dependencies
+        run: python -m pip install --upgrade pip && python -m pip install lifelines numpy scipy pandas
+      - name: Record environment
+        run: |
+          python --version | tee b1-environment.txt
+          python -m pip freeze | tee -a b1-environment.txt
+      - name: Run local regression tests
+        run: python -m pytest analysis/survival_v2/tests -q
+      - name: Run standard reference validation
+        run: python analysis/survival_v2/validate_standard_reference.py | tee b1-validation.txt
+      - name: Upload B1 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: survival-reference-validation
+          path: |
+            b1-environment.txt
+            b1-validation.txt
