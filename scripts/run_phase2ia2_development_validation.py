@@ -258,7 +258,7 @@ def self_test(device: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--training-root", type=Path, default=ROOT / "results" / "development" / "phase2ia2")
+    parser.add_argument("--training-root", type=Path, default=ROOT / "results" / "development" / "role_gate_phase2ia2" / "runs")
     parser.add_argument("--out-dir", type=Path, default=OUT)
     parser.add_argument("--episodes", type=int, default=50)
     parser.add_argument("--device", default="cpu")

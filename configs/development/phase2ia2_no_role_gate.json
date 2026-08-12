@@ -1,0 +1,23 @@
+{
+  "artifact_class": "DEVELOPMENT_ONLY",
+  "arm": "no_role_gate",
+  "seed_set": [101, 202, 303],
+  "env_name": "3d_intercept",
+  "target_policy": "straight",
+  "num_envs": 4,
+  "rollout_steps": 64,
+  "updates": 782,
+  "environment_steps": 200192,
+  "graph_encoder": "multi_relation",
+  "role_gate_mode": "none",
+  "role_gate_prior_strength": 0.4,
+  "multi_relation_global_residual_weight": 1.0,
+  "strict_target_sensing": true,
+  "agent_target_info_bottleneck": true,
+  "communication_dropout_prob": 0.3,
+  "message_delay_steps": 2,
+  "failed_blue_agent": 1,
+  "node_failure_start_step": 40,
+  "node_failure_duration_steps": 80,
+  "checkpoint_rule": "fixed_final_actor_critic_latest"
+}
