@@ -22,6 +22,19 @@ def main() -> None:
         pass
     else:
         raise AssertionError("hold length must be fixed at four")
+    # Integration-level timing check for the existing environment failure
+    # mechanism.  No policy action, performance field, or checkpoint is used.
+    from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv
+    env = UAVIntercept3DEnv(UAVIntercept3DConfig(seed=17, failed_blue_agent=-1, node_failure_duration_steps=0))
+    env.config.failed_blue_agent = 1
+    env.config.node_failure_start_step = 12
+    env.config.node_failure_duration_steps = 80
+    for step in (11, 92):
+        env.step_count = step
+        assert not env._is_comm_failed(1)
+    for step in (12, 91):
+        env.step_count = step
+        assert env._is_comm_failed(1)
     with tempfile.TemporaryDirectory() as tmp:
         assert not (Path(tmp) / "results").exists()
     print("PHASE2IA5_E0_EXECUTOR_UNIT_TEST=PASS")
