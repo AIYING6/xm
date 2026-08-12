@@ -42,29 +42,20 @@ condition passes.
 
 ## Interpretation
 
-**TASK-FEASIBILITY GATE F: FAIL**  
-**CURRENT NOMINAL TASK FORMULATION: CLOSED FOR RECOVERY-EFFICACY STUDY**  
+**TASK-FEASIBILITY GATE F: INVALIDATED BY PHASE2IA7 TERMINAL-SEMANTICS AUDIT**  
+**CURRENT NOMINAL TASK FORMULATION: UNRESOLVED (NOT CLOSED)**  
 **ROLE-GATE RETENTION: UNRESOLVED**  
 **ARCHITECTURE FREEZE: NO-GO**  
 **PHASE 3A: NO-GO**
 
-The structural-controller failure is evidence that the present nominal task
-does not furnish a usable sustained-chain population even under this
-transparent pursuit probe. It is not a proof that no conceivable controller
-could ever do so; it is, however, sufficient to reject further algorithmic
-training under this protocol because the task's prerequisite has not been
-demonstrated.
+This Gate F result was later invalidated: `chain_closed` is terminal on its
+first true timestep, so four consecutive `chain_closed` observations cannot
+occur. The zero count must not be interpreted as evidence that the task lacks
+a usable sustained-support population. See
+`PHASE2IA7_TERMINAL_SEMANTICS_AUDIT.md`.
 
 ## Required stopping rule
 
-Do not respond by expanding seeds, choosing a more favorable controller after
-seeing this result, weakening the chain condition, changing the failure
-endpoint, or launching a larger learning run. Those actions would turn a task
-feasibility failure into result-driven task design.
-
-If the research is to continue, the user must first authorize a new scientific
-scope decision: an independently justified task/environment redesign proposal
-that states the real application regime, why a sustained chain should be
-reachable there, and how it will be kept distinct from this negative result.
-That proposal is outside Phase 2IA6 and cannot be inferred or implemented
-automatically.
+Do not expand seeds, choose a more favorable controller, weaken the endpoint,
+or launch a larger learning run. The only permitted continuation is the
+separate Phase2IA7 semantic correction path.
