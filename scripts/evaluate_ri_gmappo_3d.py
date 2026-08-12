@@ -135,6 +135,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         graph_relation_ablation=args.graph_relation_ablation,
         graph_encoder=args.graph_encoder,
         graph_message_ablation=args.graph_message_ablation,
+        role_gate_mode=getattr(args, "role_gate_mode", "relation_conditioned"),
         graph_input_ablation=args.graph_input_ablation,
         multi_relation_global_residual_weight=getattr(args, "multi_relation_global_residual_weight", 1.0),
         device=args.device,
@@ -178,6 +179,7 @@ def build_agent(args: argparse.Namespace, cfg: RIGMAPPOConfig) -> tuple[RIGMAPPO
         graph_encoder=args.graph_encoder,
         graph_message_ablation=args.graph_message_ablation,
         graph_input_ablation=args.graph_input_ablation,
+        role_gate_mode=cfg.role_gate_mode,
         multi_relation_global_residual_weight=getattr(args, "multi_relation_global_residual_weight", 1.0),
         use_intent_context=False,
     )
@@ -703,6 +705,7 @@ def main() -> None:
     parser.add_argument("--graph-encoder", choices=("no_graph", "single", "multi_relation"), default="single")
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
+    parser.add_argument("--role-gate-mode", choices=("none", "shared", "relation_conditioned"), default="relation_conditioned")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
     parser.add_argument("--multi-relation-global-residual-weight", type=float, default=1.0)
     parser.add_argument("--device", type=str, default="cpu")

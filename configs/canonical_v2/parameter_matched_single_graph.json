@@ -1,0 +1,8 @@
+{
+  "canonical_method": "Parameter-Matched Single-Graph",
+  "graph_encoder": "single",
+  "hidden_dim": 115,
+  "role_dim": 8,
+  "intent_dim": 8,
+  "relation_semantics": "merged adjacency only"
+}

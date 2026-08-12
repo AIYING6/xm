@@ -23,6 +23,7 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--graph-encoder", choices=("no_graph", "single", "multi_relation"), default="single")
     parser.add_argument("--graph-relation-ablation", choices=("none", "no_task_support"), default="none")
     parser.add_argument("--graph-message-ablation", choices=("none", "no_role_pair_gate"), default="none")
+    parser.add_argument("--role-gate-mode", choices=("none", "shared", "relation_conditioned"), default="relation_conditioned")
     parser.add_argument("--graph-input-ablation", choices=("none", "no_edge_features", "no_role_identity"), default="none")
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--actor-lr", type=float, default=None)
@@ -102,6 +103,7 @@ def parse_args() -> RIGMAPPOConfig:
         graph_encoder=args.graph_encoder,
         graph_relation_ablation=args.graph_relation_ablation,
         graph_message_ablation=args.graph_message_ablation,
+        role_gate_mode=args.role_gate_mode,
         graph_input_ablation=args.graph_input_ablation,
         lr=args.lr,
         actor_lr=args.actor_lr,

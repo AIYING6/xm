@@ -1,0 +1,7 @@
+{
+  "canonical_method": "MAPPO",
+  "graph_encoder": "no_graph",
+  "hidden_dim": 64,
+  "role_dim": 8,
+  "intent_dim": 8
+}

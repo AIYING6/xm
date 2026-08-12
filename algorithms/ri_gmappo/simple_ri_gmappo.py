@@ -57,6 +57,7 @@ class RIGMAPPOConfig:
     graph_encoder: str = "single"
     graph_relation_ablation: str = "none"
     graph_message_ablation: str = "none"
+    role_gate_mode: str = "relation_conditioned"
     graph_input_ablation: str = "none"
     lr: float = 3e-4
     actor_lr: float | None = None
@@ -194,7 +195,7 @@ class GraphAttentionLayer(nn.Module):
 class RoleConditionedGraphAttentionLayer(nn.Module):
     """Graph attention with receiver-sender role-conditioned message gates."""
 
-    def __init__(self, in_dim: int, out_dim: int, num_roles: int, edge_dim: int = 0, use_role_pair_gate: bool = True):
+    def __init__(self, in_dim: int, out_dim: int, num_roles: int, edge_dim: int = 0, use_role_pair_gate: bool = True, shared_gate: nn.Embedding | None = None):
         super().__init__()
         self.num_roles = num_roles
         self.use_role_pair_gate = use_role_pair_gate
@@ -208,8 +209,9 @@ class RoleConditionedGraphAttentionLayer(nn.Module):
                 nn.Linear(out_dim, 1, bias=False),
             )
             nn.init.zeros_(self.edge_score[-1].weight)
-        self.role_pair_gate = nn.Embedding(num_roles * num_roles, out_dim)
-        nn.init.zeros_(self.role_pair_gate.weight)
+        self.role_pair_gate = None if not use_role_pair_gate else (shared_gate if shared_gate is not None else nn.Embedding(num_roles * num_roles, out_dim))
+        if self.role_pair_gate is not None and shared_gate is None:
+            nn.init.zeros_(self.role_pair_gate.weight)
         self.leaky_relu = nn.LeakyReLU(0.2)
 
     def forward(
@@ -234,19 +236,23 @@ class RoleConditionedGraphAttentionLayer(nn.Module):
         receiver_role = role.long().unsqueeze(2)
         sender_role = role.long().unsqueeze(1)
         pair_index = receiver_role * self.num_roles + sender_role
-        gate = torch.sigmoid(self.role_pair_gate(pair_index)) if self.use_role_pair_gate else torch.full_like(hj, 0.5)
+        gate = torch.sigmoid(self.role_pair_gate(pair_index)) if self.role_pair_gate is not None else torch.ones_like(hj)
         out = torch.sum(weights.unsqueeze(-1) * hj * gate, dim=2)
         return torch.tanh(out), weights
 
     def initialize_role_pair_prior(self, pairs: list[tuple[int, int]], strength: float) -> None:
         if not self.use_role_pair_gate or strength <= 0.0:
             return
+        if not 0.0 < strength < 1.0:
+            raise ValueError("role_gate_prior_strength must be a probability in (0, 1)")
+        logit = math.log(strength / (1.0 - strength))
         with torch.no_grad():
             for receiver_role, sender_role in pairs:
                 if receiver_role >= self.num_roles or sender_role >= self.num_roles:
                     continue
                 pair_index = receiver_role * self.num_roles + sender_role
-                self.role_pair_gate.weight[pair_index].fill_(float(strength))
+                assert self.role_pair_gate is not None
+                self.role_pair_gate.weight[pair_index].fill_(float(logit))
 
 
 class MultiRelationGraphEncoder(nn.Module):
@@ -261,16 +267,26 @@ class MultiRelationGraphEncoder(nn.Module):
         use_role_pair_gate: bool = True,
         role_gate_prior_strength: float = 0.0,
         global_residual_weight: float = 1.0,
+        role_gate_mode: str = "relation_conditioned",
     ):
         super().__init__()
         if global_residual_weight < 0.0:
             raise ValueError("global_residual_weight must be non-negative")
         self.num_relations = num_relations
         self.global_residual_weight = float(global_residual_weight)
+        if role_gate_mode not in {"none", "shared", "relation_conditioned"}:
+            raise ValueError(f"Unsupported role_gate_mode: {role_gate_mode}")
+        self.role_gate_mode = role_gate_mode
+        shared_gate = None
+        if role_gate_mode == "shared":
+            shared_gate = nn.Embedding(num_roles * num_roles, hidden_dim)
+            nn.init.zeros_(shared_gate.weight)
         self.layer1 = nn.ModuleList(
             [
                 RoleConditionedGraphAttentionLayer(
-                    hidden_dim, hidden_dim, num_roles, edge_dim, use_role_pair_gate=use_role_pair_gate
+                    hidden_dim, hidden_dim, num_roles, edge_dim,
+                    use_role_pair_gate=use_role_pair_gate and role_gate_mode != "none",
+                    shared_gate=shared_gate,
                 )
                 for _ in range(num_relations)
             ]
@@ -278,7 +294,9 @@ class MultiRelationGraphEncoder(nn.Module):
         self.layer2 = nn.ModuleList(
             [
                 RoleConditionedGraphAttentionLayer(
-                    hidden_dim, hidden_dim, num_roles, edge_dim, use_role_pair_gate=use_role_pair_gate
+                    hidden_dim, hidden_dim, num_roles, edge_dim,
+                    use_role_pair_gate=use_role_pair_gate and role_gate_mode != "none",
+                    shared_gate=shared_gate,
                 )
                 for _ in range(num_relations)
             ]
@@ -394,6 +412,7 @@ class RIActor(nn.Module):
         use_intent_context: bool = True,
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
+        role_gate_mode: str = "relation_conditioned",
     ):
         super().__init__()
         if graph_encoder not in {"no_graph", "single", "multi_relation"}:
@@ -428,6 +447,7 @@ class RIActor(nn.Module):
                 use_role_pair_gate=graph_message_ablation != "no_role_pair_gate",
                 role_gate_prior_strength=role_gate_prior_strength,
                 global_residual_weight=multi_relation_global_residual_weight,
+                role_gate_mode=role_gate_mode,
             )
         self.intent_head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
@@ -561,6 +581,7 @@ class RIGMAPPOAgent(nn.Module):
         use_intent_context: bool = True,
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
+        role_gate_mode: str = "relation_conditioned",
     ):
         super().__init__()
         self.num_agents = num_agents
@@ -580,6 +601,7 @@ class RIGMAPPOAgent(nn.Module):
             use_intent_context=use_intent_context,
             role_gate_prior_strength=role_gate_prior_strength,
             multi_relation_global_residual_weight=multi_relation_global_residual_weight,
+            role_gate_mode=role_gate_mode,
         )
         self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
 
@@ -954,6 +976,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         use_intent_context=cfg.env_name != "3d_intercept",
         role_gate_prior_strength=cfg.role_gate_prior_strength,
         multi_relation_global_residual_weight=cfg.multi_relation_global_residual_weight,
+        role_gate_mode=cfg.role_gate_mode,
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     optimizer = make_optimizer(agent, cfg)

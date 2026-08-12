@@ -1,0 +1,11 @@
+{
+  "canonical_method": "EA-RG-MAPPO-S",
+  "graph_encoder": "multi_relation",
+  "role_gate_mode": "relation_conditioned",
+  "role_gate_prior_strength": 0.4,
+  "role_gate_prior_semantics": "probability; initialized as logit(log(p/(1-p)))",
+  "multi_relation_global_residual_weight": 1.0,
+  "hidden_dim": 64,
+  "role_dim": 8,
+  "intent_dim": 8
+}
