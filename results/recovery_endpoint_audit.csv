@@ -1,0 +1,7 @@
+scenario,method,n_episodes,reported_post_failure_recovered_mean,reported_recovered_after_loss_mean,reported_unrecovered_mean,strict_pre_established_field_present,strict_recovered_after_loss_field_present,strict_recovery_cohort_reconstructable
+dropout030_relay_failure,multi_relation,500,0.880000,0.880000,0.120000,False,True,False
+dropout030_relay_failure,no_graph,500,0.218000,0.218000,0.782000,False,True,False
+dropout030_relay_failure,single,500,0.538000,0.538000,0.462000,False,True,False
+dropout030_relay_failure_early,multi_relation,500,0.882000,0.882000,0.118000,False,True,False
+dropout030_relay_failure_early,no_graph,500,0.232000,0.232000,0.768000,False,True,False
+dropout030_relay_failure_early,single,500,0.466000,0.466000,0.534000,False,True,False
