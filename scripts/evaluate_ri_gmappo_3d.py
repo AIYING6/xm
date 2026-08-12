@@ -561,8 +561,7 @@ def evaluate(args: argparse.Namespace) -> list[dict[str, float | int | str | boo
                     graph_list[env_i] = graph
                     if np.all(dones):
                         episode = batch_episodes[env_i]
-                        rows.append(
-                            build_episode_row(
+                        episode_row = build_episode_row(
                                 args=args,
                                 policy_source=policy_source,
                                 seed=args.base_seed + episode,
@@ -571,9 +570,78 @@ def evaluate(args: argparse.Namespace) -> list[dict[str, float | int | str | boo
                                 final=info,
                                 reward_sum=reward_sums[env_i],
                             )
-                        )
+                        rows.append(episode_row)
+                        trace_path = getattr(args, "timestep_trace_path", None)
+                        if trace_path is not None:
+                            append_chain_timestep_trace(
+                                trace_path,
+                                episode_row=episode_row,
+                                step_infos=step_infos_list[env_i],
+                                episode_id_base=getattr(args, "episode_id_base", None),
+                                episode_index=episode,
+                            )
                         active[env_i] = False
     return rows
+
+
+CHAIN_TRACE_COLUMNS = (
+    "episode_id", "timestep", "t_failure", "chain_valid_t", "node_failure_active",
+    "perception_chain_valid_t", "communication_chain_valid_t", "task_support_chain_valid_t",
+    "pre_failure_chain_established", "t_first_chain_establishment", "chain_lost_after_failure",
+    "t_loss", "post_failure_chain_recovered_after_loss", "t_recovery", "delta_t_loss_to_recovery",
+    "terminal", "terminal_reason", "success", "collision", "timeout", "comm_connectivity",
+    "mean_message_age", "tracking_rate", "attacker_info_attack_window",
+)
+
+
+def append_chain_timestep_trace(path: Path, episode_row: dict, step_infos: list[dict[str, float]], episode_id_base: int | None = None, episode_index: int = 0) -> None:
+    """Persist raw timestep observables without changing evaluation behavior.
+
+    The trace is deliberately written after an episode terminates. It is an
+    instrumentation side effect only: action selection and endpoint fields are
+    computed exactly as in the non-trace path.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pre = float(episode_row.get("pre_failure_chain_established", 0.0)) > 0.5
+    t_first = float(episode_row.get("post_failure_first_chain_step", -1.0))
+    t_failure = float(episode_row.get("t_failure", -1.0))
+    t_loss = float(episode_row.get("t_loss", -1.0))
+    t_recovery = float(episode_row.get("t_recovery", -1.0))
+    rows = []
+    for info in step_infos:
+        timestep = int(float(info.get("step", -1)))
+        failure_active = float(info.get("node_failure_active", 0.0)) > 0.5
+        chain_valid = float(info.get("chain_closed", 0.0))
+        rows.append({
+            "episode_id": (episode_id_base + episode_index) if episode_id_base is not None else episode_row.get("episode", -1),
+            "timestep": timestep,
+            "t_failure": t_failure,
+            "chain_valid_t": chain_valid,
+            "node_failure_active": float(failure_active),
+            "perception_chain_valid_t": float(info.get("perception_chain_valid", float("nan"))),
+            "communication_chain_valid_t": float(info.get("communication_chain_valid", float("nan"))),
+            "task_support_chain_valid_t": float(info.get("task_support_chain_valid", float("nan"))),
+            "pre_failure_chain_established": float(pre),
+            "t_first_chain_establishment": t_first,
+            "chain_lost_after_failure": float(episode_row.get("chain_lost_after_failure", 0.0)),
+            "t_loss": t_loss,
+            "post_failure_chain_recovered_after_loss": float(episode_row.get("post_failure_chain_recovered_after_loss", 0.0)),
+            "t_recovery": t_recovery,
+            "delta_t_loss_to_recovery": float(episode_row.get("delta_t_loss_to_recovery", -1.0)),
+            "terminal": float(timestep == int(float(episode_row.get("censor_time", -2)))),
+            "terminal_reason": "success" if float(episode_row.get("success", 0.0)) > 0.5 else "collision" if float(episode_row.get("collision", 0.0)) > 0.5 else "timeout" if float(episode_row.get("timeout", 0.0)) > 0.5 else "terminal",
+            "success": episode_row.get("success", 0.0), "collision": episode_row.get("collision", 0.0),
+            "timeout": episode_row.get("timeout", 0.0), "comm_connectivity": info.get("comm_connectivity", float("nan")),
+            "mean_message_age": info.get("mean_message_age", float("nan")), "tracking_rate": info.get("tracking_rate", float("nan")),
+            "attacker_info_attack_window": info.get("attacker_info_attack_window", float("nan")),
+        })
+    write_header = not path.exists() or path.stat().st_size == 0
+    with path.open("a", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=CHAIN_TRACE_COLUMNS)
+        if write_header:
+            writer.writeheader()
+        writer.writerows(rows)
 
 
 def write_csv(rows: list[dict[str, float | int | str | bool]], out_csv: Path) -> None:
