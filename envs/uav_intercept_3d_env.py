@@ -958,6 +958,15 @@ class UAVIntercept3DEnv:
             "tracking_rate": float(np.mean(self.detected_by)),
             "attack_window_rate": float(np.mean(self.attack_window)),
             "attack_geometry_score": self._attack_geometry_score(),
+            # P2IA8 instrumentation: exact nonterminal condition used above
+            # to advance attack_hold in default (non-v16) task execution.
+            # It is logged only; dynamics, reward, success, and termination
+            # remain unchanged.
+            "chain_support_t": float(
+                float(np.max(self.attack_window)) > 0.5
+                and float(np.mean(self.detected_by)) > 0.0
+                and self._comm_has_chain_to_attacker()
+            ),
             "chain_closed": float(self.attack_hold >= self.config.attack_hold_steps),
             "min_success_step": float(self.config.min_success_step),
             "post_loss_chain_reclosure_bonus": float(self.post_loss_chain_reclosure_bonus),
