@@ -10,15 +10,17 @@ import csv
 import hashlib
 import json
 import shutil
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 
-from scripts.evaluate_ri_gmappo_3d import CSV_COLUMNS, evaluate
+from evaluate_ri_gmappo_3d import CSV_COLUMNS, evaluate
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 OUT = ROOT / "results" / "development" / "role_gate_phase2ia4"
 ARMS = {"full_gate": "relation_conditioned", "no_role_gate": "none"}
 SEEDS = (101, 202, 303)
@@ -75,9 +77,13 @@ def run(args: argparse.Namespace) -> tuple[list[dict], dict]:
             checkpoint = args.training_root / arm / f"seed{seed}" / "actor_critic_latest.pt"
             if not checkpoint.exists():
                 raise FileNotFoundError(checkpoint)
-            manifest["arms"][arm]["seeds"][str(seed)] = {"checkpoint": str(checkpoint.relative_to(ROOT)), "sha256": sha256(checkpoint)}
+            manifest["arms"][arm]["seeds"][str(seed)] = {"checkpoint": str(checkpoint), "sha256": sha256(checkpoint)}
             for scenario_index, (scenario, failure_start) in enumerate(SCENARIOS):
+                if scenario_index not in args.scenario_indices:
+                    continue
                 trace = args.out_dir / "raw_timestep_chain" / f"{arm}_seed{seed}_{scenario}.csv"
+                if trace.exists():
+                    trace.unlink()
                 result = evaluate(args_for(checkpoint, arm, seed, scenario_index, failure_start, args.episodes, args.device, trace))
                 for row in result:
                     row.update({"artifact_class": "DEVELOPMENT_ONLY", "arm": arm, "train_seed": seed,
@@ -134,14 +140,20 @@ def main() -> None:
     p.add_argument("--device", default="cuda")
     p.add_argument("--arms", nargs="+", choices=tuple(ARMS), default=list(ARMS))
     p.add_argument("--seeds", nargs="+", type=int, choices=SEEDS, default=list(SEEDS))
+    p.add_argument("--scenario-indices", nargs="+", type=int, choices=range(len(SCENARIOS)), default=list(range(len(SCENARIOS))))
     args = p.parse_args()
     raw, manifest = run(args)
-    write_csv(args.out_dir / "raw_validation" / "episode_metrics.csv", raw)
+    raw_path = args.out_dir / "raw_validation" / "episode_metrics.csv"
+    if raw_path.exists():
+        existing = list(csv.DictReader(raw_path.open(newline="", encoding="utf-8")))
+        keys = {(r["arm"], str(r["train_seed"]), r["scenario"], str(r["episode"])) for r in existing}
+        raw = existing + [r for r in raw if (r["arm"], str(r["train_seed"]), r["scenario"], str(r["episode"])) not in keys]
+    write_csv(raw_path, raw)
     cohorts, per_scenario, arms = summarize(raw)
     write_csv(args.out_dir / "summaries" / "cohort_classification.csv", cohorts)
     write_csv(args.out_dir / "summaries" / "per_seed_scenario.csv", per_scenario)
     write_csv(args.out_dir / "summaries" / "arm_summary.csv", arms)
-    manifest["raw_validation_sha256"] = sha256(args.out_dir / "raw_validation" / "episode_metrics.csv")
+    manifest["raw_validation_sha256"] = sha256(raw_path)
     (args.out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(arms, indent=2))
 
