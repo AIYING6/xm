@@ -1,61 +1,36 @@
-# Recovery Endpoint Protocol v2
+# Recovery endpoint protocol v2
 
-Status: **FROZEN for Phase 2 evidence repair**
+This endpoint is frozen for canonical confirmatory evaluation. It must not be changed after inspecting results.
 
-Frozen on: 2026-08-12
+## Primary strict endpoint
 
-This protocol defines episode-level endpoint semantics before any re-evaluation. It does not alter training, reward, observation, communication, failure timing, checkpoint selection, or evaluation scenarios.
-
-## Primary strict recovery endpoint
+An episode enters the primary cohort only when all three conditions are true:
 
 ```text
-pre_failure_chain_established == True
-AND chain_lost_after_failure == True
-AND post_failure_chain_recovered_after_loss == True
+pre_failure_chain_established
+AND chain_lost_after_failure
+AND post_failure_chain_recovered_after_loss
 ```
 
-## Time definitions
+For this cohort:
 
-- `t_failure`: failure onset step.
-- `t_loss`: first step at or after `t_failure` at which a previously established chain is no longer closed.
-- `t_recovery`: first step after `t_loss` at which the chain satisfies the stable-closure rule for the required hold window.
-- `delta_t_loss_to_recovery = t_recovery - t_loss` for strict recovery events.
-- `event = 1` for strict recovery; otherwise `event = 0`.
-- `censor_time`: available observation duration after `t_loss` when strict recovery is not observed.
+```text
+t_loss = first post-failure time at which the established chain is lost
+t_recovery = first subsequent time at which the post-failure chain is re-established
+delta_t_loss_to_recovery = t_recovery - t_loss
+event = 1 if the strict recovery occurs by censor_time; otherwise event = 0
+```
 
-Episodes without a valid pre-failure chain or without a valid `t_loss` are reported as separate cohorts and are not silently treated as right-censored strict recovery episodes.
+Episodes without a pre-failure chain, without a post-failure loss, or without a post-loss recovery opportunity are not silently treated as slow recoveries. They are recorded with explicit cohort flags and excluded from the strict duration cohort according to the pre-registered cohort table.
 
 ## Secondary operational endpoint
 
-Retain the legacy quantity as a separate endpoint:
+The secondary endpoint is post-failure first chain establishment/closure from failure onset. It is retained for operational interpretation and must not replace the primary strict endpoint.
 
-```text
-post-failure first chain establishment/closure from failure onset
-```
+## Frozen episode schema
 
-It must not be called strict re-establishment recovery.
+`pre_failure_chain_established`, `chain_lost_after_failure`, `t_failure`, `t_loss`, `post_failure_chain_recovered_after_loss`, `t_recovery`, `delta_t_loss_to_recovery`, `post_failure_chain_first_established`, `event`, and `censor_time` are required episode-level fields. Missing values are not imputed. A schema validator must fail closed when required fields or provenance identifiers are absent.
 
-## Required episode-level schema
+## Provenance rule
 
-Every re-evaluation row must contain at least:
-
-```text
-method, seed, episode, scenario, checkpoint_update, checkpoint_sha256,
-pre_failure_chain_established, chain_lost_after_failure, t_failure, t_loss,
-post_failure_chain_recovered_after_loss, t_recovery,
-delta_t_loss_to_recovery, post_failure_chain_first_established,
-event, censor_time, post_failure_first_chain_step, success, collision, timeout
-```
-
-## Reporting rules
-
-1. No episode may be excluded because its result is unfavorable.
-2. Episodes without pre-failure establishment are a separate descriptive cohort.
-3. Episodes with pre-establishment but no loss are maintained-chain episodes, not strict recovery events.
-4. Episodes with loss but no re-closure are right-censored at available follow-up.
-5. Risk-set construction, stable hold window, censoring rule, and all tau values must be recorded in provenance.
-6. The primary endpoint cannot be changed after inspecting results.
-
-## Survival estimands
-
-For the strict risk set, report event proportion, Kaplan–Meier curve, RMST at preregistered tau values, seed-level effects, hierarchical bootstrap intervals, and counts of non-risk-set cohorts. Legacy onset-based RMST is secondary and must be renamed consistently.
+The endpoint definition, cohort counts, raw episode rows, derived survival rows, and every checkpoint must be linked by method, seed, config SHA, checkpoint SHA, evaluation protocol, and code snapshot. Historical files that do not satisfy this contract remain legacy evidence.
