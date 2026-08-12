@@ -45,6 +45,8 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--eval-interval", type=int, default=10)
     parser.add_argument("--eval-episodes", type=int, default=20)
     parser.add_argument("--eval-base-seed", type=int, default=None)
+    parser.add_argument("--disable-evaluation", action="store_true")
+    parser.add_argument("--role-gate-telemetry", action="store_true")
     parser.add_argument("--target-policy", type=str, default="mixed")
     parser.add_argument("--target-speed", type=float, default=0.75)
     parser.add_argument("--communication-radius", type=float, default=8.0)
@@ -125,6 +127,8 @@ def parse_args() -> RIGMAPPOConfig:
         eval_interval=args.eval_interval,
         eval_episodes=args.eval_episodes,
         eval_base_seed=args.eval_base_seed,
+        evaluation_enabled=not args.disable_evaluation,
+        role_gate_telemetry=args.role_gate_telemetry,
         target_policy=args.target_policy,
         target_speed=args.target_speed,
         communication_radius=args.communication_radius,

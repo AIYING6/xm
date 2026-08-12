@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import List
 
 import csv
+import math
 import random
+from contextlib import nullcontext
 
 import numpy as np
 import torch
@@ -83,6 +85,7 @@ class RIGMAPPOConfig:
     eval_interval: int = 10
     eval_episodes: int = 20
     eval_base_seed: int | None = None
+    evaluation_enabled: bool = True
     target_policy: str = "mixed"
     target_speed: float = 0.75
     communication_radius: float = 8.0
@@ -138,6 +141,7 @@ class RIGMAPPOConfig:
     resume: str | None = None
     update_offset: int = 0
     append_log: bool = False
+    role_gate_telemetry: bool = False
 
 
 class MLP(nn.Module):
@@ -984,8 +988,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         load_matching_state_dict(agent, cfg.init_checkpoint, device)
     if cfg.resume:
         load_training_checkpoint(agent, optimizer, cfg.resume, device)
+    agent._role_gate_initial_state = {
+        name: parameter.detach().clone()
+        for name, parameter in agent.named_parameters()
+        if "role_pair_gate" in name
+    }
 
     log_path = out_dir / "train_log.csv"
+    telemetry_path = out_dir / "role_gate_telemetry.csv"
     fieldnames = [
         "update",
         "loss",
@@ -1010,13 +1020,27 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "eval_avg_steps",
         "eval_avg_distance",
         "eval_intent_acc",
+        "role_gate_grad_norm",
+        "role_gate_mean",
+        "role_gate_std",
+        "role_gate_min",
+        "role_gate_max",
+        "role_gate_displacement_l2",
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
-    with log_path.open(mode, newline="", encoding="utf-8") as f:
+    with log_path.open(mode, newline="", encoding="utf-8") as f, (
+        telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
+    ) as telemetry_file:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
+        telemetry_writer = None
+        if cfg.role_gate_telemetry:
+            telemetry_fields = ["update", "relation", "receiver_role", "sender_role", "edge_count", "attention_mean", "gate_mean", "effective_payload_mean"]
+            telemetry_writer = csv.DictWriter(telemetry_file, fieldnames=telemetry_fields)
+            if not cfg.append_log or not telemetry_path.exists() or telemetry_path.stat().st_size == 0:
+                telemetry_writer.writeheader()
         f.flush()
         best_eval_key = (-1.0, float("-inf"), float("-inf"), float("-inf"))
         for local_update in range(1, cfg.updates + 1):
@@ -1025,7 +1049,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
             train_info = update_policy(agent, optimizer, batch, cfg, device, update)
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
-            if update % cfg.eval_interval == 0 or update == 1:
+            if telemetry_writer is not None:
+                for telemetry_row in summarize_role_gate_telemetry(agent, batch, device):
+                    telemetry_writer.writerow({"update": update, **telemetry_row})
+                telemetry_file.flush()
+            if cfg.evaluation_enabled and (update % cfg.eval_interval == 0 or update == 1):
                 eval_base_seed = cfg.eval_base_seed if cfg.eval_base_seed is not None else 10_000 + update * 100
                 row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))
                 print(row, flush=True)
@@ -1251,6 +1279,54 @@ def build_chain_aux_targets(node_feat: torch.Tensor, edge_feat: torch.Tensor, re
     )
 
 
+def summarize_role_gate_telemetry(agent: RIGMAPPOAgent, batch: dict, device: torch.device) -> list[dict[str, float | int]]:
+    """Summarize final-layer legal-edge attention, gate, and their product.
+
+    This is development telemetry only.  It runs after an update under no-grad and
+    never contributes to the optimization graph or action selection.
+    """
+    if agent.actor.graph_encoder != "multi_relation":
+        return []
+    num_graphs = min(256, batch["obs"].shape[0] * batch["obs"].shape[1])
+    obs = torch.as_tensor(batch["obs"].reshape(-1, agent.num_agents, batch["obs"].shape[-1])[:num_graphs], dtype=torch.float32, device=device)
+    node_feat = torch.as_tensor(batch["node_feat"].reshape(-1, *batch["node_feat"].shape[2:])[:num_graphs], dtype=torch.float32, device=device)
+    edge_feat = torch.as_tensor(batch["edge_feat"].reshape(-1, *batch["edge_feat"].shape[2:])[:num_graphs], dtype=torch.float32, device=device)
+    role = torch.as_tensor(batch["role"].reshape(-1, batch["role"].shape[-1])[:num_graphs], dtype=torch.long, device=device)
+    adj = torch.as_tensor(batch["adj"].reshape(-1, *batch["adj"].shape[2:])[:num_graphs], dtype=torch.float32, device=device)
+    relation_adj = torch.as_tensor(batch["relation_adj"].reshape(-1, *batch["relation_adj"].shape[2:])[:num_graphs], dtype=torch.float32, device=device)
+    with torch.no_grad():
+        _, attention, _, _ = agent.actor(
+            obs, node_feat, edge_feat, role, adj, agent.num_agents,
+            relation_adj=relation_adj, return_chain_aux=True,
+        )
+    encoder = agent.actor.multi_relation_graph
+    rows: list[dict[str, float | int]] = []
+    for relation_id, layer in enumerate(encoder.layer2):
+        active = relation_adj[:, relation_id] > 0.0
+        for receiver_role in range(agent.num_roles):
+            for sender_role in range(agent.num_roles):
+                pair_mask = active & (role.unsqueeze(2) == receiver_role) & (role.unsqueeze(1) == sender_role)
+                count = int(pair_mask.sum().item())
+                if count == 0:
+                    continue
+                if layer.role_pair_gate is None:
+                    gate_scalar = torch.ones((), device=device)
+                else:
+                    pair_index = receiver_role * agent.num_roles + sender_role
+                    gate_scalar = torch.sigmoid(layer.role_pair_gate.weight[pair_index]).mean()
+                alpha = attention[:, relation_id][pair_mask]
+                rows.append({
+                    "relation": relation_id,
+                    "receiver_role": receiver_role,
+                    "sender_role": sender_role,
+                    "edge_count": count,
+                    "attention_mean": float(alpha.mean().cpu()),
+                    "gate_mean": float(gate_scalar.cpu()),
+                    "effective_payload_mean": float((alpha * gate_scalar).mean().cpu()),
+                })
+    return rows
+
+
 def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict, cfg: RIGMAPPOConfig, device, update: int):
     t_steps, n_envs, num_agents = batch["actions"].shape
     num_graphs = t_steps * n_envs
@@ -1275,6 +1351,7 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
     losses, policy_losses, value_losses, entropies, intent_losses, intent_accs = [], [], [], [], [], []
     chain_aux_losses, chain_aux_accs = [], []
     approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], []
+    gate_grad_norms, gate_means, gate_stds, gate_mins, gate_maxs, gate_displacements = [], [], [], [], [], []
     indices = np.arange(num_graphs)
     epochs_ran = 0
     stop_ppo = False
@@ -1349,8 +1426,34 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
 
             optimizer.zero_grad()
             loss.backward()
+            gate_grads = [
+                parameter.grad.detach()
+                for name, parameter in agent.named_parameters()
+                if "role_pair_gate" in name and parameter.grad is not None
+            ]
+            gate_grad_norms.append(
+                float(torch.sqrt(sum(gradient.square().sum() for gradient in gate_grads)).cpu()) if gate_grads else 0.0
+            )
             grad_norm = nn.utils.clip_grad_norm_(agent.parameters(), cfg.max_grad_norm)
             optimizer.step()
+
+            gates = [
+                torch.sigmoid(parameter.detach())
+                for name, parameter in agent.named_parameters()
+                if "role_pair_gate" in name
+            ]
+            if gates:
+                gate_values = torch.cat([gate.reshape(-1) for gate in gates])
+                gate_means.append(float(gate_values.mean().cpu()))
+                gate_stds.append(float(gate_values.std(unbiased=False).cpu()))
+                gate_mins.append(float(gate_values.min().cpu()))
+                gate_maxs.append(float(gate_values.max().cpu()))
+                displacement_sq = sum(
+                    (parameter.detach() - agent._role_gate_initial_state[name].to(parameter.device)).square().sum()
+                    for name, parameter in agent.named_parameters()
+                    if name in agent._role_gate_initial_state
+                )
+                gate_displacements.append(float(torch.sqrt(displacement_sq).cpu()))
 
             losses.append(float(loss.detach().cpu()))
             policy_losses.append(float(policy_loss.detach().cpu()))
@@ -1384,4 +1487,10 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
         "explained_variance": float(np.mean(explained_variances)),
         "ppo_epochs_ran": epochs_ran,
         "critic_warmup_active": float(critic_warmup_active),
+        "role_gate_grad_norm": float(np.mean(gate_grad_norms)) if gate_grad_norms else 0.0,
+        "role_gate_mean": float(np.mean(gate_means)) if gate_means else 1.0,
+        "role_gate_std": float(np.mean(gate_stds)) if gate_stds else 0.0,
+        "role_gate_min": float(np.mean(gate_mins)) if gate_mins else 1.0,
+        "role_gate_max": float(np.mean(gate_maxs)) if gate_maxs else 1.0,
+        "role_gate_displacement_l2": float(np.mean(gate_displacements)) if gate_displacements else 0.0,
     }

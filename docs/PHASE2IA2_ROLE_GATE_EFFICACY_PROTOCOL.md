@@ -1,6 +1,6 @@
 # Phase 2I-A2 Role-Gate efficacy closure protocol
 
-**Status:** frozen before development training  
+**Status:** frozen before development training
 **Scope:** `DEVELOPMENT_ONLY`; this is not canonical training, canonical evaluation, or manuscript evidence.
 
 ## Question and decision boundary
