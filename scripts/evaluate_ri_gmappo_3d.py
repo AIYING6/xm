@@ -183,6 +183,7 @@ def build_agent(args: argparse.Namespace, cfg: RIGMAPPOConfig) -> tuple[RIGMAPPO
         multi_relation_global_residual_weight=getattr(args, "multi_relation_global_residual_weight", 1.0),
         use_intent_context=False,
     )
+    agent = agent.to(args.device)
     if checkpoint is not None:
         load_matching_state_dict(agent, str(args.checkpoint), torch.device(args.device))
     agent.eval()
