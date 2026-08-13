@@ -54,20 +54,22 @@ def test_invalid_configuration_is_rejected() -> None:
         raise AssertionError("relay-dependent mode without strict prerequisites was accepted")
 
 
-def test_attacker_direct_sensor_is_disabled_but_scout_sensor_is_not() -> None:
+def test_attacker_direct_sensor_is_terminal_only_but_scout_sensor_is_not() -> None:
     env = UAVIntercept3DEnv(_cfg())
     env.reset()
     attacker = 2
     scout = 0
     # Put both platforms at the same valid radar pose. The difference must be
     # policy, not geometry.
-    env.blue_pos[attacker] = env.red_pos[0] - np.asarray([1_000.0, 0.0, 0.0], dtype=np.float32)
+    env.blue_pos[attacker] = env.red_pos[0] - np.asarray([6_000.0, 0.0, 0.0], dtype=np.float32)
     env.blue_pos[scout] = env.red_pos[0] - np.asarray([1_000.0, 0.0, 0.0], dtype=np.float32)
     env.blue_heading[attacker] = 0.0
     env.blue_heading[scout] = 0.0
     env.blue_gamma[attacker] = 0.0
     env.blue_gamma[scout] = 0.0
     assert not env._radar_visible(attacker, env.config.blue_types[attacker])
+    env.blue_pos[attacker] = env.red_pos[0] - np.asarray([1_000.0, 0.0, 0.0], dtype=np.float32)
+    assert env._radar_visible(attacker, env.config.blue_types[attacker])
     assert env._radar_visible(scout, env.config.blue_types[scout])
 
 
@@ -115,7 +117,7 @@ def test_legacy_mode_accepts_direct_attacker_sensing_and_cache() -> None:
 def main() -> None:
     for test in (
         test_invalid_configuration_is_rejected,
-        test_attacker_direct_sensor_is_disabled_but_scout_sensor_is_not,
+        test_attacker_direct_sensor_is_terminal_only_but_scout_sensor_is_not,
         test_bypass_cache_is_rejected_and_relay_cache_is_accepted,
         test_relay_failure_makes_relay_cache_unavailable_until_rebuilt,
         test_legacy_mode_accepts_direct_attacker_sensing_and_cache,

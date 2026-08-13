@@ -108,6 +108,7 @@ class UAVIntercept3DConfig:
     # Phase2IB relay-dependent task semantics. This remains opt-in so legacy
     # configurations preserve their original sensing and cache behavior.
     relay_dependent_task: bool = False
+    attacker_terminal_sensing_range: float = 5_000.0
     max_target_message_age_steps: int = 80
     min_target_confidence: float = 0.2
     # --- P3-A OOD eval-side extensions (default no-op; do not change prior behavior) ---
@@ -693,12 +694,16 @@ class UAVIntercept3DEnv:
         return cfg.node_failure_start_step <= self.step_count < cfg.node_failure_start_step + cfg.node_failure_duration_steps
 
     def _radar_visible(self, i: int, typ: UAV3DType) -> bool:
-        # Phase2IB models an emission-constrained terminal attacker.  This is
-        # a task-level sensing policy and is a no-op for legacy configurations.
-        if self.config.relay_dependent_task and typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
-            return False
         rel = self.red_pos[0] - self.blue_pos[i]
         dist = float(np.linalg.norm(rel))
+        # R0-R2 permits attacker sensing only inside the frozen terminal
+        # envelope. Outside it, the attacker must use delivered track data.
+        if (
+            self.config.relay_dependent_task
+            and typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}
+            and dist > self.config.attacker_terminal_sensing_range
+        ):
+            return False
         if dist > typ.radar_range:
             return False
         horizontal = math.atan2(float(rel[1]), float(rel[0]))
@@ -910,12 +915,17 @@ class UAVIntercept3DEnv:
         if float(self.target_cache_confidence[agent_id]) < float(self.config.min_target_confidence):
             return False
         if self._is_relay_dependent_attacker(agent_id):
-            if not self._attacker_cache_uses_required_relay(agent_id):
+            if not self._attacker_cache_path_is_legal(
+                agent_id, self.target_cache_path[agent_id], int(self.target_cache_delivery_step[agent_id])
+            ):
                 return False
             # The relay is a live targeting service in the new task. A cache
             # is retained for provenance, but is not actionable while its
             # required relay is in the frozen fault window.
-            if self._is_comm_failed(self._required_relay_id()):
+            if (
+                self._attacker_cache_uses_required_relay(agent_id)
+                and self._is_comm_failed(self._required_relay_id())
+            ):
                 return False
         return True
 
@@ -931,6 +941,19 @@ class UAVIntercept3DEnv:
 
     def _attacker_cache_uses_required_relay(self, agent_id: int) -> bool:
         return self._required_relay_id() in self.target_cache_path[agent_id]
+
+    def _attacker_cache_path_is_legal(self, agent_id: int, path: list[int], delivery_step: int | None = None) -> bool:
+        if self._required_relay_id() in path:
+            return True
+        # The direct Scout->Attacker path is a recovery route only after the
+        # relay fault and only when its cache was delivered after fault onset.
+        return (
+            self._is_relay_dependent_attacker(agent_id)
+            and path == [0, 2]
+            and self._is_comm_failed(self._required_relay_id())
+            and (self.target_cache_delivery_step[agent_id] if delivery_step is None else delivery_step)
+            >= self.config.node_failure_start_step
+        )
 
     def _target_cache_stale_rate(self) -> float:
         valid_ids = [i for i in range(self.config.num_blue) if self.target_cache_valid[i] > 0.5]
@@ -1028,8 +1051,17 @@ class UAVIntercept3DEnv:
             # reward, termination, or policy input consumes these fields.
             "attacker_direct_target_information_t": float(bool(attacker_direct_ids)),
             "attacker_fresh_cache_information_t": float(bool(attacker_cache_ids)),
-            "attacker_relay_required_fresh_information_t": float(
+    "attacker_relay_required_fresh_information_t": float(
                 any(self._attacker_cache_uses_required_relay(i) for i in attacker_cache_ids)
+            ),
+            "attacker_legal_target_information_t": float(bool(fresh_attacker_ids)),
+            "attacker_direct_recovery_path_t": float(
+                any(
+                    self._is_relay_dependent_attacker(i)
+                    and self.target_cache_path[i] == [0, 2]
+                    and self.target_cache_delivery_step[i] >= self.config.node_failure_start_step
+                    for i in attacker_ids
+                )
             ),
             "attacker_cache_source_ids_t": cache_sources_text,
             "attacker_cache_paths_t": cache_paths_text,
@@ -1351,8 +1383,11 @@ class UAVIntercept3DEnv:
 
     def _has_target_information(self, agent_id: int) -> bool:
         if self._is_relay_dependent_attacker(agent_id):
-            # Direct attacker sensing is disabled in this task; freshness
-            # additionally enforces an approved scout->relay->attacker path.
+            # In R0, direct sensing is legal only inside the terminal sensing
+            # envelope; otherwise freshness enforces a legal communication
+            # path (relay-routed pre-fault or direct Scout->Attacker recovery).
+            if self.detected_by[agent_id] > 0.5:
+                return True
             return self._has_fresh_target_cache(agent_id)
         if self.detected_by[agent_id] > 0.5:
             return True
@@ -1388,7 +1423,9 @@ class UAVIntercept3DEnv:
         confidence: float,
         path: list[int],
     ) -> None:
-        if self._is_relay_dependent_attacker(agent_id) and self._required_relay_id() not in path:
+        if self._is_relay_dependent_attacker(agent_id) and not self._attacker_cache_path_is_legal(
+            agent_id, path, delivery_step
+        ):
             # Generic geometry may allow a scout->attacker bypass, but such a
             # message is not a legal targeting source in Phase2IB. Reject it
             # before it can displace a valid relay-routed cache.
