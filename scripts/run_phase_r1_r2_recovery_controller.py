@@ -57,6 +57,7 @@ def run_one(controller: str, ci: int, seed: int, si: int, episode: int) -> tuple
             radar_dropout_prob=0.0, strict_target_sensing=True,
             agent_target_info_bottleneck=True, relay_dependent_task=True,
             failed_blue_agent=-1, node_failure_duration_steps=0, max_steps=260,
+            min_success_step=1000,
         )
     )
     obs, _, _ = env.reset()

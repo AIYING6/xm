@@ -696,6 +696,8 @@ class UAVIntercept3DEnv:
     def _radar_visible(self, i: int, typ: UAV3DType) -> bool:
         rel = self.red_pos[0] - self.blue_pos[i]
         dist = float(np.linalg.norm(rel))
+        if self.config.relay_dependent_task and typ.role == ROLE_RELAY:
+            return False
         # R0-R2 permits attacker sensing only inside the frozen terminal
         # envelope. Outside it, the attacker must use delivered track data.
         if (
