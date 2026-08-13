@@ -111,7 +111,11 @@ def run_one(controller: str, ci: int, seed: int, si: int, episode: int) -> tuple
         direct_path = float(info["attacker_direct_recovery_path_t"]) > 0.5
         terminal_sensing = float(info["attacker_direct_target_information_t"]) > 0.5 and active
         if loss is not None and (direct_path or terminal_sensing) and recovery is None: recovery = step
-        if trigger is not None and active and (env.comm_adj[2, 0] > 0.5 or env.detected_by[2] > 0.5): bypass = True
+        # Bypass audit is evaluated at the frozen fault trigger only. A
+        # post-fault Scout->Attacker link is the intended recovery mechanism,
+        # not a pre-fault dependency violation.
+        if trigger is not None and step == trigger and (env.comm_adj[2, 0] > 0.5 or env.detected_by[2] > 0.5):
+            bypass = True
         trace.append({"development_episode_id": eid(ci, si, episode), "controller": controller, "seed": seed,
                       "timestep": step, "relay_dependent_window": int(window), "node_failure_active": int(active),
                       "scout_detected": int(env.detected_by[0] > .5), "relay_detected": int(env.detected_by[1] > .5),
