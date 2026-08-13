@@ -66,7 +66,8 @@ def run_one(controller: str, condition: str, ci: int, seed: int, si: int, episod
     if condition == "relay_failure":
         env.config.failed_blue_agent = 1; env.config.node_failure_start_step = 44; env.config.node_failure_duration_steps = 80
     trace = []; actions_out: list[np.ndarray] = []; info_values = []
-    for step_index in range(260):
+    max_steps = 260 if action_tape is None else len(action_tape)
+    for step_index in range(max_steps):
         if action_tape is None:
             base = controller_actions(controller, env, obs); actions = mission_position_actions(env, base)
             actions_out.append(np.asarray(actions, dtype=np.int64).copy())
@@ -78,6 +79,8 @@ def run_one(controller: str, condition: str, ci: int, seed: int, si: int, episod
         age = float(info["target_cache_age_mean"])
         trace.append({"development_episode_id": episode_id, "controller": controller, "seed": seed, "condition": condition, "timestep": int(info["step"]), "relay_failure_active": int(info["node_failure_active"] > .5), "attacker_legal_information": int(legal), "chain_support": int(chain), "target_cache_age_mean": age, "attacker_cache_path": info["attacker_cache_paths_t"], "attacker_direct_target_information": info["attacker_direct_target_information_t"], "scout_relay_comm": int(env.comm_adj[1, 0] > .5), "relay_attacker_comm": int(env.comm_adj[2, 1] > .5), "scout_attacker_comm": int(env.comm_adj[2, 0] > .5), "reward_sum": float(np.sum(rewards)), "terminal": int(np.all(dones))})
         info_values.append(info)
+        if np.all(dones):
+            break
     valid = np.asarray([x["attacker_legal_information"] for x in trace], dtype=np.float64)
     chain = np.asarray([x["chain_support"] for x in trace], dtype=np.float64)
     ages = np.asarray([x["target_cache_age_mean"] for x in trace], dtype=np.float64)
