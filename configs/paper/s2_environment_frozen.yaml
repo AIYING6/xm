@@ -1,6 +1,7 @@
 protocol: PHASE-S2-ENV-FROZEN-V1
 environment: UAVIntercept3DEnv
 geometry_preset: business_grounded_s1
+business_grounded_geometry: true
 state:
   num_blue: 3
   num_red: 1
@@ -22,6 +23,7 @@ target:
 observation:
   strict_target_sensing: true
   agent_target_info_bottleneck: true
+  relay_dependent_task: true
   attacker_terminal_sensing_range: 5000.0
   max_target_message_age_steps: 80
   min_target_confidence: 0.2

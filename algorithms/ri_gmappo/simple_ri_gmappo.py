@@ -105,6 +105,8 @@ class RIGMAPPOConfig:
     radar_dropout_random_max: float | None = None
     strict_target_sensing: bool = False
     agent_target_info_bottleneck: bool = False
+    relay_dependent_task: bool = False
+    business_grounded_geometry: bool = False
     target_prior_position: tuple[float, float, float] = (10_000.0, 0.0, 5_000.0)
     max_target_message_age_steps: int = 80
     min_target_confidence: float = 0.2
@@ -697,6 +699,8 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 else cfg.radar_dropout_prob,
                 strict_target_sensing=cfg.strict_target_sensing,
                 agent_target_info_bottleneck=cfg.agent_target_info_bottleneck,
+                relay_dependent_task=cfg.relay_dependent_task,
+                business_grounded_geometry=cfg.business_grounded_geometry,
                 target_prior_position=cfg.target_prior_position,
                 max_target_message_age_steps=cfg.max_target_message_age_steps,
                 min_target_confidence=cfg.min_target_confidence,

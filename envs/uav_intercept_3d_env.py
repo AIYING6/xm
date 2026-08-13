@@ -108,6 +108,8 @@ class UAVIntercept3DConfig:
     # Phase2IB relay-dependent task semantics. This remains opt-in so legacy
     # configurations preserve their original sensing and cache behavior.
     relay_dependent_task: bool = False
+    # Frozen S3 task preset; opt-in so legacy initialization is unchanged.
+    business_grounded_geometry: bool = False
     attacker_terminal_sensing_range: float = 5_000.0
     max_target_message_age_steps: int = 80
     min_target_confidence: float = 0.2
@@ -212,9 +214,17 @@ class UAVIntercept3DEnv:
             ],
             dtype=np.float32,
         )
+        if cfg.business_grounded_geometry:
+            self.blue_pos = np.asarray(
+                [[-2_000.0, -6_000.0, 5_000.0], [-2_000.0, 0.0, 5_000.0], [-2_000.0, 6_000.0, 5_000.0]],
+                dtype=np.float32,
+            )
         self.blue_speed = np.asarray([185.0, 175.0, 205.0], dtype=np.float32)
         self.blue_heading = np.asarray([0.10, 0.0, -0.10], dtype=np.float32)
         self.blue_gamma = np.asarray([0.02, 0.0, -0.02], dtype=np.float32)
+        if cfg.business_grounded_geometry:
+            self.blue_heading[:] = 0.0
+            self.blue_gamma[:] = 0.0
         self.blue_energy = np.ones(cfg.num_blue, dtype=np.float32)
 
         # --- G1: blue formation spacing/rotation about centroid (default no-op) ---
