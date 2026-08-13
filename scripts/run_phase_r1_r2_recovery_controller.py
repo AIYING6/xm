@@ -12,7 +12,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv, angle_diff
+from envs.uav_intercept_3d_env import ACTION3D_TABLE, UAVIntercept3DConfig, UAVIntercept3DEnv, angle_diff
 from run_phase2ia6_task_feasibility import controller_actions
 
 CONTROLLERS = ("structural_oracle", "legal_observation")
@@ -39,6 +39,45 @@ def recovery_guidance(env: UAVIntercept3DEnv) -> np.ndarray:
     guidance[2] = guidance_toward(env, 2, 0)
     guidance[1] = guidance_toward(env, 1, 2)
     return guidance
+
+
+def nearest_action(env: UAVIntercept3DEnv, turn: np.ndarray, climb: np.ndarray) -> np.ndarray:
+    commands = np.zeros((env.num_agents, 3), dtype=np.float32)
+    commands[:, 0] = np.clip(turn, -1.0, 1.0)
+    commands[:, 1] = np.clip(climb, -1.0, 1.0)
+    commands[:, 2] = 1.0
+    return np.argmin(((ACTION3D_TABLE[None, :, :] - commands[:, None, :]) ** 2).sum(axis=-1), axis=1)
+
+
+def formation_actions(env: UAVIntercept3DEnv, base: np.ndarray) -> np.ndarray:
+    """Add only peer-geometry formation control before failure.
+
+    Target pursuit remains in ``base``. The relay is steered toward the
+    Scout/Attacker midpoint, using no target truth for its formation term.
+    """
+    actions = np.asarray(base, dtype=np.int64).copy()
+    midpoint = 0.5 * (env.blue_pos[0] + env.blue_pos[2])
+    rel = midpoint - env.blue_pos[1]
+    desired_heading = math.atan2(float(rel[1]), float(rel[0]))
+    turn = angle_diff(desired_heading, float(env.blue_heading[1])) / env.config.blue_types[1].max_turn_rate
+    desired_gamma = math.atan2(float(rel[2]), float(np.linalg.norm(rel[:2]) + 1e-6))
+    climb = (desired_gamma - float(env.blue_gamma[1])) / env.config.blue_types[1].max_climb_rate
+    actions[1] = nearest_action(env, np.asarray([turn, 0.0, 0.0]), np.asarray([climb, 0.0, 0.0]))[0]
+    return actions
+
+
+def strict_trigger_guard(env: UAVIntercept3DEnv) -> bool:
+    paths = env.target_cache_path[2]
+    return bool(
+        env.detected_by[0] > 0.5
+        and env.comm_adj[1, 0] > 0.5
+        and env.comm_adj[2, 1] > 0.5
+        and env.target_cache_valid[2] > 0.5
+        and 1 in paths
+        and env.comm_adj[2, 0] <= 0.5
+        and env.detected_by[2] <= 0.5
+        and np.linalg.norm(env.red_pos[0] - env.blue_pos[2]) > env.config.attacker_terminal_sensing_range
+    )
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
@@ -68,12 +107,12 @@ def run_one(controller: str, ci: int, seed: int, si: int, episode: int) -> tuple
             guidance = recovery_guidance(env)
             obs, _, _, _, dones, info = env.step_guidance(guidance)
         else:
-            actions = controller_actions(controller, env, obs)
+            actions = formation_actions(env, controller_actions(controller, env, obs))
             obs, _, _, _, dones, info = env.step(actions)
         step = int(info["step"])
         primary = float(info["relay_dependency_eligible_t"]) > 0.5
         hold = hold + 1 if primary else 0
-        if trigger is None and hold >= 2 and step <= 220:
+        if trigger is None and hold >= 2 and step <= 220 and strict_trigger_guard(env):
             trigger = step; failure = step + 1
             env.config.failed_blue_agent = 1; env.config.node_failure_start_step = failure
             env.config.node_failure_duration_steps = 80
