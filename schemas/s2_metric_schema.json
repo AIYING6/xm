@@ -1,0 +1,11 @@
+{
+  "protocol": "PHASE-S2-METRIC-SCHEMA-V1",
+  "primary": ["delta_J"],
+  "key_secondary": ["success_delta", "task_chain_availability", "path_composition", "coordination_burden"],
+  "diagnostic": ["legal_target_information_availability", "information_age", "graph_connectivity", "safety_events"],
+  "exploratory": ["strict_recovery_fields", "KM", "RMST", "legacy_survival"],
+  "episode_fields": ["J", "success", "collision", "timeout", "constraint_violation", "failure_exposed", "terminal_step", "delta_J"],
+  "primary_formula": "Delta_J = J_nominal - J_failure",
+  "primary_aggregation": "all_planned_paired_episodes",
+  "mechanism_conditioning": "failure_exposed_only"
+}

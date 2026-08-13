@@ -1,0 +1,4 @@
+protocol: PHASE-S2-NOMINAL-V1
+base_environment: configs/paper/s2_environment_frozen.yaml
+failure_intervention: off
+relay_failure: {failed_blue_agent: -1, onset_step: 0, duration_steps: 0}

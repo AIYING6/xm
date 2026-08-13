@@ -1,0 +1,54 @@
+protocol: PHASE-S2-ENV-FROZEN-V1
+environment: UAVIntercept3DEnv
+geometry_preset: business_grounded_s1
+state:
+  num_blue: 3
+  num_red: 1
+  dt: 1.0
+  world_radius: 50000.0
+  altitude_range: [1000.0, 9000.0]
+action:
+  representation: discrete_turn_climb_speed
+  bounds: [-1.0, 1.0]
+dynamics:
+  blue_types: code_default_UAV3DType
+  target_type: code_default_UAV3DType
+  collision_radius: 120.0
+  max_steps: 260
+target:
+  policy: straight
+  initialization: deterministic_episode_id_seeded
+  prior_position: [10000.0, 0.0, 5000.0]
+observation:
+  strict_target_sensing: true
+  agent_target_info_bottleneck: true
+  attacker_terminal_sensing_range: 5000.0
+  max_target_message_age_steps: 80
+  min_target_confidence: 0.2
+communication:
+  range_scale: 1.0
+  dropout_probability: 0.0
+  delay_steps: 0
+  graph_orientation: A_receiver_sender
+  direct_scout_attacker_allowed: true
+reward:
+  code_default: true
+  attack_geometry_reward_weight: 0.0
+  safety_proximity_penalty_weight: 0.0
+terminal:
+  timeout_at_max_steps: true
+  success_min_step: 1000
+  collision_terminal: true
+failure:
+  intervention: relay_node_topology_perturbation
+  failed_blue_agent: 1
+  onset_step: 44
+  duration_steps: 80
+  remove_edges: [[1, 0], [0, 1], [2, 1], [1, 2]]
+  preserve_direct_edge: [2, 0]
+  failed_node_sensing_transmit_receive: disabled
+pairing:
+  geometry: fixed_business_grounded_s1
+  episode_id_base: 241000
+  controller_independent_tape: true
+  primary_exposure_estimand: all_planned_pairs

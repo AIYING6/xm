@@ -1,0 +1,9 @@
+protocol: PHASE-S2-FAILURE-V1
+base_environment: configs/paper/s2_environment_frozen.yaml
+failure_intervention: on
+relay_failure:
+  failed_blue_agent: 1
+  onset_step: 44
+  duration_steps: 80
+  removed_edges: [[1, 0], [0, 1], [2, 1], [1, 2]]
+  preserved_direct_edge: [2, 0]

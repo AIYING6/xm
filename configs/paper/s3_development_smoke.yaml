@@ -1,0 +1,21 @@
+protocol: PHASE-S3-DEVELOPMENT-SMOKE-V1
+status: PREPARED_NOT_LAUNCHED
+methods:
+  mappo:
+    graph_encoder: no_graph
+    hidden_dim: 64
+  parameter_matched_single_graph:
+    graph_encoder: single
+    hidden_dim: 115
+  multi_relation_full:
+    graph_encoder: multi_relation
+    hidden_dim: 64
+    role_gate: transparent_current_full_not_core_claim
+seeds: [1501, 1502, 1503]
+env_steps: 200000
+checkpoint: final_update_only
+early_stopping: false
+checkpoint_promotion: false
+paired_validation: true
+canonical_test: false
+headline_claims: false

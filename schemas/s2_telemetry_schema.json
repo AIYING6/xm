@@ -1,0 +1,9 @@
+{
+  "protocol": "PHASE-S2-TELEMETRY-SCHEMA-V1",
+  "topology": ["active_comm_edges", "relay_edges", "direct_scout_attacker", "connectivity", "connected_components", "degree"],
+  "path": ["legal_path_identity", "path_length", "path_source", "path_switch", "direct_path_fraction", "relay_path_fraction"],
+  "task_support": ["support_source", "support_edges", "support_source_switch", "task_chain_availability"],
+  "coordination": ["traveled_distance", "control_effort", "mission_geometry_deviation", "completion_time", "constraint_burden"],
+  "information_diagnostic": ["legal_target_information", "cache_age", "staleness", "source_identity", "confidence"],
+  "invariance": ["actions", "state", "rewards", "terminal", "failure_timing"]
+}
