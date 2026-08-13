@@ -1,13 +1,14 @@
 # S3 Cloud Execution Guide
 
-Upload `EA-RG-MAPPO_S3_DEVELOPMENT_5c357e0.bundle` to
+Upload the user-authorized nine-way S3 bundle to
 `/root/autodl-tmp` on the AutoDL instance. The bundle is a Git repository
 snapshot pinned to commit `5c357e0396276463f7fc87038546bec561166cf4`.
 
-The launcher starts the fixed nine S3 development-only runs in two batches:
-six concurrent runs, then three concurrent runs. Each run retains the frozen
+The launcher starts all fixed nine S3 development-only runs concurrently. Each run retains the frozen
 4 environments × 64 rollout steps × 782 updates = 200,192 environment steps.
-It does not change the frozen per-run configuration. It shuts down only after
+It does not change the frozen per-run configuration. Each process is limited to
+one CPU thread; the single GPU is intentionally oversubscribed at the user's
+direction. It shuts down only after
 all nine manifests report completion; a failure preserves logs and does not
 shut down the instance.
 

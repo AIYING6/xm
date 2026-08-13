@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-# Frozen S3 development-only cloud launcher.  Six concurrent processes are
-# the maximum approved concurrency for one 16-vCPU / single-4090 instance.
+# Frozen S3 development-only cloud launcher.  The user-authorized S3
+# scheduling amendment runs all nine fixed arms concurrently on one 4090.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-python}"
-MAX_PARALLEL="${MAX_PARALLEL:-6}"
+MAX_PARALLEL="${MAX_PARALLEL:-9}"
 CPU_THREADS_TOTAL="${CPU_THREADS_TOTAL:-16}"
-CPU_THREADS_PER_RUN="${CPU_THREADS_PER_RUN:-2}"
+CPU_THREADS_PER_RUN="${CPU_THREADS_PER_RUN:-1}"
 AUTO_SHUTDOWN="${AUTO_SHUTDOWN:-1}"
 RESULT_ROOT="$ROOT/results/development/phase_s3_three_method_smoke"
 
-[[ "$MAX_PARALLEL" == "6" ]] || { echo "S3 contract freezes MAX_PARALLEL=6" >&2; exit 2; }
-[[ "$CPU_THREADS_PER_RUN" == "2" ]] || { echo "S3 contract freezes CPU_THREADS_PER_RUN=2" >&2; exit 2; }
+[[ "$MAX_PARALLEL" == "9" ]] || { echo "S3 scheduling amendment freezes MAX_PARALLEL=9" >&2; exit 2; }
+[[ "$CPU_THREADS_PER_RUN" == "1" ]] || { echo "S3 scheduling amendment freezes CPU_THREADS_PER_RUN=1" >&2; exit 2; }
 [[ ! -e "$RESULT_ROOT/runs" ]] || { echo "Refusing to overwrite S3 runs: $RESULT_ROOT/runs" >&2; exit 3; }
 
 mkdir -p "$RESULT_ROOT/logs"
 GIT_SHA="$(git -C "$ROOT" rev-parse HEAD)"
-TAG_SHA="$(git -C "$ROOT" rev-parse S3_DEVELOPMENT_LAUNCH_READY^{} 2>/dev/null || true)"
+TAG_SHA="$(git -C "$ROOT" rev-parse S3_DEVELOPMENT_9WAY_LAUNCH_READY^{} 2>/dev/null || true)"
 [[ -n "$TAG_SHA" && "$GIT_SHA" == "$TAG_SHA" ]] || {
-  echo "HEAD must equal S3_DEVELOPMENT_LAUNCH_READY tag; got $GIT_SHA" >&2; exit 4;
+  echo "HEAD must equal S3_DEVELOPMENT_9WAY_LAUNCH_READY tag; got $GIT_SHA" >&2; exit 4;
 }
 
 ARMS=(
