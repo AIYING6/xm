@@ -47,9 +47,15 @@ For each checkpoint, seed, condition, episode, timestep, and relation channel:
 4. **Attention behavior**: legal-support entropy, maximum legal attention, and
    attention support size for each branch.
 5. **Training telemetry availability**: final and trajectory values of loss,
-   policy loss, value loss, entropy, approximate KL, clip fraction, and the
-   logged aggregate gradient norm. Separate historical actor/critic gradient
-   norms are reported as unavailable unless present in source artifacts.
+  policy loss, value loss, entropy, approximate KL, clip fraction, and the
+  logged aggregate gradient norm. Separate historical actor/critic gradient
+  norms are reported as unavailable unless present in source artifacts.
+
+The forward probe records every tenth timestep and the frozen failure-boundary
+steps `43`, `44`, and `45`. This bounded resolution is sufficient for branch
+sparsity, scale, and attention-degeneration diagnosis while keeping the
+read-only artifact reproducible on the local workstation. It is not a new
+evaluation protocol and is not used to compute a headline endpoint.
 
 The probe is instrumentation only. It does not call backward, optimizer.step,
 or any training/evaluation-selection code.
@@ -77,4 +83,3 @@ mechanism. No third “inconclusive, train longer” outcome is permitted.
 The executor writes only new diagnostic artifacts under
 `results/development/phase_s3d_encoder_diagnosis/` and a report at
 `docs/PHASE_S3D_MULTI_RELATION_ENCODER_DIAGNOSIS_REPORT.md`.
-

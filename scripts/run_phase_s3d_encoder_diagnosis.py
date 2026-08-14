@@ -31,6 +31,8 @@ TAPE_START = 340000
 TAPE_EPISODES = 100
 SEEDS = (1501, 1502, 1503)
 CONDITIONS = ("nominal", "relay_failure")
+PROBE_STRIDE = 10
+PROBE_BOUNDARY_STEPS = frozenset((43, 44, 45))
 RELATION_NAMES = ("perception", "communication", "task_support", "union")
 DEVICE_DEFAULT = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -204,7 +206,7 @@ def run(args: argparse.Namespace) -> dict:
                     while any(active):
                         indices = [i for i, flag in enumerate(active) if flag]
                         packed = stack_graphs([states[i][2] for i in indices])
-                        probe = encoder_probe(agent, packed, device)
+                        probe = encoder_probe(agent, packed, device) if (timestep % PROBE_STRIDE == 0 or timestep in PROBE_BOUNDARY_STEPS) else {"probe_available": False}
                         if probe.get("probe_available"):
                             for row in probe["rows"]:
                                 raw_rows.append({
@@ -250,6 +252,7 @@ def run(args: argparse.Namespace) -> dict:
     manifest = {
         "protocol": PROTOCOL, "training_started": False, "backward_called": False, "optimizer_step_called": False,
         "tape_start": TAPE_START, "episodes_per_condition": TAPE_EPISODES, "seeds": list(SEEDS),
+        "probe_stride": PROBE_STRIDE, "probe_boundary_steps": sorted(PROBE_BOUNDARY_STEPS),
         "methods": list(CHECKPOINTS), "raw_rows": len(raw_rows), "summary_rows": len(summary),
         "separate_actor_critic_gradient_history_available": False,
         "checkpoint_inventory": checkpoint_inventory, "telemetry_inventory": telemetry_inventory,
