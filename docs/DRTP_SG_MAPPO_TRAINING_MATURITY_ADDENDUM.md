@@ -38,12 +38,12 @@ best-checkpoint selection, and method-specific extra training. The final
 checkpoint at the common frozen budget is the only checkpoint used for the
 UTR-versus-DRTP method comparison.
 
-For the pre-registered 1M-to-2M or 2M-to-3M extension only, a run may continue
-its own uninterrupted optimizer/training state after the common maturity verdict.
-That continuation is part of the same from-scratch trajectory, not a resumed
-external, selected, or promoted checkpoint. No arm may be restarted from a
-milestone or final checkpoint, and no arm may continue unless the symmetric
-extension rule in Section 4/5 has triggered for both methods.
+If the symmetric extension rule triggers, the next common budget is implemented
+as four new **from-scratch** trajectories with the same arm/seed assignments and
+immutable configuration. No optimizer, sampler, environment, or model state is
+loaded from a previous-budget run. This is the only interpretation consistent
+with the frozen no-resume rule; the earlier-budget artifacts remain retained for
+curve analysis and are never promoted into the next-budget training trajectory.
 
 ## 2. Development evaluation tape
 
@@ -105,20 +105,20 @@ threshold, its denominator, its aggregation, or the seed-consistency rule.
 
 ## 5. 2M and 3M limits
 
-If the 1M rule triggers, all four runs continue without resume from their own
-ongoing training state to the common 2M budget, with fixed curve-only
-milestones:
+If the 1M rule triggers, all four arms start fresh 2M trajectories at **7,813
+updates = 2,000,128 environment steps**, with fixed curve-only milestones:
 
 | common budget | additional required milestones |
 |---|---|
-| 2M | approximately 1.5M and final 2M |
-| 3M, only if triggered at 2M | approximately 2.5M and final 3M |
+| 2M | update 5,859 (approximately 1.5M) and final update 7,813 |
+| 3M, only if triggered at 2M | update 9,766 (approximately 2.5M) and final update 11,719 (3,000,064 steps) |
 
 The same 5% pooled-primary-metric and both-seed-direction rule is applied from
-approximately 1.5M to final 2M. If either method triggers, all four runs
-continue together to 3M. At 3M, no automatic extension is permitted. If either
-method still shows the stipulated sustained improvement from approximately 2.5M
-to final 3M, the sole recorded conclusion is:
+approximately 1.5M to final 2M. If either method triggers, all four arms start
+fresh 3M trajectories under the same assignments and configuration. At 3M, no
+automatic extension is permitted. If either method still shows the stipulated
+sustained improvement from approximately 2.5M to final 3M, the sole recorded
+conclusion is:
 
 > `training maturity unresolved at <=3M`.
 
