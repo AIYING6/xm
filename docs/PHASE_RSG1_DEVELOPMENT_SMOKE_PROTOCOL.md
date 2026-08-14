@@ -21,6 +21,15 @@ checkpoint promotion, seed exclusion, or protocol change is allowed.
 - no consistency loss, robustness auxiliary loss, Role-Gate, or new module;
 - no in-training evaluation used for selection.
 
+## Execution concurrency
+
+The nine cells are independent `method × seed` processes and may be launched
+concurrently on one GPU. Concurrency changes only resource scheduling; it does
+not change any method, seed, environment step budget, checkpoint rule,
+evaluation tape, or statistical unit. Each cell has its own output directory
+and log, and aggregation is allowed only after all nine cells report
+`status=completed`.
+
 ## Evaluation contract
 
 Each final checkpoint is evaluated on the same paired episode IDs
