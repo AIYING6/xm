@@ -66,6 +66,8 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--radar-dropout-random-max", type=float, default=None)
     parser.add_argument("--strict-target-sensing", action="store_true")
     parser.add_argument("--agent-target-info-bottleneck", action="store_true")
+    parser.add_argument("--relay-dependent-task", action="store_true")
+    parser.add_argument("--business-grounded-geometry", action="store_true")
     parser.add_argument("--target-prior-position", type=float, nargs=3, default=(10_000.0, 0.0, 5_000.0))
     parser.add_argument("--max-target-message-age-steps", type=int, default=80)
     parser.add_argument("--min-target-confidence", type=float, default=0.2)
@@ -92,6 +94,9 @@ def parse_args() -> RIGMAPPOConfig:
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--update-offset", type=int, default=0)
     parser.add_argument("--append-log", action="store_true")
+    parser.add_argument("--topology-curriculum-schedule", choices=("none", "A", "B", "C"), default="none")
+    parser.add_argument("--topology-curriculum-seed", type=int, default=None)
+    parser.add_argument("--topology-curriculum-logging", action="store_true")
     args = parser.parse_args()
     return RIGMAPPOConfig(
         seed=args.seed,
@@ -148,6 +153,8 @@ def parse_args() -> RIGMAPPOConfig:
         radar_dropout_random_max=args.radar_dropout_random_max,
         strict_target_sensing=args.strict_target_sensing,
         agent_target_info_bottleneck=args.agent_target_info_bottleneck,
+        relay_dependent_task=args.relay_dependent_task,
+        business_grounded_geometry=args.business_grounded_geometry,
         target_prior_position=tuple(args.target_prior_position),
         max_target_message_age_steps=args.max_target_message_age_steps,
         min_target_confidence=args.min_target_confidence,
@@ -174,6 +181,9 @@ def parse_args() -> RIGMAPPOConfig:
         resume=args.resume,
         update_offset=args.update_offset,
         append_log=args.append_log,
+        topology_curriculum_schedule=args.topology_curriculum_schedule,
+        topology_curriculum_seed=args.topology_curriculum_seed,
+        topology_curriculum_logging=args.topology_curriculum_logging,
     )
 
 
