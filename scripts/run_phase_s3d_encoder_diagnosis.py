@@ -129,9 +129,9 @@ def encoder_probe(agent, packed: dict[str, np.ndarray], device: torch.device) ->
             weights = attention[:, relation_id].masked_fill(~active_mask, 0.0)
             weights = weights / weights.sum(dim=-1, keepdim=True).clamp_min(1e-12)
             logw = torch.where(weights > 0.0, weights.log(), torch.zeros_like(weights))
-            ent = -(weights * logw).sum(dim=-1) / active_mask.sum(dim=-1).to(weights.dtype).clamp_min(2.0).log().clamp_min(1e-12)
-            max_attn = weights.max(dim=-1).values
-            support_n = active_mask.sum(dim=-1).to(weights.dtype)
+            ent = (-(weights * logw).sum(dim=-1) / active_mask.sum(dim=-1).to(weights.dtype).clamp_min(2.0).log().clamp_min(1e-12)).mean(dim=-1)
+            max_attn = weights.max(dim=-1).values.mean(dim=-1)
+            support_n = active_mask.sum(dim=-1).to(weights.dtype).mean(dim=-1)
             output = branch_outputs[relation_id]
             node_norm = output.norm(dim=-1).mean(dim=-1)
             for batch_index in range(raw_adj.shape[0]):
