@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 from pathlib import Path
 
 
@@ -18,7 +19,9 @@ def read_csv(path: Path) -> list[dict[str, str]]:
 
 
 def mean(rows: list[dict[str, str]], key: str) -> float:
-    return sum(float(row[key]) for row in rows) / len(rows)
+    values = [float(row[key]) for row in rows]
+    finite = [value for value in values if math.isfinite(value)]
+    return sum(finite) / len(finite) if finite else math.nan
 
 
 def summary(group: str, seed: int, paired: list[dict[str, str]]) -> dict:
