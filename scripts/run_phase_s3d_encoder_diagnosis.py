@@ -214,6 +214,10 @@ def run(args: argparse.Namespace) -> dict:
                                     "development_episode_id": episode_ids[indices[row["batch_index"]]], "timestep": timestep,
                                     **{k: v for k, v in row.items() if k != "batch_index"},
                                 })
+                        if args.reset_only:
+                            for env_index in indices:
+                                active[env_index] = False
+                            continue
                         with torch.no_grad():
                             action, *_ = agent.get_action_and_value(
                                 torch.as_tensor(np.stack([states[i][0] for i in indices]), dtype=torch.float32, device=device),
@@ -254,6 +258,7 @@ def run(args: argparse.Namespace) -> dict:
         "tape_start": TAPE_START, "episodes_per_condition": TAPE_EPISODES, "seeds": list(SEEDS),
         "probe_stride": PROBE_STRIDE, "probe_boundary_steps": sorted(PROBE_BOUNDARY_STEPS),
         "methods": list(CHECKPOINTS), "raw_rows": len(raw_rows), "summary_rows": len(summary),
+        "reset_only": bool(args.reset_only),
         "separate_actor_critic_gradient_history_available": False,
         "checkpoint_inventory": checkpoint_inventory, "telemetry_inventory": telemetry_inventory,
         "status": "completed",
@@ -268,6 +273,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=ROOT / "results/development/phase_s3d_encoder_diagnosis")
     parser.add_argument("--device", default=DEVICE_DEFAULT, choices=("cpu", "cuda"))
     parser.add_argument("--episodes", type=int, default=TAPE_EPISODES)
+    parser.add_argument("--reset-only", action="store_true")
     args = parser.parse_args()
     if args.episodes != TAPE_EPISODES:
         raise SystemExit("S3-D requires the frozen 100-episode tape; no tape resizing is permitted")

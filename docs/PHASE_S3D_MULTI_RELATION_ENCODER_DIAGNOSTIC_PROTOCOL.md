@@ -60,6 +60,11 @@ evaluation protocol and is not used to compute a headline endpoint.
 The probe is instrumentation only. It does not call backward, optimizer.step,
 or any training/evaluation-selection code.
 
+A reset-state supplemental probe may be used to verify initial relation scales
+and masks without rolling out a policy. Reset-state evidence alone cannot
+support the bug decision; if no dynamic forward evidence is available, the
+conservative outcome is `NO ACTIONABLE ROOT CAUSE — DROP CURRENT FULL`.
+
 ## Conservative interpretation rule
 
 The result can have only one of two final decisions:
