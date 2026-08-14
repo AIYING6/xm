@@ -1,4 +1,4 @@
-"""Run one frozen TP-1 Round-A SG or CTP-Schedule-A cell."""
+"""Run one frozen TP-1 SG or CTP curriculum cell."""
 from __future__ import annotations
 
 import argparse
@@ -27,6 +27,7 @@ ROLLOUT_STEPS = 64
 ARMS = {
     "sg": {"graph_encoder": "single", "hidden_dim": 115, "schedule": "none"},
     "ctp_a": {"graph_encoder": "single", "hidden_dim": 115, "schedule": "A"},
+    "ctp_c": {"graph_encoder": "single", "hidden_dim": 115, "schedule": "C"},
 }
 
 
@@ -56,7 +57,7 @@ def training_config(arm: str, seed: int, out_dir: Path) -> RIGMAPPOConfig:
         out_dir=str(out_dir), device="cuda" if torch.cuda.is_available() else "cpu",
         topology_curriculum_schedule=spec["schedule"],
         topology_curriculum_seed=seed,
-        topology_curriculum_logging=arm == "ctp_a",
+        topology_curriculum_logging=arm in {"ctp_a", "ctp_c"},
     )
 
 
@@ -80,7 +81,7 @@ def evaluate(agent, arm: str, seed: int, out_dir: Path) -> None:
     evaluator.frozen_env = frozen_eval_env
     try:
         raw, bias = [], []
-        method_label = "matched_single_graph" if arm == "sg" else "ctp_a"
+        method_label = "matched_single_graph" if arm == "sg" else arm
         for episode in range(EPISODES):
             episode_id = TAPE_START + episode
             for condition in ("nominal", "relay_failure"):
@@ -120,7 +121,7 @@ def run_one(arm: str, seed: int, output_root: Path) -> dict:
     manifest = {
         "protocol": PROTOCOL, "status": "running", "arm": arm, "seed": seed,
         "schedule": spec["schedule"],
-        "schedule_hash": schedule_hash("A") if arm == "ctp_a" else None,
+        "schedule_hash": schedule_hash(spec["schedule"]) if spec["schedule"] != "none" else None,
         "graph_encoder": spec["graph_encoder"], "hidden_dim": spec["hidden_dim"],
         "environment_steps": UPDATES * NUM_ENVS * ROLLOUT_STEPS,
         "updates": UPDATES, "num_envs": NUM_ENVS, "rollout_steps": ROLLOUT_STEPS,
