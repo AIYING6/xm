@@ -7,6 +7,7 @@ existing MAPPO training path with the new encoder.
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import math
 import sys
@@ -28,6 +29,7 @@ from algorithms.ri_gmappo.simple_ri_gmappo import (  # noqa: E402
     stack_graphs,
     train_ri_gmappo,
 )
+from algorithms.ri_gmappo import simple_ri_gmappo as model_module  # noqa: E402
 
 
 PROTOCOL = "PHASE-RSG-TC-0-V1"
@@ -86,7 +88,12 @@ def contract_checks() -> dict[str, object]:
     checks["shared_tape_frozen"] = TAPE_START == 340000 and TAPE_EPISODES == 100
     checks["relation_multihot_count"] = RSG_TC_RELATION_COUNT == 3
     checks["edge_feature_indices_frozen"] = RSG_TC_EDGE_FEATURE_INDICES == (3, 11, 12, 13, 15, 16)
-    checks["forbidden_global_route_inputs_absent"] = True
+    layer_source = inspect.getsource(model_module.TopologyConditionedGraphAttentionLayer)
+    checks["forbidden_global_route_inputs_absent"] = not any(
+        token in layer_source.lower()
+        for token in ("shortest_path", "ground_truth_route", "failure_label", "full_graph_connectivity")
+    )
+    checks["multihot_uses_relation_permutation"] = "relation_adj.permute" in layer_source and "argmax" not in layer_source
 
     agents = {}
     for method_name, spec in METHODS.items():
@@ -104,7 +111,10 @@ def contract_checks() -> dict[str, object]:
             checks["relation_adj_shape"] = tuple(relation.shape) == (1, 3, graph["node_feat"].shape[0], graph["node_feat"].shape[0])
             # A simultaneous P+C edge is legal in the schema; the encoder must
             # receive both bits rather than an argmax category.
-            checks["multihot_overlap_representable"] = bool((relation[:, 0] * relation[:, 1]).sum().item() >= 0.0)
+            checks["multihot_overlap_representable"] = (
+                agent.actor.rsg_tc_gat1.relation_bias[0].in_features
+                == RSG_TC_RELATION_COUNT + len(RSG_TC_EDGE_FEATURE_INDICES)
+            )
             try:
                 agent.actor(
                     torch.as_tensor(state["obs"][None], dtype=torch.float32),
@@ -162,12 +172,19 @@ def one_update_smoke(output_root: Path) -> dict[str, object]:
 
 
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--checks-only", action="store_true")
+    args = parser.parse_args()
     checks = contract_checks()
     if not checks["all_contract_checks"]:
         raise SystemExit(json.dumps({"protocol": PROTOCOL, "checks": checks}, indent=2))
+    if args.checks_only:
+        print(json.dumps({"protocol": PROTOCOL, "checks": checks, "status": "PASS"}, indent=2))
+        return
     smoke = one_update_smoke(SMOKE_ROOT)
     result = {
-        "protocol": PROTOCOL, "training_started": False,
+        "protocol": PROTOCOL, "formal_training_started": False,
         "one_update_integration_smoke": True, "formal_training_authorized": False,
         "checks": checks, "smoke": smoke, "status": "PASS",
     }
