@@ -6,6 +6,7 @@ cd "$ROOT_DIR"
 OUTPUT_ROOT="${OUTPUT_ROOT:-results/development/phase_fl_failure_learnability}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
 AUTO_SHUTDOWN="${AUTO_SHUTDOWN:-1}"
+RESULT_ARCHIVE="${RESULT_ARCHIVE:-/root/autodl-tmp/phase_fl_results.tar.gz}"
 
 if [[ -e "$OUTPUT_ROOT" ]]; then
   echo "Refusing to overwrite existing output: $OUTPUT_ROOT" >&2
@@ -45,6 +46,8 @@ if [[ "$rc" -ne 0 ]]; then
 fi
 
 "$PYTHON_BIN" scripts/aggregate_phase_fl.py --results-root "$OUTPUT_ROOT"
+tar -czf "$RESULT_ARCHIVE" "$OUTPUT_ROOT"
+sha256sum "$RESULT_ARCHIVE"
 sync
 if [[ "$AUTO_SHUTDOWN" == "1" ]]; then
   shutdown -h now
