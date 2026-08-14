@@ -92,7 +92,7 @@ Both cells trained from scratch for 3,907 updates = 1,000,192 environment steps 
 - Cases per condition: {tape['episodes_per_condition']}
 - F0: relay node 1, onset step 44, duration 80
 - Tape SHA256: `{tape['tape_hash']}`
-- Every one of the six checkpoints was evaluated on the same 100 nominal/F0 pairs; all paired failure episodes had exposure = 1.
+- Every one of the six checkpoints was evaluated on the same 100 nominal/F0 pairs. Failure exposure is reported per checkpoint and is not used as a post-hoc episode exclusion rule; episodes that naturally terminated before onset remain part of the frozen tape.
 
 ## Six-checkpoint unified evaluation
 

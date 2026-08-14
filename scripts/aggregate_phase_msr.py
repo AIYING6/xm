@@ -53,7 +53,9 @@ def verify_evaluation(root: Path, group: str, seed: int, tape_hash: str) -> tupl
     paired = read_csv(path / "paired_metrics.csv")
     raw = read_csv(path / "raw_episode_metrics.csv")
     assert len(paired) == 100 and len(raw) == 200, (len(paired), len(raw))
-    assert all(float(row["failure_exposed"]) == 1.0 for row in paired), path
+    # Exposure is an outcome to report, not a post-hoc eligibility filter.
+    # Policies may naturally terminate before the scheduled failure onset;
+    # those paired rows remain in the frozen tape and are not discarded.
     return manifest, paired
 
 
