@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import hashlib
 import json
 import math
+import multiprocessing as mp
 from pathlib import Path
 import sys
 
@@ -79,38 +81,79 @@ def finite_mean(rows: list[dict], key: str) -> float:
     return sum(values) / len(values) if values else math.nan
 
 
+def evaluate_checkpoint_cell(task: tuple[str, int, str, str, list[int]]) -> list[dict]:
+    """Evaluate one checkpoint/seed across all conditions in one process.
+
+    The process owns one agent and patches only its local evaluator module. This
+    avoids the thread-unsafe global frozen_env while allowing the six independent
+    checkpoint cells to run concurrently on a single GPU.
+    """
+    group, seed, checkpoint_str, tape_hash, episode_ids = task
+    try:
+        import torch
+        torch.set_num_threads(1)
+    except ImportError:  # pragma: no cover - torch is a project dependency
+        pass
+
+    checkpoint = Path(checkpoint_str)
+    agent = fl.build_agent({"graph_encoder": "single", "hidden_dim": 115}, checkpoint, seed)
+    rows: list[dict] = []
+    for condition, spec in CONDITIONS.items():
+        original = evaluator.frozen_env
+        evaluator.frozen_env = lambda episode_seed, failure_on, _spec=spec: variant_env(episode_seed, _spec)
+        try:
+            for episode_id in episode_ids:
+                eval_condition = "nominal" if spec is None else "relay_failure"
+                row, _ = evaluator.evaluate_episode(agent, group, seed, episode_id, eval_condition)
+                row.update({"ogs_condition": condition,
+                            "onset": "" if spec is None else spec[0],
+                            "duration": "" if spec is None else spec[1],
+                            "checkpoint_sha256": fl.sha256(checkpoint),
+                            "tape_hash": tape_hash})
+                rows.append(row)
+        finally:
+            evaluator.frozen_env = original
+    return rows
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, default=ROOT / "results/development/post_msr_ogs")
+    parser.add_argument(
+        "--workers", type=int, default=len(CHECKPOINTS),
+        help="parallel checkpoint/seed workers; default is the six independent cells",
+    )
     args = parser.parse_args()
+    if args.workers < 1:
+        raise ValueError("--workers must be positive")
     if args.output_root.exists() and any(args.output_root.iterdir()):
         raise FileExistsError(f"refusing to overwrite: {args.output_root}")
     args.output_root.mkdir(parents=True, exist_ok=True)
     tape = tape_manifest()
     (args.output_root / "tape_manifest.json").write_text(json.dumps(tape, indent=2) + "\n", encoding="utf-8")
 
+    tasks = [
+        (group, seed, str(checkpoint), tape["tape_hash"], tape["episode_ids"])
+        for group, cells in CHECKPOINTS.items()
+        for seed, checkpoint in cells.items()
+    ]
+    workers = min(args.workers, len(tasks))
     raw_rows = []
-    total = len(CHECKPOINTS) * len(SEEDS) * len(CONDITIONS) * EPISODES
+    total = len(tasks) * len(CONDITIONS) * EPISODES
     done = 0
-    for group, cells in CHECKPOINTS.items():
-        for seed, checkpoint in cells.items():
-            agent = fl.build_agent({"graph_encoder": "single", "hidden_dim": 115}, checkpoint, seed)
-            for condition, spec in CONDITIONS.items():
-                original = evaluator.frozen_env
-                evaluator.frozen_env = lambda episode_seed, failure_on, _spec=spec: variant_env(episode_seed, _spec)
-                try:
-                    for episode_id in tape["episode_ids"]:
-                        eval_condition = "nominal" if spec is None else "relay_failure"
-                        row, _ = evaluator.evaluate_episode(agent, group, seed, episode_id, eval_condition)
-                        row.update({"ogs_condition": condition, "onset": "" if spec is None else spec[0],
-                                    "duration": "" if spec is None else spec[1],
-                                    "checkpoint_sha256": fl.sha256(checkpoint), "tape_hash": tape["tape_hash"]})
-                        raw_rows.append(row)
-                        done += 1
-                        if done % 200 == 0:
-                            print(f"OGS progress {done}/{total} ({100*done/total:.1f}%)", flush=True)
-                finally:
-                    evaluator.frozen_env = original
+    print(f"OGS parallel execution: workers={workers}, cells={len(tasks)}, episodes={total}", flush=True)
+    context = mp.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=workers, mp_context=context) as pool:
+        futures = [pool.submit(evaluate_checkpoint_cell, task) for task in tasks]
+        for future in as_completed(futures):
+            cell_rows = future.result()
+            raw_rows.extend(cell_rows)
+            done += len(cell_rows)
+            print(f"OGS progress {done}/{total} ({100*done/total:.1f}%)", flush=True)
+    condition_index = {name: index for index, name in enumerate(CONDITIONS)}
+    raw_rows.sort(key=lambda row: (row["method"], int(row["train_seed"]),
+                                   condition_index[row["ogs_condition"]],
+                                   int(row["development_episode_id"])))
     raw_fields = list(raw_rows[0])
     with (args.output_root / "ogs_raw_episode_metrics.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=raw_fields); writer.writeheader(); writer.writerows(raw_rows)
@@ -171,6 +214,8 @@ def main() -> None:
     pooled_ood = {key: sum(float(row[key]) for row in ood_by_seed) / len(ood_by_seed)
                   for key in ("J_OOD_mean", "J_OOD_worst", "R_OOD_mean", "R_OOD_worst")}
     result = {"protocol": "POST-MSR-OGS-V1", "training_started": False, "enmm_started": False,
+              "execution": {"parallel": True, "workers": workers, "cells": len(tasks),
+                             "episodes": total, "cell_granularity": "checkpoint_seed"},
               "tape": tape, "ood_conditions": list(OOD_CONDITIONS), "per_seed": ood_by_seed,
               "pooled": pooled_ood, "mixed50_safety": [r for r in pooled if r["group"] == "mixed50_sg"]}
     (args.output_root / "OGS_RESULT.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
