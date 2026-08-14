@@ -32,6 +32,7 @@ from envs import (
 )
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
 from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
+from algorithms.ri_gmappo.drtp_topology_sampler import DRTPSelection, DRTPTopologySampler
 
 
 ROLE_SCOUT_ID = 0
@@ -163,6 +164,12 @@ class RIGMAPPOConfig:
     fixed_f0_probability: float | None = None
     fixed_condition_mixture_seed: int | None = None
     fixed_condition_mixture_logging: bool = False
+    # Frozen DRTP/UTR reset-time topology sampler. It changes no policy input,
+    # reward, PPO objective, or environment semantics beyond selected failure
+    # onset/duration from the pre-registered condition set.
+    drtp_sampler_mode: str = "none"
+    drtp_sampler_seed: int | None = None
+    drtp_sampler_logging: bool = False
 
 
 class MLP(nn.Module):
@@ -1064,8 +1071,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.topology_curriculum_seed if cfg.topology_curriculum_seed is not None else cfg.seed,
         cfg.updates,
     )
-    if curriculum.enabled and cfg.fixed_f0_probability is not None:
-        raise ValueError("curriculum and fixed condition mixture are mutually exclusive")
+    drtp_mode = str(cfg.drtp_sampler_mode).lower()
+    if drtp_mode not in {"none", "utr", "drtp"}:
+        raise ValueError("drtp_sampler_mode must be none, utr, or drtp")
+    if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none")) > 1:
+        raise ValueError("curriculum, fixed mixture, and DRTP sampler are mutually exclusive")
     mixture = (
         FixedConditionMixture(
             cfg.fixed_f0_probability,
@@ -1074,8 +1084,20 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if cfg.fixed_f0_probability is not None
         else None
     )
+    drtp_sampler = (
+        DRTPTopologySampler(
+            drtp_mode,
+            cfg.drtp_sampler_seed if cfg.drtp_sampler_seed is not None else cfg.seed,
+            cfg.updates,
+        )
+        if drtp_mode != "none"
+        else None
+    )
     curriculum_rows: list[dict] = []
+    drtp_rows: list[dict] = []
     episode_counts = [0 for _ in range(cfg.num_envs)]
+    drtp_episode_returns = [0.0 for _ in range(cfg.num_envs)]
+    drtp_selections: list[DRTPSelection | None] = [None for _ in range(cfg.num_envs)]
     if curriculum.enabled:
         (out_dir / "topology_curriculum_manifest.json").write_text(
             json.dumps({**curriculum.manifest(), "training_seed": cfg.seed,
@@ -1090,6 +1112,13 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                        indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+    if drtp_sampler is not None:
+        (out_dir / "drtp_topology_sampler_manifest.json").write_text(
+            json.dumps({**drtp_sampler.manifest(), "training_seed": cfg.seed,
+                        "graph_encoder": cfg.graph_encoder, "hidden_dim": cfg.hidden_dim,
+                        "parameter_count": 116728}, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     envs = make_envs(cfg)
     obs_list, share_list, graph_list = [], [], []
@@ -1102,6 +1131,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             selection = mixture.select(env_index=env_index, episode_index=0)
             mixture.apply(env, selection)
             curriculum_rows.append(mixture.row(0, env_index, 0, selection))
+        elif drtp_sampler is not None:
+            selection = drtp_sampler.select(update=0, env_index=env_index, episode_index=0)
+            drtp_sampler.apply(env, selection)
+            drtp_selections[env_index] = selection
+            drtp_rows.append(drtp_sampler.selection_row(0, env_index, 0, selection))
         obs, share_obs, graph = env.reset()
         obs_list.append(obs)
         share_list.append(share_obs)
@@ -1146,6 +1180,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     telemetry_path = out_dir / "role_gate_telemetry.csv"
     curriculum_log_path = out_dir / "topology_curriculum_log.csv"
     mixture_log_path = out_dir / "fixed_condition_mixture_log.csv"
+    drtp_log_path = out_dir / "drtp_topology_sampler_log.csv"
     fieldnames = [
         "update",
         "loss",
@@ -1189,9 +1224,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if mixture is not None and cfg.fixed_condition_mixture_logging
         else nullcontext()
     )
+    drtp_log_context = (
+        drtp_log_path.open("w", newline="", encoding="utf-8")
+        if drtp_sampler is not None and cfg.drtp_sampler_logging
+        else nullcontext()
+    )
     with log_path.open(mode, newline="", encoding="utf-8") as f, (
         telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
-    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file:
+    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
@@ -1229,6 +1269,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 mixture_writer.writerow(mixture_row)
             mixture_file.flush()
             mixture_logged_count = len(curriculum_rows)
+        drtp_writer = None
+        drtp_logged_count = 0
+        if drtp_file is not None:
+            drtp_writer = csv.DictWriter(drtp_file, fieldnames=DRTPTopologySampler.log_fields())
+            drtp_writer.writeheader()
+            for drtp_row in drtp_rows:
+                drtp_writer.writerow(drtp_row)
+            drtp_file.flush()
+            drtp_logged_count = len(drtp_rows)
         f.flush()
         best_eval_key = (-1.0, float("-inf"), float("-inf"), float("-inf"))
         for local_update in range(1, cfg.updates + 1):
@@ -1239,8 +1288,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 episode_counts=episode_counts, current_update=update,
                 curriculum_rows=curriculum_rows,
                 fixed_mixture=mixture,
+                drtp_sampler=drtp_sampler,
+                drtp_episode_returns=drtp_episode_returns,
+                drtp_selections=drtp_selections,
+                drtp_rows=drtp_rows,
             )
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
+            if drtp_sampler is not None:
+                drtp_update_row = drtp_sampler.maybe_update(update)
+                if drtp_update_row is not None:
+                    drtp_rows.append(drtp_update_row)
             train_info = update_policy(agent, optimizer, batch, cfg, device, update)
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
             if telemetry_writer is not None:
@@ -1257,6 +1314,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     mixture_writer.writerow(mixture_row)
                 mixture_file.flush()
                 mixture_logged_count = len(curriculum_rows)
+            if drtp_writer is not None:
+                for drtp_row in drtp_rows[drtp_logged_count:]:
+                    drtp_writer.writerow(drtp_row)
+                drtp_file.flush()
+                drtp_logged_count = len(drtp_rows)
             if cfg.evaluation_enabled and (update % cfg.eval_interval == 0 or update == 1):
                 eval_base_seed = cfg.eval_base_seed if cfg.eval_base_seed is not None else 10_000 + update * 100
                 row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))
@@ -1327,6 +1389,10 @@ def collect_rollout(
     current_update: int = 0,
     curriculum_rows: list[dict] | None = None,
     fixed_mixture: FixedConditionMixture | None = None,
+    drtp_sampler: DRTPTopologySampler | None = None,
+    drtp_episode_returns: list[float] | None = None,
+    drtp_selections: list[DRTPSelection | None] | None = None,
+    drtp_rows: list[dict] | None = None,
 ) -> dict:
     obs_buf, share_buf, node_buf, edge_buf, role_buf, adj_buf, intent_buf = [], [], [], [], [], [], []
     relation_adj_buf = []
@@ -1353,6 +1419,10 @@ def collect_rollout(
         next_obs, next_share, next_graphs, rewards, dones = [], [], [], [], []
         for e, env in enumerate(envs):
             o, s, g, r, d, _ = env.step(actions_np[e])
+            if drtp_sampler is not None:
+                if drtp_episode_returns is None:
+                    raise ValueError("DRTP episode-return bookkeeping is required")
+                drtp_episode_returns[e] += float(np.sum(r))
             if np.all(d):
                 if curriculum is not None:
                     if episode_counts is None or curriculum_rows is None:
@@ -1373,6 +1443,24 @@ def collect_rollout(
                     fixed_mixture.apply(env, selection)
                     curriculum_rows.append(
                         fixed_mixture.row(current_update, e, episode_counts[e], selection)
+                    )
+                elif drtp_sampler is not None:
+                    if (episode_counts is None or drtp_episode_returns is None
+                            or drtp_selections is None or drtp_rows is None):
+                        raise ValueError("DRTP reset bookkeeping is required")
+                    previous_selection = drtp_selections[e]
+                    if previous_selection is None:
+                        raise AssertionError("DRTP selection missing for completed episode")
+                    drtp_sampler.record_completed_return(previous_selection, drtp_episode_returns[e])
+                    drtp_episode_returns[e] = 0.0
+                    episode_counts[e] += 1
+                    selection = drtp_sampler.select(
+                        update=current_update, env_index=e, episode_index=episode_counts[e]
+                    )
+                    drtp_sampler.apply(env, selection)
+                    drtp_selections[e] = selection
+                    drtp_rows.append(
+                        drtp_sampler.selection_row(current_update, e, episode_counts[e], selection)
                     )
                 elif cfg.env_name == "2d_pursuit":
                     env.config.communication_radius = sample_comm_radius(cfg)
