@@ -31,6 +31,7 @@ from envs import (
     UAVPursuitEnv,
 )
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
+from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
 
 
 ROLE_SCOUT_ID = 0
@@ -158,6 +159,10 @@ class RIGMAPPOConfig:
     topology_curriculum_schedule: str = "none"
     topology_curriculum_seed: int | None = None
     topology_curriculum_logging: bool = False
+    # Static episode-level nominal/F0 mix.  This is not a curriculum.
+    fixed_f0_probability: float | None = None
+    fixed_condition_mixture_seed: int | None = None
+    fixed_condition_mixture_logging: bool = False
 
 
 class MLP(nn.Module):
@@ -1059,11 +1064,28 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.topology_curriculum_seed if cfg.topology_curriculum_seed is not None else cfg.seed,
         cfg.updates,
     )
+    if curriculum.enabled and cfg.fixed_f0_probability is not None:
+        raise ValueError("curriculum and fixed condition mixture are mutually exclusive")
+    mixture = (
+        FixedConditionMixture(
+            cfg.fixed_f0_probability,
+            cfg.fixed_condition_mixture_seed if cfg.fixed_condition_mixture_seed is not None else cfg.seed,
+        )
+        if cfg.fixed_f0_probability is not None
+        else None
+    )
     curriculum_rows: list[dict] = []
     episode_counts = [0 for _ in range(cfg.num_envs)]
     if curriculum.enabled:
         (out_dir / "topology_curriculum_manifest.json").write_text(
             json.dumps({**curriculum.manifest(), "training_seed": cfg.seed,
+                        "graph_encoder": cfg.graph_encoder, "hidden_dim": cfg.hidden_dim},
+                       indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    if mixture is not None:
+        (out_dir / "fixed_condition_mixture_manifest.json").write_text(
+            json.dumps({**mixture.manifest(), "training_seed": cfg.seed,
                         "graph_encoder": cfg.graph_encoder, "hidden_dim": cfg.hidden_dim},
                        indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
@@ -1076,6 +1098,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             selection = curriculum.select(update=0, env_index=env_index, episode_index=0)
             curriculum.apply(env, selection)
             curriculum_rows.append(curriculum.row(0, env_index, 0, selection))
+        elif mixture is not None:
+            selection = mixture.select(env_index=env_index, episode_index=0)
+            mixture.apply(env, selection)
+            curriculum_rows.append(mixture.row(0, env_index, 0, selection))
         obs, share_obs, graph = env.reset()
         obs_list.append(obs)
         share_list.append(share_obs)
@@ -1119,6 +1145,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     log_path = out_dir / "train_log.csv"
     telemetry_path = out_dir / "role_gate_telemetry.csv"
     curriculum_log_path = out_dir / "topology_curriculum_log.csv"
+    mixture_log_path = out_dir / "fixed_condition_mixture_log.csv"
     fieldnames = [
         "update",
         "loss",
@@ -1157,9 +1184,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if curriculum.enabled and cfg.topology_curriculum_logging
         else nullcontext()
     )
+    mixture_log_context = (
+        mixture_log_path.open("w", newline="", encoding="utf-8")
+        if mixture is not None and cfg.fixed_condition_mixture_logging
+        else nullcontext()
+    )
     with log_path.open(mode, newline="", encoding="utf-8") as f, (
         telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
-    ) as telemetry_file, curriculum_log_context as curriculum_file:
+    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
@@ -1184,6 +1216,19 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 curriculum_writer.writerow(curriculum_row)
             curriculum_file.flush()
             curriculum_logged_count = len(curriculum_rows)
+        mixture_writer = None
+        mixture_logged_count = 0
+        if mixture_file is not None:
+            mixture_fields = [
+                "update", "env_index", "episode_index", "condition", "failed_blue_agent",
+                "failure_start_step", "failure_duration_steps", "nominal_probability", "f0_probability",
+            ]
+            mixture_writer = csv.DictWriter(mixture_file, fieldnames=mixture_fields)
+            mixture_writer.writeheader()
+            for mixture_row in curriculum_rows:
+                mixture_writer.writerow(mixture_row)
+            mixture_file.flush()
+            mixture_logged_count = len(curriculum_rows)
         f.flush()
         best_eval_key = (-1.0, float("-inf"), float("-inf"), float("-inf"))
         for local_update in range(1, cfg.updates + 1):
@@ -1193,6 +1238,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 curriculum=curriculum if curriculum.enabled else None,
                 episode_counts=episode_counts, current_update=update,
                 curriculum_rows=curriculum_rows,
+                fixed_mixture=mixture,
             )
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
             train_info = update_policy(agent, optimizer, batch, cfg, device, update)
@@ -1206,6 +1252,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     curriculum_writer.writerow(curriculum_row)
                 curriculum_file.flush()
                 curriculum_logged_count = len(curriculum_rows)
+            if mixture_writer is not None:
+                for mixture_row in curriculum_rows[mixture_logged_count:]:
+                    mixture_writer.writerow(mixture_row)
+                mixture_file.flush()
+                mixture_logged_count = len(curriculum_rows)
             if cfg.evaluation_enabled and (update % cfg.eval_interval == 0 or update == 1):
                 eval_base_seed = cfg.eval_base_seed if cfg.eval_base_seed is not None else 10_000 + update * 100
                 row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))
@@ -1275,6 +1326,7 @@ def collect_rollout(
     episode_counts: list[int] | None = None,
     current_update: int = 0,
     curriculum_rows: list[dict] | None = None,
+    fixed_mixture: FixedConditionMixture | None = None,
 ) -> dict:
     obs_buf, share_buf, node_buf, edge_buf, role_buf, adj_buf, intent_buf = [], [], [], [], [], [], []
     relation_adj_buf = []
@@ -1312,6 +1364,15 @@ def collect_rollout(
                     curriculum.apply(env, selection)
                     curriculum_rows.append(
                         curriculum.row(current_update, e, episode_counts[e], selection)
+                    )
+                elif fixed_mixture is not None:
+                    if episode_counts is None or curriculum_rows is None:
+                        raise ValueError("fixed-mixture reset bookkeeping is required")
+                    episode_counts[e] += 1
+                    selection = fixed_mixture.select(env_index=e, episode_index=episode_counts[e])
+                    fixed_mixture.apply(env, selection)
+                    curriculum_rows.append(
+                        fixed_mixture.row(current_update, e, episode_counts[e], selection)
                     )
                 elif cfg.env_name == "2d_pursuit":
                     env.config.communication_radius = sample_comm_radius(cfg)
