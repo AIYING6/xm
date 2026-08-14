@@ -23,8 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from algorithms.ri_gmappo.simple_ri_gmappo import stack_graphs  # noqa: E402
-from scripts.run_phase_s3_development_smoke import frozen_env  # noqa: E402
-from scripts.run_phase_s3r2_simple_full import agent_for_checkpoint  # noqa: E402
+from scripts.run_phase_s3_development_smoke import agent_for_checkpoint, frozen_env  # noqa: E402
 
 
 PROTOCOL = "PHASE-S3D-V1"
