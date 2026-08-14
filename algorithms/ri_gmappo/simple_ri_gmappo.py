@@ -147,6 +147,8 @@ class RIGMAPPOConfig:
     out_dir: str = "results/ri_gmappo"
     save_interval: int = 10
     save_snapshots: bool = False
+    # Fixed diagnostic milestones; never used for checkpoint selection.
+    milestone_updates: dict[int, str] | None = None
     init_checkpoint: str | None = None
     resume: str | None = None
     update_offset: int = 0
@@ -1248,6 +1250,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                         update,
                         best_eval_key,
                     )
+            milestone_label = (cfg.milestone_updates or {}).get(update)
+            if milestone_label is not None:
+                torch.save(agent.state_dict(), out_dir / f"actor_critic_milestone_{milestone_label}.pt")
+                save_training_checkpoint(
+                    out_dir / f"actor_critic_milestone_{milestone_label}_training_state.pt",
+                    agent,
+                    optimizer,
+                    update,
+                    best_eval_key,
+                )
     return log_path
 
 
