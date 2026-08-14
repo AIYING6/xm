@@ -95,7 +95,6 @@ def encoder_probe(agent, packed: dict[str, np.ndarray], device: torch.device) ->
     if actor.graph_encoder != "multi_relation":
         return {"graph_encoder": "single", "probe_available": False}
 
-    obs = torch.zeros((packed["node_feat"].shape[0], packed["node_feat"].shape[1], actor.obs_encoder[0].in_features), device=device)
     node_feat = torch.as_tensor(packed["node_feat"], dtype=torch.float32, device=device)
     edge_feat = torch.as_tensor(packed["edge_feat"], dtype=torch.float32, device=device)
     role = torch.as_tensor(packed["role"], dtype=torch.long, device=device)
@@ -127,45 +126,51 @@ def encoder_probe(agent, packed: dict[str, np.ndarray], device: torch.device) ->
             offdiag = offdiag.masked_fill(eye, 0.0)
             edge_count = offdiag.sum(dim=(-2, -1))
             active_mask = (raw_adj + eye.to(raw_adj.dtype)) > 0.0
-            ent, max_attn, support_n = entropy_and_max(attention[:, relation_id], active_mask)
+            weights = attention[:, relation_id].masked_fill(~active_mask, 0.0)
+            weights = weights / weights.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+            logw = torch.where(weights > 0.0, weights.log(), torch.zeros_like(weights))
+            ent = -(weights * logw).sum(dim=-1) / active_mask.sum(dim=-1).to(weights.dtype).clamp_min(2.0).log().clamp_min(1e-12)
+            max_attn = weights.max(dim=-1).values
+            support_n = active_mask.sum(dim=-1).to(weights.dtype)
             output = branch_outputs[relation_id]
-            node_norm = output.norm(dim=-1)
-            row = {
-                "layer": layer_name,
-                "relation": name,
-                "episodes_in_batch": int(raw_adj.shape[0]),
-                "active_edge_mean": float(edge_count.mean().cpu()),
-                "active_edge_median": float(edge_count.median().cpu()),
-                "empty_graph_ratio": float((edge_count <= 0).float().mean().cpu()),
-                "branch_norm_mean": float(node_norm.mean().cpu()),
-                "branch_norm_median": float(node_norm.median().cpu()),
-                "branch_norm_p95": float(torch.quantile(node_norm.flatten(), 0.95).cpu()),
-                "attention_entropy_normalized": ent,
-                "attention_max_mean": max_attn,
-                "attention_support_mean": support_n,
-                "finite": finite(output) and finite(attention[:, relation_id]),
-            }
-            rows.append(row)
+            node_norm = output.norm(dim=-1).mean(dim=-1)
+            for batch_index in range(raw_adj.shape[0]):
+                rows.append({
+                    "batch_index": batch_index, "layer": layer_name, "relation": name,
+                    "active_edge_mean": float(edge_count[batch_index].cpu()),
+                    "active_edge_median": float(edge_count[batch_index].cpu()),
+                    "empty_graph_ratio": float((edge_count[batch_index] <= 0).cpu()),
+                    "branch_norm_mean": float(node_norm[batch_index].cpu()),
+                    "branch_norm_median": float(node_norm[batch_index].cpu()),
+                    "branch_norm_p95": float(node_norm[batch_index].cpu()),
+                    "attention_entropy_normalized": float(ent[batch_index].cpu()),
+                    "attention_max_mean": float(max_attn[batch_index].cpu()),
+                    "attention_support_mean": float(support_n[batch_index].cpu()),
+                    "union_to_relation_norm_ratio": float("nan"),
+                    "post_fusion_norm_mean": float("nan"),
+                    "finite": finite(output[batch_index:batch_index + 1]) and finite(attention[batch_index:batch_index + 1, relation_id]),
+                })
 
         rel_norm = torch.stack([branch_outputs[i].norm(dim=-1).mean(dim=-1) for i in range(3)], dim=1)
         union_norm = branch_outputs[3].norm(dim=-1).mean(dim=-1)
-        rows.append({
-            "layer": layer_name,
-            "relation": "union_vs_relation",
-            "episodes_in_batch": int(x.shape[0]),
-            "active_edge_mean": float(union_adj.sum(dim=(-2, -1)).mean().cpu()),
-            "active_edge_median": float(union_adj.sum(dim=(-2, -1)).median().cpu()),
-            "empty_graph_ratio": float((union_adj.sum(dim=(-2, -1)) <= 0).float().mean().cpu()),
-            "branch_norm_mean": float(union_norm.mean().cpu()),
-            "branch_norm_median": float(union_norm.median().cpu()),
-            "branch_norm_p95": float(torch.quantile(union_norm, 0.95).cpu()),
-            "attention_entropy_normalized": float("nan"),
-            "attention_max_mean": float("nan"),
-            "attention_support_mean": float("nan"),
-            "union_to_relation_norm_ratio": float((union_norm / rel_norm.mean(dim=1).clamp_min(1e-12)).mean().cpu()),
-            "post_fusion_norm_mean": float(layer_x.norm(dim=-1).mean().cpu()),
-            "finite": finite(layer_x),
-        })
+        ratio = union_norm / rel_norm.mean(dim=1).clamp_min(1e-12)
+        post_norm = layer_x.norm(dim=-1).mean(dim=-1)
+        union_edges = union_adj.sum(dim=(-2, -1))
+        for batch_index in range(x.shape[0]):
+            rows.append({
+                "batch_index": batch_index, "layer": layer_name, "relation": "union_vs_relation",
+                "active_edge_mean": float(union_edges[batch_index].cpu()),
+                "active_edge_median": float(union_edges[batch_index].cpu()),
+                "empty_graph_ratio": float((union_edges[batch_index] <= 0).cpu()),
+                "branch_norm_mean": float(union_norm[batch_index].cpu()),
+                "branch_norm_median": float(union_norm[batch_index].cpu()),
+                "branch_norm_p95": float(union_norm[batch_index].cpu()),
+                "attention_entropy_normalized": float("nan"), "attention_max_mean": float("nan"),
+                "attention_support_mean": float("nan"),
+                "union_to_relation_norm_ratio": float(ratio[batch_index].cpu()),
+                "post_fusion_norm_mean": float(post_norm[batch_index].cpu()),
+                "finite": finite(layer_x[batch_index:batch_index + 1]),
+            })
     return {"graph_encoder": "multi_relation", "probe_available": True, "rows": rows}
 
 
@@ -189,37 +194,43 @@ def run(args: argparse.Namespace) -> dict:
             device = next(agent.parameters()).device
             for condition in CONDITIONS:
                 failure = condition == "relay_failure"
-                for episode_index in range(TAPE_EPISODES):
-                    episode_id = TAPE_START + episode_index
-                    env = frozen_env(episode_id, failure)
-                    obs, share, graph = env.reset()
+                batch_size = 20
+                for batch_start in range(0, TAPE_EPISODES, batch_size):
+                    episode_ids = [TAPE_START + i for i in range(batch_start, min(TAPE_EPISODES, batch_start + batch_size))]
+                    envs = [frozen_env(eid, failure) for eid in episode_ids]
+                    states = [env.reset() for env in envs]
+                    active = [True] * len(envs)
                     timestep = 0
-                    while True:
-                        packed = stack_graphs([graph])
+                    while any(active):
+                        indices = [i for i, flag in enumerate(active) if flag]
+                        packed = stack_graphs([states[i][2] for i in indices])
                         probe = encoder_probe(agent, packed, device)
                         if probe.get("probe_available"):
                             for row in probe["rows"]:
                                 raw_rows.append({
                                     "method": method, "seed": seed, "condition": condition,
-                                    "development_episode_id": episode_id, "timestep": timestep,
-                                    **row,
+                                    "development_episode_id": episode_ids[indices[row["batch_index"]]], "timestep": timestep,
+                                    **{k: v for k, v in row.items() if k != "batch_index"},
                                 })
                         with torch.no_grad():
                             action, *_ = agent.get_action_and_value(
-                                torch.as_tensor(obs[None], dtype=torch.float32, device=device),
+                                torch.as_tensor(np.stack([states[i][0] for i in indices]), dtype=torch.float32, device=device),
                                 torch.as_tensor(packed["node_feat"], dtype=torch.float32, device=device),
                                 torch.as_tensor(packed["edge_feat"], dtype=torch.float32, device=device),
                                 torch.as_tensor(packed["role"], dtype=torch.long, device=device),
                                 torch.as_tensor(packed["adj"], dtype=torch.float32, device=device),
-                                torch.as_tensor(share[None], dtype=torch.float32, device=device),
+                                torch.as_tensor(np.stack([states[i][1] for i in indices]), dtype=torch.float32, device=device),
                                 relation_adj=torch.as_tensor(packed["relation_adj"], dtype=torch.float32, device=device),
                                 deterministic=True,
                                 intent_label=torch.as_tensor(packed["intent_label"], dtype=torch.long, device=device),
                             )
-                        obs, share, graph, _, dones, _ = env.step(action.squeeze(0).cpu().numpy())
+                        action_batch = action.cpu().numpy()
+                        for action_index, env_index in enumerate(indices):
+                            obs, share, graph, _, dones, _ = envs[env_index].step(action_batch[action_index])
+                            states[env_index] = (obs, share, graph)
+                            if np.all(dones):
+                                active[env_index] = False
                         timestep += 1
-                        if np.all(dones):
-                            break
             del agent
             if device.type == "cuda":
                 torch.cuda.empty_cache()
@@ -231,7 +242,7 @@ def run(args: argparse.Namespace) -> dict:
         grouped[(row["method"], row["seed"], row["condition"], row["layer"], row["relation"])].append(row)
     for key, rows in sorted(grouped.items()):
         method, seed, condition, layer, relation = key
-        numeric = {k: [float(r[k]) for r in rows if r.get(k) not in (None, "") and math.isfinite(float(r[k]))] for k in ("active_edge_mean", "empty_graph_ratio", "branch_norm_mean", "branch_norm_median", "attention_entropy_normalized", "attention_max_mean", "attention_support_mean", "union_to_relation_norm_ratio", "post_fusion_norm_mean")}
+        numeric = {k: [float(r.get(k, float("nan"))) for r in rows if r.get(k) not in (None, "") and math.isfinite(float(r.get(k, float("nan"))))] for k in ("active_edge_mean", "empty_graph_ratio", "branch_norm_mean", "branch_norm_median", "attention_entropy_normalized", "attention_max_mean", "attention_support_mean", "union_to_relation_norm_ratio", "post_fusion_norm_mean")}
         summary.append({"method": method, "seed": seed, "condition": condition, "layer": layer, "relation": relation, "rows": len(rows), **{f"{k}_mean": float(np.mean(v)) if v else float("nan") for k, v in numeric.items()}})
     write_csv(out / "summary_by_seed_condition.csv", summary)
     (out / "checkpoint_inventory.json").write_text(json.dumps(checkpoint_inventory, indent=2) + "\n", encoding="utf-8")
