@@ -45,6 +45,12 @@ CHAIN_AUX_LABEL_NAMES = (
     "fresh_message_available",
 )
 
+# RSG-TC deliberately uses only receiver-local edge state.  These indices are
+# the frozen 3D edge-feature contract: normalized distance, sensing validity,
+# communication validity, task-support validity, message age, and confidence.
+RSG_TC_EDGE_FEATURE_INDICES = (3, 11, 12, 13, 15, 16)
+RSG_TC_RELATION_COUNT = 3
+
 
 @dataclass
 class RIGMAPPOConfig:
@@ -189,6 +195,83 @@ class GraphAttentionLayer(nn.Module):
         scores = self.leaky_relu(self.attn(torch.cat([hi, hj], dim=-1))).squeeze(-1)
         if self.edge_score is not None and edge_feat is not None:
             scores = scores + self.edge_score(edge_feat).squeeze(-1)
+
+        eye = torch.eye(num_nodes, dtype=adj.dtype, device=adj.device).unsqueeze(0)
+        mask = torch.clamp(adj + eye, 0.0, 1.0)
+        scores = scores.masked_fill(mask <= 0.0, -1e9)
+        weights = torch.softmax(scores, dim=-1)
+        out = torch.bmm(weights, h)
+        return torch.tanh(out), weights
+
+
+class TopologyConditionedGraphAttentionLayer(nn.Module):
+    """Shared GAT layer with a zero-initialized local relation-state bias.
+
+    The relation state is a multi-hot ``[P, C, T]`` vector concatenated with
+    the frozen receiver-local edge features.  It enters only as an additive
+    attention-score bias; the sender payload remains ``h_j``.  Zero
+    initialization makes the initial forward pass structurally equivalent to
+    the ordinary edge-feature GAT before the relation correction is learned.
+    """
+
+    def __init__(
+        self,
+        in_dim: int,
+        out_dim: int,
+        edge_dim: int = 0,
+        relation_count: int = RSG_TC_RELATION_COUNT,
+        relation_edge_indices: tuple[int, ...] = RSG_TC_EDGE_FEATURE_INDICES,
+    ):
+        super().__init__()
+        self.proj = nn.Linear(in_dim, out_dim, bias=False)
+        self.attn = nn.Linear(out_dim * 2, 1, bias=False)
+        self.edge_score = None
+        if edge_dim > 0:
+            self.edge_score = nn.Sequential(
+                nn.Linear(edge_dim, out_dim),
+                nn.Tanh(),
+                nn.Linear(out_dim, 1, bias=False),
+            )
+            nn.init.zeros_(self.edge_score[-1].weight)
+        self.relation_edge_indices = tuple(relation_edge_indices)
+        if edge_dim > 0 and max(self.relation_edge_indices, default=-1) >= edge_dim:
+            raise ValueError(
+                f"RSG-TC edge feature index exceeds edge_dim={edge_dim}: {self.relation_edge_indices}"
+            )
+        context_dim = relation_count + len(self.relation_edge_indices)
+        self.relation_bias = nn.Sequential(
+            nn.Linear(context_dim, out_dim),
+            nn.Tanh(),
+            nn.Linear(out_dim, 1, bias=False),
+        )
+        # The last projection is exactly zero, so the initial bias is zero for
+        # every relation/state vector without requiring a special input.
+        nn.init.zeros_(self.relation_bias[-1].weight)
+        self.leaky_relu = nn.LeakyReLU(0.2)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        adj: torch.Tensor,
+        edge_feat: torch.Tensor,
+        relation_adj: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        if relation_adj.ndim != 4 or relation_adj.shape[1] != RSG_TC_RELATION_COUNT:
+            raise ValueError(
+                "RSG-TC requires relation_adj with shape "
+                f"[batch, {RSG_TC_RELATION_COUNT}, nodes, nodes], got {tuple(relation_adj.shape)}"
+            )
+        h = self.proj(x)
+        bsz, num_nodes, hidden = h.shape
+        hi = h.unsqueeze(2).expand(bsz, num_nodes, num_nodes, hidden)
+        hj = h.unsqueeze(1).expand(bsz, num_nodes, num_nodes, hidden)
+        scores = self.leaky_relu(self.attn(torch.cat([hi, hj], dim=-1))).squeeze(-1)
+        if self.edge_score is not None and edge_feat is not None:
+            scores = scores + self.edge_score(edge_feat).squeeze(-1)
+        relation_multi_hot = relation_adj.permute(0, 2, 3, 1)
+        local_edge_state = edge_feat[..., list(self.relation_edge_indices)]
+        context = torch.cat([relation_multi_hot, local_edge_state], dim=-1)
+        scores = scores + self.relation_bias(context).squeeze(-1)
 
         eye = torch.eye(num_nodes, dtype=adj.dtype, device=adj.device).unsqueeze(0)
         mask = torch.clamp(adj + eye, 0.0, 1.0)
@@ -421,7 +504,7 @@ class RIActor(nn.Module):
         role_gate_mode: str = "relation_conditioned",
     ):
         super().__init__()
-        if graph_encoder not in {"no_graph", "single", "multi_relation"}:
+        if graph_encoder not in {"no_graph", "single", "rsg_tc", "multi_relation"}:
             raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
         if graph_message_ablation not in {"none", "no_role_pair_gate"}:
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
@@ -445,6 +528,9 @@ class RIActor(nn.Module):
         elif graph_encoder == "single":
             self.gat1 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
             self.gat2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
+        elif graph_encoder == "rsg_tc":
+            self.rsg_tc_gat1 = TopologyConditionedGraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
+            self.rsg_tc_gat2 = TopologyConditionedGraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
         else:
             self.multi_relation_graph = MultiRelationGraphEncoder(
                 hidden_dim,
@@ -532,6 +618,11 @@ class RIActor(nn.Module):
         if self.graph_encoder == "single":
             x, _ = self.gat1(x, adj, edge_feat)
             x, attn = self.gat2(x, adj, edge_feat)
+        elif self.graph_encoder == "rsg_tc":
+            if relation_adj is None:
+                raise ValueError("relation_adj is required when graph_encoder='rsg_tc'")
+            x, _ = self.rsg_tc_gat1(x, adj, edge_feat, relation_adj)
+            x, attn = self.rsg_tc_gat2(x, adj, edge_feat, relation_adj)
         else:
             if relation_adj is None:
                 raise ValueError("relation_adj is required when graph_encoder='multi_relation'")
