@@ -5,11 +5,11 @@
 ```text
 CTP = CLOSED
 TP-2 = NO-GO
-Phase FL protocol = FROZEN FOR REVIEW
-Training = NOT AUTHORIZED
+Phase FL protocol = FROZEN
+Training = AUTHORIZED AFTER THIS PROVENANCE AMENDMENT
 ```
 
-This document defines a diagnostic audit. It is not a new method-selection phase and it does not authorize training by itself. No Schedule D, robust loss, recurrent module, architecture change, reward change, environment change, or failure-semantic change is permitted under this protocol.
+This document defines a diagnostic audit. It is not a new method-selection phase. No Schedule D, robust loss, recurrent module, architecture change, reward change, environment change, or failure-semantic change is permitted under this protocol.
 
 ## 1. Single diagnostic question
 
@@ -79,12 +79,12 @@ Any violation invalidates that run as FL evidence; the run must not be silently 
 FL uses a new paired diagnostic tape, separate from all previously used tapes. The reserved FL namespace is:
 
 ```text
-paired episode IDs: 360000–360049
+paired episode IDs: 370000–370049
 conditions: nominal and relay_failure
 episodes per condition: 50
 ```
 
-The tape must be generated, hashed, and frozen before any FL evaluation. It must bind the same exogenous episode realization for the nominal/failure pair, including initial state, target realization, action/noise realization where applicable, failure node/time, and environment randomness. The tape must not reuse IDs or realizations from `340000–340099` or `350000–350049`.
+The tape must be generated, hashed, and frozen before any FL evaluation. It must bind the same exogenous episode realization for the nominal/failure pair, including initial state, target realization, action/noise realization where applicable, failure node/time, and environment randomness. The tape must not reuse IDs or realizations from `340000–340099`, `350000–350049`, or the previously reserved TP-2 namespace `360000–360099`.
 
 Both FL arms must be evaluated on exactly the same tape. The tape is diagnostic-only and must not be reused as canonical evidence.
 
@@ -112,29 +112,45 @@ Also report paired episode-level values and:
 
 The primary comparison is between the two experts on the same seed and the same FL tape. `J_failure` is the main learnability diagnostic; `J_nominal` is the specialization/competence diagnostic.
 
-## 7. Pre-registered interpretation rule
+## 7. Pre-registered numerical interpretation rule
 
-FL does not require a pre-specified victory margin, statistical significance, or paper-level superiority. Results are classified by the frozen qualitative pattern below, using pooled means plus seed-wise direction. With two seeds, all conclusions remain diagnostic and uncertainty must be reported.
+Define, for each seed and for the pooled means:
+
+```text
+G_F = J_failure(F0 expert) - J_failure(nominal expert)
+G_N = J_nominal(F0 expert) - J_nominal(nominal expert)
+
+R_F = G_F / (abs(J_failure(nominal expert)) + 1e-8)
+R_N = G_N / (abs(J_nominal(nominal expert)) + 1e-8)
+```
+
+The numerical thresholds are frozen before tape generation and training:
+
+- **Failure clearly improves:** pooled `R_F >= 0.10` and `G_F >= 0` for both seeds.
+- **Nominal materially declines:** pooled `R_N <= -0.10` and `G_N <= 0` for both seeds.
+- **Nominal not materially reduced:** the material-decline rule is false.
+
+The 10% thresholds are diagnostic classification thresholds, not significance levels and not paper-performance targets. With two seeds, all conclusions remain diagnostic and uncertainty must be reported.
 
 ### A — Failure learnable; shared-policy interference indicated
 
-Assign A when the F0-only expert has a higher failure score than the nominal reference in the pooled result and the direction is consistent across both diagnostic seeds, while nominal competence is not materially reduced.
+Assign A when the **failure clearly improves** rule is satisfied and the **nominal materially declines** rule is false.
 
 Interpretation: the failure condition is learnable by the existing SG backbone, and the earlier mixed-condition degradation is consistent with nominal–failure policy interference or optimization interference.
 
 ### B — Failure not shown to be learnable under the current formulation
 
-Assign B when the F0-only expert does not improve the failure score over the nominal reference in the pooled result, or the seed-wise directions do not provide consistent evidence of improvement.
+Assign B when the **failure clearly improves** rule is not satisfied.
 
 Interpretation: under the current observation, reward, policy class, and budget, failure competence has not been demonstrated. The next investigation must target partial observability, temporal dependence, message age/staleness, and post-failure action bottlenecks—not another curriculum or robust-loss proposal.
 
 ### C — Failure learnable with nominal–failure specialization trade-off
 
-Assign C when the F0-only expert improves failure score with consistent seed-wise direction, but its nominal score is materially lower than the nominal reference.
+Assign C when the **failure clearly improves** rule and the **nominal materially declines** rule are both satisfied.
 
 Interpretation: the SG backbone can specialize to failure, but nominal and failure competence occupy a visible Pareto trade-off. A later constrained-robust-optimization proposal may be considered only after a separate protocol is written and authorized.
 
-If the result lies near a tie or has contradictory safety/telemetry evidence, report the closest pre-registered category together with `diagnostic uncertainty`; do not create a new method or alter the category after seeing the result.
+Because A/B/C are defined by complementary rules, exactly one category is selected. If the result lies near a threshold or has contradictory safety/telemetry evidence, retain the category determined by the frozen numerical rule and add `diagnostic uncertainty`; do not create a new method or alter the category after seeing the result.
 
 ## 8. Prohibited actions
 
