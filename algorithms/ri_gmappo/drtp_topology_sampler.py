@@ -107,6 +107,66 @@ class DRTPTopologySampler:
         self.last_difficulty = {group: 0.0 for group in FAILURE_GROUPS}
         self.adaptation_count = 0
 
+    def state_dict(self) -> dict:
+        """Return every mutable sampler field needed for an exact continuation.
+
+        The training-side sampler is deliberately outside the actor/critic.  It
+        nevertheless has state (especially the active adaptation window) that
+        affects later reset selections.  Persisting it is therefore required
+        for a strict post-warm-restart continuation.
+        """
+        return {
+            "format": "drtp_topology_sampler_runtime_state_v1",
+            "mode": self.mode,
+            "seed": self.seed,
+            "total_updates": self.total_updates,
+            "q": {group: float(self.q[group]) for group in FAILURE_GROUPS},
+            "ema": {
+                group: None if self.ema[group] is None else float(self.ema[group])
+                for group in ALL_GROUPS
+            },
+            "window_returns": {
+                group: [float(value) for value in self.window_returns[group]]
+                for group in ALL_GROUPS
+            },
+            "last_difficulty": {
+                group: float(self.last_difficulty[group]) for group in FAILURE_GROUPS
+            },
+            "adaptation_count": int(self.adaptation_count),
+        }
+
+    def load_state_dict(self, state: dict) -> None:
+        """Restore a state emitted by :meth:`state_dict` with strict checks."""
+        if state.get("format") != "drtp_topology_sampler_runtime_state_v1":
+            raise ValueError("unsupported DRTP sampler runtime-state format")
+        if str(state.get("mode")) != self.mode or int(state.get("seed")) != self.seed:
+            raise ValueError("DRTP sampler runtime state is bound to a different mode or seed")
+        required = {"q", "ema", "window_returns", "last_difficulty", "adaptation_count"}
+        if not required.issubset(state):
+            raise ValueError("incomplete DRTP sampler runtime state")
+        q = {group: float(state["q"][group]) for group in FAILURE_GROUPS}
+        if not math.isclose(sum(q.values()), 1.0, rel_tol=0.0, abs_tol=1e-10):
+            raise ValueError("DRTP sampler runtime state has invalid q mass")
+        if any(value < Q_MIN - 1e-12 or value > Q_MAX + 1e-12 for value in q.values()):
+            raise ValueError("DRTP sampler runtime state violates q bounds")
+        ema = {
+            group: None if state["ema"][group] is None else float(state["ema"][group])
+            for group in ALL_GROUPS
+        }
+        window_returns = {
+            group: [float(value) for value in state["window_returns"][group]]
+            for group in ALL_GROUPS
+        }
+        if any(not math.isfinite(value) for values in window_returns.values() for value in values):
+            raise ValueError("DRTP sampler runtime state has non-finite window return")
+        self.q = q
+        self.ema = ema
+        self.window_returns = window_returns
+        self.last_difficulty = {
+            group: float(state["last_difficulty"][group]) for group in FAILURE_GROUPS
+        }
+        self.adaptation_count = int(state["adaptation_count"])
+
     def _rng(self, update: int, env_index: int, episode_index: int) -> random.Random:
         key = (self.seed * 1_000_003 + int(update) * 97_003
                + int(env_index) * 10_007 + int(episode_index) * 101)

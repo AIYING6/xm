@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 
+import copy
 import math
 import numpy as np
 
@@ -186,6 +187,39 @@ class UAVIntercept3DEnv:
     def seed(self, seed: int) -> None:
         self.rng = np.random.default_rng(seed)
         self.dropout_rng = np.random.default_rng(seed + 10_007)
+
+    def runtime_state_dict(self) -> dict:
+        """Capture all mutable environment state required for exact continuation.
+
+        This is a training-runtime artifact, never an actor observation.  RNG
+        bit-generator states are recorded separately so they remain explicit in
+        provenance and can be restored on a newly constructed environment.
+        """
+        attributes = {
+            name: copy.deepcopy(value)
+            for name, value in self.__dict__.items()
+            if name not in {"rng", "dropout_rng"}
+        }
+        return {
+            "format": "uav_intercept_3d_runtime_state_v1",
+            "attributes": attributes,
+            "rng_state": copy.deepcopy(self.rng.bit_generator.state),
+            "dropout_rng_state": copy.deepcopy(self.dropout_rng.bit_generator.state),
+        }
+
+    def load_runtime_state_dict(self, state: dict) -> None:
+        """Restore a state emitted by :meth:`runtime_state_dict`."""
+        if state.get("format") != "uav_intercept_3d_runtime_state_v1":
+            raise ValueError("unsupported UAVIntercept3DEnv runtime-state format")
+        attributes = state.get("attributes")
+        if not isinstance(attributes, dict) or "config" not in attributes:
+            raise ValueError("incomplete UAVIntercept3DEnv runtime state")
+        self.__dict__.clear()
+        self.__dict__.update(copy.deepcopy(attributes))
+        self.rng = np.random.default_rng()
+        self.rng.bit_generator.state = copy.deepcopy(state["rng_state"])
+        self.dropout_rng = np.random.default_rng()
+        self.dropout_rng.bit_generator.state = copy.deepcopy(state["dropout_rng_state"])
 
     def reset(self) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray]]:
         cfg = self.config

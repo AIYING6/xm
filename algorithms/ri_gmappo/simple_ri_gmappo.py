@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
+import copy
 import csv
 import json
 import math
@@ -170,6 +171,15 @@ class RIGMAPPOConfig:
     drtp_sampler_mode: str = "none"
     drtp_sampler_seed: int | None = None
     drtp_sampler_logging: bool = False
+    # The sampler's protocol horizon can differ from this invocation's local
+    # update count during an exact runtime continuation.
+    drtp_sampler_total_updates: int | None = None
+    # Exact runtime continuation is opt-in.  Legacy checkpoints only contain
+    # model/optimizer/update and must use the separately documented warm
+    # restart path rather than this strict continuation mechanism.
+    runtime_state_resume: str | None = None
+    runtime_state_checkpointing: bool = False
+    runtime_state_save_interval: int | None = None
 
 
 class MLP(nn.Module):
@@ -1014,6 +1024,125 @@ def save_training_checkpoint(
     torch.save(payload, path)
 
 
+RUNTIME_STATE_FORMAT = "ri_gmappo_runtime_state_v1"
+
+
+def _capture_runtime_rng_state() -> dict:
+    """Capture process RNG state after a completed PPO update."""
+    payload = {
+        "python": random.getstate(),
+        "numpy": np.random.get_state(),
+        "torch_cpu": torch.get_rng_state(),
+        "torch_cuda": None,
+    }
+    if torch.cuda.is_available():
+        payload["torch_cuda"] = torch.cuda.get_rng_state_all()
+    return payload
+
+
+def _restore_runtime_rng_state(state: dict) -> None:
+    """Restore the process RNG state after all constructors have run."""
+    required = {"python", "numpy", "torch_cpu", "torch_cuda"}
+    if not required.issubset(state):
+        raise ValueError("incomplete runtime RNG state")
+    random.setstate(state["python"])
+    np.random.set_state(state["numpy"])
+    torch.set_rng_state(state["torch_cpu"])
+    if state["torch_cuda"] is not None:
+        if not torch.cuda.is_available():
+            raise RuntimeError("runtime checkpoint requires CUDA RNG restoration on a CUDA-capable host")
+        torch.cuda.set_rng_state_all(state["torch_cuda"])
+
+
+def _selection_to_state(selection: DRTPSelection | None) -> dict | None:
+    if selection is None:
+        return None
+    return {
+        "group": selection.group,
+        "condition": selection.condition,
+        "failure_start_step": int(selection.failure_start_step),
+        "failure_duration_steps": int(selection.failure_duration_steps),
+        "failed_blue_agent": int(selection.failed_blue_agent),
+    }
+
+
+def _selection_from_state(state: dict | None) -> DRTPSelection | None:
+    if state is None:
+        return None
+    return DRTPSelection(
+        group=str(state["group"]),
+        condition=str(state["condition"]),
+        failure_start_step=int(state["failure_start_step"]),
+        failure_duration_steps=int(state["failure_duration_steps"]),
+        failed_blue_agent=int(state["failed_blue_agent"]),
+    )
+
+
+def save_runtime_training_checkpoint(
+    path: Path,
+    agent: nn.Module,
+    optimizer: optim.Optimizer,
+    update: int,
+    best_eval_key: tuple[float, float, float, float],
+    envs: list[UAVPursuitEnv | UAVIntercept3DEnv],
+    obs: np.ndarray,
+    share_obs: np.ndarray,
+    graph_obs: dict,
+    episode_counts: list[int],
+    drtp_episode_returns: list[float],
+    drtp_selections: list[DRTPSelection | None],
+    drtp_sampler: DRTPTopologySampler | None,
+) -> None:
+    """Persist every state that can alter the following rollout/update.
+
+    Runtime checkpointing deliberately does not add any state to the actor or
+    critic input.  It exists only to make a future *strict continuation*
+    auditable after the one documented 3M warm-restart boundary.
+    """
+    environment_states = []
+    for env in envs:
+        runtime_state = getattr(env, "runtime_state_dict", None)
+        if runtime_state is None:
+            raise TypeError(f"{type(env).__name__} does not support runtime-state persistence")
+        environment_states.append(runtime_state())
+    payload = {
+        "format": RUNTIME_STATE_FORMAT,
+        "model_state": agent.state_dict(),
+        "optimizer_state": optimizer.state_dict(),
+        "update": int(update),
+        "best_eval_key": tuple(float(value) for value in best_eval_key),
+        "rng_state": _capture_runtime_rng_state(),
+        "environment_states": environment_states,
+        "obs": copy.deepcopy(obs),
+        "share_obs": copy.deepcopy(share_obs),
+        "graph_obs": copy.deepcopy(graph_obs),
+        "episode_counts": [int(value) for value in episode_counts],
+        "drtp_episode_returns": [float(value) for value in drtp_episode_returns],
+        "drtp_selections": [_selection_to_state(value) for value in drtp_selections],
+        "drtp_sampler_state": None if drtp_sampler is None else drtp_sampler.state_dict(),
+        # No observation/reward normalization is currently used, but its
+        # explicit placeholder makes the continuation contract unambiguous.
+        "normalization_state": None,
+    }
+    torch.save(payload, path)
+
+
+def load_runtime_training_checkpoint(path: str | Path, device: torch.device) -> dict:
+    """Read and validate a strict-continuation checkpoint without mutating state."""
+    payload = torch.load(path, map_location=device, weights_only=False)
+    if not isinstance(payload, dict) or payload.get("format") != RUNTIME_STATE_FORMAT:
+        raise ValueError("unsupported runtime training checkpoint format")
+    required = {
+        "model_state", "optimizer_state", "update", "best_eval_key", "rng_state",
+        "environment_states", "obs", "share_obs", "graph_obs", "episode_counts",
+        "drtp_episode_returns", "drtp_selections", "drtp_sampler_state", "normalization_state",
+    }
+    missing = sorted(required.difference(payload))
+    if missing:
+        raise ValueError(f"incomplete runtime training checkpoint: {missing}")
+    return payload
+
+
 def eval_policy(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig, base_seed: int = 10_000) -> dict:
     device = torch.device(cfg.device)
     records = []
@@ -1061,10 +1190,21 @@ def eval_policy(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig, base_seed: int = 10_0
 def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     if cfg.env_name == "3d_intercept" and cfg.oracle_intent:
         raise ValueError("oracle_intent is unavailable for 3d_intercept because it has no intent supervision")
+    if cfg.runtime_state_resume and (cfg.resume or cfg.init_checkpoint):
+        raise ValueError("runtime_state_resume is mutually exclusive with legacy resume/init_checkpoint")
+    if cfg.runtime_state_resume and not cfg.append_log:
+        raise ValueError("runtime_state_resume requires append_log=True to preserve one trajectory log")
     set_seed(cfg.seed)
     device = torch.device(cfg.device)
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    runtime_payload = (
+        load_runtime_training_checkpoint(cfg.runtime_state_resume, device)
+        if cfg.runtime_state_resume is not None
+        else None
+    )
+    if runtime_payload is not None and int(runtime_payload["update"]) != int(cfg.update_offset):
+        raise ValueError("runtime_state_resume update must equal the configured update_offset")
 
     curriculum = TopologyCurriculum(
         cfg.topology_curriculum_schedule,
@@ -1088,7 +1228,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         DRTPTopologySampler(
             drtp_mode,
             cfg.drtp_sampler_seed if cfg.drtp_sampler_seed is not None else cfg.seed,
-            cfg.updates,
+            cfg.drtp_sampler_total_updates if cfg.drtp_sampler_total_updates is not None else cfg.updates,
         )
         if drtp_mode != "none"
         else None
@@ -1123,19 +1263,22 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     envs = make_envs(cfg)
     obs_list, share_list, graph_list = [], [], []
     for env_index, env in enumerate(envs):
-        if curriculum.enabled:
-            selection = curriculum.select(update=0, env_index=env_index, episode_index=0)
-            curriculum.apply(env, selection)
-            curriculum_rows.append(curriculum.row(0, env_index, 0, selection))
-        elif mixture is not None:
-            selection = mixture.select(env_index=env_index, episode_index=0)
-            mixture.apply(env, selection)
-            curriculum_rows.append(mixture.row(0, env_index, 0, selection))
-        elif drtp_sampler is not None:
-            selection = drtp_sampler.select(update=0, env_index=env_index, episode_index=0)
-            drtp_sampler.apply(env, selection)
-            drtp_selections[env_index] = selection
-            drtp_rows.append(drtp_sampler.selection_row(0, env_index, 0, selection))
+        if runtime_payload is None:
+            if curriculum.enabled:
+                selection = curriculum.select(update=0, env_index=env_index, episode_index=0)
+                curriculum.apply(env, selection)
+                curriculum_rows.append(curriculum.row(0, env_index, 0, selection))
+            elif mixture is not None:
+                selection = mixture.select(env_index=env_index, episode_index=0)
+                mixture.apply(env, selection)
+                curriculum_rows.append(mixture.row(0, env_index, 0, selection))
+            elif drtp_sampler is not None:
+                selection = drtp_sampler.select(update=0, env_index=env_index, episode_index=0)
+                drtp_sampler.apply(env, selection)
+                drtp_selections[env_index] = selection
+                drtp_rows.append(drtp_sampler.selection_row(0, env_index, 0, selection))
+        # A temporary reset provides graph dimensions for agent construction.
+        # Its state/RNG effects are overwritten below for strict continuation.
         obs, share_obs, graph = env.reset()
         obs_list.append(obs)
         share_list.append(share_obs)
@@ -1166,7 +1309,30 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     optimizer = make_optimizer(agent, cfg)
-    if cfg.init_checkpoint:
+    if runtime_payload is not None:
+        agent.load_state_dict(runtime_payload["model_state"], strict=True)
+        optimizer.load_state_dict(runtime_payload["optimizer_state"])
+        if len(runtime_payload["environment_states"]) != len(envs):
+            raise ValueError("runtime checkpoint environment count does not match configuration")
+        for env, environment_state in zip(envs, runtime_payload["environment_states"]):
+            loader = getattr(env, "load_runtime_state_dict", None)
+            if loader is None:
+                raise TypeError(f"{type(env).__name__} does not support runtime-state restoration")
+            loader(environment_state)
+        obs = copy.deepcopy(runtime_payload["obs"])
+        share_obs = copy.deepcopy(runtime_payload["share_obs"])
+        graph_obs = copy.deepcopy(runtime_payload["graph_obs"])
+        episode_counts = [int(value) for value in runtime_payload["episode_counts"]]
+        drtp_episode_returns = [float(value) for value in runtime_payload["drtp_episode_returns"]]
+        drtp_selections = [_selection_from_state(value) for value in runtime_payload["drtp_selections"]]
+        if drtp_sampler is None and runtime_payload["drtp_sampler_state"] is not None:
+            raise ValueError("runtime checkpoint requires a DRTP/UTR sampler")
+        if drtp_sampler is not None:
+            if runtime_payload["drtp_sampler_state"] is None:
+                raise ValueError("runtime checkpoint is missing DRTP/UTR sampler state")
+            drtp_sampler.load_state_dict(runtime_payload["drtp_sampler_state"])
+        _restore_runtime_rng_state(runtime_payload["rng_state"])
+    elif cfg.init_checkpoint:
         load_matching_state_dict(agent, cfg.init_checkpoint, device)
     if cfg.resume:
         load_training_checkpoint(agent, optimizer, cfg.resume, device)
@@ -1215,17 +1381,17 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
     curriculum_log_context = (
-        curriculum_log_path.open("w", newline="", encoding="utf-8")
+        curriculum_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
         if curriculum.enabled and cfg.topology_curriculum_logging
         else nullcontext()
     )
     mixture_log_context = (
-        mixture_log_path.open("w", newline="", encoding="utf-8")
+        mixture_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
         if mixture is not None and cfg.fixed_condition_mixture_logging
         else nullcontext()
     )
     drtp_log_context = (
-        drtp_log_path.open("w", newline="", encoding="utf-8")
+        drtp_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
         if drtp_sampler is not None and cfg.drtp_sampler_logging
         else nullcontext()
     )
@@ -1273,13 +1439,18 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         drtp_logged_count = 0
         if drtp_file is not None:
             drtp_writer = csv.DictWriter(drtp_file, fieldnames=DRTPTopologySampler.log_fields())
-            drtp_writer.writeheader()
+            if not cfg.append_log or not drtp_log_path.exists() or drtp_log_path.stat().st_size == 0:
+                drtp_writer.writeheader()
             for drtp_row in drtp_rows:
                 drtp_writer.writerow(drtp_row)
             drtp_file.flush()
             drtp_logged_count = len(drtp_rows)
         f.flush()
-        best_eval_key = (-1.0, float("-inf"), float("-inf"), float("-inf"))
+        best_eval_key = (
+            tuple(float(value) for value in runtime_payload["best_eval_key"])
+            if runtime_payload is not None
+            else (-1.0, float("-inf"), float("-inf"), float("-inf"))
+        )
         for local_update in range(1, cfg.updates + 1):
             update = cfg.update_offset + local_update
             batch = collect_rollout(
@@ -1363,6 +1534,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                         update,
                         best_eval_key,
                     )
+                if cfg.runtime_state_checkpointing:
+                    runtime_interval = cfg.runtime_state_save_interval or cfg.save_interval
+                    if update % runtime_interval == 0 or local_update == cfg.updates:
+                        save_runtime_training_checkpoint(
+                            out_dir / "actor_critic_runtime_state_latest.pt",
+                            agent, optimizer, update, best_eval_key, envs, obs, share_obs, graph_obs,
+                            episode_counts, drtp_episode_returns, drtp_selections, drtp_sampler,
+                        )
             milestone_label = (cfg.milestone_updates or {}).get(update)
             if milestone_label is not None:
                 torch.save(agent.state_dict(), out_dir / f"actor_critic_milestone_{milestone_label}.pt")
@@ -1373,6 +1552,12 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     update,
                     best_eval_key,
                 )
+                if cfg.runtime_state_checkpointing:
+                    save_runtime_training_checkpoint(
+                        out_dir / f"actor_critic_runtime_state_milestone_{milestone_label}.pt",
+                        agent, optimizer, update, best_eval_key, envs, obs, share_obs, graph_obs,
+                        episode_counts, drtp_episode_returns, drtp_selections, drtp_sampler,
+                    )
     return log_path
 
 
