@@ -13,10 +13,10 @@
     ]]></style>
 
     <!-- Medium-detail original role illustrations; all remaining layout stays editable SVG. -->
-    <g id="scout"><image xlink:href="assets/fig1_role_icons/scout_blue_simplified.png" x="-112" y="-88" width="224" height="176" preserveAspectRatio="xMidYMid meet"/></g>
-    <g id="relay"><image xlink:href="assets/fig1_role_icons/relay_green_simplified.png" x="-112" y="-85" width="224" height="171" preserveAspectRatio="xMidYMid meet"/></g>
-    <g id="attacker"><image xlink:href="assets/fig1_role_icons/attacker_red_simplified.png" x="-118" y="-88" width="236" height="177" preserveAspectRatio="xMidYMid meet"/></g>
-    <g id="target"><image xlink:href="assets/fig1_role_icons/target_station_purple_simplified.png" x="-82" y="-92" width="164" height="184" preserveAspectRatio="xMidYMid meet"/></g>
+    <g id="scout"><image xlink:href="assets/fig1_role_icons/scout_blue_light.png" x="-112" y="-88" width="224" height="176" preserveAspectRatio="xMidYMid meet"/></g>
+    <g id="relay"><image xlink:href="assets/fig1_role_icons/relay_green_light.png" x="-112" y="-85" width="224" height="171" preserveAspectRatio="xMidYMid meet"/></g>
+    <g id="attacker"><image xlink:href="assets/fig1_role_icons/attacker_red_light.png" x="-118" y="-88" width="236" height="177" preserveAspectRatio="xMidYMid meet"/></g>
+    <g id="target"><image xlink:href="assets/fig1_role_icons/target_station_purple_light.png" x="-82" y="-92" width="164" height="184" preserveAspectRatio="xMidYMid meet"/></g>
     <g id="failure"><circle r="31" fill="#fff8f8" stroke="#e43d3d" stroke-width="2.7" stroke-dasharray="5 5"/><path d="M-14-14 L14 14 M14-14 L-14 14" stroke="#e43d3d" stroke-width="5.5" stroke-linecap="round"/></g>
   </defs>
 

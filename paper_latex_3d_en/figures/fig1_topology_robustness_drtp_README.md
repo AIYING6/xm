@@ -3,8 +3,8 @@
 This figure is an original, editable SVG schematic for the current
 DRTP-SG-MAPPO topology-robustness research line. Its panel geometry, text,
 arrows, relation paths, graph nodes, and failure marker are native SVG objects.
-The four role illustrations are original medium-detail PNG assets, retained to
-provide visual recognition while remaining lighter than the earlier version.
+The four role illustrations are original lightweight semi-flat PNG assets,
+chosen to provide visual recognition without competing with the relation paths.
 
 ## Scope
 
