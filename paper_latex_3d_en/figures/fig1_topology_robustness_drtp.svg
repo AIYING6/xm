@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Fig. 1 | Topology-robust heterogeneous UAV coordination task.
+  Editable source: all icons, labels, paths, arrows, and panels are native SVG objects.
+  Scientific scope: task definition only; no performance or information-loss claim.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1800" height="1080" viewBox="0 0 1800 1080" role="img"
+     aria-labelledby="title desc">
+  <title id="title">Relay-node failure and topology reconfiguration in a heterogeneous UAV coordination task</title>
+  <desc id="desc">An editable three-panel schematic. Panel a shows scout, relay, attacker and target roles. Panel b shows the communication topology before and after relay-node failure. Panel c shows the legal local edge-state boundary observed by the decentralized actor.</desc>
+  <defs>
+    <style type="text/css"><![CDATA[
+      .panel { fill:#ffffff; stroke:#5c636b; stroke-width:2.2; }
+      .subpanel { fill:#fbfcfd; stroke:#9aa3ad; stroke-width:1.6; }
+      .heading { font-family:Arial,Helvetica,sans-serif; font-size:28px; font-weight:700; fill:#111827; }
+      .panelLetter { font-family:Arial,Helvetica,sans-serif; font-size:33px; font-weight:700; fill:#111827; }
+      .subheading { font-family:Arial,Helvetica,sans-serif; font-size:22px; font-weight:700; fill:#1f2937; }
+      .label { font-family:Arial,Helvetica,sans-serif; font-size:20px; font-weight:700; }
+      .small { font-family:Arial,Helvetica,sans-serif; font-size:17px; fill:#374151; }
+      .tiny { font-family:Arial,Helvetica,sans-serif; font-size:15px; fill:#4b5563; }
+      .roleScout { fill:#0d4f92; }
+      .roleRelay { fill:#2d7a3e; }
+      .roleAttack { fill:#be2d2d; }
+      .roleTarget { fill:#6b3fa0; }
+      .perception { fill:none; stroke:#1f62a5; stroke-width:3.2; stroke-dasharray:3 8; stroke-linecap:round; }
+      .communication { fill:none; stroke:#3d8748; stroke-width:3.2; stroke-dasharray:10 7; stroke-linecap:round; }
+      .taskSupport { fill:none; stroke:#ee7b1a; stroke-width:3.2; stroke-dasharray:13 6 2 6; stroke-linecap:round; }
+      .neutralLink { fill:none; stroke:#9aa3ad; stroke-width:2.6; stroke-dasharray:7 6; stroke-linecap:round; }
+      .broken { fill:none; stroke:#d64545; stroke-width:3.3; stroke-dasharray:9 7; stroke-linecap:round; opacity:.85; }
+      .module { fill:#f9fafb; stroke:#67717d; stroke-width:1.5; }
+      .moduleBlue { fill:#edf5ff; stroke:#2b6cb0; stroke-width:1.7; }
+      .moduleGreen { fill:#eef8f0; stroke:#3d8748; stroke-width:1.7; }
+      .moduleOrange { fill:#fff5e9; stroke:#ee7b1a; stroke-width:1.7; }
+      .forbidden { fill:#fff3f3; stroke:#d64545; stroke-width:1.6; }
+    ]]></style>
+    <marker id="arrowBlue" markerWidth="11" markerHeight="11" refX="8.5" refY="5.5" orient="auto"><path d="M 0 0 L 10 5.5 L 0 11 z" fill="#1f62a5"/></marker>
+    <marker id="arrowGreen" markerWidth="11" markerHeight="11" refX="8.5" refY="5.5" orient="auto"><path d="M 0 0 L 10 5.5 L 0 11 z" fill="#3d8748"/></marker>
+    <marker id="arrowOrange" markerWidth="11" markerHeight="11" refX="8.5" refY="5.5" orient="auto"><path d="M 0 0 L 10 5.5 L 0 11 z" fill="#ee7b1a"/></marker>
+    <marker id="arrowGray" markerWidth="11" markerHeight="11" refX="8.5" refY="5.5" orient="auto"><path d="M 0 0 L 10 5.5 L 0 11 z" fill="#6b7280"/></marker>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="1.5" dy="2" stdDeviation="1.7" flood-color="#64748b" flood-opacity=".18"/></filter>
+
+    <!-- Original editable role icons -->
+    <g id="scoutIcon">
+      <g fill="none" stroke="#0d4f92" stroke-width="4" stroke-linecap="round">
+        <path d="M-35 -10 L35 10 M-35 10 L35 -10"/>
+        <circle cx="-42" cy="-16" r="10"/><circle cx="42" cy="16" r="10"/>
+        <circle cx="-42" cy="16" r="10"/><circle cx="42" cy="-16" r="10"/>
+      </g>
+      <path d="M-18 -9 Q0 -24 18 -9 L22 10 Q0 22 -22 10 Z" fill="#3d86c8" stroke="#0d4f92" stroke-width="3"/>
+      <path d="M-8 -7 Q0 -16 8 -7" fill="none" stroke="#d8efff" stroke-width="3" stroke-linecap="round"/>
+      <rect x="-6" y="10" width="12" height="10" rx="3" fill="#0d4f92"/>
+    </g>
+    <g id="relayIcon">
+      <path d="M-48 2 L-9 -7 L15 -27 L25 -24 L15 -5 L53 1 L15 8 L25 27 L15 30 L-10 10 L-48 7 Z" fill="#68a96f" stroke="#2d7a3e" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M-35 4 L11 3" stroke="#e9fae8" stroke-width="3" stroke-linecap="round"/>
+      <path d="M0 -37 Q0 -53 0 -66 M-13 -46 Q0 -59 13 -46 M-20 -56 Q0 -77 20 -56" fill="none" stroke="#2d7a3e" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="attackerIcon">
+      <path d="M-51 3 L-11 -4 L5 -26 L17 -24 L13 -5 L51 2 L13 9 L17 27 L5 29 L-11 11 L-51 8 Z" fill="#df5a51" stroke="#be2d2d" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M-36 5 L10 4" stroke="#ffe2dd" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="targetIcon">
+      <g fill="none" stroke="#6b3fa0" stroke-width="3.3" stroke-linecap="round">
+        <path d="M0 -46 L-23 36 M0 -46 L23 36 M-32 36 L32 36 M-23 14 L23 14 M0 -46 L0 36"/>
+        <path d="M-23 -38 Q0 -61 23 -38 M-34 -25 Q0 -57 34 -25"/>
+      </g>
+      <circle cx="0" cy="-47" r="7" fill="#a07bc4" stroke="#6b3fa0" stroke-width="3"/>
+      <path d="M-36 39 Q0 25 36 39" fill="none" stroke="#6b3fa0" stroke-width="4"/>
+    </g>
+    <g id="failureMark">
+      <circle r="32" fill="#fff5f5" stroke="#e03131" stroke-width="3" stroke-dasharray="6 5"/>
+      <path d="M-15 -15 L15 15 M15 -15 L-15 15" stroke="#e03131" stroke-width="6" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <rect width="1800" height="1080" fill="#ffffff"/>
+
+  <!-- Panel a: task scenario -->
+  <g id="panel-a">
+    <rect class="panel" x="20" y="20" width="950" height="850" rx="3"/>
+    <text class="panelLetter" x="42" y="62">(a)</text>
+    <text class="heading" x="98" y="60">Heterogeneous topology-robust UAV coordination task</text>
+
+    <!-- pale editable terrain background -->
+    <g opacity=".58">
+      <path d="M50 695 L150 545 L218 625 L295 505 L395 695 Z" fill="#e7edf1"/>
+      <path d="M224 695 L375 526 L472 626 L555 515 L668 695 Z" fill="#edf1f3"/>
+      <path d="M630 695 L730 570 L800 632 L880 540 L940 695 Z" fill="#e7edf1"/>
+      <path d="M42 730 Q240 688 410 731 T690 727 T950 730" fill="none" stroke="#d9e1e6" stroke-width="6"/>
+      <path d="M42 760 Q240 720 410 759 T690 756 T950 760" fill="none" stroke="#e7edf1" stroke-width="6"/>
+    </g>
+
+    <!-- relation paths -->
+    <path class="perception" marker-end="url(#arrowBlue)" d="M225 275 Q455 200 704 463"/>
+    <path class="communication" marker-end="url(#arrowGreen)" d="M244 310 Q392 274 484 270"/>
+    <path class="communication" marker-end="url(#arrowGreen)" d="M505 298 Q450 445 356 523"/>
+    <path class="taskSupport" marker-end="url(#arrowOrange)" d="M274 546 Q479 622 694 545"/>
+    <path class="taskSupport" marker-end="url(#arrowOrange)" d="M521 305 Q618 375 698 488"/>
+
+    <!-- roles -->
+    <g id="scout" transform="translate(190 285)" filter="url(#softShadow)"><use xlink:href="#scoutIcon"/></g>
+    <text class="label roleScout" x="102" y="374">Scout (S)</text>
+    <text class="small" x="94" y="400">local perception</text>
+    <g id="relay" transform="translate(510 262)" filter="url(#softShadow)"><use xlink:href="#relayIcon"/></g>
+    <text class="label roleRelay" x="541" y="375">Relay (R)</text>
+    <text class="small" x="541" y="401">communication support</text>
+    <g id="attacker" transform="translate(325 536)" filter="url(#softShadow)"><use xlink:href="#attackerIcon"/></g>
+    <text class="label roleAttack" x="210" y="625">Attacker (A)</text>
+    <text class="small" x="213" y="651">task execution</text>
+    <g id="target" transform="translate(718 520)" filter="url(#softShadow)"><use xlink:href="#targetIcon"/></g>
+    <text class="label roleTarget" x="754" y="624">Target (T)</text>
+    <text class="small" x="754" y="650">mission object</text>
+
+    <!-- relation legend -->
+    <g transform="translate(80 735)" filter="url(#softShadow)">
+      <rect class="module" width="760" height="102" rx="14"/>
+      <text class="subheading" x="24" y="33">Relation semantics</text>
+      <path class="perception" d="M245 30 H320"/><text class="small" x="335" y="36">Perception</text>
+      <path class="communication" d="M465 30 H540"/><text class="small" x="555" y="36">Communication</text>
+      <path class="taskSupport" d="M245 74 H320"/><text class="small" x="335" y="80">Task-support</text>
+      <text class="tiny" x="532" y="79">Relations retain distinct task semantics.</text>
+    </g>
+  </g>
+
+  <!-- Panel b: topology reconfiguration -->
+  <g id="panel-b">
+    <rect class="panel" x="990" y="20" width="790" height="445" rx="3"/>
+    <text class="panelLetter" x="1012" y="62">(b)</text>
+    <text class="heading" x="1065" y="60">Relay-node failure reconfigures local topology</text>
+
+    <rect class="subpanel" x="1025" y="95" width="335" height="265" rx="8"/>
+    <text class="subheading" x="1090" y="126">Before failure</text>
+    <path class="communication" marker-end="url(#arrowGreen)" d="M1090 207 H1180"/>
+    <path class="communication" marker-end="url(#arrowGreen)" d="M1230 207 H1320"/>
+    <path class="perception" marker-end="url(#arrowBlue)" d="M1090 250 Q1200 306 1318 252"/>
+    <circle cx="1070" cy="215" r="29" fill="#edf5ff" stroke="#1f62a5" stroke-width="2"/><text class="label roleScout" x="1062" y="222">S</text>
+    <circle cx="1205" cy="215" r="29" fill="#eef8f0" stroke="#3d8748" stroke-width="2"/><text class="label roleRelay" x="1197" y="222">R</text>
+    <circle cx="1340" cy="215" r="29" fill="#fff0ef" stroke="#be2d2d" stroke-width="2"/><text class="label roleAttack" x="1332" y="222">A</text>
+    <text class="tiny" x="1045" y="335">Relay-associated communication links are active.</text>
+
+    <path d="M1386 228 H1433" stroke="#737b85" stroke-width="8" marker-end="url(#arrowGray)"/>
+
+    <rect class="subpanel" x="1440" y="95" width="305" height="265" rx="8"/>
+    <text class="subheading" x="1496" y="126">After relay failure</text>
+    <path class="broken" d="M1496 207 H1586"/>
+    <path class="broken" d="M1636 207 H1714"/>
+    <path class="communication" marker-end="url(#arrowGreen)" d="M1496 264 Q1602 305 1714 264"/>
+    <circle cx="1476" cy="215" r="29" fill="#edf5ff" stroke="#1f62a5" stroke-width="2"/><text class="label roleScout" x="1468" y="222">S</text>
+    <circle cx="1611" cy="215" r="29" fill="#f2f4f6" stroke="#a5adb7" stroke-width="2"/><text class="label" x="1603" y="222" fill="#7b8794">R</text>
+    <circle cx="1734" cy="215" r="29" fill="#fff0ef" stroke="#be2d2d" stroke-width="2"/><text class="label roleAttack" x="1726" y="222">A</text>
+    <g transform="translate(1611 215)"><use xlink:href="#failureMark"/></g>
+    <text class="tiny" x="1458" y="321">Actor uses legal local edge states.</text>
+    <text class="tiny" x="1458" y="342">Available paths can reconfigure.</text>
+  </g>
+
+  <!-- Panel c: legality boundary -->
+  <g id="panel-c">
+    <rect class="panel" x="990" y="485" width="790" height="385" rx="3"/>
+    <text class="panelLetter" x="1012" y="527">(c)</text>
+    <text class="heading" x="1065" y="525">Decentralized actor uses only legal local edge state</text>
+
+    <g transform="translate(1028 558)" filter="url(#softShadow)">
+      <rect class="moduleBlue" width="220" height="210" rx="13"/>
+      <text class="subheading" x="23" y="34" fill="#1f62a5">Legal edge features</text>
+      <text class="small" x="24" y="72">• relation multi-hot</text>
+      <text class="small" x="24" y="103">• relative distance</text>
+      <text class="small" x="24" y="134">• link validity</text>
+      <text class="small" x="24" y="165">• message age</text>
+      <text class="small" x="24" y="196">• confidence / support state</text>
+    </g>
+    <path d="M1261 663 H1352" stroke="#6b7280" stroke-width="3" marker-end="url(#arrowGray)"/>
+    <g transform="translate(1371 575)" filter="url(#softShadow)">
+      <rect class="moduleGreen" width="178" height="176" rx="13"/>
+      <text class="subheading" x="25" y="42" fill="#2d7a3e">SG-MAPPO</text>
+      <text class="small" x="27" y="77">shared graph</text>
+      <text class="small" x="27" y="102">encoder +</text>
+      <text class="small" x="27" y="127">actor policy</text>
+      <path d="M30 149 H143" stroke="#3d8748" stroke-width="2.5"/>
+    </g>
+    <path d="M1561 663 H1648" stroke="#6b7280" stroke-width="3" marker-end="url(#arrowGray)"/>
+    <g transform="translate(1660 612)">
+      <circle cx="0" cy="0" r="28" fill="#edf5ff" stroke="#1f62a5" stroke-width="2"/>
+      <path d="M-9 3 L4 -11 L13 6 L2 14 Z" fill="#1f62a5"/>
+      <text class="small" x="-40" y="59">local action</text>
+    </g>
+
+    <g transform="translate(1277 784)" filter="url(#softShadow)">
+      <rect class="forbidden" width="440" height="60" rx="10"/>
+      <circle cx="30" cy="30" r="15" fill="#ffe0e0" stroke="#d64545" stroke-width="2"/>
+      <path d="M23 23 L37 37 M37 23 L23 37" stroke="#d64545" stroke-width="3"/>
+      <text class="small" x="60" y="35" fill="#a12626">No global topology, future links, or failure truth.</text>
+    </g>
+  </g>
+
+  <!-- Shared legend strip -->
+  <g id="shared-legend" transform="translate(20 892)">
+    <rect class="panel" width="1760" height="160" rx="8"/>
+    <g transform="translate(58 74)"><use xlink:href="#scoutIcon" transform="scale(.62)"/><text class="label roleScout" x="45" y="8">Scout (S)</text></g>
+    <g transform="translate(315 74)"><use xlink:href="#relayIcon" transform="scale(.62)"/><text class="label roleRelay" x="48" y="8">Relay (R)</text></g>
+    <g transform="translate(564 74)"><use xlink:href="#attackerIcon" transform="scale(.62)"/><text class="label roleAttack" x="48" y="8">Attacker (A)</text></g>
+    <g transform="translate(834 74)"><use xlink:href="#targetIcon" transform="scale(.62)"/><text class="label roleTarget" x="37" y="8">Target (T)</text></g>
+    <path class="perception" d="M1082 73 H1150"/><text class="small" x="1165" y="79">Perception</text>
+    <path class="communication" d="M1310 73 H1378"/><text class="small" x="1393" y="79">Communication</text>
+    <path class="taskSupport" d="M1541 73 H1609"/><text class="small" x="1624" y="79">Task-support</text>
+    <g transform="translate(1120 124)"><use xlink:href="#failureMark" transform="scale(.48)"/><text class="small" x="28" y="6">Failed relay node</text></g>
+    <path class="broken" d="M1437 124 H1513"/><text class="small" x="1527" y="130">Broken link</text>
+  </g>
+</svg>
