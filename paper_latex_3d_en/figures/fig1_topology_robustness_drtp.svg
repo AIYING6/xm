@@ -4,26 +4,34 @@
   <title id="title">Topology-robust heterogeneous UAV coordination under relay-node failure</title>
   <desc id="desc">An editable scientific schematic showing a heterogeneous UAV scenario, failure-induced topology reconfiguration, and a decentralized shared-graph policy pipeline.</desc>
   <defs>
-    <linearGradient id="gBlue" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#3a91d0"/><stop offset="1" stop-color="#0f4f91"/></linearGradient>
-    <linearGradient id="gGreen" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#9acb8d"/><stop offset="1" stop-color="#367a42"/></linearGradient>
-    <linearGradient id="gRed" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#f18b7a"/><stop offset="1" stop-color="#bd2d2c"/></linearGradient>
-    <linearGradient id="gPurple" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#bda4d4"/><stop offset="1" stop-color="#6d3f9b"/></linearGradient>
-    <linearGradient id="gCard" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#f6f8fa"/></linearGradient>
-    <filter id="shadow" x="-15%" y="-20%" width="130%" height="145%"><feDropShadow dx="2" dy="3" stdDeviation="2.4" flood-color="#475569" flood-opacity=".22"/></filter>
-    <filter id="smallShadow" x="-15%" y="-20%" width="130%" height="145%"><feDropShadow dx="1.2" dy="1.7" stdDeviation="1.5" flood-color="#64748b" flood-opacity=".18"/></filter>
     <marker id="arrBlue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L9 5 L0 10z" fill="#1e63a8"/></marker>
     <marker id="arrGreen" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L9 5 L0 10z" fill="#3d8a4d"/></marker>
     <marker id="arrOrange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L9 5 L0 10z" fill="#ed7b1a"/></marker>
     <marker id="arrGrey" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0 0 L10 6 L0 12z" fill="#7d8795"/></marker>
     <style><![CDATA[
-      .frame{fill:#fff;stroke:#555e69;stroke-width:1.8}.inner{fill:url(#gCard);stroke:#a5aeb9;stroke-width:1.35}.heading{font-family:Arial,Helvetica,sans-serif;font-size:25px;font-weight:700;fill:#151b26}.letter{font-family:Arial,Helvetica,sans-serif;font-size:31px;font-weight:700;fill:#151b26}.sub{font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;fill:#202936}.label{font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700}.note{font-family:Arial,Helvetica,sans-serif;font-size:15px;fill:#3f4a59}.tiny{font-family:Arial,Helvetica,sans-serif;font-size:13px;fill:#4b5563}.p{fill:none;stroke:#1e63a8;stroke-width:3;stroke-dasharray:2 7;stroke-linecap:round}.c{fill:none;stroke:#3d8a4d;stroke-width:3;stroke-dasharray:9 6;stroke-linecap:round}.t{fill:none;stroke:#ed7b1a;stroke-width:3;stroke-dasharray:13 5 2 5;stroke-linecap:round}.broken{fill:none;stroke:#e25555;stroke-width:3;stroke-dasharray:7 5;stroke-linecap:round}.roleBlue{fill:#0f4f91}.roleGreen{fill:#367a42}.roleRed{fill:#bd2d2c}.rolePurple{fill:#6d3f9b}
+      .frame{fill:#fff;stroke:#59616d;stroke-width:1.5}.inner{fill:#fff;stroke:#a5aeb9;stroke-width:1.15}.heading{font-family:Arial,Helvetica,sans-serif;font-size:25px;font-weight:700;fill:#151b26}.letter{font-family:Arial,Helvetica,sans-serif;font-size:31px;font-weight:700;fill:#151b26}.sub{font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;fill:#202936}.label{font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700}.note{font-family:Arial,Helvetica,sans-serif;font-size:15px;fill:#3f4a59}.tiny{font-family:Arial,Helvetica,sans-serif;font-size:13px;fill:#4b5563}.p{fill:none;stroke:#1e63a8;stroke-width:3;stroke-dasharray:2 7;stroke-linecap:round}.c{fill:none;stroke:#3d8a4d;stroke-width:3;stroke-dasharray:9 6;stroke-linecap:round}.t{fill:none;stroke:#ed7b1a;stroke-width:3;stroke-dasharray:13 5 2 5;stroke-linecap:round}.broken{fill:none;stroke:#e25555;stroke-width:3;stroke-dasharray:7 5;stroke-linecap:round}.roleBlue{fill:#0f4f91}.roleGreen{fill:#367a42}.roleRed{fill:#bd2d2c}.rolePurple{fill:#6d3f9b}
     ]]></style>
 
-    <!-- Original editable UAV / target icon collection -->
-    <g id="scout"><image xlink:href="assets/fig1_role_icons/scout_blue.png" x="-85" y="-68" width="170" height="143" preserveAspectRatio="xMidYMid meet"/></g>
-    <g id="relay"><image xlink:href="assets/fig1_role_icons/relay_green.png" x="-88" y="-74" width="176" height="148" preserveAspectRatio="xMidYMid meet"/></g>
-    <g id="attacker"><image xlink:href="assets/fig1_role_icons/attacker_red.png" x="-91" y="-78" width="182" height="158" preserveAspectRatio="xMidYMid meet"/></g>
-    <g id="target"><image xlink:href="assets/fig1_role_icons/target_station_purple.png" x="-82" y="-82" width="164" height="164" preserveAspectRatio="xMidYMid meet"/></g>
+    <!-- Compact original role icons: fully editable vector geometry. -->
+    <g id="scout" fill="none" stroke="#0f4f91" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-37 0 H37 M0-18 V18 M-26-13 L26 13 M-26 13 L26-13" stroke-width="4"/>
+      <rect x="-18" y="-11" width="36" height="22" rx="8" fill="#2876b7" stroke-width="3"/>
+      <circle cx="-40" cy="-21" r="11" fill="#fff" stroke-width="3"/><circle cx="40" cy="-21" r="11" fill="#fff" stroke-width="3"/><circle cx="-40" cy="21" r="11" fill="#fff" stroke-width="3"/><circle cx="40" cy="21" r="11" fill="#fff" stroke-width="3"/>
+      <path d="M-7-11 L7-11 L0-23Z" fill="#d7ebfa" stroke-width="2"/>
+    </g>
+    <g id="relay" fill="#5a9c56" stroke="#367a42" stroke-linejoin="round">
+      <path d="M-54 2 L-12-7 L10-33 L19-30 L13-5 L56 7 L13 11 L4 31 L-8 30 L-13 11Z" stroke-width="3"/>
+      <path d="M-3-39 Q0-61 3-39 M-10-43 Q0-74 10-43" fill="none" stroke="#367a42" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="attacker" fill="#d94b43" stroke="#bd2d2c" stroke-linejoin="round">
+      <path d="M-58 3 L-14-7 L10-31 L20-28 L13-4 L57 6 L13 11 L1 29 L-12 27 L-15 10Z" stroke-width="3"/>
+      <path d="M-7-4 H22" fill="none" stroke="#fff5f4" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="target" fill="none" stroke="#6d3f9b" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M0-43 V25 M-27 32 H27 M-20 32 L0-8 L20 32 M-14 18 H14" stroke-width="4"/>
+      <path d="M-16-30 Q0-52 16-30 M-26-39 Q0-68 26-39" stroke-width="3"/>
+      <circle cx="0" cy="-3" r="7" fill="#a77bc4" stroke-width="2"/>
+    </g>
     <g id="failure"><circle r="31" fill="#fff8f8" stroke="#e43d3d" stroke-width="2.7" stroke-dasharray="5 5"/><path d="M-14-14 L14 14 M14-14 L-14 14" stroke="#e43d3d" stroke-width="5.5" stroke-linecap="round"/></g>
   </defs>
 
@@ -32,17 +40,15 @@
   <g id="a-scenario">
     <rect class="frame" x="18" y="18" width="955" height="855" rx="2"/>
     <text class="letter" x="40" y="58">(a)</text><text class="heading" x="92" y="57">Heterogeneous task scenario</text>
-    <!-- soft terrain -->
-    <g opacity=".62"><path d="M43 683 L156 511 L232 606 L314 470 L420 683Z" fill="#e9eef1"/><path d="M255 683 L404 500 L482 598 L588 458 L704 683Z" fill="#f0f3f5"/><path d="M584 683 L716 520 L796 611 L873 498 L950 683Z" fill="#e9eef1"/><path d="M39 714 Q238 672 424 718 T740 713 T954 716" fill="none" stroke="#dce4e9" stroke-width="6"/><path d="M42 744 Q238 705 424 748 T740 745 T950 748" fill="none" stroke="#edf1f3" stroke-width="6"/></g>
     <!-- relations, drawn first -->
     <path class="p" marker-end="url(#arrBlue)" d="M234 278 Q480 203 720 478"/><path class="c" marker-end="url(#arrGreen)" d="M254 302 Q404 262 502 258"/><path class="c" marker-end="url(#arrGreen)" d="M538 292 Q465 441 349 523"/><path class="t" marker-end="url(#arrOrange)" d="M370 548 Q560 615 713 546"/><path class="t" marker-end="url(#arrOrange)" d="M562 288 Q642 367 720 470"/>
     <!-- roles -->
-    <g transform="translate(205 285) scale(1.05)" filter="url(#shadow)"><use xlink:href="#scout"/></g><text class="label roleBlue" x="91" y="385">Scout</text><text class="label roleBlue" x="91" y="407">(S)</text><text class="note" x="91" y="433">sensing platform</text>
-    <g transform="translate(535 255) scale(1.05)" filter="url(#shadow)"><use xlink:href="#relay"/></g><text class="label roleGreen" x="590" y="387">Relay</text><text class="label roleGreen" x="590" y="409">(R)</text><text class="note" x="590" y="435">communication support</text>
-    <g transform="translate(327 543) scale(1.05)" filter="url(#shadow)"><use xlink:href="#attacker"/></g><text class="label roleRed" x="201" y="637">Attacker (A)</text><text class="note" x="201" y="663">task execution</text>
-    <g transform="translate(738 520) scale(1.05)" filter="url(#shadow)"><use xlink:href="#target"/></g><text class="label rolePurple" x="777" y="638">Target (T)</text><text class="note" x="777" y="664">mission object</text>
+    <g transform="translate(205 285) scale(1.05)"><use xlink:href="#scout"/></g><text class="label roleBlue" x="91" y="385">Scout</text><text class="label roleBlue" x="107" y="407">(S)</text>
+    <g transform="translate(535 255) scale(1.05)"><use xlink:href="#relay"/></g><text class="label roleGreen" x="590" y="387">Relay</text><text class="label roleGreen" x="607" y="409">(R)</text>
+    <g transform="translate(327 543) scale(1.05)"><use xlink:href="#attacker"/></g><text class="label roleRed" x="201" y="637">Attacker (A)</text>
+    <g transform="translate(738 520) scale(1.05)"><use xlink:href="#target"/></g><text class="label rolePurple" x="777" y="638">Target (T)</text>
     <!-- in-panel semantic legend -->
-    <g transform="translate(78 756)" filter="url(#smallShadow)"><rect class="inner" width="785" height="87" rx="12"/><text class="sub" x="23" y="34">Relation types</text><path class="p" d="M198 30 H270"/><text class="note" x="286" y="35">Perception</text><path class="c" d="M433 30 H505"/><text class="note" x="521" y="35">Communication</text><path class="t" d="M198 65 H270"/><text class="note" x="286" y="70">Task-support</text><text class="tiny" x="523" y="70">Different line types encode distinct relations.</text></g>
+    <g transform="translate(78 756)"><rect class="inner" width="785" height="75" rx="8"/><text class="sub" x="23" y="34">Relation types</text><path class="p" d="M198 30 H270"/><text class="note" x="286" y="35">Perception</text><path class="c" d="M433 30 H505"/><text class="note" x="521" y="35">Communication</text><path class="t" d="M198 58 H270"/><text class="note" x="286" y="63">Task-support</text></g>
   </g>
 
   <!-- (b) Topology change -->
@@ -51,12 +57,12 @@
     <text class="letter" x="1016" y="58">(b)</text><text class="heading" x="1068" y="57">Failure disrupts coordination</text>
     <rect class="inner" x="1028" y="92" width="308" height="318" rx="8"/><text class="sub" x="1090" y="122">Before failure (normal)</text>
     <path class="c" marker-end="url(#arrGreen)" d="M1090 210 H1181"/><path class="c" marker-end="url(#arrGreen)" d="M1230 210 H1307"/><path class="p" marker-end="url(#arrBlue)" d="M1090 252 Q1200 310 1307 252"/>
-    <g transform="translate(1075 211) scale(.42)" filter="url(#smallShadow)"><use xlink:href="#scout"/></g><g transform="translate(1205 211) scale(.42)" filter="url(#smallShadow)"><use xlink:href="#relay"/></g><g transform="translate(1320 211) scale(.42)" filter="url(#smallShadow)"><use xlink:href="#attacker"/></g>
+    <g transform="translate(1075 211) scale(.42)"><use xlink:href="#scout"/></g><g transform="translate(1205 211) scale(.42)"><use xlink:href="#relay"/></g><g transform="translate(1320 211) scale(.42)"><use xlink:href="#attacker"/></g>
     <g transform="translate(1055 290)"><rect fill="#eff8ef" stroke="#87ae8d" stroke-width="1.2" width="253" height="75" rx="8"/><text class="sub" x="18" y="28">Task graph (normal)</text><circle cx="43" cy="51" r="13" fill="#eaf4ff" stroke="#1e63a8"/><text class="tiny" x="38" y="55">S</text><path d="M58 51 H101" stroke="#4c5563" stroke-width="2" marker-end="url(#arrGrey)"/><circle cx="119" cy="51" r="13" fill="#eff8ef" stroke="#3d8a4d"/><text class="tiny" x="115" y="55">R</text><path d="M134 51 H177" stroke="#4c5563" stroke-width="2" marker-end="url(#arrGrey)"/><circle cx="195" cy="51" r="13" fill="#fff0ef" stroke="#bd2d2c"/><text class="tiny" x="191" y="55">A</text></g>
     <path d="M1355 244 H1420" stroke="#a1a9b4" stroke-width="8" marker-end="url(#arrGrey)"/>
     <rect class="inner" x="1440" y="92" width="308" height="318" rx="8"/><text class="sub" x="1504" y="122">After relay failure</text>
     <path class="broken" d="M1495 210 H1584"/><path class="broken" d="M1631 210 H1713"/><path class="c" marker-end="url(#arrGreen)" d="M1496 264 Q1604 309 1713 264"/>
-    <g transform="translate(1480 211) scale(.42)" filter="url(#smallShadow)"><use xlink:href="#scout"/></g><g transform="translate(1608 211) scale(.42)" opacity=".32"><use xlink:href="#relay"/></g><g transform="translate(1730 211) scale(.42)" filter="url(#smallShadow)"><use xlink:href="#attacker"/></g><g transform="translate(1608 211)"><use xlink:href="#failure"/></g>
+    <g transform="translate(1480 211) scale(.42)"><use xlink:href="#scout"/></g><g transform="translate(1608 211) scale(.42)" opacity=".32"><use xlink:href="#relay"/></g><g transform="translate(1730 211) scale(.42)"><use xlink:href="#attacker"/></g><g transform="translate(1608 211)"><use xlink:href="#failure"/></g>
     <g transform="translate(1460 290)"><rect fill="#fff4f4" stroke="#e17676" stroke-width="1.2" width="266" height="75" rx="8"/><text class="sub" x="18" y="28">Topology reconfigured</text><circle cx="43" cy="51" r="13" fill="#eaf4ff" stroke="#1e63a8"/><text class="tiny" x="38" y="55">S</text><path d="M58 51 H102" stroke="#aeb6c0" stroke-width="2" stroke-dasharray="5 4"/><circle cx="120" cy="51" r="13" fill="#f4f5f6" stroke="#aeb6c0"/><text class="tiny" x="116" y="55">R</text><path d="M134 51 H178" stroke="#e25555" stroke-width="2" stroke-dasharray="5 4"/><circle cx="196" cy="51" r="13" fill="#fff0ef" stroke="#bd2d2c"/><text class="tiny" x="192" y="55">A</text><path d="M51 67 Q120 88 188 67" fill="none" stroke="#3d8a4d" stroke-width="2" marker-end="url(#arrGreen)"/></g>
     <g transform="translate(1472 382)"><rect fill="#fff5f5" stroke="#e25555" stroke-width="1.2" width="245" height="42" rx="7"/><path d="M18 12 L29 30 L7 30Z" fill="#e25555"/><text fill="#fff" font-family="Arial" font-size="13" font-weight="700" x="15" y="27">!</text><text class="tiny" x="40" y="26" fill="#a52a2a">Local links change; coordination must adapt.</text></g>
   </g>
@@ -72,9 +78,9 @@
       <rect class="inner" y="136" width="122" height="55" rx="9"/><g transform="translate(23 163) scale(.24)"><use xlink:href="#attacker"/></g><text class="tiny" x="50" y="168">Attacker</text>
     </g>
     <path d="M1173 675 H1233" stroke="#67717e" stroke-width="2.8" marker-end="url(#arrGrey)"/>
-    <g transform="translate(1246 577)" filter="url(#smallShadow)"><rect fill="#f8fbfd" stroke="#83909f" stroke-width="1.4" width="175" height="195" rx="12"/><text class="sub" x="18" y="30">Relation graph</text><circle cx="46" cy="78" r="12" fill="#4b94d0"/><circle cx="126" cy="72" r="12" fill="#6dae73"/><circle cx="57" cy="144" r="12" fill="#df685e"/><circle cx="133" cy="141" r="12" fill="#a17ac0"/><path class="p" d="M57 81 L119 74"/><path class="c" d="M53 89 L65 132 M119 83 L129 129"/><path class="t" d="M69 145 L121 142"/><text class="tiny" x="18" y="178">P / C / T semantics</text></g>
+    <g transform="translate(1246 577)"><rect fill="#fff" stroke="#83909f" stroke-width="1.4" width="175" height="195" rx="9"/><text class="sub" x="18" y="30">Relation graph</text><circle cx="46" cy="78" r="12" fill="#4b94d0"/><circle cx="126" cy="72" r="12" fill="#6dae73"/><circle cx="57" cy="144" r="12" fill="#df685e"/><circle cx="133" cy="141" r="12" fill="#a17ac0"/><path class="p" d="M57 81 L119 74"/><path class="c" d="M53 89 L65 132 M119 83 L129 129"/><path class="t" d="M69 145 L121 142"/><text class="tiny" x="18" y="178">P / C / T semantics</text></g>
     <path d="M1436 675 H1483" stroke="#67717e" stroke-width="2.8" marker-end="url(#arrGrey)"/>
-    <g transform="translate(1496 585)" filter="url(#smallShadow)"><rect fill="#eef7ff" stroke="#2a6dab" stroke-width="1.7" width="128" height="174" rx="12"/><text class="sub" x="17" y="38" fill="#1e63a8">Shared SG</text><text class="sub" x="25" y="62" fill="#1e63a8">encoder</text><path d="M25 82 H102" stroke="#77a6d4" stroke-width="1.5"/><circle cx="40" cy="111" r="9" fill="#4b94d0"/><circle cx="87" cy="105" r="9" fill="#6dae73"/><circle cx="62" cy="136" r="9" fill="#df685e"/><path d="M49 111 L78 106 M46 118 L58 130 M80 113 L66 130" stroke="#5e8abb" stroke-width="2"/><text class="tiny" x="22" y="160">same backbone</text></g>
+    <g transform="translate(1496 585)"><rect fill="#eef7ff" stroke="#2a6dab" stroke-width="1.7" width="128" height="174" rx="9"/><text class="sub" x="17" y="38" fill="#1e63a8">Shared SG</text><text class="sub" x="25" y="62" fill="#1e63a8">encoder</text><path d="M25 82 H102" stroke="#77a6d4" stroke-width="1.5"/><circle cx="40" cy="111" r="9" fill="#4b94d0"/><circle cx="87" cy="105" r="9" fill="#6dae73"/><circle cx="62" cy="136" r="9" fill="#df685e"/><path d="M49 111 L78 106 M46 118 L58 130 M80 113 L66 130" stroke="#5e8abb" stroke-width="2"/></g>
     <path d="M1638 675 H1684" stroke="#67717e" stroke-width="2.8" marker-end="url(#arrGrey)"/>
     <g transform="translate(1698 613)"><circle r="31" fill="#edf5ff" stroke="#2a6dab" stroke-width="2"/><path d="M-10 3 L4-12 L15 7 L2 15Z" fill="#2a6dab"/><text class="tiny" x="-31" y="57">local action</text></g>
     <g transform="translate(1200 798)"><rect fill="#fff6f6" stroke="#df5c5c" stroke-width="1.4" width="445" height="45" rx="9"/><g transform="translate(24 22) scale(.35)"><use xlink:href="#failure"/></g><text class="note" x="48" y="28" fill="#9f2929">No global topology, future links, or failure truth enters the actor.</text></g>
