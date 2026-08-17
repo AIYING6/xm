@@ -93,6 +93,8 @@ class DRTPTopologySampler:
     exponential update using completed-episode return summaries only.
     """
 
+    uses_completed_return_feedback = True
+
     def __init__(self, mode: str, seed: int, total_updates: int):
         self.mode = str(mode).lower()
         if self.mode not in {"utr", "drtp"}:

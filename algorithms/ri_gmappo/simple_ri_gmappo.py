@@ -34,6 +34,7 @@ from envs import (
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
 from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
 from algorithms.ri_gmappo.drtp_topology_sampler import DRTPSelection, DRTPTopologySampler
+from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 
 
 ROLE_SCOUT_ID = 0
@@ -174,6 +175,12 @@ class RIGMAPPOConfig:
     # The sampler's protocol horizon can differ from this invocation's local
     # update count during an exact runtime continuation.
     drtp_sampler_total_updates: int | None = None
+    # Phase-B TCR/SPC fixed-exposure condition sampler and actor-only update
+    # mode.  Both are training-side metadata; neither changes policy inputs.
+    fixed_stratified_topology_sampler: bool = False
+    fixed_stratified_topology_sampler_seed: int | None = None
+    actor_gradient_mode: str = "standard"
+    actor_gradient_logging: bool = False
     # Exact runtime continuation is opt-in.  Legacy checkpoints only contain
     # model/optimizer/update and must use the separately documented warm
     # restart path rather than this strict continuation mechanism.
@@ -1214,8 +1221,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     drtp_mode = str(cfg.drtp_sampler_mode).lower()
     if drtp_mode not in {"none", "utr", "drtp"}:
         raise ValueError("drtp_sampler_mode must be none, utr, or drtp")
-    if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none")) > 1:
-        raise ValueError("curriculum, fixed mixture, and DRTP sampler are mutually exclusive")
+    actor_gradient_mode = str(cfg.actor_gradient_mode).lower()
+    if actor_gradient_mode not in {"standard", "utr", "spc", "tcr"}:
+        raise ValueError("actor_gradient_mode must be standard, utr, spc, or tcr")
+    if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none", cfg.fixed_stratified_topology_sampler)) > 1:
+        raise ValueError("curriculum, fixed mixture, DRTP sampler, and fixed stratified sampler are mutually exclusive")
+    if actor_gradient_mode != "standard":
+        if not cfg.fixed_stratified_topology_sampler:
+            raise ValueError("UTR/SPC/TCR actor modes require the fixed stratified topology sampler")
+        if cfg.num_envs != 4 or cfg.rollout_steps * cfg.num_envs != cfg.minibatch_graphs:
+            raise ValueError("UTR/SPC/TCR require the frozen 4x64 rollout and one 256-graph projection minibatch")
     mixture = (
         FixedConditionMixture(
             cfg.fixed_f0_probability,
@@ -1233,6 +1248,13 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if drtp_mode != "none"
         else None
     )
+    if cfg.fixed_stratified_topology_sampler:
+        drtp_sampler = FixedStratifiedTopologySampler(
+            cfg.fixed_stratified_topology_sampler_seed
+            if cfg.fixed_stratified_topology_sampler_seed is not None
+            else cfg.seed,
+            cfg.num_envs,
+        )
     curriculum_rows: list[dict] = []
     drtp_rows: list[dict] = []
     episode_counts = [0 for _ in range(cfg.num_envs)]
@@ -1253,7 +1275,12 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             encoding="utf-8",
         )
     if drtp_sampler is not None:
-        (out_dir / "drtp_topology_sampler_manifest.json").write_text(
+        sampler_name = (
+            "fixed_stratified_topology_sampler_manifest.json"
+            if cfg.fixed_stratified_topology_sampler
+            else "drtp_topology_sampler_manifest.json"
+        )
+        (out_dir / sampler_name).write_text(
             json.dumps({**drtp_sampler.manifest(), "training_seed": cfg.seed,
                         "graph_encoder": cfg.graph_encoder, "hidden_dim": cfg.hidden_dim,
                         "parameter_count": 116728}, indent=2, sort_keys=True) + "\n",
@@ -1346,7 +1373,12 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     telemetry_path = out_dir / "role_gate_telemetry.csv"
     curriculum_log_path = out_dir / "topology_curriculum_log.csv"
     mixture_log_path = out_dir / "fixed_condition_mixture_log.csv"
-    drtp_log_path = out_dir / "drtp_topology_sampler_log.csv"
+    drtp_log_path = out_dir / (
+        "fixed_stratified_topology_sampler_log.csv"
+        if cfg.fixed_stratified_topology_sampler
+        else "drtp_topology_sampler_log.csv"
+    )
+    actor_gradient_log_path = out_dir / "actor_gradient_telemetry.csv"
     fieldnames = [
         "update",
         "loss",
@@ -1377,6 +1409,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "role_gate_min",
         "role_gate_max",
         "role_gate_displacement_l2",
+        "actor_nominal_sample_count",
+        "actor_failure_sample_count",
+        "actor_gradient_dot",
+        "actor_gradient_cosine",
+        "actor_projection_applied_fraction",
+        "actor_g_nominal_norm",
+        "actor_g_failure_norm",
+        "actor_projected_gradient_norm",
+        "actor_final_gradient_norm",
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
@@ -1395,9 +1436,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if drtp_sampler is not None and cfg.drtp_sampler_logging
         else nullcontext()
     )
+    actor_gradient_log_context = (
+        actor_gradient_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
+        if cfg.actor_gradient_logging
+        else nullcontext()
+    )
     with log_path.open(mode, newline="", encoding="utf-8") as f, (
         telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
-    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file:
+    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file, actor_gradient_log_context as actor_gradient_file:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
@@ -1438,7 +1484,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         drtp_writer = None
         drtp_logged_count = 0
         if drtp_file is not None:
-            drtp_writer = csv.DictWriter(drtp_file, fieldnames=DRTPTopologySampler.log_fields())
+            drtp_writer = csv.DictWriter(drtp_file, fieldnames=drtp_sampler.log_fields())
             if not cfg.append_log or not drtp_log_path.exists() or drtp_log_path.stat().st_size == 0:
                 drtp_writer.writeheader()
             for drtp_row in drtp_rows:
@@ -1475,6 +1521,19 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 for telemetry_row in summarize_role_gate_telemetry(agent, batch, device):
                     telemetry_writer.writerow({"update": update, **telemetry_row})
                 telemetry_file.flush()
+            if actor_gradient_file is not None:
+                gradient_fields = [
+                    "update", "mode", "nominal_sample_count", "failure_sample_count",
+                    "gradient_dot", "gradient_cosine", "projection_applied",
+                    "g_nominal_norm", "g_failure_norm", "projected_gradient_norm", "final_gradient_norm",
+                ]
+                gradient_writer = csv.DictWriter(actor_gradient_file, fieldnames=gradient_fields)
+                if not cfg.append_log or actor_gradient_log_path.stat().st_size == 0:
+                    gradient_writer.writeheader()
+                for gradient_row in train_info.pop("actor_gradient_rows", []):
+                    gradient_writer.writerow({"update": update, "mode": actor_gradient_mode, **gradient_row})
+                actor_gradient_file.flush()
+            row.pop("actor_gradient_rows", None)
             if curriculum_writer is not None:
                 for curriculum_row in curriculum_rows[curriculum_logged_count:]:
                     curriculum_writer.writerow(curriculum_row)
@@ -1582,8 +1641,17 @@ def collect_rollout(
     obs_buf, share_buf, node_buf, edge_buf, role_buf, adj_buf, intent_buf = [], [], [], [], [], [], []
     relation_adj_buf = []
     action_buf, logp_buf, reward_buf, done_buf, value_buf = [], [], [], [], []
+    condition_nominal_buf = []
 
     for _ in range(cfg.rollout_steps):
+        if drtp_sampler is None:
+            condition_nominal = np.ones(len(envs), dtype=bool)
+        else:
+            if drtp_selections is None or any(selection is None for selection in drtp_selections):
+                raise AssertionError("topology condition selection missing for rollout sample")
+            condition_nominal = np.asarray(
+                [selection.group == "N" for selection in drtp_selections], dtype=bool
+            )
         with torch.no_grad():
             actions, logp, _, values, _, _, _ = agent.get_action_and_value(
                 torch.as_tensor(obs, dtype=torch.float32, device=device),
@@ -1604,7 +1672,7 @@ def collect_rollout(
         next_obs, next_share, next_graphs, rewards, dones = [], [], [], [], []
         for e, env in enumerate(envs):
             o, s, g, r, d, _ = env.step(actions_np[e])
-            if drtp_sampler is not None:
+            if drtp_sampler is not None and getattr(drtp_sampler, "uses_completed_return_feedback", False):
                 if drtp_episode_returns is None:
                     raise ValueError("DRTP episode-return bookkeeping is required")
                 drtp_episode_returns[e] += float(np.sum(r))
@@ -1636,8 +1704,9 @@ def collect_rollout(
                     previous_selection = drtp_selections[e]
                     if previous_selection is None:
                         raise AssertionError("DRTP selection missing for completed episode")
-                    drtp_sampler.record_completed_return(previous_selection, drtp_episode_returns[e])
-                    drtp_episode_returns[e] = 0.0
+                    if getattr(drtp_sampler, "uses_completed_return_feedback", False):
+                        drtp_sampler.record_completed_return(previous_selection, drtp_episode_returns[e])
+                        drtp_episode_returns[e] = 0.0
                     episode_counts[e] += 1
                     selection = drtp_sampler.select(
                         update=current_update, env_index=e, episode_index=episode_counts[e]
@@ -1697,6 +1766,7 @@ def collect_rollout(
         value_buf.append(values_np.copy())
         reward_buf.append(np.asarray(rewards, dtype=np.float32))
         done_buf.append(np.asarray(dones, dtype=np.float32))
+        condition_nominal_buf.append(condition_nominal)
 
         obs = np.stack(next_obs)
         share_obs = np.stack(next_share)
@@ -1730,6 +1800,9 @@ def collect_rollout(
         "dones": dones_np,
         "advantages": advantages,
         "returns": returns,
+        # Training-only condition class.  It is excluded from obs, graph
+        # tensors, actor/critic calls, and all evaluation interfaces.
+        "condition_is_nominal": np.asarray(condition_nominal_buf, dtype=bool),
         "next_obs": obs,
         "next_share_obs": share_obs,
         "next_graph_obs": graph_obs,
@@ -1839,7 +1912,193 @@ def summarize_role_gate_telemetry(agent: RIGMAPPOAgent, batch: dict, device: tor
     return rows
 
 
+def _gradient_l2_norm(gradients: list[torch.Tensor]) -> torch.Tensor:
+    return torch.sqrt(sum(gradient.square().sum() for gradient in gradients))
+
+
+def _actor_gradients(loss: torch.Tensor, parameters: list[nn.Parameter]) -> list[torch.Tensor]:
+    raw = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
+    return [torch.zeros_like(parameter) if gradient is None else gradient.detach() for parameter, gradient in zip(parameters, raw)]
+
+
+def _conditioned_actor_gradient(
+    mode: str,
+    nominal: list[torch.Tensor],
+    failure: list[torch.Tensor],
+    delta: float = 1e-12,
+) -> tuple[list[torch.Tensor], dict[str, float | bool]]:
+    """Combine two actor gradients using the frozen UTR/SPC/TCR equations."""
+    dot = sum((g_n * g_f).sum() for g_n, g_f in zip(nominal, failure))
+    nominal_norm = _gradient_l2_norm(nominal)
+    failure_norm = _gradient_l2_norm(failure)
+    cosine = dot / (nominal_norm * failure_norm + delta)
+    conflict = bool(dot.detach().cpu() < 0.0)
+    projected_failure = failure
+    projected_nominal = nominal
+    if mode not in {"utr", "spc", "tcr"}:
+        raise ValueError(f"unsupported conditioned actor mode: {mode}")
+    if conflict and mode == "tcr":
+        projected_failure = [g_f - dot / (nominal_norm.square() + delta) * g_n for g_n, g_f in zip(nominal, failure)]
+    elif conflict and mode == "spc":
+        projected_nominal = [g_n - dot / (failure_norm.square() + delta) * g_f for g_n, g_f in zip(nominal, failure)]
+        projected_failure = [g_f - dot / (nominal_norm.square() + delta) * g_n for g_n, g_f in zip(nominal, failure)]
+    combined = [0.5 * (g_n + g_f) for g_n, g_f in zip(projected_nominal, projected_failure)]
+    return combined, {
+        "gradient_dot": float(dot.detach().cpu()),
+        "gradient_cosine": float(cosine.detach().cpu()),
+        "projection_applied": conflict and mode != "utr",
+        "g_nominal_norm": float(nominal_norm.detach().cpu()),
+        "g_failure_norm": float(failure_norm.detach().cpu()),
+        "projected_gradient_norm": float(_gradient_l2_norm(projected_failure).detach().cpu()),
+        "final_gradient_norm": float(_gradient_l2_norm(combined).detach().cpu()),
+    }
+
+
+def _update_policy_conditioned_actor(
+    agent: RIGMAPPOAgent,
+    optimizer: optim.Optimizer,
+    batch: dict,
+    cfg: RIGMAPPOConfig,
+    device,
+    update: int,
+) -> dict:
+    """Frozen Phase-B split actor update; critic remains ordinary PPO."""
+    mode = str(cfg.actor_gradient_mode).lower()
+    t_steps, n_envs, num_agents = batch["actions"].shape
+    num_graphs = t_steps * n_envs
+    if num_graphs != cfg.minibatch_graphs:
+        raise ValueError("conditioned actor update requires one complete stratified PPO minibatch")
+    condition_is_nominal = torch.as_tensor(
+        batch["condition_is_nominal"].reshape(num_graphs), dtype=torch.bool, device=device
+    )
+    nominal_count, failure_count = int(condition_is_nominal.sum().item()), int((~condition_is_nominal).sum().item())
+    if nominal_count <= 0 or failure_count <= 0:
+        raise RuntimeError("projection minibatch contract violated: both nominal and failure samples are required")
+    if nominal_count != failure_count or nominal_count * 2 != num_graphs:
+        raise RuntimeError("fixed 50% nominal / 50% failure exposure contract violated")
+
+    obs = torch.as_tensor(batch["obs"].reshape(num_graphs, num_agents, -1), dtype=torch.float32, device=device)
+    node_feat = torch.as_tensor(batch["node_feat"].reshape(num_graphs, *batch["node_feat"].shape[2:]), dtype=torch.float32, device=device)
+    edge_feat = torch.as_tensor(batch["edge_feat"].reshape(num_graphs, *batch["edge_feat"].shape[2:]), dtype=torch.float32, device=device)
+    role = torch.as_tensor(batch["role"].reshape(num_graphs, *batch["role"].shape[2:]), dtype=torch.long, device=device)
+    adj = torch.as_tensor(batch["adj"].reshape(num_graphs, *batch["adj"].shape[2:]), dtype=torch.float32, device=device)
+    relation_adj = torch.as_tensor(batch["relation_adj"].reshape(num_graphs, *batch["relation_adj"].shape[2:]), dtype=torch.float32, device=device)
+    intent_label = torch.as_tensor(batch["intent_label"].reshape(num_graphs, -1), dtype=torch.long, device=device)
+    share_obs = torch.as_tensor(batch["share_obs"].reshape(num_graphs, num_agents, -1), dtype=torch.float32, device=device)
+    actions = torch.as_tensor(batch["actions"].reshape(num_graphs, num_agents), dtype=torch.long, device=device)
+    old_logp = torch.as_tensor(batch["logp"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
+    advantages = torch.as_tensor(batch["advantages"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
+    returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
+    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+    chain_aux_coef = effective_chain_aux_coef(cfg, update)
+    if update <= cfg.critic_warmup_updates:
+        raise RuntimeError("conditioned actor update does not permit critic-only warmup updates")
+
+    actor_parameters = [parameter for parameter in agent.actor.parameters() if parameter.requires_grad]
+    losses, policy_losses, value_losses, entropies, intent_losses, intent_accs = [], [], [], [], [], []
+    chain_aux_losses, chain_aux_accs, approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], [], [], []
+    gradient_rows: list[dict[str, float | bool | int]] = []
+    epochs_ran = 0
+    stop_ppo = False
+    # The current frozen contract has one 256-graph minibatch.  Separate
+    # shuffles are retained only to make condition membership explicit.
+    for _ in range(cfg.ppo_epochs):
+        epochs_ran += 1
+        nominal_indices = torch.randperm(nominal_count, device=device)
+        failure_indices = torch.randperm(failure_count, device=device)
+        nominal_pool = torch.nonzero(condition_is_nominal, as_tuple=False).reshape(-1)[nominal_indices]
+        failure_pool = torch.nonzero(~condition_is_nominal, as_tuple=False).reshape(-1)[failure_indices]
+        mb = torch.cat([nominal_pool, failure_pool], dim=0)
+        if int(condition_is_nominal[mb].sum().item()) <= 0 or int((~condition_is_nominal[mb]).sum().item()) <= 0:
+            raise RuntimeError("stratified actor minibatch builder emitted an invalid projection minibatch")
+        _, new_logp, entropy, values, _, intent_logits, chain_aux_logits = agent.get_action_and_value(
+            obs[mb], node_feat[mb], edge_feat[mb], role[mb], adj[mb], share_obs[mb],
+            relation_adj=relation_adj[mb], action=actions[mb], intent_label=intent_label[mb],
+            detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
+        )
+        log_ratio = new_logp - old_logp[mb]
+        ratio = log_ratio.exp()
+        pg_loss1 = -advantages[mb] * ratio
+        pg_loss2 = -advantages[mb] * torch.clamp(ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef)
+        policy_per_graph = torch.max(pg_loss1, pg_loss2).mean(dim=1)
+        entropy_per_graph = entropy.mean(dim=1)
+        value_loss = 0.5 * (returns[mb] - values).pow(2).mean()
+        if batch["has_intent_label"]:
+            intent_per_graph = F.cross_entropy(
+                intent_logits.reshape(-1, NUM_INTENTS), intent_label[mb].reshape(-1), reduction="none"
+            ).reshape(num_graphs, -1).mean(dim=1)
+            intent_acc = (intent_logits.argmax(dim=-1) == intent_label[mb]).float().mean()
+        else:
+            intent_per_graph = torch.zeros(num_graphs, device=device)
+            intent_acc = torch.zeros((), device=device)
+        if chain_aux_coef > 0.0:
+            chain_target = build_chain_aux_targets(node_feat[mb], edge_feat[mb], relation_adj[mb], num_agents)
+            chain_per_graph = F.binary_cross_entropy_with_logits(chain_aux_logits, chain_target, reduction="none").mean(dim=1)
+            chain_acc = ((torch.sigmoid(chain_aux_logits) >= 0.5) == (chain_target >= 0.5)).float().mean()
+        else:
+            chain_per_graph = torch.zeros(num_graphs, device=device)
+            chain_acc = torch.zeros((), device=device)
+        actor_per_graph = policy_per_graph - cfg.entropy_coef * entropy_per_graph + effective_intent_coef(cfg) * intent_per_graph + chain_aux_coef * chain_per_graph
+        actor_loss = actor_per_graph.mean()
+        actor_loss_nominal = actor_per_graph[:nominal_count].mean()
+        actor_loss_failure = actor_per_graph[nominal_count:].mean()
+        nominal_gradients = _actor_gradients(actor_loss_nominal, actor_parameters)
+        failure_gradients = _actor_gradients(actor_loss_failure, actor_parameters)
+        combined_gradients, gradient_info = _conditioned_actor_gradient(mode, nominal_gradients, failure_gradients)
+        optimizer.zero_grad(set_to_none=True)
+        (cfg.value_coef * value_loss).backward()
+        for parameter, gradient in zip(actor_parameters, combined_gradients):
+            parameter.grad = gradient
+        grad_norm = nn.utils.clip_grad_norm_(agent.parameters(), cfg.max_grad_norm)
+        optimizer.step()
+        with torch.no_grad():
+            approx_kl = ((ratio - 1.0) - log_ratio).mean()
+            clip_fraction = ((ratio - 1.0).abs() > cfg.clip_coef).float().mean()
+            value_error_var = torch.var(returns[mb] - values)
+            returns_var = torch.var(returns[mb])
+            explained_variance = 1.0 - value_error_var / (returns_var + 1e-8)
+        losses.append(float((actor_loss + cfg.value_coef * value_loss).detach().cpu()))
+        policy_losses.append(float(policy_per_graph.mean().detach().cpu()))
+        value_losses.append(float(value_loss.detach().cpu()))
+        entropies.append(float(entropy_per_graph.mean().detach().cpu()))
+        intent_losses.append(float(intent_per_graph.mean().detach().cpu()))
+        intent_accs.append(float(intent_acc.detach().cpu()))
+        chain_aux_losses.append(float(chain_per_graph.mean().detach().cpu()))
+        chain_aux_accs.append(float(chain_acc.detach().cpu()))
+        approx_kls.append(float(approx_kl.detach().cpu()))
+        clip_fractions.append(float(clip_fraction.detach().cpu()))
+        grad_norms.append(float(grad_norm.detach().cpu()))
+        explained_variances.append(float(explained_variance.detach().cpu()))
+        gradient_rows.append({"nominal_sample_count": nominal_count, "failure_sample_count": failure_count, **gradient_info})
+        if cfg.target_kl is not None and float(approx_kl.detach().cpu()) > cfg.target_kl:
+            stop_ppo = True
+        if stop_ppo:
+            break
+    def mean_row(name: str) -> float:
+        return float(np.mean([float(row[name]) for row in gradient_rows]))
+    return {
+        "loss": float(np.mean(losses)), "policy_loss": float(np.mean(policy_losses)),
+        "value_loss": float(np.mean(value_losses)), "entropy": float(np.mean(entropies)),
+        "intent_loss": float(np.mean(intent_losses)), "intent_acc": float(np.mean(intent_accs)),
+        "chain_aux_loss": float(np.mean(chain_aux_losses)), "chain_aux_acc": float(np.mean(chain_aux_accs)),
+        "chain_aux_effective_coef": chain_aux_coef, "approx_kl": float(np.mean(approx_kls)),
+        "clip_fraction": float(np.mean(clip_fractions)), "grad_norm": float(np.mean(grad_norms)),
+        "explained_variance": float(np.mean(explained_variances)), "ppo_epochs_ran": epochs_ran,
+        "critic_warmup_active": 0.0, "role_gate_grad_norm": 0.0, "role_gate_mean": 1.0,
+        "role_gate_std": 0.0, "role_gate_min": 1.0, "role_gate_max": 1.0,
+        "role_gate_displacement_l2": 0.0, "actor_nominal_sample_count": mean_row("nominal_sample_count"),
+        "actor_failure_sample_count": mean_row("failure_sample_count"), "actor_gradient_dot": mean_row("gradient_dot"),
+        "actor_gradient_cosine": mean_row("gradient_cosine"),
+        "actor_projection_applied_fraction": float(np.mean([float(row["projection_applied"]) for row in gradient_rows])),
+        "actor_g_nominal_norm": mean_row("g_nominal_norm"), "actor_g_failure_norm": mean_row("g_failure_norm"),
+        "actor_projected_gradient_norm": mean_row("projected_gradient_norm"),
+        "actor_final_gradient_norm": mean_row("final_gradient_norm"), "actor_gradient_rows": gradient_rows,
+    }
+
+
 def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict, cfg: RIGMAPPOConfig, device, update: int):
+    if str(cfg.actor_gradient_mode).lower() != "standard":
+        return _update_policy_conditioned_actor(agent, optimizer, batch, cfg, device, update)
     t_steps, n_envs, num_agents = batch["actions"].shape
     num_graphs = t_steps * n_envs
     obs = torch.as_tensor(batch["obs"].reshape(num_graphs, num_agents, -1), dtype=torch.float32, device=device)
