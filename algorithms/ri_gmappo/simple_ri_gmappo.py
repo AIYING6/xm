@@ -1413,10 +1413,12 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "actor_failure_sample_count",
         "actor_gradient_dot",
         "actor_gradient_cosine",
+        "actor_post_projection_cosine",
         "actor_projection_applied_fraction",
         "actor_g_nominal_norm",
         "actor_g_failure_norm",
         "actor_projected_gradient_norm",
+        "actor_projection_magnitude",
         "actor_final_gradient_norm",
     ]
     write_header = not (cfg.append_log and log_path.exists())
@@ -1525,7 +1527,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 gradient_fields = [
                     "update", "mode", "nominal_sample_count", "failure_sample_count",
                     "gradient_dot", "gradient_cosine", "projection_applied",
-                    "g_nominal_norm", "g_failure_norm", "projected_gradient_norm", "final_gradient_norm",
+                    "g_nominal_norm", "g_failure_norm", "post_projection_cosine",
+                    "projected_gradient_norm", "projection_magnitude", "final_gradient_norm",
                 ]
                 gradient_writer = csv.DictWriter(actor_gradient_file, fieldnames=gradient_fields)
                 if not cfg.append_log or actor_gradient_log_path.stat().st_size == 0:
@@ -1943,13 +1946,19 @@ def _conditioned_actor_gradient(
         projected_nominal = [g_n - dot / (failure_norm.square() + delta) * g_f for g_n, g_f in zip(nominal, failure)]
         projected_failure = [g_f - dot / (nominal_norm.square() + delta) * g_n for g_n, g_f in zip(nominal, failure)]
     combined = [0.5 * (g_n + g_f) for g_n, g_f in zip(projected_nominal, projected_failure)]
+    projected_failure_norm = _gradient_l2_norm(projected_failure)
+    projected_nominal_norm = _gradient_l2_norm(projected_nominal)
+    post_dot = sum((g_n * g_f).sum() for g_n, g_f in zip(projected_nominal, projected_failure))
+    projection_magnitude = _gradient_l2_norm([g_f - projected for g_f, projected in zip(failure, projected_failure)])
     return combined, {
         "gradient_dot": float(dot.detach().cpu()),
         "gradient_cosine": float(cosine.detach().cpu()),
         "projection_applied": conflict and mode != "utr",
         "g_nominal_norm": float(nominal_norm.detach().cpu()),
         "g_failure_norm": float(failure_norm.detach().cpu()),
-        "projected_gradient_norm": float(_gradient_l2_norm(projected_failure).detach().cpu()),
+        "post_projection_cosine": float((post_dot / (projected_nominal_norm * projected_failure_norm + delta)).detach().cpu()),
+        "projected_gradient_norm": float(projected_failure_norm.detach().cpu()),
+        "projection_magnitude": float(projection_magnitude.detach().cpu()),
         "final_gradient_norm": float(_gradient_l2_norm(combined).detach().cpu()),
     }
 
@@ -2089,9 +2098,11 @@ def _update_policy_conditioned_actor(
         "role_gate_displacement_l2": 0.0, "actor_nominal_sample_count": mean_row("nominal_sample_count"),
         "actor_failure_sample_count": mean_row("failure_sample_count"), "actor_gradient_dot": mean_row("gradient_dot"),
         "actor_gradient_cosine": mean_row("gradient_cosine"),
+        "actor_post_projection_cosine": mean_row("post_projection_cosine"),
         "actor_projection_applied_fraction": float(np.mean([float(row["projection_applied"]) for row in gradient_rows])),
         "actor_g_nominal_norm": mean_row("g_nominal_norm"), "actor_g_failure_norm": mean_row("g_failure_norm"),
         "actor_projected_gradient_norm": mean_row("projected_gradient_norm"),
+        "actor_projection_magnitude": mean_row("projection_magnitude"),
         "actor_final_gradient_norm": mean_row("final_gradient_norm"), "actor_gradient_rows": gradient_rows,
     }
 
