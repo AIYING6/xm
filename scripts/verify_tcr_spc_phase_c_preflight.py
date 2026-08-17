@@ -18,6 +18,8 @@ from scripts.run_tcr_spc_phase_c_single import ARMS, SEEDS, training_config  # n
 
 
 BASELINE_COMMIT = "b3e13c1"
+PACKAGE_PROVENANCE = "TCR_SPC_PHASE_C_CLOUD_PROVENANCE.json"
+PACKAGE_PREFLIGHT_EVIDENCE = "TCR_SPC_PHASE_C_PREFLIGHT_EVIDENCE.json"
 
 
 def parameter_count(arm: str) -> int:
@@ -43,6 +45,31 @@ def historical_seed_trace(seed: int) -> str:
     return result.stdout.strip()
 
 
+def prior_use_audit() -> tuple[dict[int, str], bool, str]:
+    """Audit unused seeds from local Git, or verify bundled local evidence.
+
+    A source-only cloud package deliberately has no `.git` directory.  It must
+    therefore carry the immutable preflight evidence generated against the
+    packaged commit; silently treating missing history as an empty trace would
+    be scientifically invalid.
+    """
+    if (ROOT / ".git").exists():
+        trace = {seed: historical_seed_trace(seed) for seed in (2101, 2102, 2103, 2104)}
+        return trace, all(not value for value in trace.values()), "local_git_history"
+    provenance_path, evidence_path = ROOT / PACKAGE_PROVENANCE, ROOT / PACKAGE_PREFLIGHT_EVIDENCE
+    if not provenance_path.exists() or not evidence_path.exists():
+        raise RuntimeError("source-only package lacks immutable Phase-C seed-provenance evidence")
+    provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    if evidence.get("source_commit") != provenance.get("commit"):
+        raise RuntimeError("packaged Phase-C preflight evidence is not bound to the source commit")
+    trace = evidence.get("prior_training_tuning_trace_2101_2104")
+    unused = evidence.get("unused_2101_2104_prior_to_phase_c") is True
+    if not isinstance(trace, dict) or set(map(str, trace)) != {"2101", "2102", "2103", "2104"}:
+        raise RuntimeError("invalid packaged Phase-C seed-provenance evidence")
+    return {int(seed): str(value) for seed, value in trace.items()}, unused, "bundled_preflight_evidence"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, required=True)
@@ -52,7 +79,7 @@ def main() -> None:
         raise SystemExit("NO-GO: explicit --execute is required for Phase-C preflight")
     sampler = FixedStratifiedTopologySampler(2101, 4)
     manifest = sampler.manifest()
-    trace = {seed: historical_seed_trace(seed) for seed in (2101, 2102, 2103, 2104)}
+    trace, unused, history_mode = prior_use_audit()
     counts = {arm: parameter_count(arm) for arm in ARMS}
     result = {
         "protocol": "TCR-SPC-PHASE-C-PREFLIGHT-V1", "phase_c_contract_present": (ROOT / "docs" / "TCR_SPC_PHASE_C_1M_STABILITY_SCREEN_CONTRACT.md").exists(),
@@ -64,7 +91,8 @@ def main() -> None:
         "two_plus_two_stream_contract": manifest["nominal_streams"] == [0, 1] and manifest["failure_streams"] == [2, 3],
         "drtp_adaptation_absent": manifest["return_adaptive_state"] is False,
         "prior_training_tuning_trace_2101_2104": trace,
-        "unused_2101_2104_prior_to_phase_c": all(not value for value in trace.values()),
+        "unused_2101_2104_prior_to_phase_c": unused,
+        "seed_provenance_audit_mode": history_mode,
         "training_started": False, "tape_created": False,
     }
     result["pass"] = all((

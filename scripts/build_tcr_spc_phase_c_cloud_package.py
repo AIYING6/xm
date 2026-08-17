@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import zipfile
+import sys
 
 
 def sha256(path: Path) -> str:
@@ -30,6 +31,15 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="tcr_spc_phase_c_cloud_") as temporary:
         stage, source = Path(temporary) / "EA_RG_MAPPO_TCR_SPC_PHASE_C", Path(temporary) / "source.zip"
         stage.mkdir()
+        preflight_root = Path(temporary) / "preflight"
+        subprocess.run(
+            [sys.executable, "scripts/verify_tcr_spc_phase_c_preflight.py", "--output-root", str(preflight_root), "--execute"],
+            cwd=root, check=True,
+        )
+        evidence = json.loads((preflight_root / "phase_c_preflight.json").read_text(encoding="utf-8"))
+        if evidence.get("pass") is not True:
+            raise RuntimeError("refusing to package a failed Phase-C preflight")
+        evidence["source_commit"] = commit
         subprocess.run(["git", "archive", "--format=zip", f"--output={source}", commit], cwd=root, check=True)
         with zipfile.ZipFile(source) as archive:
             archive.extractall(stage)
@@ -46,6 +56,9 @@ def main() -> None:
         }
         (stage / "TCR_SPC_PHASE_C_CLOUD_PROVENANCE.json").write_text(
             json.dumps(provenance, indent=2) + "\n", encoding="utf-8"
+        )
+        (stage / "TCR_SPC_PHASE_C_PREFLIGHT_EVIDENCE.json").write_text(
+            json.dumps(evidence, indent=2) + "\n", encoding="utf-8"
         )
         with zipfile.ZipFile(output, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as bundle:
             for path in stage.rglob("*"):
