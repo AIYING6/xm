@@ -22,8 +22,11 @@ PACKAGE_PROVENANCE = "TCR_SPC_PHASE_C_CLOUD_PROVENANCE.json"
 PACKAGE_PREFLIGHT_EVIDENCE = "TCR_SPC_PHASE_C_PREFLIGHT_EVIDENCE.json"
 
 
-def parameter_count(arm: str) -> int:
-    config = training_config(arm, 2101, ROOT / ".phase_c_preflight")
+def parameter_count() -> int:
+    # The three arms differ only in optimizer-side gradient projection; their
+    # actor-critic construction is identical.  Instantiate the architecture
+    # once so this no-training preflight remains lightweight on cloud hosts.
+    config = training_config("utr_sg", 2101, ROOT / ".phase_c_preflight")
     # This preflight only instantiates the fixed architecture.  CPU avoids
     # device initialization and guarantees that it cannot consume training GPU.
     config.device = "cpu"
@@ -80,7 +83,8 @@ def main() -> None:
     sampler = FixedStratifiedTopologySampler(2101, 4)
     manifest = sampler.manifest()
     trace, unused, history_mode = prior_use_audit()
-    counts = {arm: parameter_count(arm) for arm in ARMS}
+    count = parameter_count()
+    counts = {arm: count for arm in ARMS}
     result = {
         "protocol": "TCR-SPC-PHASE-C-PREFLIGHT-V1", "phase_c_contract_present": (ROOT / "docs" / "TCR_SPC_PHASE_C_1M_STABILITY_SCREEN_CONTRACT.md").exists(),
         "arms": list(ARMS), "seed_set": list(SEEDS), "canonical_seeds_prohibited": True,
