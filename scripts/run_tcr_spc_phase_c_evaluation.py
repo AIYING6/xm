@@ -105,6 +105,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--phase-d", action="store_true")
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute:
@@ -114,7 +115,10 @@ def main() -> None:
     tape = json.loads((args.output_root / "tape_manifest.json").read_text(encoding="utf-8"))
     if tape.get("episode_ids") != list(range(TAPE_START, TAPE_START + EPISODES)) or tape.get("canonical") is not False:
         raise RuntimeError("invalid Phase-C 440k tape")
-    eval_root = args.output_root / "evaluations" / "final_1m"
+    global PROTOCOL
+    if args.phase_d:
+        PROTOCOL = "TCR-SPC-PHASE-D-3M-CONTINUATION-EVALUATION-V1"
+    eval_root = args.output_root / ("evaluations/final_3m" if args.phase_d else "evaluations/final_1m")
     if eval_root.exists() and any(eval_root.iterdir()):
         raise FileExistsError(f"refusing to overwrite: {eval_root}")
     eval_root.mkdir(parents=True, exist_ok=False)
@@ -124,14 +128,29 @@ def main() -> None:
             run_dir = args.output_root / "runs" / arm / f"seed{seed}"
             manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
             required = {
-                "status": "completed", "environment_steps": 1_000_192, "parameter_count": 116728,
-                "from_scratch": True, "strict_continuous": True, "final_checkpoint_only": True,
-                "canonical_seeds_used": False, "held_out_seeds_used": False, "drtp_adaptation": False,
+                "status": "completed", "parameter_count": 116728,
+                "final_checkpoint_only": True, "canonical_seeds_used": False,
+                "held_out_seeds_used": False,
             }
+            if args.phase_d:
+                required.update({
+                    "final_environment_steps": 3_000_064,
+                    "strict_continuation": True,
+                    "warm_restart_used": False,
+                    "from_scratch_used": False,
+                })
+            else:
+                required.update({
+                    "environment_steps": 1_000_192,
+                    "from_scratch": True,
+                    "strict_continuous": True,
+                    "drtp_adaptation": False,
+                })
             if any(manifest.get(key) != value for key, value in required.items()) or manifest.get("tape_hash") != tape["tape_hash"]:
-                raise RuntimeError(f"Phase-C run contract violation: {run_dir}")
+                raise RuntimeError(f"evaluation run contract violation: {run_dir}")
             checkpoint = run_dir / "actor_critic_latest.pt"
-            if not checkpoint.exists() or sha256(checkpoint) != manifest.get("checkpoint_sha256"):
+            expected_hash = manifest.get("final_checkpoint_sha256", manifest.get("checkpoint_sha256"))
+            if not checkpoint.exists() or sha256(checkpoint) != expected_hash:
                 raise RuntimeError(f"invalid final checkpoint: {run_dir}")
             summary = gradient_summary(run_dir / "actor_gradient_telemetry.csv")
             gradient_rows.append({"arm": arm, "seed": seed, **summary})
@@ -168,7 +187,8 @@ def main() -> None:
     evaluation_manifest = {
         "protocol": PROTOCOL, "status": "completed", "tape_hash": tape["tape_hash"], "tape_start": TAPE_START,
         "episodes_per_condition": EPISODES, "conditions": [row["name"] for row in tape["conditions"]],
-        "final_checkpoint_only": True, "raw_rows": len(raw), "cells": len(tasks), "workers": workers,
+        "final_checkpoint_only": True, "phase_d": args.phase_d,
+        "raw_rows": len(raw), "cells": len(tasks), "workers": workers,
         "source_runs": source_runs, "canonical_seeds_used": False, "held_out_used": False,
     }
     with (eval_root / "evaluation_manifest.json").open("w", encoding="utf-8", newline="\n") as handle:
