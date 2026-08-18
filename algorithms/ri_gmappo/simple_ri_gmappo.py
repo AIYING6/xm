@@ -1054,11 +1054,21 @@ def _restore_runtime_rng_state(state: dict) -> None:
         raise ValueError("incomplete runtime RNG state")
     random.setstate(state["python"])
     np.random.set_state(state["numpy"])
-    torch.set_rng_state(state["torch_cpu"])
+    # A CUDA map_location can move this persisted CPU RNG tensor onto the
+    # active GPU.  The CPU generator accepts only a CPU ByteTensor; restoring
+    # it explicitly on CPU keeps strict continuation device-independent.
+    torch_cpu_state = state["torch_cpu"]
+    if isinstance(torch_cpu_state, torch.Tensor) and torch_cpu_state.device.type != "cpu":
+        torch_cpu_state = torch_cpu_state.cpu()
+    torch.set_rng_state(torch_cpu_state)
     if state["torch_cuda"] is not None:
         if not torch.cuda.is_available():
             raise RuntimeError("runtime checkpoint requires CUDA RNG restoration on a CUDA-capable host")
-        torch.cuda.set_rng_state_all(state["torch_cuda"])
+        torch_cuda_states = [
+            value.cpu() if isinstance(value, torch.Tensor) and value.device.type != "cpu" else value
+            for value in state["torch_cuda"]
+        ]
+        torch.cuda.set_rng_state_all(torch_cuda_states)
 
 
 def _selection_to_state(selection: DRTPSelection | None) -> dict | None:
