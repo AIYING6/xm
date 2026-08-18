@@ -23,6 +23,10 @@ from scripts.run_tcr_spc_phase_c_single import ARMS, SEEDS  # noqa: E402
 
 
 PROTOCOL = "TCR-SPC-PHASE-C-1M-STABILITY-EVALUATION-V1"
+PHASE_D_BUDGETS = {
+    "2m": (2_000_128, "final_2m", "TCR-SPC-PHASE-D-2M-INTERIM-EVALUATION-V1"),
+    "3m": (3_000_064, "final_3m", "TCR-SPC-PHASE-D-3M-CONTINUATION-EVALUATION-V1"),
+}
 
 
 def sha256(path: Path) -> str:
@@ -106,6 +110,7 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--phase-d", action="store_true")
+    parser.add_argument("--phase-d-budget", choices=tuple(PHASE_D_BUDGETS), default="3m")
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute:
@@ -117,8 +122,10 @@ def main() -> None:
         raise RuntimeError("invalid Phase-C 440k tape")
     global PROTOCOL
     if args.phase_d:
-        PROTOCOL = "TCR-SPC-PHASE-D-3M-CONTINUATION-EVALUATION-V1"
-    eval_root = args.output_root / ("evaluations/final_3m" if args.phase_d else "evaluations/final_1m")
+        final_steps, eval_name, PROTOCOL = PHASE_D_BUDGETS[args.phase_d_budget]
+    else:
+        final_steps, eval_name = 1_000_192, "final_1m"
+    eval_root = args.output_root / f"evaluations/{eval_name}"
     if eval_root.exists() and any(eval_root.iterdir()):
         raise FileExistsError(f"refusing to overwrite: {eval_root}")
     eval_root.mkdir(parents=True, exist_ok=False)
@@ -134,7 +141,8 @@ def main() -> None:
             }
             if args.phase_d:
                 required.update({
-                    "final_environment_steps": 3_000_064,
+                    "final_environment_steps": final_steps,
+                    "stage": args.phase_d_budget,
                     "strict_continuation": True,
                     "warm_restart_used": False,
                     "from_scratch_used": False,
@@ -158,13 +166,13 @@ def main() -> None:
             source_runs.append(manifest)
     total = len(tasks) * len(tape["conditions"]) * len(tape["episode_ids"])
     workers = min(args.workers, len(tasks))
-    print(f"Phase-C evaluation: workers={workers}, episodes={total}", flush=True)
+    print(f"Phase-D evaluation {args.phase_d_budget if args.phase_d else '1m'}: workers={workers}, episodes={total}", flush=True)
     raw, completed = [], 0
     with ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context("spawn")) as pool:
         futures = [pool.submit(evaluate_cell, task) for task in tasks]
         for future in as_completed(futures):
             rows = future.result(); raw.extend(rows); completed += len(rows)
-            print(f"Phase-C evaluation progress {completed}/{total} ({100 * completed / total:.2f}%)", flush=True)
+            print(f"Phase-D evaluation progress {completed}/{total} ({100 * completed / total:.2f}%)", flush=True)
     order = {row["name"]: index for index, row in enumerate(tape["conditions"])}
     raw.sort(key=lambda row: (row["method"], int(row["train_seed"]), order[row["topology_condition"]], int(row["development_episode_id"])))
     write_csv(eval_root / "raw_episode_metrics.csv", raw)
@@ -188,6 +196,7 @@ def main() -> None:
         "protocol": PROTOCOL, "status": "completed", "tape_hash": tape["tape_hash"], "tape_start": TAPE_START,
         "episodes_per_condition": EPISODES, "conditions": [row["name"] for row in tape["conditions"]],
         "final_checkpoint_only": True, "phase_d": args.phase_d,
+        "phase_d_stage": args.phase_d_budget if args.phase_d else None,
         "raw_rows": len(raw), "cells": len(tasks), "workers": workers,
         "source_runs": source_runs, "canonical_seeds_used": False, "held_out_used": False,
     }
