@@ -85,6 +85,10 @@ def finite_mean(rows: list[dict], field: str) -> float:
 def gradient_summary(path: Path) -> dict:
     with path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
+    # Runtime telemetry may contain repeated CSV headers after periodic
+    # checkpoint/log flushes. They are not observations and must not enter
+    # numeric aggregation.
+    rows = [row for row in rows if row.get("gradient_dot") != "gradient_dot"]
     if not rows:
         raise RuntimeError(f"missing actor-gradient rows: {path}")
     numeric = ("gradient_cosine", "post_projection_cosine", "g_nominal_norm", "g_failure_norm", "projection_magnitude", "final_gradient_norm")
