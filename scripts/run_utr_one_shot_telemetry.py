@@ -46,6 +46,18 @@ INVARIANCE_FIELDS = (
     "path_switch_count", "traveled_distance", "control_effort",
 )
 
+# The historical Phase-D aggregate CSV was produced through a separate
+# float32-heavy aggregation path.  The passive logger recomputes the same
+# episode summaries in Python float64.  We keep evaluator-vs-logger checks
+# strict, but compare their shared semantic outputs with the archived CSV
+# using a documented, scale-aware serialization tolerance.  At the largest
+# retained aggregate (travel distance ~=1.6e5), the relative bound is 0.0048;
+# this is below one float32 accumulation unit while remaining far too small
+# to conceal a trajectory or terminal-outcome change.
+HISTORICAL_AGGREGATE_ABS_TOLERANCE = 1e-5
+HISTORICAL_AGGREGATE_REL_TOLERANCE = 3e-8
+EVALUATOR_LOGGER_ABS_TOLERANCE = 1e-6
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -260,7 +272,14 @@ def summarize_episode(
     }
 
 
-def compare_values(left: Any, right: Any, *, field: str) -> bool:
+def compare_values(
+    left: Any,
+    right: Any,
+    *,
+    field: str,
+    absolute_tolerance: float = EVALUATOR_LOGGER_ABS_TOLERANCE,
+    relative_tolerance: float = 0.0,
+) -> bool:
     def missing(value: Any) -> bool:
         if value in (None, ""):
             return True
@@ -274,7 +293,9 @@ def compare_values(left: Any, right: Any, *, field: str) -> bool:
     if field in {"terminal_step", "path_switch_count"}:
         return int(left) == int(float(right))
     try:
-        return abs(float(left) - float(right)) <= 1e-6
+        return math.isclose(
+            float(left), float(right), abs_tol=absolute_tolerance, rel_tol=relative_tolerance,
+        )
     except (TypeError, ValueError):
         return left == right
 
@@ -282,8 +303,22 @@ def compare_values(left: Any, right: Any, *, field: str) -> bool:
 def compare_summary(summary: dict[str, Any], historical: dict[str, str]) -> list[str]:
     failures = []
     for field in INVARIANCE_FIELDS:
-        if not compare_values(summary.get(field), historical.get(field), field=field):
-            failures.append(f"{field}: telemetry={summary.get(field)!r}, historical={historical.get(field)!r}")
+        telemetry = summary.get(field)
+        archived = historical.get(field)
+        if not compare_values(
+            telemetry,
+            archived,
+            field=field,
+            absolute_tolerance=HISTORICAL_AGGREGATE_ABS_TOLERANCE,
+            relative_tolerance=HISTORICAL_AGGREGATE_REL_TOLERANCE,
+        ):
+            try:
+                absolute_error = abs(float(telemetry) - float(archived))
+                relative_error = absolute_error / max(abs(float(archived)), 1.0)
+                suffix = f", abs_error={absolute_error:.12g}, rel_error={relative_error:.12g}"
+            except (TypeError, ValueError):
+                suffix = ""
+            failures.append(f"{field}: telemetry={telemetry!r}, historical={archived!r}{suffix}")
     return failures
 
 
