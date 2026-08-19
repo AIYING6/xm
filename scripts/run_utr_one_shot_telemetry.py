@@ -51,11 +51,12 @@ INVARIANCE_FIELDS = (
 # episode summaries in Python float64.  We keep evaluator-vs-logger checks
 # strict, but compare their shared semantic outputs with the archived CSV
 # using a documented, scale-aware serialization tolerance.  At the largest
-# retained aggregate (travel distance ~=1.6e5), the relative bound is 0.0048;
-# this is below one float32 accumulation unit while remaining far too small
+# retained aggregate (travel distance ~=1.6e5), the relative bound is 0.016;
+# this covers roughly one-to-two float32 accumulation units while remaining
+# far too small
 # to conceal a trajectory or terminal-outcome change.
 HISTORICAL_AGGREGATE_ABS_TOLERANCE = 1e-5
-HISTORICAL_AGGREGATE_REL_TOLERANCE = 3e-8
+HISTORICAL_AGGREGATE_REL_TOLERANCE = 1e-7
 EVALUATOR_LOGGER_ABS_TOLERANCE = 1e-6
 
 
