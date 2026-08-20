@@ -267,22 +267,40 @@ def write_evidence_bundle(output_root: Path, plans: Iterable[tuple[int, FailureS
     if output_root.exists() and any(output_root.iterdir()):
         raise FileExistsError(f"refusing to overwrite telemetry-native output: {output_root}")
     output_root.mkdir(parents=True, exist_ok=True)
-    all_steps: list[dict[str, Any]] = []
+    frozen_plans = list(plans)
     expected: list[dict[str, Any]] = []
-    for episode_id, scenario in plans:
-        steps, aggregate = run_episode(episode_id, scenario, policy)
-        all_steps.extend(steps)
-        expected.append(aggregate)
     raw_path = output_root / "raw_step_telemetry.jsonl"
-    write_jsonl(raw_path, all_steps)
-    restored = read_jsonl(raw_path)
+    # Keep only one episode in memory.  A final evaluation may contain many
+    # thousands of episodes; retaining every actor-side graph snapshot would
+    # defeat the evidence-chain's practical reproducibility requirement.
+    step_count = 0
+    with raw_path.open("w", encoding="utf-8", newline="\n") as handle:
+        for episode_id, scenario in frozen_plans:
+            steps, aggregate = run_episode(episode_id, scenario, policy)
+            expected.append(aggregate)
+            step_count += len(steps)
+            for row in steps:
+                handle.write(canonical_line(row) + "\n")
+
+    # Re-derive one aggregate at a time from the written source, without using
+    # the in-memory step records or any historical aggregate.
     observed: list[dict[str, Any]] = []
-    cursor = 0
-    for aggregate in expected:
-        count = int(aggregate["step_count"])
-        observed.append(summarize_steps(restored[cursor:cursor + count]))
-        cursor += count
-    if cursor != len(restored) or [canonical_line(row) for row in observed] != [canonical_line(row) for row in expected]:
+    expected_index, buffer = 0, []
+    with raw_path.open(encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            buffer.append(json.loads(line))
+            if expected_index >= len(expected):
+                raise RuntimeError("raw telemetry contains more episodes than the declared plan")
+            expected_count = int(expected[expected_index]["step_count"])
+            if len(buffer) == expected_count:
+                observed.append(summarize_steps(buffer))
+                buffer = []
+                expected_index += 1
+            elif len(buffer) > expected_count:
+                raise RuntimeError("raw telemetry episode boundary disagrees with derived aggregate")
+    if buffer or expected_index != len(expected) or [canonical_line(row) for row in observed] != [canonical_line(row) for row in expected]:
         raise RuntimeError("raw telemetry aggregation closure failed")
     aggregate_path = output_root / "episode_aggregates.jsonl"
     write_jsonl(aggregate_path, observed)
@@ -290,8 +308,8 @@ def write_evidence_bundle(output_root: Path, plans: Iterable[tuple[int, FailureS
         "protocol": PROTOCOL, "schema_version": SCHEMA_VERSION,
         "raw_step_telemetry_sha256": sha256(raw_path),
         "episode_aggregates_sha256": sha256(aggregate_path),
-        "episode_count": len(expected), "step_count": len(restored),
-        "plans": [{"episode_id": int(episode_id), "scenario": asdict(scenario)} for episode_id, scenario in plans],
+        "episode_count": len(expected), "step_count": step_count,
+        "plans": [{"episode_id": int(episode_id), "scenario": asdict(scenario)} for episode_id, scenario in frozen_plans],
         "aggregate_source": "raw_step_telemetry.jsonl only",
         "historical_aggregate_reuse": False,
         "actor_boundary": "policy receives only obs/share_obs/graph; simulator state is diagnostic_only",
