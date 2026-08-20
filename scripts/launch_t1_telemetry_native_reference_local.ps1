@@ -17,7 +17,7 @@ if (Test-Path (Join-Path $OutputRoot "preflight_manifest.json")) {
 & $PythonBin scripts/create_t1_telemetry_native_tape.py --output-root $OutputRoot --execute
 
 foreach ($seed in 2201, 2202, 2203, 2204, 2205) {
-    Write-Host "=== T1 UTR-SG seed$seed: strict continuous 1M ==="
+    Write-Host "=== T1 UTR-SG seed${seed}: strict continuous 1M ==="
     & $PythonBin scripts/run_t1_telemetry_native_single.py --seed $seed --output-root $OutputRoot --execute `
         2>&1 | Tee-Object -FilePath (Join-Path $OutputRoot "utr_sg_seed$seed.out")
 }

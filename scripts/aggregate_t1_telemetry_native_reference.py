@@ -62,7 +62,7 @@ def markdown(per_seed: dict[int, dict], pooled: dict) -> str:
     )
     return f"""# T1 Telemetry-Native UTR-SG Reference Report
 
-**Status:** `DESCRIPTIVE DEVELOPMENT REFERENCE ONLY`  
+**Status:** `DESCRIPTIVE DEVELOPMENT REFERENCE ONLY`
 **Protocol:** `{PROTOCOL}`
 
 This report is derived only from the new T1 per-seed
