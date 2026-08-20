@@ -117,7 +117,8 @@ def main() -> None:
         raise FileExistsError("refusing to overwrite T1 aggregate/report")
     output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     args.report_path.parent.mkdir(parents=True, exist_ok=True)
-    args.report_path.write_text(markdown(per_seed, pooled), encoding="utf-8")
+    with args.report_path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(markdown(per_seed, pooled))
     print(json.dumps({"status": "completed", "result": str(output), "report": str(args.report_path)}, indent=2))
 
 
