@@ -6,6 +6,7 @@ from typing import List
 
 import copy
 import csv
+import hashlib
 import json
 import math
 import random
@@ -181,6 +182,12 @@ class RIGMAPPOConfig:
     fixed_stratified_topology_sampler_seed: int | None = None
     actor_gradient_mode: str = "standard"
     actor_gradient_logging: bool = False
+    # TC-SAM-UTR: standard Euclidean SAM applied to actor parameters only.
+    # These fields are inert unless sam_enabled=True and are intentionally
+    # fixed rather than adapted from returns, topology, or training seed.
+    sam_enabled: bool = False
+    sam_rho: float = 0.05
+    sam_epsilon: float = 1e-12
     # Exact runtime continuation is opt-in.  Legacy checkpoints only contain
     # model/optimizer/update and must use the separately documented warm
     # restart path rather than this strict continuation mechanism.
@@ -1296,6 +1303,13 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     actor_gradient_mode = str(cfg.actor_gradient_mode).lower()
     if actor_gradient_mode not in {"standard", "utr", "spc", "tcr"}:
         raise ValueError("actor_gradient_mode must be standard, utr, spc, or tcr")
+    if cfg.sam_enabled:
+        if actor_gradient_mode != "utr" or not cfg.fixed_stratified_topology_sampler:
+            raise ValueError("TC-SAM requires the frozen UTR actor mode and fixed stratified sampler")
+        if not math.isfinite(float(cfg.sam_rho)) or float(cfg.sam_rho) < 0.0:
+            raise ValueError("sam_rho must be a finite non-negative scalar")
+        if not math.isfinite(float(cfg.sam_epsilon)) or float(cfg.sam_epsilon) <= 0.0:
+            raise ValueError("sam_epsilon must be a finite positive scalar")
     if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none", cfg.fixed_stratified_topology_sampler)) > 1:
         raise ValueError("curriculum, fixed mixture, DRTP sampler, and fixed stratified sampler are mutually exclusive")
     if actor_gradient_mode != "standard":
@@ -1492,6 +1506,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "actor_projected_gradient_norm",
         "actor_projection_magnitude",
         "actor_final_gradient_norm",
+        "sam_enabled",
+        "sam_first_gradient_norm",
+        "sam_perturbation_norm",
+        "sam_second_gradient_norm",
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
@@ -1601,6 +1619,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     "gradient_dot", "gradient_cosine", "projection_applied",
                     "g_nominal_norm", "g_failure_norm", "post_projection_cosine",
                     "projected_gradient_norm", "projection_magnitude", "final_gradient_norm",
+                    "sam_enabled", "sam_first_gradient_norm", "sam_perturbation_norm", "sam_second_gradient_norm",
+                    "sam_first_minibatch_hash", "sam_second_minibatch_hash",
                 ]
                 gradient_writer = csv.DictWriter(actor_gradient_file, fieldnames=gradient_fields)
                 if not cfg.append_log or actor_gradient_log_path.stat().st_size == 0:
@@ -2035,6 +2055,29 @@ def _conditioned_actor_gradient(
     }
 
 
+def _sam_perturbations(
+    gradients: list[torch.Tensor], rho: float, epsilon: float,
+) -> tuple[list[torch.Tensor], torch.Tensor, torch.Tensor]:
+    """Return standard Euclidean-SAM perturbations without mutating parameters.
+
+    The first-pass PPO actor gradients are deliberately *not* clipped.  SAM's
+    definition uses this raw direction.  Only the restored, final combined PPO
+    gradient is clipped immediately before the optimiser step.
+    """
+    gradient_norm = _gradient_l2_norm(gradients)
+    scale = float(rho) / (gradient_norm + float(epsilon))
+    perturbations = [gradient.detach() * scale for gradient in gradients]
+    perturbation_norm = _gradient_l2_norm(perturbations)
+    return perturbations, gradient_norm, perturbation_norm
+
+
+def _restore_parameter_copies(parameters: list[torch.nn.Parameter], copies: list[torch.Tensor]) -> None:
+    """Restore base tensors by copy, avoiding round-off from add/subtract."""
+    with torch.no_grad():
+        for parameter, original in zip(parameters, copies):
+            parameter.copy_(original)
+
+
 def _update_policy_conditioned_actor(
     agent: RIGMAPPOAgent,
     optimizer: optim.Optimizer,
@@ -2076,6 +2119,9 @@ def _update_policy_conditioned_actor(
         raise RuntimeError("conditioned actor update does not permit critic-only warmup updates")
 
     actor_parameters = [parameter for parameter in agent.actor.parameters() if parameter.requires_grad]
+    sam_enabled = bool(cfg.sam_enabled)
+    if sam_enabled and mode != "utr":
+        raise RuntimeError("TC-SAM is defined only for the frozen UTR actor update")
     losses, policy_losses, value_losses, entropies, intent_losses, intent_accs = [], [], [], [], [], []
     chain_aux_losses, chain_aux_accs, approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], [], [], []
     gradient_rows: list[dict[str, float | bool | int]] = []
@@ -2123,9 +2169,82 @@ def _update_policy_conditioned_actor(
         actor_loss = actor_per_graph.mean()
         actor_loss_nominal = actor_per_graph[:nominal_count].mean()
         actor_loss_failure = actor_per_graph[nominal_count:].mean()
-        nominal_gradients = _actor_gradients(actor_loss_nominal, actor_parameters)
-        failure_gradients = _actor_gradients(actor_loss_failure, actor_parameters)
-        combined_gradients, gradient_info = _conditioned_actor_gradient(mode, nominal_gradients, failure_gradients)
+        if sam_enabled:
+            # First pass: raw, full UTR actor loss.  No optimiser state is
+            # touched and no clipping is applied before SAM constructs epsilon.
+            first_gradients = _actor_gradients(actor_loss, actor_parameters)
+            # Audit-only fingerprint: both SAM passes must operate on exactly
+            # the same stratified actor minibatch, not merely an equal-size one.
+            sam_minibatch_hash = hashlib.sha256(
+                mb.detach().cpu().numpy().tobytes()
+            ).hexdigest()
+            perturbations, first_gradient_norm, perturbation_norm = _sam_perturbations(
+                first_gradients, cfg.sam_rho, cfg.sam_epsilon,
+            )
+            base_parameters = [parameter.detach().clone() for parameter in actor_parameters]
+            with torch.no_grad():
+                for parameter, perturbation in zip(actor_parameters, perturbations):
+                    parameter.add_(perturbation)
+            try:
+                # The second pass reuses exactly the same minibatch, old policy
+                # log-probabilities, returns, and advantages.  The critic is
+                # intentionally not part of SAM and remains ordinary PPO.
+                _, perturbed_logp, perturbed_entropy, _, _, perturbed_intent_logits, perturbed_chain_aux_logits = agent.get_action_and_value(
+                    obs[mb], node_feat[mb], edge_feat[mb], role[mb], adj[mb], share_obs[mb],
+                    relation_adj=relation_adj[mb], action=actions[mb], intent_label=intent_label[mb],
+                    detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
+                )
+                perturbed_ratio = (perturbed_logp - old_logp[mb]).exp()
+                perturbed_pg = torch.max(
+                    -advantages[mb] * perturbed_ratio,
+                    -advantages[mb] * torch.clamp(perturbed_ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef),
+                ).mean()
+                perturbed_entropy_loss = perturbed_entropy.mean()
+                if batch["has_intent_label"]:
+                    flat_labels = intent_label[mb].reshape(-1)
+                    perturbed_intent_loss = F.cross_entropy(
+                        perturbed_intent_logits.reshape(-1, NUM_INTENTS), flat_labels,
+                    )
+                else:
+                    perturbed_intent_loss = torch.zeros((), device=device)
+                if chain_aux_coef > 0.0:
+                    perturbed_chain_loss = F.binary_cross_entropy_with_logits(perturbed_chain_aux_logits, chain_aux_target)
+                else:
+                    perturbed_chain_loss = torch.zeros((), device=device)
+                perturbed_actor_loss = (
+                    perturbed_pg - cfg.entropy_coef * perturbed_entropy_loss
+                    + effective_intent_coef(cfg) * perturbed_intent_loss
+                    + chain_aux_coef * perturbed_chain_loss
+                )
+                combined_gradients = _actor_gradients(perturbed_actor_loss, actor_parameters)
+                second_gradient_norm = _gradient_l2_norm(combined_gradients)
+            finally:
+                _restore_parameter_copies(actor_parameters, base_parameters)
+            # These entries retain the existing UTR gradient telemetry schema
+            # while making explicit that no nominal/failure projection occurred.
+            gradient_info = {
+                "gradient_dot": 0.0, "gradient_cosine": 0.0, "projection_applied": False,
+                "g_nominal_norm": float(first_gradient_norm.detach().cpu()),
+                "g_failure_norm": 0.0, "post_projection_cosine": 0.0,
+                "projected_gradient_norm": float(second_gradient_norm.detach().cpu()),
+                "projection_magnitude": 0.0,
+                "final_gradient_norm": float(second_gradient_norm.detach().cpu()),
+                "sam_enabled": True,
+                "sam_first_gradient_norm": float(first_gradient_norm.detach().cpu()),
+                "sam_perturbation_norm": float(perturbation_norm.detach().cpu()),
+                "sam_second_gradient_norm": float(second_gradient_norm.detach().cpu()),
+                "sam_first_minibatch_hash": sam_minibatch_hash,
+                "sam_second_minibatch_hash": sam_minibatch_hash,
+            }
+        else:
+            nominal_gradients = _actor_gradients(actor_loss_nominal, actor_parameters)
+            failure_gradients = _actor_gradients(actor_loss_failure, actor_parameters)
+            combined_gradients, gradient_info = _conditioned_actor_gradient(mode, nominal_gradients, failure_gradients)
+            gradient_info.update({
+                "sam_enabled": False, "sam_first_gradient_norm": 0.0,
+                "sam_perturbation_norm": 0.0, "sam_second_gradient_norm": 0.0,
+                "sam_first_minibatch_hash": "", "sam_second_minibatch_hash": "",
+            })
         optimizer.zero_grad(set_to_none=True)
         (cfg.value_coef * value_loss).backward()
         for parameter, gradient in zip(actor_parameters, combined_gradients):
@@ -2175,7 +2294,12 @@ def _update_policy_conditioned_actor(
         "actor_g_nominal_norm": mean_row("g_nominal_norm"), "actor_g_failure_norm": mean_row("g_failure_norm"),
         "actor_projected_gradient_norm": mean_row("projected_gradient_norm"),
         "actor_projection_magnitude": mean_row("projection_magnitude"),
-        "actor_final_gradient_norm": mean_row("final_gradient_norm"), "actor_gradient_rows": gradient_rows,
+        "actor_final_gradient_norm": mean_row("final_gradient_norm"),
+        "sam_enabled": float(np.mean([float(row["sam_enabled"]) for row in gradient_rows])),
+        "sam_first_gradient_norm": mean_row("sam_first_gradient_norm"),
+        "sam_perturbation_norm": mean_row("sam_perturbation_norm"),
+        "sam_second_gradient_norm": mean_row("sam_second_gradient_norm"),
+        "actor_gradient_rows": gradient_rows,
     }
 
 
