@@ -28,6 +28,7 @@ from scripts.telemetry_native_t0 import (
 
 PROTOCOL = "T1-TELEMETRY-NATIVE-CHECKPOINT-ADAPTER-V1"
 MATCHED_SG_PARAMETER_COUNT = 116_728
+SUPPORTED_GRAPH_ENCODERS = ("single", "edr")
 
 
 def _template_dimensions() -> tuple[int, int, int, int, int, int, int]:
@@ -45,12 +46,19 @@ def _template_dimensions() -> tuple[int, int, int, int, int, int, int]:
     )
 
 
-def build_matched_sg_agent(checkpoint: Path, construction_seed: int, device: str = "cpu") -> RIGMAPPOAgent:
-    """Load an unchanged 116,728-parameter Single-Graph checkpoint.
+def build_matched_graph_agent(
+    checkpoint: Path,
+    construction_seed: int,
+    graph_encoder: str = "single",
+    device: str = "cpu",
+) -> RIGMAPPOAgent:
+    """Load a matched SG-family checkpoint through the legal actor boundary.
 
     `construction_seed` fixes module construction before the checkpoint is
     loaded.  It is provenance only and is not exposed to the actor.
     """
+    if graph_encoder not in SUPPORTED_GRAPH_ENCODERS:
+        raise ValueError(f"unsupported matched graph encoder: {graph_encoder}")
     torch.manual_seed(int(construction_seed))
     obs_dim, node_dim, edge_dim, share_dim, action_dim, num_agents, num_roles = _template_dimensions()
     agent = RIGMAPPOAgent(
@@ -64,18 +72,23 @@ def build_matched_sg_agent(checkpoint: Path, construction_seed: int, device: str
         hidden_dim=115,
         role_dim=8,
         intent_dim=8,
-        graph_encoder="single",
+        graph_encoder=graph_encoder,
         role_gate_mode="none",
         use_intent_context=False,
     )
     parameter_count = sum(parameter.numel() for parameter in agent.parameters())
     if parameter_count != MATCHED_SG_PARAMETER_COUNT:
-        raise RuntimeError(f"matched SG parameter mismatch: {parameter_count}")
+        raise RuntimeError(f"matched graph parameter mismatch: {parameter_count}")
     target = torch.device(device)
     agent.to(target)
     load_matching_state_dict(agent, str(checkpoint), target)
     agent.eval()
     return agent
+
+
+def build_matched_sg_agent(checkpoint: Path, construction_seed: int, device: str = "cpu") -> RIGMAPPOAgent:
+    """Backward-compatible unchanged Single-Graph checkpoint adapter."""
+    return build_matched_graph_agent(checkpoint, construction_seed, graph_encoder="single", device=device)
 
 
 def deterministic_checkpoint_policy(agent: RIGMAPPOAgent) -> ActionPolicy:
@@ -106,18 +119,20 @@ def write_checkpoint_evidence_bundle(
     checkpoint: Path,
     construction_seed: int,
     plans: Iterable[tuple[int, FailureScenario]],
+    graph_encoder: str = "single",
     device: str = "cpu",
 ) -> dict[str, Any]:
     """Evaluate a final checkpoint through the T0 sole-source writer."""
     if not checkpoint.exists() or checkpoint.stat().st_size == 0:
         raise FileNotFoundError(checkpoint)
-    agent = build_matched_sg_agent(checkpoint, construction_seed, device=device)
+    agent = build_matched_graph_agent(checkpoint, construction_seed, graph_encoder=graph_encoder, device=device)
     manifest = write_evidence_bundle(output_root, plans, deterministic_checkpoint_policy(agent))
     manifest.update({
         "checkpoint_policy_protocol": PROTOCOL,
         "checkpoint_sha256": sha256(checkpoint),
         "checkpoint_construction_seed": int(construction_seed),
         "matched_sg_parameter_count": MATCHED_SG_PARAMETER_COUNT,
+        "graph_encoder": graph_encoder,
         "deterministic_actor": True,
         "training_or_checkpoint_selection": "not performed by telemetry adapter",
     })

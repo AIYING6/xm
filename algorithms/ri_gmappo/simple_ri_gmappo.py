@@ -241,6 +241,58 @@ class GraphAttentionLayer(nn.Module):
         return torch.tanh(out), weights
 
 
+class EdgeDeletionResilientGraphAttentionLayer(nn.Module):
+    """Deletion-local graph aggregation for the frozen EDR-SG-MAPPO method.
+
+    This layer has exactly the same trainable tensors as ``GraphAttentionLayer``.
+    Unlike neighbour-softmax aggregation, each legal incoming message has an
+    independent sigmoid gate and a fixed ``1 / 4`` reduction.  Consequently,
+    removing one incoming edge deletes only that edge's pre-aggregation
+    contribution; it does not renormalize surviving messages.
+
+    The graph convention remains ``adj[receiver, sender]``.  The identity edge
+    follows the existing SG convention and is included in the legal mask.
+    """
+
+    FIXED_NORMALIZER = 4.0
+
+    def __init__(self, in_dim: int, out_dim: int, edge_dim: int = 0):
+        super().__init__()
+        self.proj = nn.Linear(in_dim, out_dim, bias=False)
+        self.attn = nn.Linear(out_dim * 2, 1, bias=False)
+        self.edge_score = None
+        if edge_dim > 0:
+            self.edge_score = nn.Sequential(
+                nn.Linear(edge_dim, out_dim),
+                nn.Tanh(),
+                nn.Linear(out_dim, 1, bias=False),
+            )
+            nn.init.zeros_(self.edge_score[-1].weight)
+        self.leaky_relu = nn.LeakyReLU(0.2)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        adj: torch.Tensor,
+        edge_feat: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        h = self.proj(x)
+        bsz, num_nodes, hidden = h.shape
+        hi = h.unsqueeze(2).expand(bsz, num_nodes, num_nodes, hidden)
+        hj = h.unsqueeze(1).expand(bsz, num_nodes, num_nodes, hidden)
+        scores = self.attn(torch.cat([hi, hj], dim=-1)).squeeze(-1)
+        if self.edge_score is not None and edge_feat is not None:
+            scores = scores + self.edge_score(edge_feat).squeeze(-1)
+        scores = self.leaky_relu(scores)
+
+        eye = torch.eye(num_nodes, dtype=adj.dtype, device=adj.device).unsqueeze(0)
+        mask = torch.clamp(adj + eye, 0.0, 1.0)
+        gates = torch.sigmoid(scores) * mask
+        contributions = gates.unsqueeze(-1) * h.unsqueeze(1)
+        out = contributions.sum(dim=2) / self.FIXED_NORMALIZER
+        return torch.tanh(out), gates
+
+
 class TopologyConditionedGraphAttentionLayer(nn.Module):
     """Shared GAT layer with a zero-initialized local relation-state bias.
 
@@ -541,7 +593,7 @@ class RIActor(nn.Module):
         role_gate_mode: str = "relation_conditioned",
     ):
         super().__init__()
-        if graph_encoder not in {"no_graph", "single", "rsg_tc", "multi_relation"}:
+        if graph_encoder not in {"no_graph", "single", "edr", "rsg_tc", "multi_relation"}:
             raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
         if graph_message_ablation not in {"none", "no_role_pair_gate"}:
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
@@ -565,6 +617,13 @@ class RIActor(nn.Module):
         elif graph_encoder == "single":
             self.gat1 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
             self.gat2 = GraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
+        elif graph_encoder == "edr":
+            self.edr_gat1 = EdgeDeletionResilientGraphAttentionLayer(
+                hidden_dim, hidden_dim, edge_dim=edge_feat_dim
+            )
+            self.edr_gat2 = EdgeDeletionResilientGraphAttentionLayer(
+                hidden_dim, hidden_dim, edge_dim=edge_feat_dim
+            )
         elif graph_encoder == "rsg_tc":
             self.rsg_tc_gat1 = TopologyConditionedGraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
             self.rsg_tc_gat2 = TopologyConditionedGraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
@@ -655,6 +714,9 @@ class RIActor(nn.Module):
         if self.graph_encoder == "single":
             x, _ = self.gat1(x, adj, edge_feat)
             x, attn = self.gat2(x, adj, edge_feat)
+        elif self.graph_encoder == "edr":
+            x, _ = self.edr_gat1(x, adj, edge_feat)
+            x, attn = self.edr_gat2(x, adj, edge_feat)
         elif self.graph_encoder == "rsg_tc":
             if relation_adj is None:
                 raise ValueError("relation_adj is required when graph_encoder='rsg_tc'")
