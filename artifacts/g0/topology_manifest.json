@@ -1,0 +1,38 @@
+{
+  "protocol": "G0-TOPOLOGY-GENERALIZABLE-MARL-V1",
+  "status": "FROZEN_BEFORE_EVALUATION",
+  "development_only": true,
+  "source_commit": "441781c",
+  "graph_convention": "A[receiver,sender]",
+  "episode_id_namespace": "950000-950049 per condition",
+  "episodes_per_condition": 50,
+  "training_exposure": {
+    "methods": ["SG", "UTR-SG-MAPPO", "DRTP-SG-MAPPO"],
+    "base_graph": "three blue UAVs with legal directed Scout(0), Relay(1), Attacker(2) communication edges",
+    "failed_node_locations": [1],
+    "edge_deletions": [],
+    "directed_asymmetry": false,
+    "connectivity_patterns": ["nominal complete directed blue graph", "temporary Relay-1 incident-edge removal"],
+    "groups": {
+      "N": [["nominal", -1, 0]], "F0": [["f0", 44, 80]],
+      "TE": [["te_28_80", 28, 80], ["te_36_80", 36, 80]],
+      "TL": [["tl_52_80", 52, 80], ["tl_60_80", 60, 80]],
+      "DS": [["ds_44_40", 44, 40], ["ds_44_60", 44, 60]],
+      "DL": [["dl_44_100", 44, 100], ["dl_44_120", 44, 120]],
+      "CP": [["cp_28_120", 28, 120], ["cp_60_120", 60, 120]]
+    }
+  },
+  "evaluation_conditions": [
+    {"id": "reference_nominal", "family": "reference", "failure": null, "comm_topology_mode": "none", "unseen": false},
+    {"id": "seen_f0_44_80", "family": "seen_relay_failure", "failure": {"agent": 1, "onset": 44, "duration": 80}, "comm_topology_mode": "none", "unseen": false},
+    {"id": "parameter_timing_20_80", "family": "parameter_ood", "failure": {"agent": 1, "onset": 20, "duration": 80}, "comm_topology_mode": "none", "unseen": false},
+    {"id": "parameter_duration_44_140", "family": "parameter_ood", "failure": {"agent": 1, "onset": 44, "duration": 140}, "comm_topology_mode": "none", "unseen": false},
+    {"id": "U1_scout_node_failure", "family": "structural_ood", "failure": {"agent": 0, "onset": 44, "duration": 80}, "comm_topology_mode": "none", "unseen": true, "classification": "DEGRADED_BUT_FEASIBLE"},
+    {"id": "U2_static_symmetric_direct_prune", "family": "structural_ood", "failure": null, "comm_topology_mode": "symmetric_longest_prune", "unseen": true, "classification": "FEASIBLE"},
+    {"id": "U3_static_directed_scout_to_attacker_prune", "family": "structural_ood", "failure": null, "comm_topology_mode": "directed_longest_prune", "unseen": true, "classification": "FEASIBLE"},
+    {"id": "U4_scout_failure_symmetric_direct_prune", "family": "structural_ood", "failure": {"agent": 0, "onset": 44, "duration": 80}, "comm_topology_mode": "symmetric_longest_prune", "unseen": true, "classification": "DEGRADED_BUT_FEASIBLE"},
+    {"id": "U5_relay_failure_directed_direct_prune", "family": "structural_ood", "failure": {"agent": 1, "onset": 44, "duration": 80}, "comm_topology_mode": "directed_longest_prune", "unseen": true, "classification": "DEGRADED_BUT_FEASIBLE"},
+    {"id": "U6_relay_failure_symmetric_direct_prune", "family": "structural_ood_diagnostic", "failure": {"agent": 1, "onset": 44, "duration": 80}, "comm_topology_mode": "symmetric_longest_prune", "unseen": true, "classification": "PHYSICALLY_INFEASIBLE_DIAGNOSTIC_ONLY"}
+  ],
+  "variable_size_zero_shot_supported": "NO"
+}
