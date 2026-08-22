@@ -1,0 +1,195 @@
+{
+  "schema": "paper-q2-p1-statistical-summary-v1",
+  "independent_unit": "training_seed",
+  "mixed_contract_summary_is_descriptive_only": true,
+  "primary_metrics": {
+    "delta_nominal": {
+      "n": 5,
+      "mean": 46.2314,
+      "median": 40.794,
+      "std": 63.39037716246843,
+      "IQR": 43.742,
+      "MAD": 33.885999999999996,
+      "win_count": 4,
+      "worst_delta": -16.254,
+      "paired_dz": 0.7293125876425964,
+      "descriptive_seed_bootstrap_95_ci": [
+        1.759199999999999,
+        100.947
+      ]
+    },
+    "delta_F0": {
+      "n": 5,
+      "mean": 26.404,
+      "median": 29.804,
+      "std": 99.46706722830426,
+      "IQR": 125.952,
+      "MAD": 74.461,
+      "win_count": 3,
+      "worst_delta": -113.951,
+      "paired_dz": 0.26545469506400104,
+      "descriptive_seed_bootstrap_95_ci": [
+        -51.855,
+        101.1024
+      ]
+    },
+    "delta_OOD_mean": {
+      "n": 5,
+      "mean": 34.218399999999995,
+      "median": 26.305,
+      "std": 88.62939782769598,
+      "IQR": 112.985,
+      "MAD": 80.89500000000001,
+      "win_count": 3,
+      "worst_delta": -88.126,
+      "paired_dz": 0.38608408540159367,
+      "descriptive_seed_bootstrap_95_ci": [
+        -32.592600000000004,
+        100.7402
+      ]
+    },
+    "delta_OOD_worst": {
+      "n": 5,
+      "mean": 31.479400000000002,
+      "median": 23.688,
+      "std": 87.65819266218075,
+      "IQR": 85.07400000000001,
+      "MAD": 68.938,
+      "win_count": 4,
+      "worst_delta": -97.1,
+      "paired_dz": 0.35911532104381927,
+      "descriptive_seed_bootstrap_95_ci": [
+        -38.224399999999996,
+        98.4142
+      ]
+    }
+  },
+  "contract_stratified": {
+    "development_3M": {
+      "delta_nominal": {
+        "n": 2,
+        "mean": 23.851,
+        "median": 23.851,
+        "std": 23.96102038728735,
+        "IQR": 16.942999999999998,
+        "MAD": 16.942999999999998,
+        "win_count": 2,
+        "worst_delta": 6.908,
+        "paired_dz": 0.9954083596813047,
+        "descriptive_seed_bootstrap_95_ci": [
+          6.908,
+          40.794
+        ]
+      },
+      "delta_F0": {
+        "n": 2,
+        "mean": 55.951,
+        "median": 55.951,
+        "std": 109.79671255552236,
+        "IQR": 77.638,
+        "MAD": 77.638,
+        "win_count": 1,
+        "worst_delta": -21.687,
+        "paired_dz": 0.5095872061898622,
+        "descriptive_seed_bootstrap_95_ci": [
+          -21.687,
+          133.589
+        ]
+      },
+      "delta_OOD_mean": {
+        "n": 2,
+        "mean": 62.8565,
+        "median": 62.8565,
+        "std": 97.07374024163279,
+        "IQR": 68.6415,
+        "MAD": 68.6415,
+        "win_count": 1,
+        "worst_delta": -5.785,
+        "paired_dz": 0.6475129097069882,
+        "descriptive_seed_bootstrap_95_ci": [
+          -5.785,
+          131.498
+        ]
+      },
+      "delta_OOD_worst": {
+        "n": 2,
+        "mean": 69.0915,
+        "median": 69.0915,
+        "std": 87.02999552165909,
+        "IQR": 61.53950000000001,
+        "MAD": 61.539500000000004,
+        "win_count": 2,
+        "worst_delta": 7.552,
+        "paired_dz": 0.7938814610510379,
+        "descriptive_seed_bootstrap_95_ci": [
+          7.552,
+          130.631
+        ]
+      }
+    },
+    "heldout_10M": {
+      "delta_nominal": {
+        "n": 3,
+        "mean": 61.151666666666664,
+        "median": 50.65,
+        "std": 83.15534104513873,
+        "IQR": 82.65650000000001,
+        "MAD": 66.904,
+        "win_count": 2,
+        "worst_delta": -16.254,
+        "paired_dz": 0.7353907265376022,
+        "descriptive_seed_bootstrap_95_ci": [
+          -16.254,
+          149.059
+        ]
+      },
+      "delta_F0": {
+        "n": 3,
+        "mean": 6.706000000000002,
+        "median": 29.804,
+        "std": 110.92652463229882,
+        "IQR": 109.10799999999999,
+        "MAD": 74.461,
+        "win_count": 2,
+        "worst_delta": -113.951,
+        "paired_dz": 0.06045443163597857,
+        "descriptive_seed_bootstrap_95_ci": [
+          -113.951,
+          104.265
+        ]
+      },
+      "delta_OOD_mean": {
+        "n": 3,
+        "mean": 15.126333333333333,
+        "median": 26.305,
+        "std": 98.14165023237247,
+        "IQR": 97.663,
+        "MAD": 80.89500000000001,
+        "win_count": 2,
+        "worst_delta": -88.126,
+        "paired_dz": 0.15412756253352508,
+        "descriptive_seed_bootstrap_95_ci": [
+          -88.126,
+          107.2
+        ]
+      },
+      "delta_OOD_worst": {
+        "n": 3,
+        "mean": 6.40466666666667,
+        "median": 23.688,
+        "std": 96.0365762474555,
+        "IQR": 94.863,
+        "MAD": 68.938,
+        "win_count": 2,
+        "worst_delta": -97.1,
+        "paired_dz": 0.06668986876587411,
+        "descriptive_seed_bootstrap_95_ci": [
+          -97.1,
+          92.626
+        ]
+      }
+    }
+  },
+  "timeout_note": "Only held-out pooled seed deltas are available in the frozen P0 audit; development timeout is retained as pooled and condition-level evidence, not imputed per seed.",
+  "effect_size": "paired Cohen dz reported descriptively; n=5 and mixed contracts do not support broad population inference."
+}

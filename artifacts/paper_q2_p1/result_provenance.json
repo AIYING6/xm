@@ -1,0 +1,42 @@
+{
+  "schema": "paper-q2-p1-result-provenance-v1",
+  "training_started": false,
+  "rows": [
+    {
+      "paper_number": "Table 2",
+      "artifact": "artifacts/paper_q2_p1/main_table.csv",
+      "source_artifact": "docs/DRTP_SG_MAPPO_DEVELOPMENT_PERFORMANCE_REPORT.md; docs/DRTP_HELDOUT_V2_AUDIT_REPORT.md; docs/T1_TELEMETRY_NATIVE_REFERENCE_REPORT.md",
+      "aggregation": "source report pooled seed means; no episode-level independence"
+    },
+    {
+      "paper_number": "Table 3 / Figure 6",
+      "artifact": "artifacts/paper_q2_p1/seed_level_results.csv",
+      "source_artifact": "docs/DRTP_Q2_PUBLICATION_VIABILITY_AUDIT.md",
+      "contract": "development_3M and heldout_10M kept as separate strata",
+      "aggregation": "paired DRTP-UTR deltas by training seed"
+    },
+    {
+      "paper_number": "Figure 1/2",
+      "artifact": "docs/PHASE_S1B_TOPOLOGY_RECONFIGURATION_VALIDATION_REPORT.md",
+      "source_artifact": "S1B/S2 frozen mechanism reports",
+      "aggregation": "telemetry/path audit"
+    },
+    {
+      "paper_number": "Figure 7",
+      "artifact": "docs/DRTP_HELDOUT_V2_AUDIT_REPORT.md",
+      "source_artifact": "held-out v2 final evaluation",
+      "aggregation": "all planned rows, safety/exposure retained"
+    },
+    {
+      "paper_number": "Supplementary limitation",
+      "artifact": "docs/G0_FINAL_DECISION.md",
+      "source_artifact": "G0 development-only zero-shot suite",
+      "aggregation": "decision C; descriptive limitation only"
+    }
+  ],
+  "forbidden_sources": [
+    "paper_latex_3d_en/main.tex",
+    "results/gate1_safety_fx60_paper_tables/*"
+  ],
+  "provenance_warning": "Development 3M and held-out 10M are not one homogeneous replicate set; do not pool for confirmatory inference."
+}

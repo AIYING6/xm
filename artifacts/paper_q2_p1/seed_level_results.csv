@@ -1,0 +1,6 @@
+seed,contract,delta_nominal,delta_F0,delta_OOD_mean,delta_OOD_worst,delta_timeout,direction_note
+1901,development_3M,40.794,133.589,131.498,130.631,NA,positive on all published return deltas
+1902,development_3M,6.908,-21.687,-5.785,7.552,NA,F0/OOD mean negative; compound timeout breach +0.19
+2001,heldout_10M,149.059,104.265,107.2,92.626,-0.4563,positive returns; timeout lower
+2002,heldout_10M,-16.254,-113.951,-88.126,-97.1,0.3919,severe reversal; timeout higher
+2003,heldout_10M,50.65,29.804,26.305,23.688,-0.0909,positive returns; timeout lower
