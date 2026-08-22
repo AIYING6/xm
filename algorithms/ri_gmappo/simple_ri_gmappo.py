@@ -1204,6 +1204,10 @@ def save_runtime_training_checkpoint(
     drtp_episode_returns: list[float],
     drtp_selections: list[DRTPSelection | None],
     drtp_sampler: DRTPTopologySampler | None,
+    rng_streams: RNGStreams | None = None,
+    action_generator: torch.Generator | None = None,
+    minibatch_rng: np.random.Generator | None = None,
+    env_rngs: list[random.Random] | None = None,
 ) -> None:
     """Persist every state that can alter the following rollout/update.
 
@@ -1235,6 +1239,12 @@ def save_runtime_training_checkpoint(
         # No observation/reward normalization is currently used, but its
         # explicit placeholder makes the continuation contract unambiguous.
         "normalization_state": None,
+        "s1_rng_state": None if rng_streams is None else {
+            "manifest": rng_streams.manifest(),
+            "action_generator": None if action_generator is None else action_generator.get_state(),
+            "minibatch_rng": None if minibatch_rng is None else copy.deepcopy(minibatch_rng.bit_generator.state),
+            "env_rngs": None if env_rngs is None else [rng.getstate() for rng in env_rngs],
+        },
     }
     torch.save(payload, path)
 
@@ -1740,8 +1750,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     if update % runtime_interval == 0 or local_update == cfg.updates:
                         save_runtime_training_checkpoint(
                             out_dir / "actor_critic_runtime_state_latest.pt",
-                            agent, optimizer, update, best_eval_key, envs, obs, share_obs, graph_obs,
-                            episode_counts, drtp_episode_returns, drtp_selections, drtp_sampler,
+                         agent, optimizer, update, best_eval_key, envs, obs, share_obs, graph_obs,
+                         episode_counts, drtp_episode_returns, drtp_selections, drtp_sampler,
+                         rng_streams=rng_streams, action_generator=action_generator,
+                         minibatch_rng=minibatch_rng, env_rngs=env_rngs,
                         )
             milestone_label = (cfg.milestone_updates or {}).get(update)
             if milestone_label is not None:
@@ -1756,8 +1768,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 if cfg.runtime_state_checkpointing:
                     save_runtime_training_checkpoint(
                         out_dir / f"actor_critic_runtime_state_milestone_{milestone_label}.pt",
-                        agent, optimizer, update, best_eval_key, envs, obs, share_obs, graph_obs,
-                        episode_counts, drtp_episode_returns, drtp_selections, drtp_sampler,
+                         agent, optimizer, update, best_eval_key, envs, obs, share_obs, graph_obs,
+                         episode_counts, drtp_episode_returns, drtp_selections, drtp_sampler,
+                         rng_streams=rng_streams, action_generator=action_generator,
+                         minibatch_rng=minibatch_rng, env_rngs=env_rngs,
                     )
     return log_path
 

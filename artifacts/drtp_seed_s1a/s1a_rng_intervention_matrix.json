@@ -1,0 +1,15 @@
+{
+  "protocol": "DRTP-SEED-S1-A-V1",
+  "status": "preflight_frozen",
+  "evaluation_seed_shared": true,
+  "runs": {
+    "R0_G_REFERENCE": {"init_seed": 1901958805, "env_seed": 1569457146, "action_seed": 567658143, "minibatch_seed": 1743884113, "topology_seed": 1927631934, "eval_seed": 717918475},
+    "R1_B_REFERENCE": {"init_seed": 2010898085, "env_seed": 934620491, "action_seed": 97424918, "minibatch_seed": 728007225, "topology_seed": 1723647413, "eval_seed": 717918475},
+    "R2_I_INIT": {"init_seed": 1901958805, "env_seed": 934620491, "action_seed": 97424918, "minibatch_seed": 728007225, "topology_seed": 1723647413, "eval_seed": 717918475},
+    "R3_I_ENV": {"init_seed": 2010898085, "env_seed": 1569457146, "action_seed": 97424918, "minibatch_seed": 728007225, "topology_seed": 1723647413, "eval_seed": 717918475},
+    "R4_I_ACTION": {"init_seed": 2010898085, "env_seed": 934620491, "action_seed": 567658143, "minibatch_seed": 728007225, "topology_seed": 1723647413, "eval_seed": 717918475},
+    "R5_I_MINIBATCH": {"init_seed": 2010898085, "env_seed": 934620491, "action_seed": 97424918, "minibatch_seed": 1743884113, "topology_seed": 1723647413, "eval_seed": 717918475},
+    "R6_I_TOPOLOGY": {"init_seed": 2010898085, "env_seed": 934620491, "action_seed": 97424918, "minibatch_seed": 728007225, "topology_seed": 1927631934, "eval_seed": 717918475}
+  },
+  "source": "scripts/run_drtp_seed_s1a_screen.py"
+}
