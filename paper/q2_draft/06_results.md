@@ -16,6 +16,20 @@ Across the five historical paired records, DRTP−UTR mean/median gains are +26.
 
 Held-out pooled DRTP versus UTR values are `221.493/168.893/170.147/144.758` versus `160.341/162.187/155.021/138.354` for nominal/F0/OOD mean/OOD worst. The held-out contract still FAILS: seed2002 has DRTP F0 `72.970` versus UTR `186.921`, OOD worst `53.597` versus `150.697`, and timeout `0.9064` versus `0.5145`. Collision is higher for DRTP in all three held-out seeds. The pooled upside cannot erase these reliability and safety outcomes.
 
-## 6.5 OOD and mechanism presentation
+## 6.5 Mandatory UTR-versus-DRTP ablation
+
+The main-paper ablation is the matched comparison below. Because architecture, capacity, PPO, topology groups, nominal anchor, budget, and evaluation contract are held fixed, the intended causal contrast is uniform perturbation weighting (`UTR`) versus adaptive DRTP weighting (`DRTP`).
+
+| Metric | UTR-SG | DRTP-SG | Pooled difference | Historical paired win count | Paired effect size (descriptive dz) |
+|---|---:|---:|---:|---:|---:|
+| Nominal | 147.157 | 171.007 | +23.850 | 4/5 | +0.729 |
+| F0 | 127.929 | 183.880 | +55.951 | 3/5 | +0.265 |
+| OOD mean | 120.607 | 183.464 | +62.857 | 3/5 | +0.386 |
+| OOD worst | 103.149 | 172.241 | +69.092 | 4/5 | +0.359 |
+| Timeout | 0.8086 | 0.5600 | -0.2486 | contract-stratified | descriptive; not pooled across contracts |
+
+The table is descriptive evidence for the adaptive-weighting ablation, not a claim of universal benefit. The full five-seed paired record remains part of the main-paper evidence: seed1902 is negative for F0 and OOD mean, and held-out seed2002 is a severe reversal. Accordingly, the manuscript reports mean, median, win count, worst degradation, and seed dispersion, and explicitly avoids “consistently outperforms” or “seed-stable” language.
+
+## 6.6 OOD and mechanism presentation
 
 The final figures should separate early/late timing, short/long duration, and compound conditions, then identify the worst condition per seed. Mechanism panels should show path switching, task-support source, and mission-score change rather than imply information restoration.

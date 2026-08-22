@@ -175,7 +175,7 @@ UTR and DRTP already isolate the primary method question: whether adaptive topol
 - seven topology groups and 50% nominal anchor;
 - training budget, seed policy, final checkpoint and evaluation aggregation.
 
-The only intended difference is fixed uniform `q_k=1/6` versus bounded adaptive `q`. This is the most important ablation and is already represented by the historical paired evidence.
+The only intended difference is fixed uniform `q_k=1/6` versus bounded adaptive `q`. This is the mandatory causal ablation and is already represented by the historical paired evidence. It must appear in the main paper, not only in supplementary material. The full seed-level record, including weak and reversed seeds, must be retained; the paper must not claim universal benefit or seed-stable superiority.
 
 Fixed non-uniform weighting and nominal-anchor removal are not required to answer the primary reviewer question and would reopen algorithm development. No ablation zoo is justified.
 """)
@@ -211,7 +211,7 @@ Held-out 10M: UTR `160.341/162.187/155.021/138.354`; DRTP `221.493/168.893/170.1
 
 ## Interpretation
 
-The mean/median gains are publication-relevant descriptive effects, not evidence of seed-stable superiority. Seed1902 and held-out seed2002 remain in the main reliability narrative.
+The mean/median gains are publication-relevant descriptive effects, not evidence of seed-stable superiority. Seed1902 and held-out seed2002 remain in the main reliability narrative. The UTR-versus-DRTP comparison is the mandatory causal ablation and must remain in the main paper.
 """)
     write("docs/PAPER_Q2_RESULT_PROVENANCE.md", """# PAPER-Q2 Result Provenance
 
@@ -247,7 +247,7 @@ No new training is required for the minimal publication gap closure. The current
 6. does not claim stable, guaranteed, universal, or consistently superior robustness.
 
 External comparator: no fair drop-in identified (E2).  
-Ablation: existing UTR vs DRTP is sufficient (A0).  
+Ablation: existing UTR vs DRTP is sufficient and mandatory in the main paper (A0).  
 Scalability: not fairly zero-shot scalable under the frozen contract (S0).  
 New training: none required or authorized by P1.
 """)
@@ -348,11 +348,15 @@ The clean T1 UTR reference uses five 1M seeds (2201–2205). DRTP development us
 
 UTR and DRTP share the SG backbone, PPO, reward, S2 environment, seven groups, nominal anchor, seed policy, final-checkpoint rule, and evaluation aggregation. Their only intended method difference is fixed versus adaptive group weighting. Legacy EA-RG recovery and Gate1 tables are excluded because their estimands and contracts differ.
 
-## 5.3 Metrics
+## 5.3 Mandatory main-paper ablation
+
+The primary ablation is `UTR-SG-MAPPO vs DRTP-SG-MAPPO`. It is a causal design comparison, not a supplementary-only baseline: the two methods have identical SG architecture and parameter count (116,728), PPO and critic, seven topology-condition groups, 50% nominal anchor, training budget, and evaluation protocol. The only intended difference is uniform perturbation weighting versus adaptive DRTP weighting. Every seed is retained, including weak or reversed outcomes, and the interpretation uses paired effect sizes, win counts, medians, and worst degradation; no universal-benefit or seed-stability claim is permitted.
+
+## 5.4 Metrics
 
 Primary metrics are `J_F0`, `J_OOD_mean`, `J_OOD_worst`, and timeout. Secondary metrics are nominal score, collision, constraint violation, exposure, survival to onset, risk-set trigger validity, path switching, task-support availability, and maneuver/control burden. Training seed is the independent statistical unit. All planned episodes remain in unconditional return and safety summaries.
 
-## 5.4 Statistical reporting
+## 5.5 Statistical reporting
 
 Every seed is shown. We report paired DRTP−UTR differences, win count, mean, median, standard deviation, IQR/MAD, worst degradation, and descriptive seed-level intervals where defensible. Five seeds are not treated as a basis for universal or seed-stable claims.
 """)
@@ -374,7 +378,21 @@ Across the five historical paired records, DRTP−UTR mean/median gains are +26.
 
 Held-out pooled DRTP versus UTR values are `221.493/168.893/170.147/144.758` versus `160.341/162.187/155.021/138.354` for nominal/F0/OOD mean/OOD worst. The held-out contract still FAILS: seed2002 has DRTP F0 `72.970` versus UTR `186.921`, OOD worst `53.597` versus `150.697`, and timeout `0.9064` versus `0.5145`. Collision is higher for DRTP in all three held-out seeds. The pooled upside cannot erase these reliability and safety outcomes.
 
-## 6.5 OOD and mechanism presentation
+## 6.5 Mandatory UTR-versus-DRTP ablation
+
+The main-paper ablation is the matched comparison below. Because architecture, capacity, PPO, topology groups, nominal anchor, budget, and evaluation contract are held fixed, the intended causal contrast is uniform perturbation weighting (`UTR`) versus adaptive DRTP weighting (`DRTP`).
+
+| Metric | UTR-SG | DRTP-SG | Pooled difference | Historical paired win count | Paired effect size (descriptive dz) |
+|---|---:|---:|---:|---:|---:|
+| Nominal | 147.157 | 171.007 | +23.850 | 4/5 | +0.729 |
+| F0 | 127.929 | 183.880 | +55.951 | 3/5 | +0.265 |
+| OOD mean | 120.607 | 183.464 | +62.857 | 3/5 | +0.386 |
+| OOD worst | 103.149 | 172.241 | +69.092 | 4/5 | +0.359 |
+| Timeout | 0.8086 | 0.5600 | -0.2486 | contract-stratified | descriptive; not pooled across contracts |
+
+The table is descriptive evidence for the adaptive-weighting ablation, not a claim of universal benefit. The full five-seed paired record remains part of the main-paper evidence: seed1902 is negative for F0 and OOD mean, and held-out seed2002 is a severe reversal. Accordingly, the manuscript reports mean, median, win count, worst degradation, and seed dispersion, and explicitly avoids “consistently outperforms” or “seed-stable” language.
+
+## 6.6 OOD and mechanism presentation
 
 The final figures should separate early/late timing, short/long duration, and compound conditions, then identify the worst condition per seed. Mechanism panels should show path switching, task-support source, and mission-score change rather than imply information restoration.
 """)

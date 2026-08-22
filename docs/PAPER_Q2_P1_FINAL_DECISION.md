@@ -12,6 +12,6 @@ No new training is required for the minimal publication gap closure. The current
 6. does not claim stable, guaranteed, universal, or consistently superior robustness.
 
 External comparator: no fair drop-in identified (E2).  
-Ablation: existing UTR vs DRTP is sufficient (A0).  
+Ablation: existing UTR vs DRTP is sufficient and mandatory in the main paper (A0).  
 Scalability: not fairly zero-shot scalable under the frozen contract (S0).  
 New training: none required or authorized by P1.

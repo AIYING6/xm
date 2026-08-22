@@ -21,4 +21,4 @@ Held-out 10M: UTR `160.341/162.187/155.021/138.354`; DRTP `221.493/168.893/170.1
 
 ## Interpretation
 
-The mean/median gains are publication-relevant descriptive effects, not evidence of seed-stable superiority. Seed1902 and held-out seed2002 remain in the main reliability narrative.
+The mean/median gains are publication-relevant descriptive effects, not evidence of seed-stable superiority. Seed1902 and held-out seed2002 remain in the main reliability narrative. The UTR-versus-DRTP comparison is the mandatory causal ablation and must remain in the main paper.
