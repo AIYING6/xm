@@ -1,0 +1,5 @@
+{
+  "optimization": "no event classification is inferred from descriptive logs alone",
+  "policy": "policy distances are archival runtime-state estimates",
+  "coordination": "not estimable without step-level trajectories"
+}
