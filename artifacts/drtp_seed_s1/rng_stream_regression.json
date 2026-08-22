@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "single_stream_isolation": true,
+  "manifest": {
+    "format": "drtp_seed_s1_rng_tuple_v1",
+    "streams": [
+      "init",
+      "env",
+      "action",
+      "minibatch",
+      "topology",
+      "eval"
+    ],
+    "seeds": {
+      "init_seed": 2010898085,
+      "env_seed": 934620491,
+      "action_seed": 97424918,
+      "minibatch_seed": 728007225,
+      "topology_seed": 1723647413,
+      "eval_seed": 1506311707
+    },
+    "derivation": "blake2b(base_seed, stream_name, components) -> signed-31-bit seed",
+    "global_rng_coupling": "disabled for S1 opt-in action/minibatch/environment configuration paths"
+  }
+}

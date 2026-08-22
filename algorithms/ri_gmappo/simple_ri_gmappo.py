@@ -35,6 +35,7 @@ from envs import (
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
 from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
 from algorithms.ri_gmappo.drtp_topology_sampler import DRTPSelection, DRTPTopologySampler
+from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 
 
@@ -194,6 +195,10 @@ class RIGMAPPOConfig:
     runtime_state_resume: str | None = None
     runtime_state_checkpointing: bool = False
     runtime_state_save_interval: int | None = None
+    # DRTP-SEED-S1 opt-in independent RNG decomposition.  The historical
+    # path remains unchanged when this flag is false.
+    rng_decomposition: bool = False
+    rng_seed_tuple: dict[str, int] | None = None
 
 
 class MLP(nn.Module):
@@ -824,6 +829,7 @@ class RIGMAPPOAgent(nn.Module):
         relation_adj: torch.Tensor | None = None,
         action: torch.Tensor | None = None,
         deterministic: bool = False,
+        action_generator: torch.Generator | None = None,
         intent_label: torch.Tensor | None = None,
         detach_intent: bool = False,
         oracle_intent: bool = False,
@@ -843,7 +849,13 @@ class RIGMAPPOAgent(nn.Module):
         )
         dist = Categorical(logits=logits)
         if action is None:
-            action = torch.argmax(logits, dim=-1) if deterministic else dist.sample()
+            if deterministic:
+                action = torch.argmax(logits, dim=-1)
+            elif action_generator is None:
+                action = dist.sample()
+            else:
+                probs = dist.probs.reshape(-1, dist.probs.shape[-1])
+                action = torch.multinomial(probs, num_samples=1, generator=action_generator).reshape(logits.shape[:-1])
         log_prob = dist.log_prob(action)
         entropy = dist.entropy()
         value = self.critic_value(share_obs, role)
@@ -856,14 +868,14 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
 
 
-def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
+def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.Random | None = None):
     if cfg.env_name == "2d_pursuit":
         return UAVPursuitEnv(
             UAVPursuitConfig(
                 seed=seed,
                 target_policy=cfg.target_policy,
                 target_speed=cfg.target_speed,
-                communication_radius=sample_comm_radius(cfg) if training else cfg.communication_radius,
+                communication_radius=sample_comm_radius(cfg, rng=rng) if training else cfg.communication_radius,
                 communication_dropout_prob=cfg.communication_dropout_prob,
             )
         )
@@ -872,11 +884,12 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
             UAVIntercept3DConfig(
                 seed=seed,
                 target_policy=cfg.target_policy,
-                communication_range_scale=sample_communication_range_scale(cfg) if training else cfg.communication_range_scale,
+                communication_range_scale=sample_communication_range_scale(cfg, rng=rng) if training else cfg.communication_range_scale,
                 communication_dropout_prob=sample_float_curriculum(
                     cfg.communication_dropout_prob,
                     cfg.communication_dropout_random_min,
                     cfg.communication_dropout_random_max,
+                    rng=rng,
                 )
                 if training
                 else cfg.communication_dropout_prob,
@@ -884,6 +897,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                     cfg.message_delay_steps,
                     cfg.message_delay_random_min,
                     cfg.message_delay_random_max,
+                    rng=rng,
                 )
                 if training
                 else cfg.message_delay_steps,
@@ -891,6 +905,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                     cfg.radar_dropout_prob,
                     cfg.radar_dropout_random_min,
                     cfg.radar_dropout_random_max,
+                    rng=rng,
                 )
                 if training
                 else cfg.radar_dropout_prob,
@@ -908,11 +923,12 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                 min_success_step=cfg.min_success_step,
                 post_loss_chain_reclosure_reward_weight=cfg.post_loss_chain_reclosure_reward_weight,
                 post_loss_chain_reclosure_min_step=cfg.post_loss_chain_reclosure_min_step,
-                failed_blue_agent=sample_failed_blue_agent(cfg) if training else cfg.failed_blue_agent,
+                failed_blue_agent=sample_failed_blue_agent(cfg, rng=rng) if training else cfg.failed_blue_agent,
                 node_failure_start_step=sample_int_curriculum(
                     cfg.node_failure_start_step,
                     cfg.node_failure_start_random_min,
                     cfg.node_failure_start_random_max,
+                    rng=rng,
                 )
                 if training
                 else cfg.node_failure_start_step,
@@ -920,6 +936,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
                     cfg.node_failure_duration_steps,
                     cfg.node_failure_duration_random_min,
                     cfg.node_failure_duration_random_max,
+                    rng=rng,
                 )
                 if training
                 else cfg.node_failure_duration_steps,
@@ -936,42 +953,51 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True):
     raise ValueError(f"Unsupported env_name: {cfg.env_name}")
 
 
-def make_envs(cfg: RIGMAPPOConfig) -> List[UAVPursuitEnv | UAVIntercept3DEnv]:
-    return [make_env(cfg, cfg.seed + i, training=True) for i in range(cfg.num_envs)]
+def make_envs(cfg: RIGMAPPOConfig, rng_streams: RNGStreams | None = None) -> List[UAVPursuitEnv | UAVIntercept3DEnv]:
+    return [
+        make_env(
+            cfg,
+            cfg.seed + i if rng_streams is None else rng_streams.seed("env", i),
+            training=True,
+            rng=None if rng_streams is None else rng_streams.python_rng("env", i),
+        )
+        for i in range(cfg.num_envs)
+    ]
 
 
-def sample_comm_radius(cfg: RIGMAPPOConfig) -> float:
+def sample_comm_radius(cfg: RIGMAPPOConfig, rng: random.Random | None = None) -> float:
     if cfg.comm_radius_random_min is None or cfg.comm_radius_random_max is None:
         return cfg.communication_radius
     lo = min(cfg.comm_radius_random_min, cfg.comm_radius_random_max)
     hi = max(cfg.comm_radius_random_min, cfg.comm_radius_random_max)
-    return random.uniform(lo, hi)
+    return (rng or random).uniform(lo, hi)
 
 
-def sample_communication_range_scale(cfg: RIGMAPPOConfig) -> float:
+def sample_communication_range_scale(cfg: RIGMAPPOConfig, rng: random.Random | None = None) -> float:
     if cfg.communication_range_random_min is None or cfg.communication_range_random_max is None:
         return cfg.communication_range_scale
     lo = min(cfg.communication_range_random_min, cfg.communication_range_random_max)
     hi = max(cfg.communication_range_random_min, cfg.communication_range_random_max)
-    return random.uniform(lo, hi)
+    return (rng or random).uniform(lo, hi)
 
 
-def sample_float_curriculum(default: float, lo: float | None, hi: float | None) -> float:
+def sample_float_curriculum(default: float, lo: float | None, hi: float | None, rng: random.Random | None = None) -> float:
     if lo is None or hi is None:
         return default
-    return random.uniform(min(lo, hi), max(lo, hi))
+    return (rng or random).uniform(min(lo, hi), max(lo, hi))
 
 
-def sample_int_curriculum(default: int, lo: int | None, hi: int | None) -> int:
+def sample_int_curriculum(default: int, lo: int | None, hi: int | None, rng: random.Random | None = None) -> int:
     if lo is None or hi is None:
         return default
-    return random.randint(min(lo, hi), max(lo, hi))
+    return (rng or random).randint(min(lo, hi), max(lo, hi))
 
 
-def sample_failed_blue_agent(cfg: RIGMAPPOConfig) -> int:
-    if cfg.node_failure_random_prob <= 0.0 or random.random() >= cfg.node_failure_random_prob:
+def sample_failed_blue_agent(cfg: RIGMAPPOConfig, rng: random.Random | None = None) -> int:
+    source = rng or random
+    if cfg.node_failure_random_prob <= 0.0 or source.random() >= cfg.node_failure_random_prob:
         return cfg.failed_blue_agent
-    return random.randint(0, 2)
+    return source.randint(0, 2)
 
 
 def stack_graphs(graphs: List[dict]) -> dict:
@@ -1280,7 +1306,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         raise ValueError("runtime_state_resume is mutually exclusive with legacy resume/init_checkpoint")
     if cfg.runtime_state_resume and not cfg.append_log:
         raise ValueError("runtime_state_resume requires append_log=True to preserve one trajectory log")
-    set_seed(cfg.seed)
+    rng_streams = None
+    if cfg.rng_decomposition:
+        if cfg.rng_seed_tuple is None:
+            rng_streams = RNGStreams.from_master(cfg.seed)
+        else:
+            from algorithms.ri_gmappo.rng_streams import RNGSeedTuple
+            rng_streams = RNGStreams(RNGSeedTuple(**{key: int(value) for key, value in cfg.rng_seed_tuple.items()}))
+        set_seed(rng_streams.seeds.init_seed)
+    else:
+        set_seed(cfg.seed)
     device = torch.device(cfg.device)
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1373,7 +1408,17 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             encoding="utf-8",
         )
 
-    envs = make_envs(cfg)
+    envs = make_envs(cfg, rng_streams=rng_streams)
+    env_rngs = (
+        [rng_streams.python_rng("env", env_index, 1) for env_index in range(cfg.num_envs)]
+        if rng_streams is not None else None
+    )
+    action_generator = rng_streams.torch_generator("action", device) if rng_streams is not None else None
+    minibatch_rng = rng_streams.numpy_rng("minibatch") if rng_streams is not None else None
+    if rng_streams is not None:
+        (out_dir / "rng_stream_manifest.json").write_text(
+            json.dumps(rng_streams.manifest(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
     obs_list, share_list, graph_list = [], [], []
     for env_index, env in enumerate(envs):
         if runtime_payload is None:
@@ -1601,13 +1646,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 drtp_episode_returns=drtp_episode_returns,
                 drtp_selections=drtp_selections,
                 drtp_rows=drtp_rows,
+                action_generator=action_generator,
+                env_rngs=env_rngs,
             )
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
             if drtp_sampler is not None:
                 drtp_update_row = drtp_sampler.maybe_update(update)
                 if drtp_update_row is not None:
                     drtp_rows.append(drtp_update_row)
-            train_info = update_policy(agent, optimizer, batch, cfg, device, update)
+            train_info = update_policy(agent, optimizer, batch, cfg, device, update, minibatch_rng=minibatch_rng)
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
             if telemetry_writer is not None:
                 for telemetry_row in summarize_role_gate_telemetry(agent, batch, device):
@@ -1732,6 +1779,8 @@ def collect_rollout(
     drtp_episode_returns: list[float] | None = None,
     drtp_selections: list[DRTPSelection | None] | None = None,
     drtp_rows: list[dict] | None = None,
+    action_generator: torch.Generator | None = None,
+    env_rngs: list[random.Random] | None = None,
 ) -> dict:
     obs_buf, share_buf, node_buf, edge_buf, role_buf, adj_buf, intent_buf = [], [], [], [], [], [], []
     relation_adj_buf = []
@@ -1756,6 +1805,7 @@ def collect_rollout(
                 torch.as_tensor(graph_obs["adj"], dtype=torch.float32, device=device),
                 torch.as_tensor(share_obs, dtype=torch.float32, device=device),
                 relation_adj=torch.as_tensor(graph_obs["relation_adj"], dtype=torch.float32, device=device),
+                action_generator=action_generator,
                 intent_label=torch.as_tensor(graph_obs["intent_label"], dtype=torch.long, device=device),
                 detach_intent=cfg.detach_intent,
                 oracle_intent=cfg.oracle_intent,
@@ -1812,34 +1862,40 @@ def collect_rollout(
                         drtp_sampler.selection_row(current_update, e, episode_counts[e], selection)
                     )
                 elif cfg.env_name == "2d_pursuit":
-                    env.config.communication_radius = sample_comm_radius(cfg)
+                    env.config.communication_radius = sample_comm_radius(cfg, rng=None if env_rngs is None else env_rngs[e])
                 elif cfg.env_name == "3d_intercept":
-                    env.config.communication_range_scale = sample_communication_range_scale(cfg)
+                    rng = None if env_rngs is None else env_rngs[e]
+                    env.config.communication_range_scale = sample_communication_range_scale(cfg, rng=rng)
                     env.config.communication_dropout_prob = sample_float_curriculum(
                         cfg.communication_dropout_prob,
                         cfg.communication_dropout_random_min,
                         cfg.communication_dropout_random_max,
+                        rng=rng,
                     )
                     env.config.message_delay_steps = sample_int_curriculum(
                         cfg.message_delay_steps,
                         cfg.message_delay_random_min,
                         cfg.message_delay_random_max,
+                        rng=rng,
                     )
                     env.config.radar_dropout_prob = sample_float_curriculum(
                         cfg.radar_dropout_prob,
                         cfg.radar_dropout_random_min,
                         cfg.radar_dropout_random_max,
+                        rng=rng,
                     )
-                    env.config.failed_blue_agent = sample_failed_blue_agent(cfg)
+                    env.config.failed_blue_agent = sample_failed_blue_agent(cfg, rng=rng)
                     env.config.node_failure_start_step = sample_int_curriculum(
                         cfg.node_failure_start_step,
                         cfg.node_failure_start_random_min,
                         cfg.node_failure_start_random_max,
+                        rng=rng,
                     )
                     env.config.node_failure_duration_steps = sample_int_curriculum(
                         cfg.node_failure_duration_steps,
                         cfg.node_failure_duration_random_min,
                         cfg.node_failure_duration_random_max,
+                        rng=rng,
                     )
                 o, s, g = env.reset()
             next_obs.append(o)
@@ -2085,6 +2141,7 @@ def _update_policy_conditioned_actor(
     cfg: RIGMAPPOConfig,
     device,
     update: int,
+    minibatch_rng: np.random.Generator | None = None,
 ) -> dict:
     """Frozen Phase-B split actor update; critic remains ordinary PPO."""
     mode = str(cfg.actor_gradient_mode).lower()
@@ -2131,8 +2188,12 @@ def _update_policy_conditioned_actor(
     # shuffles are retained only to make condition membership explicit.
     for _ in range(cfg.ppo_epochs):
         epochs_ran += 1
-        nominal_indices = torch.randperm(nominal_count, device=device)
-        failure_indices = torch.randperm(failure_count, device=device)
+        if minibatch_rng is None:
+            nominal_indices = torch.randperm(nominal_count, device=device)
+            failure_indices = torch.randperm(failure_count, device=device)
+        else:
+            nominal_indices = torch.as_tensor(minibatch_rng.permutation(nominal_count), dtype=torch.long, device=device)
+            failure_indices = torch.as_tensor(minibatch_rng.permutation(failure_count), dtype=torch.long, device=device)
         nominal_pool = torch.nonzero(condition_is_nominal, as_tuple=False).reshape(-1)[nominal_indices]
         failure_pool = torch.nonzero(~condition_is_nominal, as_tuple=False).reshape(-1)[failure_indices]
         mb = torch.cat([nominal_pool, failure_pool], dim=0)
@@ -2303,9 +2364,17 @@ def _update_policy_conditioned_actor(
     }
 
 
-def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict, cfg: RIGMAPPOConfig, device, update: int):
+def update_policy(
+    agent: RIGMAPPOAgent,
+    optimizer: optim.Optimizer,
+    batch: dict,
+    cfg: RIGMAPPOConfig,
+    device,
+    update: int,
+    minibatch_rng: np.random.Generator | None = None,
+):
     if str(cfg.actor_gradient_mode).lower() != "standard":
-        return _update_policy_conditioned_actor(agent, optimizer, batch, cfg, device, update)
+        return _update_policy_conditioned_actor(agent, optimizer, batch, cfg, device, update, minibatch_rng=minibatch_rng)
     t_steps, n_envs, num_agents = batch["actions"].shape
     num_graphs = t_steps * n_envs
     obs = torch.as_tensor(batch["obs"].reshape(num_graphs, num_agents, -1), dtype=torch.float32, device=device)
@@ -2335,7 +2404,10 @@ def update_policy(agent: RIGMAPPOAgent, optimizer: optim.Optimizer, batch: dict,
     stop_ppo = False
     for _ in range(cfg.ppo_epochs):
         epochs_ran += 1
-        np.random.shuffle(indices)
+        if minibatch_rng is None:
+            np.random.shuffle(indices)
+        else:
+            indices = minibatch_rng.permutation(num_graphs)
         for start in range(0, num_graphs, cfg.minibatch_graphs):
             mb = indices[start : start + cfg.minibatch_graphs]
             _, new_logp, entropy, values, _, intent_logits, chain_aux_logits = agent.get_action_and_value(

@@ -1,0 +1,10 @@
+{
+  "protocol": "DRTP-SEED-S1",
+  "status": "pre_main_run_frozen",
+  "diagnostic_tape": "a7baa7dfeb802167d311b687a6ad18b87dd0e8dca18b7bb3ea47b37bf4280af6",
+  "rng_regression": "PASS",
+  "compatibility_smoke": "PASS",
+  "training_started": false,
+  "historical_paper_baseline": "5e55a22",
+  "paper_protection": "P1 evidence immutable"
+}
