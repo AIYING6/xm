@@ -10,6 +10,7 @@ import argparse
 import csv
 import hashlib
 import json
+import shutil
 import sys
 import time
 from dataclasses import asdict
@@ -105,7 +106,19 @@ def config(run: str, values: dict[str, int], out_dir: Path) -> RIGMAPPOConfig:
 def run_one(run: str, values: dict[str, int], output_root: Path) -> dict:
     out_dir = output_root / "runs" / run
     if out_dir.exists() and any(out_dir.iterdir()):
-        raise FileExistsError(f"refusing to overwrite {out_dir}")
+        existing_path = out_dir / "run_manifest.json"
+        existing = json.loads(existing_path.read_text(encoding="utf-8")) if existing_path.exists() else {}
+        if existing.get("status") == "completed":
+            raise FileExistsError(f"refusing to overwrite completed run {out_dir}")
+        invalid_root = output_root / "technical_invalid"
+        invalid_root.mkdir(parents=True, exist_ok=True)
+        suffix = 1
+        archived = invalid_root / f"{run}_attempt{suffix}"
+        while archived.exists():
+            suffix += 1
+            archived = invalid_root / f"{run}_attempt{suffix}"
+        shutil.move(str(out_dir), str(archived))
+        print(json.dumps({"technical_invalid_archived": str(archived)}), flush=True)
     out_dir.mkdir(parents=True, exist_ok=False)
     cfg = config(run, values, out_dir)
     manifest = {
@@ -158,4 +171,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

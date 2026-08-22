@@ -1565,6 +1565,17 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "sam_first_gradient_norm",
         "sam_perturbation_norm",
         "sam_second_gradient_norm",
+        # S1 optimization telemetry contract.  Values that the frozen PPO
+        # path does not expose are written explicitly as NOT_AVAILABLE.
+        "actor_gradient_norm",
+        "critic_gradient_norm",
+        "actor_update_norm",
+        "critic_update_norm",
+        "advantage_mean",
+        "advantage_std",
+        "value_target_mean",
+        "value_target_std",
+        "learning_rate",
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
@@ -1666,6 +1677,17 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     drtp_rows.append(drtp_update_row)
             train_info = update_policy(agent, optimizer, batch, cfg, device, update, minibatch_rng=minibatch_rng)
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
+            row.update({
+                "actor_gradient_norm": "NOT_AVAILABLE",
+                "critic_gradient_norm": "NOT_AVAILABLE",
+                "actor_update_norm": "NOT_AVAILABLE",
+                "critic_update_norm": "NOT_AVAILABLE",
+                "advantage_mean": float(np.asarray(batch["advantages"]).mean()),
+                "advantage_std": float(np.asarray(batch["advantages"]).std()),
+                "value_target_mean": float(np.asarray(batch["returns"]).mean()),
+                "value_target_std": float(np.asarray(batch["returns"]).std()),
+                "learning_rate": float(optimizer.param_groups[0]["lr"]),
+            })
             if telemetry_writer is not None:
                 for telemetry_row in summarize_role_gate_telemetry(agent, batch, device):
                     telemetry_writer.writerow({"update": update, **telemetry_row})
