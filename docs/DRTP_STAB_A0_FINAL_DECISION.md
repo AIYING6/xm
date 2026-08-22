@@ -35,3 +35,13 @@ training, rollout, tape generation, new seeds, held-out use, or canonical use.
 The only scientifically supported DRTP role remains transparent reporting as a
 high-upside, seed-sensitive historical comparator/limitation within the
 UTR-centered robustness paper.
+
+## Backup recovery addendum — final evidence basis
+
+Complete 10M development and held-out sampler/PPO histories were subsequently
+recovered from the backup archives. They do not change the decision. Rather
+than a data-availability limitation, the controlling reason for outcome C is
+now empirical: seed1902 and seed2002 do not share abnormal pre-divergence
+weight movement, while strong seeds exhibit equal or greater movement/ranking
+churn. Offline smoothing reduces movement in every seed and remains nonuniform,
+but cannot identify a failure-specific stabilization target.

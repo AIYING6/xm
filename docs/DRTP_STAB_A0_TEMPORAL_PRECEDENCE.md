@@ -40,3 +40,16 @@ confirmed. The evidence cannot distinguish H1 (weights first) from H2
 
 Machine-readable event boundaries are in
 `artifacts/drtp_stab_a0/temporal_events.json`.
+
+## Backup recovery addendum — controlling temporal result
+
+The recovered histories confirm the 0.5M seed2002 q snapshot but reject the
+necessary common pre-divergence signature: seed1902 is not early-volatile and
+seed2002's early movement lies inside the strong-seed range. The seed2002
+training-return sequence is also non-monotone rather than a collapse: DRTP/UTR
+mean reward is 0.037/0.033 (0--0.25M), 0.070/0.078 (0.25--0.5M), 0.094/0.113
+(0.5--1M), 0.155/0.149 (1--3M), and 0.226/0.219 (3--10M).
+
+Because held-out F0/OOD/timeout were evaluated only at 10M, the final outcome
+is still interval-censored. H1 (adaptive-weight amplification) is not
+supported; H2 (policy-first divergence) is not uniquely established.

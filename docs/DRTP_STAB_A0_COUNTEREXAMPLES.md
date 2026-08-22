@@ -15,3 +15,11 @@ These counterexamples rule out the proposed A0 requirement that the observed
 weight pattern be both pre-divergence and materially absent from strong seeds.
 They do not prove adaptive sampling is harmless; they show the available
 history cannot identify it as the single actionable amplifier.
+
+## Backup recovery addendum
+
+The full logs strengthen the counterexample set: weak seed2002 has lower
+all-run `TV_w` (12.270) than strong seeds1901 (14.904) and 2001 (13.376),
+while strong seed2003 has the highest ranking-switch count (77). The proposed
+common unstable-weight explanation is therefore contradicted by the observed
+five-seed histories.

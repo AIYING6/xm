@@ -26,3 +26,16 @@ candidate smoothing transform would remain meaningfully adaptive over time.
 
 `artifacts/drtp_stab_a0/replay_summary.csv` records this non-execution
 explicitly.
+
+## Backup recovery addendum — controlling replay
+
+Recovered q/difficulty trajectories made read-only replay possible. R1
+difficulty EMA (`beta=0.8`) reduces total variation to 62--71% of the original
+for every seed; R2 inertia (`alpha=0.5`) reduces it to 87--90%; R3 L1 trust
+region (`0.05`) reduces it only to 97--99%. The effects are not selective to
+weak seeds. R1 also remains far from uniform UTR (for seed2002 mean L1
+distance is 0.653 original and 0.664 after R1), so it preserves adaptive focus
+but supplies no evidence that it repairs seed sensitivity.
+
+These constants are characterization-only and are not frozen as method
+hyperparameters.

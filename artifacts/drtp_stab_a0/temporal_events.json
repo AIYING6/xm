@@ -2,6 +2,10 @@
   "audit": "DRTP-STAB-A0",
   "training_started": false,
   "environment_interaction": false,
+  "backup_archives": {
+    "strict_10m_sha256": "08bae982a858c2bab6ecd21cc0f59e10f881bb134d14bab6d26cb6545293ca45",
+    "heldout_v2_sha256": "fcfd308fe84bb5214c6adc7cad98a562d7e1df86497bebde6e8b57f78acc7949"
+  },
   "seed2002": {
     "weight_snapshot_steps": "approximately 0.5M",
     "weight_snapshot": {"F0": 0.07, "TE": 0.05, "TL": 0.09, "DS": 0.10, "DL": 0.34, "CP": 0.35},
@@ -10,11 +14,13 @@
     "internal_ema_utr": {"nominal": 114.9, "F0": 94.7, "mean_other_groups": 94.6},
     "recovery_steps": "approximately 3M",
     "final_heldout_evaluation_steps": "10M",
-    "temporal_precedence": "unresolved"
+    "early_weight_movement": 0.043384371841024554,
+    "temporal_precedence": "no_abnormal_pre_divergence_signature"
   },
   "seed1902": {
     "final_development_failure_steps": "3M",
-    "temporal_precedence": "not_estimable"
+    "early_weight_movement": 0.036843742127617346,
+    "temporal_precedence": "no_early_excess_variation"
   },
   "final_decision": "C — NO_ACTIONABLE_WEIGHT_STABILITY_CAUSE"
 }

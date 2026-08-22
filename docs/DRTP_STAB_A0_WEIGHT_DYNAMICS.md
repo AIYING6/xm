@@ -37,3 +37,23 @@ failure mechanism.
 No evidence supports a claim that abnormal weight volatility or concentration
 is present in both failed seeds and materially absent from strong seeds before
 their behavioral divergence.
+
+## Backup recovery addendum — controlling analysis
+
+The recovered full trajectories preserve the same conclusion. Full-run
+`TV_w` is 14.904/16.298/13.376/12.270/12.072 for seeds
+1901/1902/2001/2002/2003 respectively. Thus weak seed1902 is highest, while
+the severe held-out weak seed2002 is lower than strong seeds1901 and 2001.
+Strong seed2003 has 77 top-1 ranking switches, above weak seeds1902 (32) and
+2002 (37).
+
+In the prespecified 0--0.25M interval, mean L1 weight movement is 0.04654
+(strong 1901), 0.03684 (weak 1902), 0.03942 (strong 2001), 0.04338 (weak
+2002), and 0.04815 (strong 2003). The failed seeds therefore do not share an
+early excess-volatility, entropy-collapse, or ranking-churn signature.
+
+Full metrics are in `artifacts/drtp_stab_a0/seed_weight_metrics.csv`.
+
+Early difficulty-to-weight correlations are likewise non-diagnostic: 0.318,
+0.138, 0.053, 0.117, and 0.252 for seeds 1901, 1902, 2001, 2002, and 2003.
+The failed seeds are not the strongest difficulty-reactive trajectories.

@@ -16,3 +16,11 @@ Therefore generic PPO/optimization instability is not supported. Since the
 per-update PPO and q histories are unavailable, lead/lag tests between KL,
 clip fraction, difficulty and weight changes are not estimable. This is an
 evidence limit, not a negative finding about all possible interactions.
+
+## Backup recovery addendum
+
+Full PPO logs are now available and confirm the original aggregate conclusion:
+no seed2002-specific KL, clip-fraction, gradient, value-loss, or entropy
+explosion precedes the final held-out reversal. This does not prove PPO played
+no role; it rejects generic numerical PPO instability as the actionable A0
+target.

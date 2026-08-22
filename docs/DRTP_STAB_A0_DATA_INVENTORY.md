@@ -47,3 +47,18 @@ was attempted.
 
 Machine-readable availability is recorded in
 `artifacts/drtp_stab_a0/seed_weight_metrics.csv`.
+
+## Backup recovery addendum — controlling inventory
+
+After the initial workspace-only inventory, a read-only search recovered
+`D:\Code\backup\drtp_strict_10m_results.tar.gz`
+(`08bae982a858c2bab6ecd21cc0f59e10f881bb134d14bab6d26cb6545293ca45`) and
+`D:\Code\backup\drtp_heldout_v2_results.tar.gz`
+(`fcfd308fe84bb5214c6adc7cad98a562d7e1df86497bebde6e8b57f78acc7949`).
+These archives contain all five DRTP sampler and PPO training logs. The
+earlier “missing per-update history” statement is superseded.
+
+All five seeds now have 1,220 `weight_update` rows containing q, EMAs,
+difficulties and window counts, plus full PPO training logs. Held-out
+evaluation still has final-only F0/OOD/safety endpoints; its final behavioral
+failure cannot be dated to a precise training update.
