@@ -1,0 +1,22 @@
+{
+  "audit": "DRTP_Q2_PUBLICATION_VIABILITY",
+  "date": "2026-08-22",
+  "training_started": false,
+  "historical_decision_preserved": "DRTP_Q2_LIMITATION_ONLY",
+  "development_retention_preserved": "NO-GO",
+  "heldout_decision_preserved": "HELD_OUT_FAIL",
+  "paired_seed_count": 5,
+  "metrics": {
+    "J_nominal": {"wins": 4, "mean_delta": 46.231, "median_delta": 40.794, "worst_delta": -16.254, "sd": 63.390},
+    "J_F0": {"wins": 3, "mean_delta": 26.404, "median_delta": 29.804, "worst_delta": -113.951, "sd": 99.467},
+    "J_OOD_mean": {"wins": 3, "mean_delta": 34.218, "median_delta": 26.305, "worst_delta": -88.126, "sd": 88.629},
+    "J_OOD_worst": {"wins": 4, "mean_delta": 31.479, "median_delta": 23.688, "worst_delta": -97.100, "sd": 87.658}
+  },
+  "heldout_safety_deltas": {
+    "timeout_drtp_minus_utr": [-0.4563, 0.3919, -0.0909],
+    "collision_drtp_minus_utr": [0.0037, 0.0036, 0.0164]
+  },
+  "publication_positioning": "CONDITIONAL_PAPER_VIABLE_WITH_EXPLICIT_SEED_SENSITIVITY",
+  "algorithm_stability_claim_supported": false,
+  "new_training_authorized": false
+}
