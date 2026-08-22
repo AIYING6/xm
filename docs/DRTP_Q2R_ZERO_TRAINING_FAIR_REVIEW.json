@@ -1,0 +1,31 @@
+{
+  "review": "DRTP-Q2R",
+  "date": "2026-08-22",
+  "training_started": false,
+  "new_tape_created": false,
+  "historical_decisions_preserved": [
+    "DRTP development retention: NO-GO",
+    "DRTP held-out v2: HELD_OUT_FAIL"
+  ],
+  "development_3m": {
+    "utr": {"J_nominal": 147.157, "J_F0": 127.929, "J_OOD_mean": 120.607, "J_OOD_worst": 103.149, "collision_failure": 0.0136, "timeout_failure": 0.8086},
+    "drtp": {"J_nominal": 171.007, "J_F0": 183.880, "J_OOD_mean": 183.464, "J_OOD_worst": 172.241, "collision_failure": 0.0014, "timeout_failure": 0.5600},
+    "retention": "NO-GO",
+    "failure_seed": 1902
+  },
+  "heldout_10m": {
+    "utr": {"J_nominal": 160.341, "J_F0": 162.187, "J_OOD_mean": 155.021, "J_OOD_worst": 138.354},
+    "drtp": {"J_nominal": 221.493, "J_F0": 168.893, "J_OOD_mean": 170.147, "J_OOD_worst": 144.758},
+    "decision": "HELD_OUT_FAIL",
+    "catastrophic_seed": 2002
+  },
+  "historical_direction_counts": {
+    "J_nominal": "4/5",
+    "J_F0": "3/5",
+    "J_OOD_mean": "3/5",
+    "J_OOD_worst": "4/5"
+  },
+  "final_decision": "DRTP_Q2_LIMITATION_ONLY",
+  "algorithm_development_closed": true,
+  "recommended_paper_route": "UTR-centered robustness paper with DRTP as transparent limitation/descriptive comparator"
+}
