@@ -1,0 +1,20 @@
+{
+  "audit": "DRTP-STAB-A0",
+  "training_started": false,
+  "environment_interaction": false,
+  "seed2002": {
+    "weight_snapshot_steps": "approximately 0.5M",
+    "weight_snapshot": {"F0": 0.07, "TE": 0.05, "TL": 0.09, "DS": 0.10, "DL": 0.34, "CP": 0.35},
+    "internal_deficit_steps": "approximately 1M",
+    "internal_ema_drtp": {"nominal": 56.2, "F0": 52.9, "mean_other_groups": 46.2},
+    "internal_ema_utr": {"nominal": 114.9, "F0": 94.7, "mean_other_groups": 94.6},
+    "recovery_steps": "approximately 3M",
+    "final_heldout_evaluation_steps": "10M",
+    "temporal_precedence": "unresolved"
+  },
+  "seed1902": {
+    "final_development_failure_steps": "3M",
+    "temporal_precedence": "not_estimable"
+  },
+  "final_decision": "C — NO_ACTIONABLE_WEIGHT_STABILITY_CAUSE"
+}
