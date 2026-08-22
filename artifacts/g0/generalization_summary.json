@@ -1,0 +1,71 @@
+{
+  "decision": "C \u2014 NO_ACTIONABLE_TOPOLOGY_GENERALIZATION_GAP",
+  "utr_seed_statistics": [
+    {
+      "seed": 2201,
+      "J_seen_F0": 60.14122960742563,
+      "J_structural_primary_mean": 61.53419525444322,
+      "J_parameter_mean": 54.758243814278394,
+      "structural_gap": -1.39296564701759,
+      "parameter_gap": 5.382985793147235,
+      "structural_minus_parameter_gap": -6.775951440164825
+    },
+    {
+      "seed": 2202,
+      "J_seen_F0": 176.08104596227406,
+      "J_structural_primary_mean": 173.8342175623197,
+      "J_parameter_mean": 172.0922043698933,
+      "structural_gap": 2.246828399954353,
+      "parameter_gap": 3.9888415923807656,
+      "structural_minus_parameter_gap": -1.7420131924264126
+    },
+    {
+      "seed": 2203,
+      "J_seen_F0": 58.006713025597854,
+      "J_structural_primary_mean": 72.66051977879927,
+      "J_parameter_mean": 60.482718625380656,
+      "structural_gap": -14.653806753201415,
+      "parameter_gap": -2.476005599782802,
+      "structural_minus_parameter_gap": -12.177801153418613
+    },
+    {
+      "seed": 2204,
+      "J_seen_F0": 119.09133640252985,
+      "J_structural_primary_mean": 100.52773317097781,
+      "J_parameter_mean": 115.43768778490835,
+      "structural_gap": 18.563603231552037,
+      "parameter_gap": 3.6536486176214993,
+      "structural_minus_parameter_gap": 14.909954613930537
+    },
+    {
+      "seed": 2205,
+      "J_seen_F0": 44.43753357298672,
+      "J_structural_primary_mean": 51.38765580072347,
+      "J_parameter_mean": 41.46294583029113,
+      "structural_gap": -6.950122227736749,
+      "parameter_gap": 2.97458774269559,
+      "structural_minus_parameter_gap": -9.924709970432339
+    }
+  ],
+  "utr_topology_seed_mean_J": {
+    "seen_f0_44_80": 91.55157171416283,
+    "U1_scout_node_failure": 90.12613603869266,
+    "U2_static_symmetric_direct_prune": 98.98176153984481,
+    "U3_static_directed_scout_to_attacker_prune": 107.03003240721674,
+    "U4_scout_failure_symmetric_direct_prune": 78.43008141306136,
+    "U5_relay_failure_directed_direct_prune": 85.3763101684479,
+    "parameter_timing_20_80": 89.1289523821678,
+    "parameter_duration_44_140": 88.56456778773294
+  },
+  "primary_topology_count_above_A_threshold": 0,
+  "pooled_A_threshold": 13.732735757124425,
+  "median_structural_gap": -1.39296564701759,
+  "median_structural_minus_parameter_gap": -6.775951440164825,
+  "seed_positive_structural_minus_parameter_gap": 1,
+  "protocol": "G0-TOPOLOGY-GENERALIZABLE-MARL-V1",
+  "raw_records": 5000,
+  "seed_condition_records": 100,
+  "topology_records": 30,
+  "primary_training_unit": "training seed",
+  "DRTP_pooling": "reported separately by historical contract; not pooled for primary inference"
+}

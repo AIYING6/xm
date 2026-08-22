@@ -1,0 +1,103 @@
+{
+  "protocol": "G0-ZERO-SHOT-TOPOLOGY-EVALUATION-V1",
+  "status": "completed",
+  "topology_manifest_sha256": "7f32dd4fd73939aaba83839b5b4a4452c092e7abba3476cd53d544e88091f4a4",
+  "episode_count_per_condition": 50,
+  "conditions": [
+    "reference_nominal",
+    "seen_f0_44_80",
+    "parameter_timing_20_80",
+    "parameter_duration_44_140",
+    "U1_scout_node_failure",
+    "U2_static_symmetric_direct_prune",
+    "U3_static_directed_scout_to_attacker_prune",
+    "U4_scout_failure_symmetric_direct_prune",
+    "U5_relay_failure_directed_direct_prune",
+    "U6_relay_failure_symmetric_direct_prune"
+  ],
+  "policy_inventory": [
+    {
+      "method": "UTR-SG-MAPPO",
+      "contract": "T1_clean_development_1M",
+      "seed": 2201,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\development\\t1_telemetry_native_reference_1m_run1\\runs\\utr_sg\\seed2201\\actor_critic_latest.pt",
+      "kind": "checkpoint",
+      "sha256": "d374ce8eab4f51926839306de5076bf17fbbbe89a58716a546cd62d525ea8a69"
+    },
+    {
+      "method": "UTR-SG-MAPPO",
+      "contract": "T1_clean_development_1M",
+      "seed": 2202,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\development\\t1_telemetry_native_reference_1m_run1\\runs\\utr_sg\\seed2202\\actor_critic_latest.pt",
+      "kind": "checkpoint",
+      "sha256": "c88c7f4abb02ff245972a0bb2eb463ea8f34a98249f8638936b1a07d5f43b82a"
+    },
+    {
+      "method": "UTR-SG-MAPPO",
+      "contract": "T1_clean_development_1M",
+      "seed": 2203,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\development\\t1_telemetry_native_reference_1m_run1\\runs\\utr_sg\\seed2203\\actor_critic_latest.pt",
+      "kind": "checkpoint",
+      "sha256": "376fc5c27b66c1b804e38073b9459c53b4471b853d2f7461137f0dfd6a070197"
+    },
+    {
+      "method": "UTR-SG-MAPPO",
+      "contract": "T1_clean_development_1M",
+      "seed": 2204,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\development\\t1_telemetry_native_reference_1m_run1\\runs\\utr_sg\\seed2204\\actor_critic_latest.pt",
+      "kind": "checkpoint",
+      "sha256": "e258080caf2feef83c224f6d8b1d7c305691b72acf7f9c19bbd74e353805180d"
+    },
+    {
+      "method": "UTR-SG-MAPPO",
+      "contract": "T1_clean_development_1M",
+      "seed": 2205,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\results\\development\\t1_telemetry_native_reference_1m_run1\\runs\\utr_sg\\seed2205\\actor_critic_latest.pt",
+      "kind": "checkpoint",
+      "sha256": "907cf9dbfcf83c2e2ac36bec120af67b9724f07afc22b89427e7679cfdc9becb"
+    },
+    {
+      "method": "DRTP-SG-MAPPO",
+      "contract": "strict_development_10M",
+      "seed": 1901,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\artifacts\\drtp_div_a0\\source_runtime\\results\\development\\drtp_sg_strict_continuous_10m\\runs\\drtp_sg\\seed1901\\actor_critic_runtime_state_milestone_10m.pt",
+      "kind": "runtime_state",
+      "sha256": "dab261d3599c2bfa61e29293d3500c592c28316511073c985643ebb308322391"
+    },
+    {
+      "method": "DRTP-SG-MAPPO",
+      "contract": "strict_development_10M",
+      "seed": 1902,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\artifacts\\drtp_div_a0\\source_runtime\\results\\development\\drtp_sg_strict_continuous_10m\\runs\\drtp_sg\\seed1902\\actor_critic_runtime_state_milestone_10m.pt",
+      "kind": "runtime_state",
+      "sha256": "97291368eaa0765f7ce004c62bc2e16fc9778a9a11f79f42d372f9788cac4449"
+    },
+    {
+      "method": "DRTP-SG-MAPPO",
+      "contract": "heldout_v2_10M_historical_FAIL",
+      "seed": 2001,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\artifacts\\drtp_div_a0\\source_runtime\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2001\\actor_critic_runtime_state_milestone_10m.pt",
+      "kind": "runtime_state",
+      "sha256": "64feeb6c4238a7da8a2fb6d986257ec77eba47b44fc76b2aaf633b252f39d357"
+    },
+    {
+      "method": "DRTP-SG-MAPPO",
+      "contract": "heldout_v2_10M_historical_FAIL",
+      "seed": 2002,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\artifacts\\drtp_div_a0\\source_runtime\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2002\\actor_critic_runtime_state_milestone_10m.pt",
+      "kind": "runtime_state",
+      "sha256": "88b05c6872abbd9ffcdc8ba9b19d217aac67009192316145565f6bfff188303e"
+    },
+    {
+      "method": "DRTP-SG-MAPPO",
+      "contract": "heldout_v2_10M_historical_FAIL",
+      "seed": 2003,
+      "path": "D:\\Code\\Codex\\ri_gmappo_uav\\artifacts\\drtp_div_a0\\source_runtime\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2003\\actor_critic_runtime_state_milestone_10m.pt",
+      "kind": "runtime_state",
+      "sha256": "42c7d928d34a0f6efeba70848182fdad27b013a1fe4424125c4995a396eb3810"
+    }
+  ],
+  "optimizer_steps": 0,
+  "training": "not performed",
+  "raw_episode_results": "D:\\Code\\Codex\\ri_gmappo_uav\\artifacts\\g0\\g0_episode_results.csv"
+}
