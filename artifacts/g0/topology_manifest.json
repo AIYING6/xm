@@ -34,5 +34,16 @@
     {"id": "U5_relay_failure_directed_direct_prune", "family": "structural_ood", "failure": {"agent": 1, "onset": 44, "duration": 80}, "comm_topology_mode": "directed_longest_prune", "unseen": true, "classification": "DEGRADED_BUT_FEASIBLE"},
     {"id": "U6_relay_failure_symmetric_direct_prune", "family": "structural_ood_diagnostic", "failure": {"agent": 1, "onset": 44, "duration": 80}, "comm_topology_mode": "symmetric_longest_prune", "unseen": true, "classification": "PHYSICALLY_INFEASIBLE_DIAGNOSTIC_ONLY"}
   ],
-  "variable_size_zero_shot_supported": "NO"
+  "variable_size_zero_shot_supported": "NO",
+  "pre_registered_decision_rule": {
+    "primary_method": "UTR-SG-MAPPO five clean T1 development seeds",
+    "primary_structural_conditions": ["U1_scout_node_failure", "U2_static_symmetric_direct_prune", "U3_static_directed_scout_to_attacker_prune", "U4_scout_failure_symmetric_direct_prune", "U5_relay_failure_directed_direct_prune"],
+    "reference": "seen_f0_44_80",
+    "parameter_comparator": ["parameter_timing_20_80", "parameter_duration_44_140"],
+    "structural_gap": "J_seen_f0 - mean(J_U1..J_U5)",
+    "parameter_gap": "J_seen_f0 - mean(J_timing, J_duration)",
+    "A": "median structural gap > max(10, 0.15*abs(J_seen_f0)); median(structural_gap-parameter_gap) > max(5, 0.10*abs(J_seen_f0)); at least 4/5 seed differences positive; and at least 3/5 primary topology pooled gaps exceed max(10,0.15*abs(pooled seen F0))",
+    "B": "not A, but median structural gap > max(5,0.05*abs(J_seen_f0)); median(structural_gap-parameter_gap)>0; and at least 3/5 seed differences positive",
+    "C": "otherwise; or if feasibility/legality evidence invalidates a primary condition"
+  }
 }

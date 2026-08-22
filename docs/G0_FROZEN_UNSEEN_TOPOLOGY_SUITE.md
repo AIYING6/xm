@@ -30,3 +30,22 @@ For comparison, the same frozen tape additionally contains a nominal
 reference, seen Relay-F0 `(44,80)`, timing parameter OOD `(20,80)`, and
 duration parameter OOD `(44,140)`. Those two parameter cases are not claimed
 to be structurally unseen.
+
+## Pre-registered G0 decision quantities
+
+The primary evidence is the five clean T1 UTR seeds and U1–U5. For each seed,
+`structural gap = J_seen_F0 − mean(J_U1…J_U5)` and `parameter gap =
+J_seen_F0 − mean(J_timing,J_duration)`. U6 is never included in this primary
+aggregate.
+
+- **A:** median structural gap exceeds `max(10, 15% × |J_seen_F0|)`, its
+  median excess over the parameter gap exceeds `max(5, 10% × |J_seen_F0|)`,
+  at least 4/5 seed differences are positive, and at least 3/5 primary
+  topologies exceed the pooled structural-gap threshold.
+- **B:** not A, but median structural gap exceeds `max(5, 5% × |J_seen_F0|)`,
+  median structural-minus-parameter gap is positive, and at least 3/5 seeds
+  have a positive structural-minus-parameter difference.
+- **C:** otherwise, or if a primary condition fails legality/feasibility.
+
+These criteria were added and frozen before any G0 rollout. They identify a
+problem gap; they do not establish a new method or authorize training.
