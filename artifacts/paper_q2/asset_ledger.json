@@ -1,0 +1,263 @@
+{
+  "schema": "paper-q2-asset-ledger-v1",
+  "generated": "2026-08-22",
+  "training_started_by_this_audit": false,
+  "frozen_mainline": "relay failure -> legal communication topology/path reconfiguration -> mission degradation -> topology-robust MARL",
+  "graph_convention": "A[receiver,sender]",
+  "rows": [
+    {
+      "asset": "S1/S1B/S2 problem and mechanism freeze",
+      "classification": "MAIN_TEXT",
+      "contract": "S2 frozen",
+      "sources": [
+        "docs/PHASE_S1B_TOPOLOGY_RECONFIGURATION_VALIDATION_REPORT.md",
+        "docs/PHASE_S2_FINAL_FREEZE_REPORT.md",
+        "docs/PHASE_S2_CLAIM_EVIDENCE_BOUNDARY.md"
+      ],
+      "status": "reusable",
+      "notes": "Supports relay-node-induced topology/path reconfiguration; not information-loss or recovery.",
+      "source_exists": true
+    },
+    {
+      "asset": "T1 clean UTR five-seed reference",
+      "classification": "MAIN_TEXT",
+      "contract": "T1 1M, seeds 2201-2205",
+      "sources": [
+        "docs/T1_TELEMETRY_NATIVE_REFERENCE_REPORT.md",
+        "docs/T1_SEED_LEVEL_REFERENCE_AND_RANKING.md",
+        "results/development/t1_telemetry_native_reference_1m_run1"
+      ],
+      "status": "reusable",
+      "records": 5,
+      "metrics": [
+        "J_nominal",
+        "J_F0",
+        "J_OOD_mean",
+        "J_OOD_worst",
+        "collision",
+        "timeout",
+        "exposure"
+      ],
+      "notes": "Clean baseline reference; descriptive, not a universal superiority claim.",
+      "source_exists": true
+    },
+    {
+      "asset": "DRTP paired historical audit",
+      "classification": "MAIN_TEXT",
+      "contract": "development_3M + heldout_10M, separate contracts",
+      "sources": [
+        "docs/DRTP_Q2_PUBLICATION_VIABILITY_AUDIT.md",
+        "docs/DRTP_Q2_PUBLICATION_VIABILITY_AUDIT.json",
+        "docs/DRTP_Q2R_ZERO_TRAINING_FAIR_REVIEW.md"
+      ],
+      "status": "reusable_with_boundary",
+      "records": 5,
+      "metrics": [
+        "J_nominal",
+        "J_F0",
+        "J_OOD_mean",
+        "J_OOD_worst"
+      ],
+      "notes": "Report development and held-out sets separately; never pool them as one homogeneous experiment.",
+      "source_exists": true
+    },
+    {
+      "asset": "DRTP held-out final evidence",
+      "classification": "MAIN_TEXT",
+      "contract": "v2 held-out 10M, seeds 2001-2003",
+      "sources": [
+        "docs/DRTP_HELDOUT_V2_AUDIT_REPORT.md",
+        "docs/DRTP_HELDOUT_FAILURE_FORENSIC_REVIEW.md"
+      ],
+      "status": "reusable_with_negative_result",
+      "records": 6,
+      "metrics": [
+        "J_nominal",
+        "J_F0",
+        "J_OOD_mean",
+        "J_OOD_worst",
+        "collision",
+        "timeout",
+        "constraint",
+        "exposure"
+      ],
+      "notes": "Must retain seed2002 reversal and overall held-out FAIL.",
+      "source_exists": true
+    },
+    {
+      "asset": "FL failure learnability upper bound",
+      "classification": "SUPPLEMENTARY",
+      "contract": "FL maturity 1M, seeds 1801-1802",
+      "sources": [
+        "docs/PHASE_FL_TRAINING_MATURITY_UPPER_BOUND_REPORT.md"
+      ],
+      "status": "reusable_for_limitation",
+      "records": 4,
+      "notes": "Shows F0 can be learned by a specialist; not a main method comparison.",
+      "source_exists": true
+    },
+    {
+      "asset": "G0 unseen topology generalization audit",
+      "classification": "SUPPLEMENTARY",
+      "contract": "zero-training diagnostic",
+      "sources": [
+        "docs/G0_FINAL_DECISION.md",
+        "docs/G0_ZERO_SHOT_RESULTS.md",
+        "docs/G0_GENERALIZATION_GAP_ANALYSIS.md"
+      ],
+      "status": "reusable_for_limitation",
+      "records": 0,
+      "notes": "Decision C; do not claim a universal topology-generalization gap.",
+      "source_exists": true
+    },
+    {
+      "asset": "TC-SAM / EDR / TCR / SPC / CTP negative evidence",
+      "classification": "SUPPLEMENTARY",
+      "contract": "historical development contracts",
+      "sources": [
+        "docs/TC_SAM_D1_FINAL_DECISION.md",
+        "docs/EDR_D1_FINAL_DECISION.md",
+        "docs/TCR_SPC_PHASE_C_V2_REANALYSIS_REPORT.md",
+        "docs/DRTP_SG_MAPPO_DEVELOPMENT_PERFORMANCE_REPORT.md"
+      ],
+      "status": "reusable_as_negative_evidence",
+      "notes": "Do not use to inflate method count or imply a selective benchmark.",
+      "source_exists": true
+    },
+    {
+      "asset": "Old EA-RG / multi-relation paper draft",
+      "classification": "INVALID_NON_COMPARABLE",
+      "contract": "legacy recovery paper",
+      "sources": [
+        "paper_latex_3d_en/main.tex",
+        "paper_latex_3d_en/README.md",
+        "docs/PAPER_CODE_EQUIVALENCE_AUDIT_V3.md"
+      ],
+      "status": "do_not_reuse_claims",
+      "notes": "Claims recovery, old Full, and old metrics incompatible with frozen DRTP problem/claim boundary.",
+      "source_exists": true
+    },
+    {
+      "asset": "Gate1 safety/fx60 paper tables",
+      "classification": "INVALID_NON_COMPARABLE",
+      "contract": "legacy recovery/fx60 table contract",
+      "sources": [
+        "results/gate1_safety_fx60_paper_tables/main_results.csv",
+        "results/gate1_safety_fx60_paper_tables/ablation_results.csv",
+        "results/gate1_safety_fx60_paper_tables/capacity_control_results.csv",
+        "results/gate1_safety_fx60_paper_tables/seed_aware_deltas.csv"
+      ],
+      "status": "do_not_mix",
+      "notes": "Uses recovery/chain metrics and old method labels; not commensurate with T1/DRTP frozen estimands.",
+      "source_exists": true
+    },
+    {
+      "asset": "Old M0 TC-SAM positioning/feasibility",
+      "classification": "INTERNAL_ONLY",
+      "contract": "superseded",
+      "sources": [
+        "docs/M0_Q2_PAPER_POSITIONING.md",
+        "docs/M0_OFFLINE_FEASIBILITY.md"
+      ],
+      "status": "historical_only",
+      "notes": "Superseded by DRTP positioning and should not be cited as current method definition.",
+      "source_exists": true
+    }
+  ],
+  "drtp_seed_level_deltas": [
+    {
+      "seed": 1901,
+      "contract": "development_3M",
+      "J_nominal": 40.794,
+      "J_F0": 133.589,
+      "J_OOD_mean": 131.498,
+      "J_OOD_worst": 130.631
+    },
+    {
+      "seed": 1902,
+      "contract": "development_3M",
+      "J_nominal": 6.908,
+      "J_F0": -21.687,
+      "J_OOD_mean": -5.785,
+      "J_OOD_worst": 7.552
+    },
+    {
+      "seed": 2001,
+      "contract": "heldout_10M",
+      "J_nominal": 149.059,
+      "J_F0": 104.265,
+      "J_OOD_mean": 107.2,
+      "J_OOD_worst": 92.626
+    },
+    {
+      "seed": 2002,
+      "contract": "heldout_10M",
+      "J_nominal": -16.254,
+      "J_F0": -113.951,
+      "J_OOD_mean": -88.126,
+      "J_OOD_worst": -97.1
+    },
+    {
+      "seed": 2003,
+      "contract": "heldout_10M",
+      "J_nominal": 50.65,
+      "J_F0": 29.804,
+      "J_OOD_mean": 26.305,
+      "J_OOD_worst": 23.688
+    }
+  ],
+  "t1_reference_rows": [
+    {
+      "seed": 2201,
+      "J_nominal": 84.409,
+      "J_F0": 60.938,
+      "J_OOD_mean": 61.909,
+      "J_OOD_worst": 53.845,
+      "collision": 0.0,
+      "timeout": 1.0
+    },
+    {
+      "seed": 2202,
+      "J_nominal": 188.756,
+      "J_F0": 165.788,
+      "J_OOD_mean": 164.521,
+      "J_OOD_worst": 152.47,
+      "collision": 0.061,
+      "timeout": 0.666
+    },
+    {
+      "seed": 2203,
+      "J_nominal": 98.946,
+      "J_F0": 57.777,
+      "J_OOD_mean": 58.979,
+      "J_OOD_worst": 49.154,
+      "collision": 0.083,
+      "timeout": 0.917
+    },
+    {
+      "seed": 2204,
+      "J_nominal": 121.801,
+      "J_F0": 116.938,
+      "J_OOD_mean": 116.834,
+      "J_OOD_worst": 109.139,
+      "collision": 0.021,
+      "timeout": 0.973
+    },
+    {
+      "seed": 2205,
+      "J_nominal": 61.882,
+      "J_F0": 44.521,
+      "J_OOD_mean": 45.089,
+      "J_OOD_worst": 38.109,
+      "collision": 0.0,
+      "timeout": 1.0
+    }
+  ],
+  "historical_decisions_preserved": [
+    "DRTP_Q2_LIMITATION_ONLY",
+    "DRTP_HELDOUT_FAIL",
+    "TC_SAM_DEV_FAIL",
+    "EDR_DEV_FAIL",
+    "G0_NO_ACTIONABLE_TOPOLOGY_GENERALIZATION_GAP"
+  ]
+}

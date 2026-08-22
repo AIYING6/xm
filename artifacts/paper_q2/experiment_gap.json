@@ -1,0 +1,77 @@
+{
+  "schema": "paper-q2-experiment-gap-v1",
+  "generated": "2026-08-22",
+  "new_training_authorized": false,
+  "items": [
+    {
+      "id": "M0",
+      "priority": "MUST_HAVE",
+      "item": "Claim/provenance alignment",
+      "status": "COMPLETE_ZERO_TRAINING",
+      "need": "Replace legacy recovery framing and keep development/held-out contracts separate."
+    },
+    {
+      "id": "M1",
+      "priority": "MUST_HAVE",
+      "item": "Seed-level statistics",
+      "status": "COMPLETE_ZERO_TRAINING",
+      "need": "Report all paired seeds, mean, median, IQR/MAD, worst delta, and contract-stratified summaries."
+    },
+    {
+      "id": "M2",
+      "priority": "MUST_HAVE",
+      "item": "OOD and safety decomposition",
+      "status": "COMPLETE_AUDIT; PRESENTATION_REQUIRED",
+      "need": "Show F0, timing, duration, compound, worst condition, timeout, collision, constraints, exposure."
+    },
+    {
+      "id": "M3",
+      "priority": "MUST_HAVE",
+      "item": "One strong external comparator",
+      "status": "OPEN; NO TRAINING AUTHORIZED",
+      "need": "Assess whether a directly relevant robust/topology-aware MARL comparator can be implemented under a separately frozen contract; do not substitute an incomparable legacy table."
+    },
+    {
+      "id": "M4",
+      "priority": "HIGH_VALUE",
+      "item": "Ablation of DRTP components",
+      "status": "OPEN; NO TRAINING AUTHORIZED",
+      "need": "Uniform topology training, nominal anchor, and adaptive weighting ablations only if a new contract is separately authorized."
+    },
+    {
+      "id": "M5",
+      "priority": "HIGH_VALUE",
+      "item": "Scalability",
+      "status": "OPEN; NO TRAINING AUTHORIZED",
+      "need": "4/5-UAV or a defensible scope limitation; use only fair matched protocols."
+    },
+    {
+      "id": "M6",
+      "priority": "MUST_HAVE",
+      "item": "Compute and reproducibility",
+      "status": "COMPLETE_ZERO_TRAINING",
+      "need": "Report parameter count, training budget, wall-clock provenance where available, inference path, tape hashes, and checkpoint provenance."
+    },
+    {
+      "id": "D0",
+      "priority": "DO_NOT_DO",
+      "item": "New algorithm search/rescue",
+      "status": "CLOSED",
+      "need": "No DRTP-v2, SAM-v2, EDR-v2, new encoder, loss, or curriculum."
+    },
+    {
+      "id": "D1",
+      "priority": "DO_NOT_DO",
+      "item": "Post-hoc seed/checkpoint selection",
+      "status": "PROHIBITED",
+      "need": "Retain seed1902 development limitation and held-out seed2002 reversal."
+    },
+    {
+      "id": "D2",
+      "priority": "DO_NOT_DO",
+      "item": "Universal topology generalization claim",
+      "status": "CLOSED_BY_G0",
+      "need": "Do not reopen G0 without a new scientific gap and authorization."
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "paper-q2-main-result-manifest-v1",
+  "generated": "2026-08-22",
+  "training_started": false,
+  "main_claim": "DRTP substantially improves average and median robustness across relay-failure topology perturbations, while remaining seed-sensitive.",
+  "main_assets": [
+    {
+      "id": "problem_mechanism",
+      "sources": [
+        "docs/PHASE_S1B_TOPOLOGY_RECONFIGURATION_VALIDATION_REPORT.md",
+        "docs/PHASE_S2_FINAL_FREEZE_REPORT.md"
+      ],
+      "role": "problem_and_mechanism"
+    },
+    {
+      "id": "t1_utr_reference",
+      "sources": [
+        "docs/T1_TELEMETRY_NATIVE_REFERENCE_REPORT.md",
+        "docs/T1_SEED_LEVEL_REFERENCE_AND_RANKING.md"
+      ],
+      "role": "clean_reference"
+    },
+    {
+      "id": "drtp_development",
+      "sources": [
+        "docs/DRTP_Q2_PUBLICATION_VIABILITY_AUDIT.md"
+      ],
+      "role": "development_performance_with_limitation"
+    },
+    {
+      "id": "drtp_heldout",
+      "sources": [
+        "docs/DRTP_HELDOUT_V2_AUDIT_REPORT.md"
+      ],
+      "role": "heldout_reliability_and_failure"
+    }
+  ],
+  "metric_hierarchy": {
+    "primary": [
+      "J_F0",
+      "J_OOD_mean",
+      "J_OOD_worst",
+      "timeout"
+    ],
+    "secondary": [
+      "J_nominal",
+      "collision",
+      "constraint_violation",
+      "exposure",
+      "path_switch",
+      "task_support",
+      "maneuver_cost"
+    ]
+  },
+  "contract_separation": [
+    "T1_1M_2201_2205",
+    "DRTP_development_3M_1901_1902",
+    "DRTP_heldout_10M_2001_2003"
+  ],
+  "forbidden_claims": [
+    "stable_algorithm",
+    "reliably superior",
+    "information restoration",
+    "Relay unique mediator",
+    "strict recovery guarantee",
+    "universal topology generalization"
+  ]
+}
