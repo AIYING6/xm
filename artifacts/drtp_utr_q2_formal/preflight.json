@@ -1,0 +1,29 @@
+{
+  "protocol": "DRTP-UTR-Q2-FORMAL-PAIRED-5SEED-PREFLIGHT-V1",
+  "checks": {
+    "ten_authorized_trajectories": true,
+    "prospective_seed_set": true,
+    "canonical_seeds_prohibited": true,
+    "strict_common_10m_budget": true,
+    "fixed_milestones_and_final": true,
+    "matched_116728_parameters": true,
+    "all_non_sampler_config_identical": true,
+    "only_uniform_vs_adaptive_sampler": true,
+    "same_frozen_sg_ppo_s2_contract": true,
+    "runtime_persistence_from_update_zero": true,
+    "formal_tape_490000_490099": true,
+    "twelve_frozen_conditions": true,
+    "tape_noncanonical_and_prospective": true,
+    "no_training_started_by_preflight": true
+  },
+  "parameter_counts": {
+    "utr_sg": 116728,
+    "drtp_sg": 116728
+  },
+  "tape_hash": "84e31ed185ced0608a30c9cb9f9659c7423c952e4603aac53cf691c54fc64ac2",
+  "updates": 39063,
+  "environment_steps_per_run": 10000128,
+  "total_environment_steps": 100001280,
+  "pass": true,
+  "training_started": false
+}
