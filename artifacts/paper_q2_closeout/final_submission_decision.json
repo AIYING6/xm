@@ -1,0 +1,17 @@
+{
+  "schema": "paper-q2-closeout-decision-v1",
+  "date": "2026-08-23",
+  "historical_decisions_preserved": [
+    "DRTP_Q2_LIMITATION_ONLY",
+    "held-out FAIL",
+    "development NO-GO"
+  ],
+  "external_comparator_audit": "E2_NO_FAIR_EXTERNAL_COMPARATOR",
+  "external_comparator_training_required": false,
+  "new_algorithm_started": false,
+  "seed_rescue_started": false,
+  "remaining_scientific_experiment_count": 0,
+  "remaining_training_budget": 0,
+  "submission_decision": "B_Q2_SUBMISSION_READY_WITH_EXPLICIT_LIMITATIONS",
+  "reason": "Evidence is traceable and bounded, but seed sensitivity, mixed safety, no fair external drop-in, and 3-UAV scope must be explicit."
+}

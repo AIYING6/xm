@@ -1,0 +1,3 @@
+method,nearest_relevance,same_problem_estimand,same_actor_information_boundary,same_action_and_learner_contract,architecture_or_objective_change_required,implementation_ready_under_frozen_contract,scientifically_relevant,fair_drop_in,decision,source
+TAPE (AAAI 2024),topology-aware cooperative MARL,no,no demonstrated drop-in mapping,no,yes,not established,"yes, positioning only",no,do not train,https://ojs.aaai.org/index.php/AAAI/article/view/29699
+M3DDPG (AAAI 2019),robust multi-agent learning under changing opponents,no,no demonstrated drop-in mapping,no; minimax DDPG differs from frozen MAPPO,yes,not established,"yes, positioning only",no,do not train,https://ojs.aaai.org/index.php/AAAI/article/view/4327

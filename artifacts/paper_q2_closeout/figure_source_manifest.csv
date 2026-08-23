@@ -1,0 +1,11 @@
+item,content,source,integrity_rule,placement
+Figure 1,Problem/topology reconfiguration schematic,docs/PHASE_S1B_TOPOLOGY_RECONFIGURATION_VALIDATION_REPORT.md,telemetry-grounded schematic; no invented data,main
+Figure 2,Topology/path to mission-degradation mechanism timeline,docs/PHASE_S1B_TOPOLOGY_RECONFIGURATION_VALIDATION_REPORT.md; S2 frozen reports,telemetry-grounded sequence,main
+Figure 3,Stratified UTR/DRTP absolute returns,final_main_results.csv,keep 3M development and 10M held-out separate,main
+Figure 4,Five paired seed effects and adverse seed2002,final_seed_level_results.csv; final_reliability_results.csv,"all points, no mean-only plot",main
+Figure 5,OOD decomposition,docs/DRTP_REL_A0_FINAL_REPORT.md,condition/tape source must remain labeled,main
+Figure 6,Safety and evaluation-validity outcomes,final_main_results.csv; docs/DRTP_HELDOUT_V2_AUDIT_REPORT.md,retain all failures and strata,main
+Table 1,Frozen task and information boundary,S2 contract / topology reports,provenance table,main
+Table 2,Matched method/compute comparison,efficiency_results.csv,wall-clock comparability unavailable,main
+Table 3,Full seed-level paired results,final_seed_level_results.csv,all seeds retained,main
+Table 4,Reliability limitation,final_reliability_results.csv,show worst reversal,main

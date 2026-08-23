@@ -1,0 +1,5 @@
+metric,training_seed_unit,wins,mean_delta_drtp_minus_utr,median_delta_drtp_minus_utr,iqr,mad,worst_delta,interpretation
+delta_nominal,5 historical paired seeds; descriptive cross-contract summary only,4/5,46.2314,40.794,43.742,33.885999999999996,-16.254,positive center does not establish seed stability
+delta_F0,5 historical paired seeds; descriptive cross-contract summary only,3/5,26.404,29.804,125.952,74.461,-113.951,positive center does not establish seed stability
+delta_OOD_mean,5 historical paired seeds; descriptive cross-contract summary only,3/5,34.218399999999995,26.305,112.985,80.89500000000001,-88.126,positive center does not establish seed stability
+delta_OOD_worst,5 historical paired seeds; descriptive cross-contract summary only,4/5,31.479400000000002,23.688,85.07400000000001,68.938,-97.1,positive center does not establish seed stability
