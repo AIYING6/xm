@@ -1,0 +1,167 @@
+{
+  "evaluation": {
+    "conditions": [
+      "nominal",
+      "f0",
+      "timing",
+      "duration",
+      "compound"
+    ],
+    "manifest": "artifacts/drtp_s1r_protocol_v2/eval_manifest.json",
+    "pre_onset_termination": "retained in overall metrics and reported separately",
+    "risk_set": "episodes alive immediately before scheduled failure onset",
+    "tp50_manifest": "artifacts/drtp_s1r_protocol_v2/tp50_manifest.json"
+  },
+  "evaluation_started": false,
+  "history": {
+    "v1_execution_audit": "F_PROTOCOL_UNDERSPECIFIED",
+    "v1_overwritten": false,
+    "v1_preserved": true
+  },
+  "methods": [
+    "utr_sg",
+    "drtp_sg"
+  ],
+  "outcome_labels": [
+    "A_ACTIONABLE_SINGLE",
+    "B_MULTIPLE_ACTIONABLE",
+    "C_ONE_WAY_ONLY",
+    "D_NO_SOURCE",
+    "E_TRAJECTORY_NO_SOURCE",
+    "F_REFERENCE_NOT_REPRODUCED",
+    "G_TECHNICAL_INVALID"
+  ],
+  "precursor": {
+    "coefficient_threshold": 0.3,
+    "confirmatory_milestone": 500096,
+    "direction_families": 3,
+    "eligibility": ">=2/3 precursor metrics and reference gap > 0 with >=3/4 failure families separated",
+    "metrics": {
+      "P1": "(task_progress[39]-task_progress[0])/40; higher is better",
+      "P2": "count(stagnation == 1)/40; quality is negative fraction",
+      "P3": "1 if task_stage[39] > task_stage[0], else 0"
+    },
+    "passing_precursors": 2,
+    "risk_set": "alive at scheduled failure onset",
+    "window_steps": 40
+  },
+  "protocol": "DRTP-S1R-PROTOCOL-V2",
+  "reference_gate": {
+    "R1": "mean_t Gap_m > 0 for all four return metrics",
+    "R2": ">=3/4 return metrics with G_REF > B_REF on >=4/5 tapes",
+    "R3": "mean timeout quality G > B and G favorable on >=3/5 tapes",
+    "failure_action": "F_REFERENCE_NOT_REPRODUCED; stop before interventions"
+  },
+  "rescue_and_reverse": {
+    "dimensions": [
+      "F0",
+      "TIMING",
+      "DURATION",
+      "COMPOUND",
+      "TIMEOUT"
+    ],
+    "median_coefficient_threshold": 0.4,
+    "minimum_coefficient": -0.2,
+    "overall_dimensions": 5,
+    "overall_pass_count": 4,
+    "per_metric_threshold": 0.35,
+    "return_dimension_pass_count": 3,
+    "tape_pass_count": 4
+  },
+  "rng": {
+    "derivation": "RNGStreams.from_master(master_seed); blake2b(base_seed, stream_name, components) -> signed-31-bit seed",
+    "intervention_rule": "replace exactly one named stream from B with G while retaining the other five B streams; evaluation stream is fixed",
+    "protocol": "DRTP-S1R-RNG-V2",
+    "source_file": "algorithms/ri_gmappo/rng_streams.py",
+    "source_regression_artifact": "artifacts/drtp_seed_s1/rng_stream_regression.json",
+    "source_regression_sha256": "8b36cd54ca68176623c7ed6b973d1860bf4fc194d9eed344aa9d18d15cc04725",
+    "source_sha256": "70038bfecd81e174d0c2eaa64e2252987a3b92a9dd2bee5d1a7a3c90d69438e7",
+    "streams": [
+      "init",
+      "env",
+      "action",
+      "minibatch",
+      "topology",
+      "eval"
+    ],
+    "training_started": false,
+    "tuples": {
+      "B": {
+        "action_seed": 1728403788,
+        "env_seed": 1426732065,
+        "eval_seed": 1839374455,
+        "init_seed": 222834908,
+        "master_seed": 2002,
+        "minibatch_seed": 277030910,
+        "topology_seed": 1837311832
+      },
+      "G": {
+        "action_seed": 993989929,
+        "env_seed": 2084278804,
+        "eval_seed": 420889792,
+        "init_seed": 1888953741,
+        "master_seed": 2001,
+        "minibatch_seed": 128451329,
+        "topology_seed": 655855597
+      }
+    }
+  },
+  "scientific_runs": {
+    "checkpoint_policy": "milestones are diagnostic only; no promotion",
+    "intervention_runs": 10,
+    "max_scientific_env_steps": 12002304,
+    "milestones": [
+      250048,
+      500096,
+      750144,
+      1000192
+    ],
+    "reference_runs": 2,
+    "steps_per_run": 1000192,
+    "technical_smoke_max_env_steps": 20000,
+    "total_runs": 12
+  },
+  "seed_pool": [
+    1901,
+    1902,
+    2001,
+    2002,
+    2003
+  ],
+  "selected_B_seed": 2002,
+  "selected_G_seed": 2001,
+  "status": "FROZEN_PROTOCOL_ONLY",
+  "stop_after_protocol_validation": true,
+  "telemetry_schema": [
+    "episode_id",
+    "env_step",
+    "failure_relative_step",
+    "agent_role",
+    "position",
+    "velocity",
+    "sampled_action",
+    "executed_action",
+    "task_stage",
+    "task_progress",
+    "stagnation",
+    "graph_state",
+    "active_edges",
+    "failure_state",
+    "terminal_reason",
+    "timeout",
+    "collision",
+    "constraint_violation",
+    "actor_loss",
+    "critic_loss",
+    "entropy",
+    "KL",
+    "clip_fraction",
+    "gradient_norm",
+    "DRTP_group_weights",
+    "DRTP_group_signal",
+    "probe_id",
+    "probe_policy_output",
+    "milestone"
+  ],
+  "training_started": false
+}

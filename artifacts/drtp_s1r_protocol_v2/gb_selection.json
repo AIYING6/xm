@@ -1,0 +1,527 @@
+{
+  "candidates": [
+    {
+      "B_eligible": false,
+      "B_tie_break": [
+        0,
+        106.36093156950082,
+        75.21107129154348,
+        0.18999999999999995,
+        -1901
+      ],
+      "G_eligible": true,
+      "G_tie_break": [
+        4,
+        47.39542305397799,
+        75.21107129154348,
+        0.18999999999999995,
+        -1901
+      ],
+      "mean_D": {
+        "COMPOUND": 104.14809737699666,
+        "DURATION": 46.91796298689115,
+        "F0": 80.22537988898159,
+        "TIMING": 65.84046939428269
+      },
+      "mean_D_timeout": 0.16899999999999996,
+      "median_D": {
+        "COMPOUND": 106.36093156950082,
+        "DURATION": 47.39542305397799,
+        "F0": 80.23480777587278,
+        "TIMING": 66.85312276682234
+      },
+      "median_D_timeout": 0.18999999999999995,
+      "negative_tape_counts": {
+        "COMPOUND": 0,
+        "DURATION": 0,
+        "F0": 0,
+        "TIMING": 0
+      },
+      "per_tape": {
+        "T0": {
+          "D": {
+            "COMPOUND": 106.39061709471514,
+            "DURATION": 37.756003554915054,
+            "F0": 75.2011935204128,
+            "TIMING": 60.768869656212615
+          },
+          "DRTP_timeout_mean_failure": 0.5375,
+          "D_timeout": 0.20499999999999996,
+          "UTR_timeout_mean_failure": 0.7424999999999999
+        },
+        "T1": {
+          "D": {
+            "COMPOUND": 108.12152365053538,
+            "DURATION": 47.39542305397799,
+            "F0": 80.23480777587278,
+            "TIMING": 73.3724611273827
+          },
+          "DRTP_timeout_mean_failure": 0.5625,
+          "D_timeout": 0.13749999999999996,
+          "UTR_timeout_mean_failure": 0.7
+        },
+        "T2": {
+          "D": {
+            "COMPOUND": 106.36093156950082,
+            "DURATION": 55.00147081193049,
+            "F0": 84.00256673483176,
+            "TIMING": 66.85312276682234
+          },
+          "DRTP_timeout_mean_failure": 0.5375000000000001,
+          "D_timeout": 0.2074999999999999,
+          "UTR_timeout_mean_failure": 0.745
+        },
+        "T3": {
+          "D": {
+            "COMPOUND": 94.59954139357899,
+            "DURATION": 48.407044119052586,
+            "F0": 75.53190778207033,
+            "TIMING": 59.398447140033795
+          },
+          "DRTP_timeout_mean_failure": 0.5700000000000001,
+          "D_timeout": 0.18999999999999995,
+          "UTR_timeout_mean_failure": 0.76
+        },
+        "T4": {
+          "D": {
+            "COMPOUND": 105.26787317665294,
+            "DURATION": 46.029873394579624,
+            "F0": 86.15642363172024,
+            "TIMING": 68.80944628096199
+          },
+          "DRTP_timeout_mean_failure": 0.5800000000000001,
+          "D_timeout": 0.10499999999999998,
+          "UTR_timeout_mean_failure": 0.685
+        }
+      },
+      "positive_tape_counts": {
+        "COMPOUND": 5,
+        "DURATION": 5,
+        "F0": 5,
+        "TIMING": 5
+      },
+      "seed": 1901
+    },
+    {
+      "B_eligible": false,
+      "B_tie_break": [
+        0,
+        102.7351517456211,
+        86.3066320310952,
+        0.3075,
+        -1902
+      ],
+      "G_eligible": true,
+      "G_tie_break": [
+        4,
+        63.4964218573831,
+        86.3066320310952,
+        0.3075,
+        -1902
+      ],
+      "mean_D": {
+        "COMPOUND": 87.36754765209928,
+        "DURATION": 65.63287824617697,
+        "F0": 102.63494259359686,
+        "TIMING": 92.4420160547979
+      },
+      "mean_D_timeout": 0.3055,
+      "median_D": {
+        "COMPOUND": 86.39118267888203,
+        "DURATION": 63.4964218573831,
+        "F0": 102.7351517456211,
+        "TIMING": 92.6037718424946
+      },
+      "median_D_timeout": 0.3075,
+      "negative_tape_counts": {
+        "COMPOUND": 0,
+        "DURATION": 0,
+        "F0": 0,
+        "TIMING": 0
+      },
+      "per_tape": {
+        "T0": {
+          "D": {
+            "COMPOUND": 91.85964858366175,
+            "DURATION": 73.94570015612989,
+            "F0": 111.83991203228011,
+            "TIMING": 101.47469685675576
+          },
+          "DRTP_timeout_mean_failure": 0.6675,
+          "D_timeout": 0.275,
+          "UTR_timeout_mean_failure": 0.9425
+        },
+        "T1": {
+          "D": {
+            "COMPOUND": 86.39118267888203,
+            "DURATION": 63.4964218573831,
+            "F0": 102.7351517456211,
+            "TIMING": 92.96092748010531
+          },
+          "DRTP_timeout_mean_failure": 0.6275000000000001,
+          "D_timeout": 0.31499999999999995,
+          "UTR_timeout_mean_failure": 0.9425
+        },
+        "T2": {
+          "D": {
+            "COMPOUND": 91.52959373486229,
+            "DURATION": 56.177233458822585,
+            "F0": 101.5678404982295,
+            "TIMING": 92.6037718424946
+          },
+          "DRTP_timeout_mean_failure": 0.635,
+          "D_timeout": 0.3075,
+          "UTR_timeout_mean_failure": 0.9425
+        },
+        "T3": {
+          "D": {
+            "COMPOUND": 82.16526551216842,
+            "DURATION": 73.84543124072255,
+            "F0": 104.2363186006993,
+            "TIMING": 92.50849593780936
+          },
+          "DRTP_timeout_mean_failure": 0.64,
+          "D_timeout": 0.3025,
+          "UTR_timeout_mean_failure": 0.9425
+        },
+        "T4": {
+          "D": {
+            "COMPOUND": 84.89204775092193,
+            "DURATION": 60.69960451782681,
+            "F0": 92.79549009115435,
+            "TIMING": 82.66218815682456
+          },
+          "DRTP_timeout_mean_failure": 0.6,
+          "D_timeout": 0.3275,
+          "UTR_timeout_mean_failure": 0.9275
+        }
+      },
+      "positive_tape_counts": {
+        "COMPOUND": 5,
+        "DURATION": 5,
+        "F0": 5,
+        "TIMING": 5
+      },
+      "seed": 1902
+    },
+    {
+      "B_eligible": false,
+      "B_tie_break": [
+        0,
+        143.8148419529386,
+        120.26649423228577,
+        0.4975,
+        -2001
+      ],
+      "G_eligible": true,
+      "G_tie_break": [
+        4,
+        104.67347980849443,
+        120.26649423228577,
+        0.4975,
+        -2001
+      ],
+      "mean_D": {
+        "COMPOUND": 123.58199720672147,
+        "DURATION": 143.60869815711303,
+        "F0": 110.29659358888492,
+        "TIMING": 104.01409708008916
+      },
+      "mean_D_timeout": 0.506,
+      "median_D": {
+        "COMPOUND": 123.1635837681964,
+        "DURATION": 143.8148419529386,
+        "F0": 109.41407139951363,
+        "TIMING": 104.67347980849443
+      },
+      "median_D_timeout": 0.4975,
+      "negative_tape_counts": {
+        "COMPOUND": 0,
+        "DURATION": 0,
+        "F0": 0,
+        "TIMING": 0
+      },
+      "per_tape": {
+        "T0": {
+          "D": {
+            "COMPOUND": 127.58482054195366,
+            "DURATION": 140.59358525449412,
+            "F0": 109.70542813362553,
+            "TIMING": 100.00311141123994
+          },
+          "DRTP_timeout_mean_failure": 0.485,
+          "D_timeout": 0.4800000000000001,
+          "UTR_timeout_mean_failure": 0.9650000000000001
+        },
+        "T1": {
+          "D": {
+            "COMPOUND": 118.80602509806864,
+            "DURATION": 143.24926114654167,
+            "F0": 107.34682170821354,
+            "TIMING": 105.02512407328933
+          },
+          "DRTP_timeout_mean_failure": 0.45249999999999996,
+          "D_timeout": 0.4975,
+          "UTR_timeout_mean_failure": 0.95
+        },
+        "T2": {
+          "D": {
+            "COMPOUND": 119.12817763910628,
+            "DURATION": 145.8266006867401,
+            "F0": 107.99244180766864,
+            "TIMING": 100.6101296758093
+          },
+          "DRTP_timeout_mean_failure": 0.4725,
+          "D_timeout": 0.4725000000000001,
+          "UTR_timeout_mean_failure": 0.9450000000000001
+        },
+        "T3": {
+          "D": {
+            "COMPOUND": 123.1635837681964,
+            "DURATION": 144.55920174485072,
+            "F0": 117.02420489540324,
+            "TIMING": 104.67347980849443
+          },
+          "DRTP_timeout_mean_failure": 0.4425,
+          "D_timeout": 0.5,
+          "UTR_timeout_mean_failure": 0.9425
+        },
+        "T4": {
+          "D": {
+            "COMPOUND": 129.22737898628228,
+            "DURATION": 143.8148419529386,
+            "F0": 109.41407139951363,
+            "TIMING": 109.75864043161273
+          },
+          "DRTP_timeout_mean_failure": 0.35000000000000003,
+          "D_timeout": 0.5800000000000001,
+          "UTR_timeout_mean_failure": 0.93
+        }
+      },
+      "positive_tape_counts": {
+        "COMPOUND": 5,
+        "DURATION": 5,
+        "F0": 5,
+        "TIMING": 5
+      },
+      "seed": 2001
+    },
+    {
+      "B_eligible": true,
+      "B_tie_break": [
+        4,
+        -36.20354481155752,
+        -85.63090817320088,
+        -0.42,
+        -2002
+      ],
+      "G_eligible": false,
+      "G_tie_break": [
+        0,
+        -117.23476592853679,
+        -85.63090817320088,
+        -0.42,
+        -2002
+      ],
+      "mean_D": {
+        "COMPOUND": -36.48772932553802,
+        "DURATION": -76.51875960947716,
+        "F0": -113.10393675345742,
+        "TIMING": -116.90321782337836
+      },
+      "mean_D_timeout": -0.40199999999999997,
+      "median_D": {
+        "COMPOUND": -36.20354481155752,
+        "DURATION": -75.42180342872555,
+        "F0": -113.66351852398365,
+        "TIMING": -117.23476592853679
+      },
+      "median_D_timeout": -0.42,
+      "negative_tape_counts": {
+        "COMPOUND": 5,
+        "DURATION": 5,
+        "F0": 5,
+        "TIMING": 5
+      },
+      "per_tape": {
+        "T0": {
+          "D": {
+            "COMPOUND": -41.35980239974036,
+            "DURATION": -78.86699004208786,
+            "F0": -114.11036897014827,
+            "TIMING": -115.33320930401285
+          },
+          "DRTP_timeout_mean_failure": 0.8999999999999999,
+          "D_timeout": -0.30499999999999994,
+          "UTR_timeout_mean_failure": 0.595
+        },
+        "T1": {
+          "D": {
+            "COMPOUND": -32.959635903345415,
+            "DURATION": -73.91889687921211,
+            "F0": -116.10502479337156,
+            "TIMING": -117.23476592853679
+          },
+          "DRTP_timeout_mean_failure": 0.8925,
+          "D_timeout": -0.42,
+          "UTR_timeout_mean_failure": 0.4725
+        },
+        "T2": {
+          "D": {
+            "COMPOUND": -44.35185669277888,
+            "DURATION": -82.05218469546759,
+            "F0": -113.66351852398365,
+            "TIMING": -118.82891503038088
+          },
+          "DRTP_timeout_mean_failure": 0.8925,
+          "D_timeout": -0.47,
+          "UTR_timeout_mean_failure": 0.4225
+        },
+        "T3": {
+          "D": {
+            "COMPOUND": -36.20354481155752,
+            "DURATION": -75.42180342872555,
+            "F0": -109.50981905013322,
+            "TIMING": -114.8823445818374
+          },
+          "DRTP_timeout_mean_failure": 0.89,
+          "D_timeout": -0.36249999999999993,
+          "UTR_timeout_mean_failure": 0.5275000000000001
+        },
+        "T4": {
+          "D": {
+            "COMPOUND": -27.563806820267928,
+            "DURATION": -72.3339230018927,
+            "F0": -112.13095242965035,
+            "TIMING": -118.23685427212381
+          },
+          "DRTP_timeout_mean_failure": 0.8775,
+          "D_timeout": -0.4524999999999999,
+          "UTR_timeout_mean_failure": 0.42500000000000004
+        }
+      },
+      "positive_tape_counts": {
+        "COMPOUND": 0,
+        "DURATION": 0,
+        "F0": 0,
+        "TIMING": 0
+      },
+      "seed": 2002
+    },
+    {
+      "B_eligible": false,
+      "B_tie_break": [
+        0,
+        42.13441896387084,
+        35.327674680135246,
+        0.04499999999999993,
+        -2003
+      ],
+      "G_eligible": true,
+      "G_tie_break": [
+        4,
+        27.143161739677907,
+        35.327674680135246,
+        0.04499999999999993,
+        -2003
+      ],
+      "mean_D": {
+        "COMPOUND": 26.615741425716784,
+        "DURATION": 41.23892558370205,
+        "F0": 29.482159173818303,
+        "TIMING": 37.31435194152431
+      },
+      "mean_D_timeout": 0.0595,
+      "median_D": {
+        "COMPOUND": 27.143161739677907,
+        "DURATION": 41.49953086642316,
+        "F0": 30.533587150569076,
+        "TIMING": 42.13441896387084
+      },
+      "median_D_timeout": 0.04499999999999993,
+      "negative_tape_counts": {
+        "COMPOUND": 0,
+        "DURATION": 0,
+        "F0": 0,
+        "TIMING": 0
+      },
+      "per_tape": {
+        "T0": {
+          "D": {
+            "COMPOUND": 33.46746653031673,
+            "DURATION": 46.91141004051781,
+            "F0": 35.54780929009897,
+            "TIMING": 45.35900256451683
+          },
+          "DRTP_timeout_mean_failure": 0.8325,
+          "D_timeout": 0.032500000000000084,
+          "UTR_timeout_mean_failure": 0.8650000000000001
+        },
+        "T1": {
+          "D": {
+            "COMPOUND": 22.808815001585174,
+            "DURATION": 34.99029962361152,
+            "F0": 28.194388368386996,
+            "TIMING": 25.45719724414755
+          },
+          "DRTP_timeout_mean_failure": 0.8,
+          "D_timeout": 0.10499999999999998,
+          "UTR_timeout_mean_failure": 0.905
+        },
+        "T2": {
+          "D": {
+            "COMPOUND": 36.5663971739757,
+            "DURATION": 46.04211965060267,
+            "F0": 38.352768321936594,
+            "TIMING": 45.397659241660165
+          },
+          "DRTP_timeout_mean_failure": 0.8600000000000001,
+          "D_timeout": 0.03499999999999992,
+          "UTR_timeout_mean_failure": 0.895
+        },
+        "T3": {
+          "D": {
+            "COMPOUND": 27.143161739677907,
+            "DURATION": 41.49953086642316,
+            "F0": 30.533587150569076,
+            "TIMING": 42.13441896387084
+          },
+          "DRTP_timeout_mean_failure": 0.83,
+          "D_timeout": 0.08000000000000007,
+          "UTR_timeout_mean_failure": 0.91
+        },
+        "T4": {
+          "D": {
+            "COMPOUND": 13.092866683028404,
+            "DURATION": 36.75126773735508,
+            "F0": 14.782242738099882,
+            "TIMING": 28.22348169342615
+          },
+          "DRTP_timeout_mean_failure": 0.8450000000000001,
+          "D_timeout": 0.04499999999999993,
+          "UTR_timeout_mean_failure": 0.89
+        }
+      },
+      "positive_tape_counts": {
+        "COMPOUND": 5,
+        "DURATION": 5,
+        "F0": 5,
+        "TIMING": 5
+      },
+      "seed": 2003
+    }
+  ],
+  "protocol": "DRTP-S1R-GB-SELECTION-V2",
+  "rules": {
+    "B": "all four mean D < 0 and at least three metrics have D < 0 on >=4/5 tapes",
+    "G": "all four mean D > 0 and at least three metrics have D > 0 on >=4/5 tapes",
+    "timeout_orientation": "D_timeout = timeout_UTR - timeout_DRTP; tape value is mean of four failure conditions"
+  },
+  "selected": {
+    "B": 2002,
+    "G": 2001
+  },
+  "selection_is_machine_generated": true,
+  "source": "artifacts/drtp_reliability_a0/rel_a0_decision.json",
+  "source_sha256": "8018efe911327b170ba1e63ef858a26e8798df2919a6933cb0d7e98a874ceda0"
+}
