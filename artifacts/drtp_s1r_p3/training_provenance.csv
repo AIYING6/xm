@@ -1,0 +1,3 @@
+run,seed,git_commit,protocol,environment_steps,from_scratch,runtime_persistence
+R0_G_REF,2001,025bb44,DRTP-S1R-P3-G-B-REFERENCE-V1,1000192,True,True
+R1_B_REF,2002,025bb44,DRTP-S1R-P3-G-B-REFERENCE-V1,1000192,True,True

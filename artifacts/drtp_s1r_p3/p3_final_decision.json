@@ -1,0 +1,78 @@
+{
+  "P4_started": false,
+  "canonical_seeds_used": false,
+  "evaluation": {
+    "evaluation_root": "results\\development\\drtp_s1r_p3\\evaluations\\final",
+    "raw_rows": 5000,
+    "summary_rows": 50
+  },
+  "gate": {
+    "R1": false,
+    "R2": false,
+    "R3": false,
+    "mean_gap_compound": -36.08350109289215,
+    "mean_gap_duration": -55.23197131503561,
+    "mean_gap_f0": -65.77659926701428,
+    "mean_gap_timing": -62.3131444982253,
+    "mean_timeout_quality_gap": -0.2679999999999999,
+    "tape_positive_compound": 0,
+    "tape_positive_duration": 0,
+    "tape_positive_f0": 0,
+    "tape_positive_timeout_quality": 0,
+    "tape_positive_timing": 0
+  },
+  "heldout_started": false,
+  "outcome": "F_REFERENCE_NOT_REPRODUCED",
+  "precursor": {
+    "eligible_metric_count": 2,
+    "metrics": [
+      {
+        "B_mean": -0.006757705335658806,
+        "G_mean": -0.004294775381254369,
+        "eligible": true,
+        "gap_G_minus_B": 0.0024629299544044365,
+        "metric": "P1"
+      },
+      {
+        "B_mean": 0.0,
+        "G_mean": 0.0,
+        "eligible": false,
+        "gap_G_minus_B": 0.0,
+        "metric": "P2"
+      },
+      {
+        "B_mean": 0.0,
+        "G_mean": 0.06,
+        "eligible": true,
+        "gap_G_minus_B": 0.06,
+        "metric": "P3"
+      }
+    ],
+    "pass": true,
+    "required": 2
+  },
+  "protocol": "DRTP-S1R-P3-G-B-REFERENCE-V1",
+  "scientific_env_steps": 2000384,
+  "technical_valid": true,
+  "telemetry": {
+    "conditions_per_tape": 5,
+    "milestones": [
+      "250k",
+      "500k",
+      "750k",
+      "1m"
+    ],
+    "protocol": "DRTP-S1R-P3-MILESTONE-TRAJECTORY-V1",
+    "records": 2000,
+    "sha256": "97dff46ca2169110531c90c5a730ec4777f2ecf6a84cabfc612fa7a3e3b8be1c",
+    "step_telemetry_gzip": "results\\development\\drtp_s1r_p3\\milestone_telemetry\\tp50_step_telemetry.jsonl.gz",
+    "tapes": [
+      "T0",
+      "T1",
+      "T2",
+      "T3",
+      "T4"
+    ],
+    "tp50_per_tape": 10
+  }
+}

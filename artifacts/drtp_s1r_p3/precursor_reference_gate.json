@@ -1,0 +1,28 @@
+{
+  "eligible_metric_count": 2,
+  "metrics": [
+    {
+      "B_mean": -0.006757705335658806,
+      "G_mean": -0.004294775381254369,
+      "eligible": true,
+      "gap_G_minus_B": 0.0024629299544044365,
+      "metric": "P1"
+    },
+    {
+      "B_mean": 0.0,
+      "G_mean": 0.0,
+      "eligible": false,
+      "gap_G_minus_B": 0.0,
+      "metric": "P2"
+    },
+    {
+      "B_mean": 0.0,
+      "G_mean": 0.06,
+      "eligible": true,
+      "gap_G_minus_B": 0.06,
+      "metric": "P3"
+    }
+  ],
+  "pass": true,
+  "required": 2
+}

@@ -1,0 +1,15 @@
+{
+  "R1": false,
+  "R2": false,
+  "R3": false,
+  "mean_gap_compound": -36.08350109289215,
+  "mean_gap_duration": -55.23197131503561,
+  "mean_gap_f0": -65.77659926701428,
+  "mean_gap_timing": -62.3131444982253,
+  "mean_timeout_quality_gap": -0.2679999999999999,
+  "tape_positive_compound": 0,
+  "tape_positive_duration": 0,
+  "tape_positive_f0": 0,
+  "tape_positive_timeout_quality": 0,
+  "tape_positive_timing": 0
+}
