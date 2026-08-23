@@ -63,15 +63,40 @@ def main() -> None:
             "wins": f"{entry['win_count']}/{entry['n']}",
             "mean_delta_drtp_minus_utr": entry["mean"],
             "median_delta_drtp_minus_utr": entry["median"],
+            "std": entry["std"],
             "iqr": entry["IQR"],
             "mad": entry["MAD"],
             "worst_delta": entry["worst_delta"],
+            "paired_dz_descriptive": entry["paired_dz"],
+            "bootstrap_mean_ci_low_descriptive": entry["descriptive_seed_bootstrap_95_ci"][0],
+            "bootstrap_mean_ci_high_descriptive": entry["descriptive_seed_bootstrap_95_ci"][1],
             "interpretation": "positive center does not establish seed stability",
         })
     write_csv(
         OUT / "final_reliability_results.csv",
         list(reliability_rows[0]),
         reliability_rows,
+    )
+    stratified_rows = []
+    for contract, metrics in stats["contract_stratified"].items():
+        for metric, entry in metrics.items():
+            stratified_rows.append({
+                "contract": contract,
+                "metric": metric,
+                "n_training_seeds": entry["n"],
+                "wins": entry["win_count"],
+                "mean_delta": entry["mean"],
+                "median_delta": entry["median"],
+                "std": entry["std"],
+                "iqr": entry["IQR"],
+                "mad": entry["MAD"],
+                "worst_delta": entry["worst_delta"],
+                "inference_boundary": "descriptive within frozen contract; no population-level claim",
+            })
+    write_csv(
+        OUT / "final_stratified_statistics.csv",
+        list(stratified_rows[0]),
+        stratified_rows,
     )
     write_csv(
         OUT / "efficiency_results.csv",
@@ -172,8 +197,8 @@ def main() -> None:
         [[r["seed"], r["contract"], r["delta_nominal"], r["delta_F0"], r["delta_OOD_mean"], r["delta_OOD_worst"], r["direction_note"]] for r in seed_rows],
     )
     summary_table = md_table(
-        ["Metric", "Wins", "Mean Δ", "Median Δ", "IQR", "Worst Δ"],
-        [[r["metric"], r["wins"], r["mean_delta_drtp_minus_utr"], r["median_delta_drtp_minus_utr"], r["iqr"], r["worst_delta"]] for r in reliability_rows],
+        ["Metric", "Wins", "Mean Δ", "Median Δ", "SD", "IQR", "MAD", "Worst Δ"],
+        [[r["metric"], r["wins"], r["mean_delta_drtp_minus_utr"], r["median_delta_drtp_minus_utr"], r["std"], r["iqr"], r["mad"], r["worst_delta"]] for r in reliability_rows],
     )
 
     write(DOCS / "PAPER_Q2_FINAL_EVIDENCE_FREEZE.md", f"""# PAPER-Q2 Final Evidence Freeze

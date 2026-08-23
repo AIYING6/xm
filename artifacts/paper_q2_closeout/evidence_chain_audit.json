@@ -1,0 +1,25 @@
+{
+  "schema": "paper-q2-evidence-chain-audit-v1",
+  "status": "PASS",
+  "training_started": false,
+  "checks": [
+    "HASH_CHAIN_PASS:24",
+    "MAIN_TABLE_IDENTITY_PASS",
+    "ALL_FIVE_SEEDS_RETAINED_PASS",
+    "ABSOLUTE_TO_PAIRED_DELTAS_PASS",
+    "SEED_LEVEL_STATISTICS_RECOMPUTED_PASS",
+    "CONTRACT_STRATIFICATION_PASS",
+    "NEGATIVE_SEEDS_PRESERVED_PASS",
+    "HISTORICAL_DECISIONS_AND_STOP_RULE_PASS",
+    "LEGACY_EVIDENCE_QUARANTINE_PASS",
+    "STATISTICAL_TRANSCRIPTION_CORRECTION_PASS"
+  ],
+  "independent_unit": "training_seed",
+  "statistical_boundary": "cross-stratum n=5 summary is descriptive only",
+  "remaining_risks": [
+    "development n=2 and held-out n=3 are small and contract-separated",
+    "no fair external drop-in comparator",
+    "seed2002 adverse reversal and mixed safety",
+    "3-UAV simulation scope only"
+  ]
+}

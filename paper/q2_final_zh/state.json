@@ -1,0 +1,24 @@
+{
+  "schema": "paper-q2-final-zh-writing-state-v1",
+  "mode": "hybrid_reconstruction",
+  "stage": "evidence_chain_hardened_pre_draft",
+  "scientific_training_authorized": false,
+  "evidence_freeze_commit": "1680b21",
+  "foundation_files_complete": true,
+  "evidence_chain_status": "PASS",
+  "current_primary_method": "DRTP-SG-MAPPO",
+  "current_primary_comparator": "UTR-SG-MAPPO",
+  "historical_decisions_preserved": [
+    "DRTP_Q2_LIMITATION_ONLY",
+    "development NO-GO",
+    "held-out FAIL"
+  ],
+  "technical_debts": [
+    "target journal and article format not selected",
+    "bibliography not yet fully verified",
+    "final figures not yet rendered",
+    "author and availability metadata not supplied",
+    "wall-clock and peak-memory comparison unavailable under common hardware"
+  ],
+  "next_stage": "draft Methods and Experimental Protocol from frozen contracts"
+}

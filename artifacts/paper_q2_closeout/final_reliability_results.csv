@@ -1,5 +1,5 @@
-metric,training_seed_unit,wins,mean_delta_drtp_minus_utr,median_delta_drtp_minus_utr,iqr,mad,worst_delta,interpretation
-delta_nominal,5 historical paired seeds; descriptive cross-contract summary only,4/5,46.2314,40.794,43.742,33.885999999999996,-16.254,positive center does not establish seed stability
-delta_F0,5 historical paired seeds; descriptive cross-contract summary only,3/5,26.404,29.804,125.952,74.461,-113.951,positive center does not establish seed stability
-delta_OOD_mean,5 historical paired seeds; descriptive cross-contract summary only,3/5,34.218399999999995,26.305,112.985,80.89500000000001,-88.126,positive center does not establish seed stability
-delta_OOD_worst,5 historical paired seeds; descriptive cross-contract summary only,4/5,31.479400000000002,23.688,85.07400000000001,68.938,-97.1,positive center does not establish seed stability
+metric,training_seed_unit,wins,mean_delta_drtp_minus_utr,median_delta_drtp_minus_utr,std,iqr,mad,worst_delta,paired_dz_descriptive,bootstrap_mean_ci_low_descriptive,bootstrap_mean_ci_high_descriptive,interpretation
+delta_nominal,5 historical paired seeds; descriptive cross-contract summary only,4/5,46.2314,40.794,63.39037716246843,43.742,33.885999999999996,-16.254,0.7293125876425964,1.759199999999999,100.947,positive center does not establish seed stability
+delta_F0,5 historical paired seeds; descriptive cross-contract summary only,3/5,26.404,29.804,99.46706722830426,125.952,74.461,-113.951,0.26545469506400104,-51.855,101.1024,positive center does not establish seed stability
+delta_OOD_mean,5 historical paired seeds; descriptive cross-contract summary only,3/5,34.218399999999995,26.305,88.62939782769598,112.985,80.89500000000001,-88.126,0.38608408540159367,-32.592600000000004,100.7402,positive center does not establish seed stability
+delta_OOD_worst,5 historical paired seeds; descriptive cross-contract summary only,4/5,31.479400000000002,23.688,87.65819266218075,85.07400000000001,68.938,-97.1,0.35911532104381927,-38.224399999999996,98.4142,positive center does not establish seed stability

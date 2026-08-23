@@ -1,5 +1,7 @@
 # PAPER-Q2-P1 Statistical Results
 
+> **Numerical correction (2026-08-23):** the original prose table transcribed two MAD values incorrectly. The values below have been corrected from the machine-readable `statistical_summary.json` and direct recomputation over all five paired training-seed deltas. No seed, outcome, decision, mean, median, win count, or worst-case value changed.
+
 The machine-readable sources are `artifacts/paper_q2_p1/main_table.csv`, `seed_level_results.csv`, and `statistical_summary.json`. The independent unit is the training seed. Development 3M and held-out 10M are separate contract strata.
 
 ## Historical paired DRTP − UTR summary
@@ -7,9 +9,9 @@ The machine-readable sources are `artifacts/paper_q2_p1/main_table.csv`, `seed_l
 | Metric | Wins | Mean | Median | SD | IQR | MAD | Worst |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Nominal | 4/5 | +46.231 | +40.794 | 63.390 | 43.742 | 33.886 | −16.254 |
-| F0 | 3/5 | +26.404 | +29.804 | 99.467 | 125.952 | 51.491 | −113.951 |
+| F0 | 3/5 | +26.404 | +29.804 | 99.467 | 125.952 | 74.461 | −113.951 |
 | OOD mean | 3/5 | +34.218 | +26.305 | 88.629 | 112.985 | 80.895 | −88.126 |
-| OOD worst | 4/5 | +31.479 | +23.688 | 87.658 | 85.074 | 16.136 | −97.100 |
+| OOD worst | 4/5 | +31.479 | +23.688 | 87.658 | 85.074 | 68.938 | −97.100 |
 
 The exact machine-readable summary is authoritative. These dispersion values are deterministic seed-level descriptive statistics over the five historical paired deltas; they are not population estimates.
 
