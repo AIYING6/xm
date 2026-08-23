@@ -1,0 +1,9 @@
+{
+  "protocol": "DRTP-REL-A0-SMOKE-V1",
+  "training_started": false,
+  "checkpoint_sha256": "52719762aac0a0b954a52317ff4a77ac5d81973cfca74c48d5c28a379b82e2e8",
+  "deterministic_replay": true,
+  "rows": 4,
+  "finite_returns": true,
+  "status": "PASS"
+}

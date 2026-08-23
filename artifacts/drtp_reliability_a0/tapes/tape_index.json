@@ -1,0 +1,37 @@
+{
+  "protocol": "DRTP-REL-A0-MULTI-TAPE-V1",
+  "canonical": false,
+  "development_only": true,
+  "tapes": {
+    "T0": {
+      "path": "artifacts\\drtp_reliability_a0\\tapes\\T0_manifest.json",
+      "start": 440000,
+      "end": 440099,
+      "tape_hash": "16017eb30696a652d3bb8c1d701c49d35b736a99f0750c4f185511ff6215fc29"
+    },
+    "T1": {
+      "path": "artifacts\\drtp_reliability_a0\\tapes\\T1_manifest.json",
+      "start": 450000,
+      "end": 450099,
+      "tape_hash": "e5d5d7e7030cfd6704395585201abb4baa98559849d1989e3a82d5dc0a2b5eef"
+    },
+    "T2": {
+      "path": "artifacts\\drtp_reliability_a0\\tapes\\T2_manifest.json",
+      "start": 460000,
+      "end": 460099,
+      "tape_hash": "8f28bb657d0af7396a195c5e238aace50e98da3396ceedf1f29bfea67ca9a72f"
+    },
+    "T3": {
+      "path": "artifacts\\drtp_reliability_a0\\tapes\\T3_manifest.json",
+      "start": 470000,
+      "end": 470099,
+      "tape_hash": "516d73669e9f3f0ab721fccaaa72ec3e5b17930de4f3b41938dadfe226a6350c"
+    },
+    "T4": {
+      "path": "artifacts\\drtp_reliability_a0\\tapes\\T4_manifest.json",
+      "start": 480000,
+      "end": 480099,
+      "tape_hash": "ce5791df493c910e492b78ecc5f97204a8e1820ac399b52ab2051986371d6a63"
+    }
+  }
+}
