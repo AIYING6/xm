@@ -19,4 +19,8 @@
 | training-seed sensitivity | reproducible difference in final policy outcomes across training seeds | proven policy-basin divergence | Basin is only a candidate explanation. |
 | prospective formal confirmation | frozen paired UTR/DRTP experiment on seeds 2301–2305 at 10M steps | final experiment before completion; definitive proof | Primary prospective evidence, conditional on technical validity. |
 | catastrophic training seed | a paired seed satisfying the pre-registered formal collapse rule | bad seed, outlier to be removed | Retain and report; never exclude for weak performance. |
-| `[FORMAL RESULT PENDING]` | protected placeholder awaiting the complete formal decision archive | zero, NA, estimated result | Must not be replaced from live logs or partial runs. |
+| 正常工况 | no injected relay failure; first use may include `(nominal)` | nominal condition throughout Chinese prose | Use Chinese after first definition; metric symbol `J_nominal` remains unchanged. |
+| 配对评估样本带 | common base episode-ID namespace reused across methods, seeds, and conditions | evaluation tape, tape | Use Chinese prose; retain numeric namespace and machine file names. |
+| 故障起始时刻存活风险集 | episodes alive immediately before scheduled failure onset | risk set, alive-at-onset set | Technical trigger validity denominator only. |
+| 灾难性种子 | training seed satisfying the frozen paired collapse rule | catastrophic seed, bad seed, outlier | Never exclude; report adjacent to central effects. |
+| `[正式结果待回填]` | 中文主稿的受保护正式结果占位符 | `[FORMAL RESULT PENDING]` | 中文稿唯一允许的结果占位符；不得从实时日志回填。 |

@@ -25,6 +25,11 @@ REQUIRED_FILES = [
     "07_style_guide.md",
     "08_formal_result_integration_contract.md",
     "09_citation_ledger.md",
+    "10_chinese_submission_contract.md",
+    "11_chinese_figure_table_plan.md",
+    "12_author_input_checklist.md",
+    "references_core.enw",
+    "13_chinese_manuscript_readiness_audit.md",
     "main_zh.md",
     "state.json",
 ]
@@ -57,7 +62,7 @@ def main() -> None:
     for heading in REQUIRED_HEADINGS:
         require(heading in manuscript, f"missing required heading: {heading}")
 
-    placeholder_count = manuscript.count("[FORMAL RESULT PENDING")
+    placeholder_count = manuscript.count("[正式结果待回填")
     require(placeholder_count >= 7, "formal-result placeholders are incomplete")
     require(FORMAL_SEEDS.issubset(set(re.findall(r"\b23\d{2}\b", manuscript))),
             "formal seed table does not contain every frozen seed")
@@ -73,6 +78,10 @@ def main() -> None:
     require(state.get("formal_confirmation_contract") ==
             "DRTP-UTR-Q2-FORMAL-PAIRED-5SEED-V1",
             "formal confirmation contract mismatch")
+    require(state.get("publication_language_route") == "chinese_only",
+            "publication route is not frozen to Chinese")
+    require(state.get("parallel_english_full_manuscript") is False,
+            "parallel English full manuscript must remain disabled")
 
     integration = (PAPER / "08_formal_result_integration_contract.md").read_text(
         encoding="utf-8"
@@ -86,10 +95,24 @@ def main() -> None:
         require(token in integration, f"missing formal verdict branch: {token}")
 
     citation_ledger = (PAPER / "09_citation_ledger.md").read_text(encoding="utf-8")
-    require("MISSING_PRIMARY_METADATA" in citation_ledger,
+    require("仍待补充的引用主题" in citation_ledger,
             "citation debt is not explicitly marked")
-    require("not a final bibliography" in citation_ledger,
+    require("不等同于最终参考文献表" in citation_ledger,
             "citation ledger boundary is missing")
+    require(all(f"R{idx}" in citation_ledger for idx in range(1, 10)),
+            "verified core citation ledger is incomplete")
+
+    reference_export = (PAPER / "references_core.enw").read_text(encoding="utf-8")
+    require(reference_export.count("%0 ") == 9,
+            "EndNote core-reference export must contain nine records")
+
+    chinese_contract = (PAPER / "10_chinese_submission_contract.md").read_text(
+        encoding="utf-8"
+    )
+    require("只建设中文主稿" in chinese_contract,
+            "Chinese-only manuscript route is not explicit")
+    require("英文题名、英文摘要和英文关键词" in chinese_contract,
+            "Chinese-journal English metadata boundary is missing")
 
     print(
         "PASS: Q2 Chinese manuscript workspace is complete, formal-result "

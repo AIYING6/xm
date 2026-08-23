@@ -1,6 +1,9 @@
 {
   "schema": "paper-q2-final-zh-writing-state-v1",
   "mode": "hybrid_reconstruction",
+  "publication_language_route": "chinese_only",
+  "parallel_english_full_manuscript": false,
+  "english_metadata_only_if_required_by_chinese_journal": true,
   "stage": "prospective_formal_confirmation_cloud_training_and_nonresult_manuscript_drafting_in_progress",
   "scientific_training_authorized": true,
   "formal_confirmation_started": true,
@@ -11,6 +14,10 @@
   "nonresult_manuscript_sections_drafted": true,
   "formal_result_placeholders_frozen": true,
   "formal_result_integration_contract": "paper/q2_final_zh/08_formal_result_integration_contract.md",
+  "chinese_submission_contract": "paper/q2_final_zh/10_chinese_submission_contract.md",
+  "figure_table_plan": "paper/q2_final_zh/11_chinese_figure_table_plan.md",
+  "author_input_checklist": "paper/q2_final_zh/12_author_input_checklist.md",
+  "manuscript_readiness_audit": "paper/q2_final_zh/13_chinese_manuscript_readiness_audit.md",
   "current_primary_method": "DRTP-SG-MAPPO",
   "current_primary_comparator": "UTR-SG-MAPPO",
   "historical_decisions_preserved": [
@@ -20,7 +27,7 @@
   ],
   "technical_debts": [
     "target journal and article format not selected",
-    "bibliography not yet fully verified",
+    "nine core references verified; PPO/CTDE, node-failure, adaptive-sampling, and target-journal literature still pending",
     "final figures not yet rendered",
     "author and availability metadata not supplied",
     "wall-clock and peak-memory comparison unavailable under common hardware"

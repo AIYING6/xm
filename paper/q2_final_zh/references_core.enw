@@ -1,0 +1,136 @@
+%0 Conference Paper
+%A Yu, Chao
+%A Velu, Akash
+%A Vinitsky, Eugene
+%A Gao, Jiaxuan
+%A Wang, Yu
+%A Bayen, Alexandre
+%A Wu, Yi
+%T The Surprising Effectiveness of PPO in Cooperative Multi-Agent Games
+%B Advances in Neural Information Processing Systems
+%D 2022
+%V 35
+%R 10.52202/068431-1787
+%U https://proceedings.neurips.cc/paper_files/paper/2022/hash/9c1535a02f0ce079433344e14d910597-Abstract.html
+
+%0 Conference Paper
+%A Veličković, Petar
+%A Cucurull, Guillem
+%A Casanova, Arantxa
+%A Romero, Adriana
+%A Liò, Pietro
+%A Bengio, Yoshua
+%T Graph Attention Networks
+%B 6th International Conference on Learning Representations
+%D 2018
+%U https://iclr.cc/virtual/2018/poster/299
+
+%0 Conference Paper
+%A Lou, Xingzhou
+%A Zhang, Junge
+%A Norman, Timothy J.
+%A Huang, Kaiqi
+%A Du, Yali
+%T TAPE: Leveraging Agent Topology for Cooperative Multi-Agent Policy Gradient
+%B Proceedings of the AAAI Conference on Artificial Intelligence
+%D 2024
+%V 38
+%N 16
+%P 17496-17504
+%R 10.1609/aaai.v38i16.29699
+%U https://ojs.aaai.org/index.php/AAAI/article/view/29699
+
+%0 Conference Paper
+%A Li, Shihui
+%A Wu, Yi
+%A Cui, Xinyue
+%A Dong, Honghua
+%A Fang, Fei
+%A Russell, Stuart
+%T Robust Multi-Agent Reinforcement Learning via Minimax Deep Deterministic Policy Gradient
+%B Proceedings of the AAAI Conference on Artificial Intelligence
+%D 2019
+%V 33
+%N 1
+%P 4213-4220
+%R 10.1609/aaai.v33i01.33014213
+%U https://ojs.aaai.org/index.php/AAAI/article/view/4327
+
+%0 Conference Paper
+%A Liu, Zijian
+%A Bai, Qinxun
+%A Blanchet, Jose
+%A Dong, Perry
+%A Xu, Wei
+%A Zhou, Zhengqing
+%A Zhou, Zhengyuan
+%T Distributionally Robust Q-Learning
+%B Proceedings of the 39th International Conference on Machine Learning
+%D 2022
+%V 162
+%P 13623-13643
+%U https://proceedings.mlr.press/v162/liu22a.html
+
+%0 Journal Article
+%A Zhao, Bocheng
+%A Huo, Mingying
+%A Li, Zheng
+%A Feng, Wenyu
+%A Yu, Ze
+%A Qi, Naiming
+%A Wang, Shaohai
+%T Graph-based multi-agent reinforcement learning for collaborative search and tracking of multiple UAVs
+%J Chinese Journal of Aeronautics
+%D 2025
+%V 38
+%N 3
+%P 103214
+%R 10.1016/j.cja.2024.08.045
+%U https://www.sciencedirect.com/science/article/pii/S1000936124003510
+
+%0 Journal Article
+%A Zhao, Bocheng
+%A Huo, Mingying
+%A Li, Zheng
+%A Yu, Ze
+%A Qi, Naiming
+%T Graph-based multi-agent reinforcement learning for large-scale UAVs swarm system control
+%J Aerospace Science and Technology
+%D 2024
+%V 150
+%P 109166
+%R 10.1016/j.ast.2024.109166
+%U https://www.sciencedirect.com/science/article/pii/S1270963824002992
+
+%0 Journal Article
+%A Lv, Zefang
+%A Xiao, Liang
+%A Du, Yousong
+%A Niu, Guohang
+%A Xing, Chengwen
+%A Xu, Wenyuan
+%T Multi-Agent Reinforcement Learning Based UAV Swarm Communications Against Jamming
+%J IEEE Transactions on Wireless Communications
+%D 2023
+%V 22
+%N 12
+%P 9063-9075
+%R 10.1109/TWC.2023.3268082
+%U https://ieeexplore.ieee.org/document/10107729
+
+%0 Journal Article
+%A Bai, Hengzhi
+%A Wang, Haichao
+%A He, Rongrong
+%A Du, Jiatao
+%A Li, Guoxin
+%A Xu, Yuhua
+%A Jiao, Yutao
+%T Multi-hop UAV relay covert communication: A multi-agent reinforcement learning approach
+%J Chinese Journal of Aeronautics
+%D 2025
+%V 38
+%N 10
+%P 103440
+%R 10.1016/j.cja.2025.103440
+%U https://www.sciencedirect.com/science/article/pii/S1000936125000469
