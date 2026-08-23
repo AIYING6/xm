@@ -1,9 +1,9 @@
 {
   "schema": "paper-q2-final-zh-writing-state-v1",
   "mode": "hybrid_reconstruction",
-  "stage": "prospective_formal_confirmation_ready",
+  "stage": "prospective_formal_confirmation_training_in_progress",
   "scientific_training_authorized": true,
-  "formal_confirmation_started": false,
+  "formal_confirmation_started": true,
   "formal_confirmation_contract": "DRTP-UTR-Q2-FORMAL-PAIRED-5SEED-V1",
   "evidence_freeze_commit": "1680b21",
   "foundation_files_complete": true,

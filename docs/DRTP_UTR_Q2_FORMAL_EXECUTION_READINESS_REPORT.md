@@ -1,6 +1,6 @@
 # DRTP/UTR Q2 Formal Confirmation Execution Readiness
 
-**Status:** `TECHNICAL_PREFLIGHT_PASS / LONG TRAINING NOT STARTED`
+**Status:** `TECHNICAL_PREFLIGHT_PASS / LOCAL LONG TRAINING IN PROGRESS`
 
 The remaining high-value experiment has been converted from a general wish
 list into one prospective, executable comparison. It is intentionally limited
@@ -59,7 +59,9 @@ unfavorable result demotes DRTP; it does not trigger another algorithm search.
 
 ## Next authorized action
 
-Run the source-only cloud package under the frozen controller. After the ten
-final checkpoints are evaluated, stop and reconstruct the manuscript from the
-combined historical and prospective evidence. No follow-on experiment is
-automatically authorized.
+Local execution started on 2026-08-24 after the contract-freeze commit. The
+Windows controller runs two trajectories concurrently on the available GTX
+1650 Ti and queues the remaining trajectories without changing their budgets.
+After the ten final checkpoints are evaluated, stop and reconstruct the
+manuscript from the combined historical and prospective evidence. No follow-on
+experiment is automatically authorized.

@@ -1,7 +1,7 @@
 # DRTP/UTR Q2 Formal Paired Five-Seed Confirmation Contract
 
 **Protocol:** `DRTP-UTR-Q2-FORMAL-PAIRED-5SEED-V1`  
-**Status:** `FROZEN BEFORE PERFORMANCE / LONG TRAINING NOT YET STARTED`  
+**Status:** `FROZEN BEFORE PERFORMANCE / LONG TRAINING STARTED 2026-08-24`
 **Purpose:** close the single remaining high-value evidence gap with one
 prospective, common-contract UTR-versus-DRTP comparison. This is not a rescue
 of the historical held-out result and does not erase any prior decision.
@@ -20,6 +20,11 @@ The following remain part of the main-paper evidence and may not be rewritten:
 The new experiment is prospective evidence under a new contract. It cannot be
 pooled with historical 3M/10M strata as though all runs were one homogeneous
 confirmatory sample.
+
+The contract was frozen at commit `05c37c3` before any of the prospective
+trajectories started. Local execution began afterwards under the unchanged
+contract, using the output root
+`results/formal/drtp_utr_q2_paired_5seed`.
 
 ## 2. Methods and sole contrast
 
