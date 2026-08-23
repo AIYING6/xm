@@ -10,9 +10,9 @@
 
 → `DRTP retains the SG policy and changes only bounded training-group weighting`
 
-→ `matched UTR-versus-DRTP evaluation shows positive historical mean/median effects`
+→ `a prospective matched five-seed 10M test evaluates absolute performance, paired effects, safety, and catastrophic-seed risk`
 
-→ `seed1902 and seed2002 show that the effect is not uniformly reliable`
+→ `historical seed1902 and seed2002 evidence supplies the reliability stress context rather than replacing prospective confirmation`
 
 → `topology robustness and training reliability must be evaluated together`.
 
@@ -31,10 +31,10 @@
 
 ## Results paragraph order
 
-1. Task/topology mechanism validation.
-2. Absolute development and held-out results, separately.
-3. Paired seed-level effects and descriptive center/spread.
-4. Timing, duration, and compound OOD decomposition.
-5. Timeout, collision, constraint, and exposure validity.
-6. Reliability result centered on seed1902/seed2002.
+1. Prospective formal integrity and evaluation-validity audit.
+2. Formal absolute UTR and DRTP values for all five seeds.
+3. Formal paired effects, mean/median/spread, win count, and catastrophic-seed verdict.
+4. Formal timing, duration, and compound OOD decomposition.
+5. Formal timeout, collision, constraint, pre-trigger collision, and risk-set exposure validity.
+6. Historical development/held-out/REL-A0 reliability evidence, kept in separate strata.
 7. Mechanism telemetry and what it does not prove.

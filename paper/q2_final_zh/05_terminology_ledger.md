@@ -17,3 +17,6 @@
 | training seed | independent statistical unit | episode as replicate | Never treat episodes as training replicates. |
 | risk-set trigger validity | trigger success among episodes alive immediately before onset | all-episode exposure as evaluator validity | Overall outcomes still retain all episodes. |
 | training-seed sensitivity | reproducible difference in final policy outcomes across training seeds | proven policy-basin divergence | Basin is only a candidate explanation. |
+| prospective formal confirmation | frozen paired UTR/DRTP experiment on seeds 2301–2305 at 10M steps | final experiment before completion; definitive proof | Primary prospective evidence, conditional on technical validity. |
+| catastrophic training seed | a paired seed satisfying the pre-registered formal collapse rule | bad seed, outlier to be removed | Retain and report; never exclude for weak performance. |
+| `[FORMAL RESULT PENDING]` | protected placeholder awaiting the complete formal decision archive | zero, NA, estimated result | Must not be replaced from live logs or partial runs. |

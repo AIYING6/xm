@@ -29,14 +29,14 @@
 ## Experimental Protocol
 
 - Purpose: establish comparison fairness and provenance.
-- Required: contract strata, seeds, budgets, final-checkpoint rule, tapes, primary metrics, safety, exposure semantics, training-seed unit.
+- Required: prospective seeds 2301–2305, common 10M budget, tape 490000–490099, final-checkpoint rule, historical contract strata, primary metrics, safety, exposure semantics, and training-seed unit.
 - Forbidden: pooling episodes as independent replicates; treating 3M and 10M as one experiment.
 
 ## Results
 
 - Purpose: report observations without mechanism inflation.
-- Required: absolute values before deltas, every seed, mean/median/spread/worst, adverse seeds, mixed safety.
-- Forbidden: hiding seed2002, mean-only bars, success/recovery metrics from legacy contracts, “consistently.”
+- Required: formal absolute values before deltas, every formal seed, mean/median/spread/worst, win count, catastrophic classification, safety/risk-set diagnostics, and a separately labeled historical reliability subsection retaining adverse seeds.
+- Forbidden: partial cloud results, intermediate checkpoints, hiding seed1902/seed2002 or any formal seed, mean-only bars, success/recovery metrics from legacy contracts, “consistently.”
 
 ## Discussion
 

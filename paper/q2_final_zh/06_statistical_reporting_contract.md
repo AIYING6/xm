@@ -10,8 +10,9 @@ The independent unit for method comparison is the **training seed**. Evaluation 
 |---|---:|---:|---|
 | development | 1901, 1902 | 3M | descriptive development evidence only |
 | held-out v2 | 2001, 2002, 2003 | 10M | held-out evidence with historical `FAIL` retained |
+| prospective formal confirmation | 2301, 2302, 2303, 2304, 2305 | 10M | primary homogeneous five-seed evidence; result pending |
 
-The strata differ in training budget and evaluation contract. They must be shown separately before any five-pair summary. The five-pair summary is a retrospective descriptive reliability audit, not one homogeneous confirmatory experiment.
+The historical strata differ in training budget and evaluation contract. They must be shown separately before any retrospective five-pair summary. That historical summary is a descriptive reliability audit, not one homogeneous confirmatory experiment. By contrast, the prospective formal stratum is one frozen, homogeneous five-seed experiment and is the primary unit for the final method decision.
 
 ## Required reporting per primary metric
 
@@ -34,6 +35,8 @@ For `J_nominal`, `J_F0`, `J_OOD_mean`, and `J_OOD_worst`, report:
 - Seed1902 and seed2002 must remain visible adjacent to the central performance claim.
 - Safety outcomes must be reported separately from return metrics.
 - Risk-set trigger validity is an evaluator quantity; pre-trigger collision remains an unconditional policy safety/performance outcome.
+- The prospective formal report must include catastrophic-seed count, paired direction for every seed, safety differences, pre-trigger collision, survival-to-onset fraction, and risk-set trigger validity.
+- Live logs, incomplete method pairs, and intermediate checkpoints are not admissible manuscript evidence.
 
 ## Missing-data and exclusion policy
 

@@ -1,13 +1,16 @@
 {
   "schema": "paper-q2-final-zh-writing-state-v1",
   "mode": "hybrid_reconstruction",
-  "stage": "prospective_formal_confirmation_training_in_progress",
+  "stage": "prospective_formal_confirmation_cloud_training_and_nonresult_manuscript_drafting_in_progress",
   "scientific_training_authorized": true,
   "formal_confirmation_started": true,
   "formal_confirmation_contract": "DRTP-UTR-Q2-FORMAL-PAIRED-5SEED-V1",
   "evidence_freeze_commit": "1680b21",
   "foundation_files_complete": true,
   "evidence_chain_status": "PASS",
+  "nonresult_manuscript_sections_drafted": true,
+  "formal_result_placeholders_frozen": true,
+  "formal_result_integration_contract": "paper/q2_final_zh/08_formal_result_integration_contract.md",
   "current_primary_method": "DRTP-SG-MAPPO",
   "current_primary_comparator": "UTR-SG-MAPPO",
   "historical_decisions_preserved": [
@@ -22,5 +25,5 @@
     "author and availability metadata not supplied",
     "wall-clock and peak-memory comparison unavailable under common hardware"
   ],
-  "next_stage": "run frozen paired UTR/DRTP 10M five-seed confirmation, then reconstruct the manuscript"
+  "next_stage": "complete the frozen paired UTR/DRTP 10M confirmation, validate the full archive, then integrate results through the fail-closed contract"
 }
