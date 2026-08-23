@@ -1,0 +1,17 @@
+{
+  "deterministic_reconstruction": true,
+  "milestone": "scratch_1",
+  "pass": true,
+  "protocol": "DRTP-S1R-P2-PRECURSOR-V1",
+  "values_first": {
+    "P1_progress_rate_40": 0.003749999999999999,
+    "P2_quality_negative_stagnation_fraction_40": 0.0,
+    "P3_stage_advance_40": 0
+  },
+  "values_second": {
+    "P1_progress_rate_40": 0.003749999999999999,
+    "P2_quality_negative_stagnation_fraction_40": 0.0,
+    "P3_stage_advance_40": 0
+  },
+  "window": "failure_relative_step 0..39"
+}

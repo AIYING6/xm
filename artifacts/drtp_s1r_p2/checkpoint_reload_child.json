@@ -1,0 +1,23 @@
+{
+  "independent_process": true,
+  "model_sha256": "6cbdc354dc8ced2d62938f63a0bee1bcccc71757e535d416df4c41f420e00bcf",
+  "probe_output": [
+    0.0,
+    1.0,
+    0.0
+  ],
+  "required_keys_present": true,
+  "required_runtime_keys": [
+    "drtp_sampler_state",
+    "environment_states",
+    "episode_counts",
+    "graph_obs",
+    "model_state",
+    "obs",
+    "optimizer_state",
+    "rng_state",
+    "share_obs",
+    "update"
+  ],
+  "update": 1
+}
