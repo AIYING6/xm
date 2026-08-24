@@ -165,15 +165,15 @@ def format_display_math(raw: str) -> str:
     if "\\mathcal Q=" in compact:
         return "有界权重集合 Q：每个故障组权重 q_k 介于 0.05 与 0.35，且六组权重和为 1。"
     if "d_{k,u}=\\operatorname{clip}" in compact:
-        return "相对难度 d(k,u)：由正常 EMA 与组 k EMA 的相对差距截断得到，范围为 [0, d_max]。"
+        return "d_k,u = clip((Jbar_N,u − Jbar_k,u) / max(|Jbar_N,u|, epsilon), 0, d_max)"
     if "\\bar J_{k,u}" in compact:
         return "组 k 的 EMA 回报：Jbar(k,u) = (1 - kappa) Jbar(k,u-1) + kappa Jhat(k,u)"
     if "\\tilde q_{k,u+1}" in compact:
-        return "候选权重 q_tilde(k,u+1)：按 exp(eta × d_tilde(k,u)) 对当前权重进行指数重加权并归一化。"
+        return "q_tilde(k,u+1) = q_k,u · exp(eta · d_tilde(k,u)) / Σ_j∈F[q_j,u · exp(eta · d_tilde(j,u))]"
     if "\\tilde d_{k,u}" in compact:
-        return "去均值难度 d_tilde(k,u) = d(k,u) - 六个故障组难度的平均值。"
+        return "d_tilde(k,u) = d_k,u − (1/6) Σ_j∈F d_j,u"
     if "q_{u+1}=\\Pi" in compact:
-        return "更新权重 q(u+1)：将当前权重与候选权重平滑混合后投影回有界集合 Q。"
+        return "x_u+1 = (1 − beta)q_u + beta·q_tilde_u+1；q_u+1 = Pi_Q(x_u+1)"
     if "\\frac{\\overline J_{\\mathrm{nominal}}^{D}}" in compact:
         return "正常工况总体保持：DRTP 的五种子总体平均任务得分 / UTR 的总体平均任务得分 ≥ 0.95，且五个配对差值的中位数 ≥ 0。"
     if "\\min\\{0.35" in compact and "\\lambda" in compact:
