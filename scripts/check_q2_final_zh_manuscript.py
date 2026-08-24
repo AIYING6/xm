@@ -37,6 +37,7 @@ REQUIRED_FILES = [
     "16_no_training_evidence_enhancement_audit.md",
     "17_major_revision_rectification_log.md",
     "18_p1_review_response_and_submission_gap.md",
+    "19_v112_reviewer_reconciliation_and_submission_blockers.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
     "formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json",
@@ -100,6 +101,9 @@ def main() -> None:
             "formal seed2302 nominal regression is not retained")
     require("100 次二分" in manuscript and "有界单纯形投影" in manuscript,
             "bounded-simplex implementation detail is missing")
+    require("max(|\\bar J_{N,u}|,\\epsilon)" in manuscript and
+            "(1-\\beta)q_u+\\beta\\tilde q_{u+1}" in manuscript,
+            "difficulty denominator or smoothing equation is not explicit")
     require(manuscript.count("FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE") == 1,
             "machine verdict must be retained exactly once in Appendix B")
     main_body = manuscript.split("## 附录B", maxsplit=1)[0]

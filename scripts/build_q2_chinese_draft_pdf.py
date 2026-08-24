@@ -117,6 +117,14 @@ def plain_math(text: str) -> str:
     for raw, readable in EQUATION_REPLACEMENTS.items():
         text = text.replace(raw, readable)
     # Inline formula cleanup for the few non-display expressions in prose.
+    # Avoid combining mathematical glyphs here: the internal CJK review font
+    # does not provide reliable marks for every Latin/Greek combination.
+    text = text.replace("\\Pi_{\\mathcal Q}", "Pi_Q")
+    text = text.replace("\\bar J", "Jbar").replace("\\widehat J", "Jhat")
+    text = text.replace("\\tilde q", "q_tilde").replace("\\tilde d", "d_tilde")
+    text = text.replace("\\epsilon", "epsilon").replace("\\beta", "beta")
+    text = text.replace("\\kappa", "kappa").replace("\\eta", "eta")
+    text = text.replace("\\overline J", "Jbar")
     text = text.replace("\\(", "").replace("\\)", "")
     text = text.replace("\\Delta", "Δ").replace("\\times", "×")
     text = text.replace("\\mathrm{", "").replace("\\mathcal{", "")
@@ -166,6 +174,8 @@ def format_display_math(raw: str) -> str:
         return "去均值难度 d_tilde(k,u) = d(k,u) - 六个故障组难度的平均值。"
     if "q_{u+1}=\\Pi" in compact:
         return "更新权重 q(u+1)：将当前权重与候选权重平滑混合后投影回有界集合 Q。"
+    if "\\frac{\\overline J_{\\mathrm{nominal}}^{D}}" in compact:
+        return "正常工况总体保持：DRTP 的五种子总体平均任务得分 / UTR 的总体平均任务得分 ≥ 0.95，且五个配对差值的中位数 ≥ 0。"
     if "\\min\\{0.35" in compact and "\\lambda" in compact:
         return "有界单纯形投影：q_k = min{0.35, max{0.05, x_k − λ}}，且六个故障组权重之和为 1。"
     if compact.startswith("\\frac{J_{\\mathrm{pert,worst}}^{D}"):
