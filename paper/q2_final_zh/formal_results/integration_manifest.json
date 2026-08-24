@@ -1,0 +1,14 @@
+{
+  "verdict": "FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE",
+  "tape_hash": "84e31ed185ced0608a30c9cb9f9659c7423c952e4603aac53cf691c54fc64ac2",
+  "raw_rows": 12000,
+  "source_results_root": "D:\\Code\\Codex\\ri_gmappo_uav_s1r_exec\\results\\formal\\drtp_utr_q2_paired_5seed_cloud_10way",
+  "figures": [
+    "fig1_relay_failure_topology_reconfiguration.svg",
+    "fig2_utr_drtp_training_distribution.svg",
+    "fig3_formal_primary_performance.svg",
+    "fig4_ood_condition_decomposition.svg",
+    "fig5_seed_reliability_and_safety.svg",
+    "fig6_adaptive_weight_telemetry.svg"
+  ]
+}

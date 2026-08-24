@@ -23,4 +23,4 @@
 | 配对评估样本带 | common base episode-ID namespace reused across methods, seeds, and conditions | evaluation tape, tape | Use Chinese prose; retain numeric namespace and machine file names. |
 | 故障起始时刻存活风险集 | episodes alive immediately before scheduled failure onset | risk set, alive-at-onset set | Technical trigger validity denominator only. |
 | 灾难性种子 | training seed satisfying the frozen paired collapse rule | catastrophic seed, bad seed, outlier | Never exclude; report adjacent to central effects. |
-| `[正式结果待回填]` | 中文主稿的受保护正式结果占位符 | `[FORMAL RESULT PENDING]` | 中文稿唯一允许的结果占位符；不得从实时日志回填。 |
+| 正式结果占位符（历史） | 正式结果归档前用于保护主稿的临时标记 | formal-result placeholder (historical) | 已在正式归档 SHA256 核验和 fail-closed 整合后全部移除；不得从实时日志回填。 |

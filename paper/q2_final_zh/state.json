@@ -4,15 +4,19 @@
   "publication_language_route": "chinese_only",
   "parallel_english_full_manuscript": false,
   "english_metadata_only_if_required_by_chinese_journal": true,
-  "stage": "prospective_formal_confirmation_cloud_training_and_nonresult_manuscript_drafting_in_progress",
-  "scientific_training_authorized": true,
+  "stage": "formal_result_integrated_chinese_manuscript_finalization",
+  "scientific_training_authorized": false,
   "formal_confirmation_started": true,
+  "formal_confirmation_completed": true,
+  "formal_result_integration_completed": true,
+  "formal_verdict": "FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE",
+  "formal_archive_sha256": "cc3e2d29f382c332563c33957f5c109bbee4f42abb91b0d06b2b26cd3e618bdd",
   "formal_confirmation_contract": "DRTP-UTR-Q2-FORMAL-PAIRED-5SEED-V1",
   "evidence_freeze_commit": "1680b21",
   "foundation_files_complete": true,
   "evidence_chain_status": "PASS",
   "nonresult_manuscript_sections_drafted": true,
-  "formal_result_placeholders_frozen": true,
+  "formal_result_placeholders_frozen": false,
   "formal_result_integration_contract": "paper/q2_final_zh/08_formal_result_integration_contract.md",
   "chinese_submission_contract": "paper/q2_final_zh/10_chinese_submission_contract.md",
   "figure_table_plan": "paper/q2_final_zh/11_chinese_figure_table_plan.md",
@@ -28,9 +32,8 @@
   "technical_debts": [
     "target journal and article format not selected",
     "nine core references verified; PPO/CTDE, node-failure, adaptive-sampling, and target-journal literature still pending",
-    "final figures not yet rendered",
     "author and availability metadata not supplied",
     "wall-clock and peak-memory comparison unavailable under common hardware"
   ],
-  "next_stage": "complete the frozen paired UTR/DRTP 10M confirmation, validate the full archive, then integrate results through the fail-closed contract"
+  "next_stage": "complete Chinese manuscript provenance, literature, author metadata, and target-journal formatting without changing the frozen formal result"
 }

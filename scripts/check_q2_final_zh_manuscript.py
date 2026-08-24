@@ -1,7 +1,7 @@
 """Fail-closed checks for the Q2 Chinese manuscript workspace.
 
-This checker validates writing-state integrity only. It does not run experiments,
-evaluate checkpoints, or authorize result integration.
+This checker validates the completed Chinese-manuscript evidence package. It does
+not run experiments, evaluate checkpoints, or authorize new training.
 """
 
 from __future__ import annotations
@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +32,20 @@ REQUIRED_FILES = [
     "12_author_input_checklist.md",
     "references_core.enw",
     "13_chinese_manuscript_readiness_audit.md",
+    "14_formal_result_integration_audit.md",
+    "15_formal_statistics_and_figure_legend_contract.md",
+    "formal_results/integration_manifest.json",
+    "formal_results/formal_result_tables.md",
+    "formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json",
+    "formal_results/source_data/evaluation_manifest.json",
+    "formal_results/source_data/formal_tape_manifest.json",
+    "formal_results/source_data/paired_seed_results.csv",
+    "formal_results/source_data/per_seed_condition_summary.csv",
+    "formal_results/source_data/sampler_telemetry_summary.json",
+    "formal_results/figures/fig3_formal_primary_performance.svg",
+    "formal_results/figures/fig4_ood_condition_decomposition.svg",
+    "formal_results/figures/fig5_seed_reliability_and_safety.svg",
+    "formal_results/figures/fig6_adaptive_weight_telemetry.svg",
     "main_zh.md",
     "state.json",
 ]
@@ -63,7 +79,8 @@ def main() -> None:
         require(heading in manuscript, f"missing required heading: {heading}")
 
     placeholder_count = manuscript.count("[正式结果待回填")
-    require(placeholder_count >= 7, "formal-result placeholders are incomplete")
+    require(placeholder_count == 0, "formal-result placeholders remain in the manuscript")
+    require("[PENDING]" not in manuscript, "unresolved PENDING marker remains in the manuscript")
     require(FORMAL_SEEDS.issubset(set(re.findall(r"\b23\d{2}\b", manuscript))),
             "formal seed table does not contain every frozen seed")
     require("490000–490099" in manuscript, "formal evaluation tape is not stated")
@@ -73,8 +90,12 @@ def main() -> None:
     state = json.loads((PAPER / "state.json").read_text(encoding="utf-8"))
     require(state.get("nonresult_manuscript_sections_drafted") is True,
             "writing state does not record the completed non-result draft")
-    require(state.get("formal_result_placeholders_frozen") is True,
-            "writing state does not freeze formal-result placeholders")
+    require(state.get("formal_confirmation_completed") is True,
+            "writing state does not record completed formal confirmation")
+    require(state.get("formal_result_integration_completed") is True,
+            "writing state does not record formal-result integration")
+    require(state.get("formal_verdict") == "FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE",
+            "formal manuscript verdict mismatch")
     require(state.get("formal_confirmation_contract") ==
             "DRTP-UTR-Q2-FORMAL-PAIRED-5SEED-V1",
             "formal confirmation contract mismatch")
@@ -114,9 +135,38 @@ def main() -> None:
     require("英文题名、英文摘要和英文关键词" in chinese_contract,
             "Chinese-journal English metadata boundary is missing")
 
+    decision = json.loads((PAPER / "formal_results" / "source_data" /
+                           "DRTP_UTR_Q2_FORMAL_DECISION.json").read_text(encoding="utf-8"))
+    require(decision.get("verdict") == "FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE",
+            "paper-facing formal decision differs from frozen verdict")
+    require(decision.get("catastrophic_seed_count") == 0,
+            "paper-facing decision reports unexpected catastrophic seeds")
+    require(all(decision.get("gates", {}).values()),
+            "paper-facing decision has a failed frozen gate")
+
+    figures = PAPER / "formal_results" / "figures"
+    figure_stems = (
+        "fig1_relay_failure_topology_reconfiguration",
+        "fig2_utr_drtp_training_distribution",
+        "fig3_formal_primary_performance",
+        "fig4_ood_condition_decomposition",
+        "fig5_seed_reliability_and_safety",
+        "fig6_adaptive_weight_telemetry",
+    )
+    for stem in figure_stems:
+        for extension in (".svg", ".pdf", ".png", ".tiff"):
+            require((figures / f"{stem}{extension}").is_file(),
+                    f"missing figure artifact: {stem}{extension}")
+        with Image.open(figures / f"{stem}.tiff") as image:
+            dpi = image.info.get("dpi", (0, 0))
+            require(min(dpi) >= 599, f"{stem} TIFF DPI below 600: {dpi}")
+            require(min(image.size) >= 1400,
+                    f"{stem} TIFF raster dimensions unexpectedly small: {image.size}")
+
     print(
-        "PASS: Q2 Chinese manuscript workspace is complete, formal-result "
-        f"placeholders are frozen ({placeholder_count}), and integration is fail-closed."
+        "PASS: Chinese manuscript evidence package is integrated; no formal-result "
+        "placeholders remain, all six figures pass artifact checks, and the paper-facing "
+        "frozen decision is PASS_SEED_SENSITIVE."
     )
 
 

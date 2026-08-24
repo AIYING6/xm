@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="505.232065pt" height="172.62pt" viewBox="0 0 505.232065 172.62" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-08-24T17:36:22.690696</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.7.5, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 172.62
+L 505.232065 172.62
+L 505.232065 0
+L 0 0
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 26.935742 93.952013
+L 99.464258 93.952013
+Q 101.948111 93.952013 101.948111 91.115981
+L 101.948111 74.099794
+Q 101.948111 71.263762 99.464258 71.263762
+L 26.935742 71.263762
+Q 24.451889 71.263762 24.451889 74.099794
+L 24.451889 91.115981
+Q 24.451889 93.952013 26.935742 93.952013
+z
+" clip-path="url(#p35f69a14f3)" style="fill: #eff6ff; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 26.935742 122.312325
+L 99.464258 122.312325
+Q 101.948111 122.312325 101.948111 119.476294
+L 101.948111 102.460106
+Q 101.948111 99.624075 99.464258 99.624075
+L 26.935742 99.624075
+Q 24.451889 99.624075 24.451889 102.460106
+L 24.451889 119.476294
+Q 24.451889 122.312325 26.935742 122.312325
+z
+" clip-path="url(#p35f69a14f3)" style="fill: #ecfdf5; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 26.935742 150.672638
+L 99.464258 150.672638
+Q 101.948111 150.672638 101.948111 147.836606
+L 101.948111 130.820419
+Q 101.948111 127.984388 99.464258 127.984388
+L 26.935742 127.984388
+Q 24.451889 127.984388 24.451889 130.820419
+L 24.451889 147.836606
+Q 24.451889 150.672638 26.935742 150.672638
+z
+" clip-path="url(#p35f69a14f3)" style="fill: #fff7ed; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_1">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(8.95 80.997341)">同一单图 SG actor + CTDE critic</text>
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(24.7 88.730153)">116,728 参数；同一 PPO</text>
+   </g>
+   <g id="text_2">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="63.2" y="113.292419" transform="rotate(-0 63.2 113.292419)">50% 正常工况锚点 N</text>
+   </g>
+   <g id="text_3">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="63.2" y="141.693747" transform="rotate(-0 63.2 141.693747)">50% 故障：F0、TE、TL、DS、DL、CP</text>
+   </g>
+   <g id="text_4">
+    <text style="font: 700 8px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="63.2" y="45.97875" transform="rotate(-0 63.2 45.97875)">(a) 共同策略与训练组</text>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_5">
+    <path d="M 157.307825 89.414363
+L 225.862175 89.414363
+Q 228.346028 89.414363 228.346028 86.578331
+L 228.346028 70.696556
+Q 228.346028 67.860525 225.862175 67.860525
+L 157.307825 67.860525
+Q 154.823972 67.860525 154.823972 70.696556
+L 154.823972 86.578331
+Q 154.823972 89.414363 157.307825 89.414363
+z
+" clip-path="url(#pcce61710c0)" style="fill: #ecfdf5; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 157.307825 116.640263
+L 225.862175 116.640263
+Q 228.346028 116.640263 228.346028 113.804231
+L 228.346028 97.922456
+Q 228.346028 95.086425 225.862175 95.086425
+L 157.307825 95.086425
+Q 154.823972 95.086425 154.823972 97.922456
+L 154.823972 113.804231
+Q 154.823972 116.640263 157.307825 116.640263
+z
+" clip-path="url(#pcce61710c0)" style="fill: #fff7ed; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 157.307825 147.2694
+L 225.862175 147.2694
+Q 228.346028 147.2694 228.346028 144.433369
+L 228.346028 126.282769
+Q 228.346028 123.446738 225.862175 123.446738
+L 157.307825 123.446738
+Q 154.823972 123.446738 154.823972 126.282769
+L 154.823972 144.433369
+Q 154.823972 147.2694 157.307825 147.2694
+z
+" clip-path="url(#pcce61710c0)" style="fill: #eff6ff; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_5">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="191.585" y="81.002678" transform="rotate(-0 191.585 81.002678)">N：固定 0.50</text>
+   </g>
+   <g id="text_6">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="191.585" y="108.24225" transform="rotate(-0 191.585 108.24225)">故障质量：0.50</text>
+   </g>
+   <g id="text_7">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(165.335 133.947131)">六组均匀：q=1/6</text>
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(165.335 141.581506)">每组总概率=1/12</text>
+   </g>
+   <g id="text_8">
+    <text style="font: 700 8px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="191.585" y="45.97875" transform="rotate(-0 191.585 45.97875)">(b) UTR：均匀故障暴露</text>
+   </g>
+  </g>
+  <g id="axes_3">
+   <g id="patch_8">
+    <path d="M 282.712201 83.7423
+L 357.227799 83.7423
+Q 359.711652 83.7423 359.711652 80.906269
+L 359.711652 67.293319
+Q 359.711652 64.457288 357.227799 64.457288
+L 282.712201 64.457288
+Q 280.228348 64.457288 280.228348 67.293319
+L 280.228348 80.906269
+Q 280.228348 83.7423 282.712201 83.7423
+z
+" clip-path="url(#p68c6c90c01)" style="fill: #ecfdf5; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 282.712201 107.564963
+L 357.227799 107.564963
+Q 359.711652 107.564963 359.711652 104.728931
+L 359.711652 91.115981
+Q 359.711652 88.27995 357.227799 88.27995
+L 282.712201 88.27995
+Q 280.228348 88.27995 280.228348 91.115981
+L 280.228348 104.728931
+Q 280.228348 107.564963 282.712201 107.564963
+z
+" clip-path="url(#p68c6c90c01)" style="fill: #f5f3ff; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 282.712201 132.522038
+L 357.227799 132.522038
+Q 359.711652 132.522038 359.711652 129.686006
+L 359.711652 116.073056
+Q 359.711652 113.237025 357.227799 113.237025
+L 282.712201 113.237025
+Q 280.228348 113.237025 280.228348 116.073056
+L 280.228348 129.686006
+Q 280.228348 132.522038 282.712201 132.522038
+z
+" clip-path="url(#p68c6c90c01)" style="fill: #f5f3ff; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 282.712201 157.479113
+L 357.227799 157.479113
+Q 359.711652 157.479113 359.711652 154.643081
+L 359.711652 141.030131
+Q 359.711652 138.1941 357.227799 138.1941
+L 282.712201 138.1941
+Q 280.228348 138.1941 280.228348 141.030131
+L 280.228348 154.643081
+Q 280.228348 157.479113 282.712201 157.479113
+z
+" clip-path="url(#p68c6c90c01)" style="fill: #fff7ed; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 319.97 108.427404
+Q 319.97 110.399558 319.97 110.582857
+" clip-path="url(#p68c6c90c01)" style="fill: none; stroke: #7c3aed; stroke-width: 1.6; stroke-linecap: round"/>
+    <path d="M 322.37 105.782857
+L 319.97 110.582857
+L 317.57 105.782857
+z
+" clip-path="url(#p68c6c90c01)" style="fill: #7c3aed; stroke: #7c3aed; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 319.97 133.384479
+Q 319.97 135.356633 319.97 135.539932
+" clip-path="url(#p68c6c90c01)" style="fill: none; stroke: #7c3aed; stroke-width: 1.6; stroke-linecap: round"/>
+    <path d="M 322.37 130.739932
+L 319.97 135.539932
+L 317.57 130.739932
+z
+" clip-path="url(#p68c6c90c01)" style="fill: #7c3aed; stroke: #7c3aed; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="text_9">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="319.97" y="76.465028" transform="rotate(-0 319.97 76.465028)">N：固定 0.50</text>
+   </g>
+   <g id="text_10">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="319.97" y="100.287691" transform="rotate(-0 319.97 100.287691)">组回报 → EMA → 相对难度</text>
+   </g>
+   <g id="text_11">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="319.97" y="125.272109" transform="rotate(-0 319.97 125.272109)">指数更新 + 平滑 + 有界单纯形投影</text>
+   </g>
+   <g id="text_12">
+    <text style="font: 7px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="319.97" y="150.174497" transform="rotate(-0 319.97 150.174497)">q(k) ∈ [0.05, 0.35]；仅训练期使用</text>
+   </g>
+   <g id="text_13">
+    <text style="font: 700 8px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="319.97" y="45.97875" transform="rotate(-0 319.97 45.97875)">(c) DRTP：有界自适应加权</text>
+   </g>
+  </g>
+  <g id="axes_4">
+   <g id="patch_14">
+    <path d="M 409.110118 89.414363
+L 487.599882 89.414363
+Q 490.083735 89.414363 490.083735 86.578331
+L 490.083735 70.696556
+Q 490.083735 67.860525 487.599882 67.860525
+L 409.110118 67.860525
+Q 406.626265 67.860525 406.626265 70.696556
+L 406.626265 86.578331
+Q 406.626265 89.414363 409.110118 89.414363
+z
+" clip-path="url(#p2ba70acfbe)" style="fill: #f3f4f6; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_15">
+    <path d="M 409.110118 118.909088
+L 487.599882 118.909088
+Q 490.083735 118.909088 490.083735 116.073056
+L 490.083735 100.191281
+Q 490.083735 97.35525 487.599882 97.35525
+L 409.110118 97.35525
+Q 406.626265 97.35525 406.626265 100.191281
+L 406.626265 116.073056
+Q 406.626265 118.909088 409.110118 118.909088
+z
+" clip-path="url(#p2ba70acfbe)" style="fill: #dbeafe; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 409.110118 148.403813
+L 487.599882 148.403813
+Q 490.083735 148.403813 490.083735 145.567781
+L 490.083735 129.686006
+Q 490.083735 126.849975 487.599882 126.849975
+L 409.110118 126.849975
+Q 406.626265 126.849975 406.626265 129.686006
+L 406.626265 145.567781
+Q 406.626265 148.403813 409.110118 148.403813
+z
+" clip-path="url(#p2ba70acfbe)" style="fill: #fefce8; stroke: #9ca3af; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_14">
+    <text style="font: 6.4px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(405.155 77.332444)">相同：网络、PPO、奖励、环境</text>
+    <text style="font: 6.4px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(400.355 84.342444)">训练组、正常锚点、预算、样本带</text>
+   </g>
+   <g id="text_15">
+    <text style="font: 6.8px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(407.555 106.734981)">唯一差异：UTR 固定均匀 q</text>
+    <text style="font: 6.8px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(422.855 114.310606)">DRTP 更新有界 q</text>
+   </g>
+   <g id="text_16">
+    <text style="font: 6.5px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(402.855 136.372597)">执行期相同：无新增参数、输入</text>
+    <text style="font: 6.5px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif" transform="translate(425.605 143.400722)">和自适应采样器</text>
+   </g>
+   <g id="text_17">
+    <text style="font: 700 8px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="448.355" y="45.97875" transform="rotate(-0 448.355 45.97875)">(d) 公平比较的隔离变量</text>
+   </g>
+  </g>
+  <g id="text_18">
+   <text style="font: 700 10px 'Noto Sans CJK SC', 'SimHei', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="251.7275" y="15.246875" transform="rotate(-0 251.7275 15.246875)">UTR 与 DRTP 的训练分布差异及公平比较合同</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p35f69a14f3">
+   <rect x="13.522935" y="51.97875" width="99.35413" height="113.44125"/>
+  </clipPath>
+  <clipPath id="pcce61710c0">
+   <rect x="141.907935" y="51.97875" width="99.35413" height="113.44125"/>
+  </clipPath>
+  <clipPath id="p68c6c90c01">
+   <rect x="270.292935" y="51.97875" width="99.35413" height="113.44125"/>
+  </clipPath>
+  <clipPath id="p2ba70acfbe">
+   <rect x="398.677935" y="51.97875" width="99.35413" height="113.44125"/>
+  </clipPath>
+ </defs>
+</svg>
