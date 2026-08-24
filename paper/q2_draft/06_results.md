@@ -4,6 +4,8 @@
 
 The S1/S2 audits show that Relay failure changes legal path composition and task-support structure while legal direct alternatives can remain. The resulting mission degradation is therefore interpreted as a coordination/topology effect, not as evidence of complete information loss.
 
+The results are presented in the following order: first the topology/path event and evaluator validity, then absolute mission performance, then paired seed effects, OOD decomposition, and safety. This ordering prevents a favorable pooled mean from obscuring a condition-level or seed-level failure.
+
 ## 6.2 Main robustness performance
 
 At the 3M development endpoint, pooled UTR versus DRTP values are respectively `147.157` versus `171.007` for nominal score, `127.929` versus `183.880` for F0, `120.607` versus `183.464` for OOD mean, and `103.149` versus `172.241` for OOD worst. Failure collision is `0.0136` versus `0.0014`, timeout is `0.8086` versus `0.5600`, and both constraint rates are zero. These pooled values are positive descriptive evidence, but the development contract remains NO-GO because seed/condition retention rules failed.
@@ -30,6 +32,10 @@ The main-paper ablation is the matched comparison below. Because architecture, c
 
 The table is descriptive evidence for the adaptive-weighting ablation, not a claim of universal benefit. The full five-seed paired record remains part of the main-paper evidence: seed1902 is negative for F0 and OOD mean, and held-out seed2002 is a severe reversal. Accordingly, the manuscript reports mean, median, win count, worst degradation, and seed dispersion, and explicitly avoids “consistently outperforms” or “seed-stable” language.
 
+The table should be read metric by metric. DRTP's strongest evidence is its average perturbation performance and reduced development timeout; its weakest evidence is initialization reliability and held-out safety. The manuscript therefore does not compress these dimensions into one composite score, and it does not treat the higher pooled nominal score as proof that nominal competence is preserved for every seed.
+
 ## 6.6 OOD and mechanism presentation
 
 The final figures should separate early/late timing, short/long duration, and compound conditions, then identify the worst condition per seed. Mechanism panels should show path switching, task-support source, and mission-score change rather than imply information restoration.
+
+The main-paper result set should contain one compact contract table, one full paired seed table, one seed-level effect plot, and one OOD/safety decomposition figure. Raw per-condition rows, tape hashes, evaluator audits, and negative-method evidence belong in supplementary material or the reproducibility archive.

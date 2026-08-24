@@ -11,3 +11,16 @@ followed by a change in path composition, support-source availability, and coord
 The primary paired endpoint is the nominal–failure degradation `Delta_J = J_nominal - J_failure`, accompanied by absolute `J_nominal`, `J_F0`, `J_OOD_mean`, `J_OOD_worst`, timeout, collision, constraint violation, exposure, and topology/path telemetry. OOD conditions vary failure timing, duration, and their compound combinations. Overall performance retains every scheduled episode, including episodes that terminate before failure onset. Trigger validity is assessed separately among episodes alive immediately before scheduled onset.
 
 The policy is decentralized at execution. Actors receive only the frozen legal local observation, node/edge features, roles, and adjacency. Training-sampler labels, failure labels, global routes, future links, and hidden simulator truth are not actor inputs.
+
+## 3.1 Scope and terminology boundary
+
+| Item | Frozen definition in this study | Not claimed |
+|---|---|---|
+| Mission level | Three-UAV heterogeneous cooperative interception with Scout, Relay, and Attacker roles | General multi-UAV scalability or real-flight validity |
+| Perturbation | Relay-node unavailability that changes legal communication/path composition | Complete information blackout or mandatory information loss |
+| Policy output | Decentralized control action produced from legal local observations and graph features | Ground-truth route, future link, centralized execution |
+| Robustness endpoint | Absolute `J_F0`, `J_OOD_mean`, `J_OOD_worst`, nominal retention, and safety | A universal worst-case or distributional guarantee |
+| Exposure validity | Failure-trigger success among episodes alive immediately before scheduled onset | Exposed/all scheduled episodes as a standalone policy-quality metric |
+| Statistical unit | Training seed; paired UTR/DRTP differences when contracts match | Treating pooled episodes as independent training replicates |
+
+This table is a scope contract, not an additional experiment. It is included to prevent a topology/path robustness result from being read as an information-recovery, scalability, or deployment claim.
