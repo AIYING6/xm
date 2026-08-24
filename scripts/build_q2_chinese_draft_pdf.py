@@ -92,7 +92,7 @@ EQUATION_REPLACEMENTS = {
     "t_f=44,\\qquad d_f=80.": "t_f = 44；d_f = 80。",
     "0\\rightarrow1\\rightarrow2\n\\quad\\longrightarrow\\quad\n0\\rightarrow2,": "0 → 1 → 2  重构为  0 → 2",
     "J_{\\mathrm{nominal}},\\qquad J_{F0},": "J_nominal，J_F0",
-    "J_{\\mathrm{OOD,mean}}=\\frac{1}{10}\\sum_{c\\in\\mathcal C_{\\mathrm{OOD}}}J_c,\n\\qquad\nJ_{\\mathrm{OOD,worst}}=\\min_{c\\in\\mathcal C_{\\mathrm{OOD}}}J_c.": "J_OOD,mean = 十个 OOD 条件任务得分的平均值；J_OOD,worst = 十个 OOD 条件中的最小任务得分。",
+    "J_{\\mathrm{pert,mean}}=\\frac{1}{10}\\sum_{c\\in\\mathcal C_{\\mathrm{pert}}}J_c,\n\\qquad\nJ_{\\mathrm{pert,worst}}=\\min_{c\\in\\mathcal C_{\\mathrm{pert}}}J_c.": "J_pert,mean = 十个冻结跨扰动条件任务得分的平均值；J_pert,worst = 十个条件中的最小任务得分。",
     "\\Delta J_c=J_{\\mathrm{nominal}}-J_c.": "ΔJ_c = J_nominal − J_c",
     "V_{\\mathrm{trigger},c}=\n\\frac{\\#\\{\\text{在 }R_c\\text{ 中正确触发故障的 episodes}\\}}\n{|R_c|}.": "V_trigger,c = 风险集 R_c 内正确触发故障的 episode 数 / |R_c|",
     "a_{i,t}\\sim\\pi_\\theta(a_{i,t}\\mid o_{i,t},G_{i,t}).": "a_i,t ∼ π_θ(a_i,t | o_i,t, G_i,t)",
@@ -106,8 +106,8 @@ EQUATION_REPLACEMENTS = {
     "\\tilde d_{k,u}=d_{k,u}-\\frac{1}{6}\\sum_{j\\in\\mathcal F}d_{j,u}.": "d̃_k,u = d_k,u − (1/6)Σ_{j∈F} d_j,u",
     "\\tilde q_{k,u+1}=\n\\frac{q_{k,u}\\exp(\\eta\\tilde d_{k,u})}\n{\\sum_{j\\in\\mathcal F}q_{j,u}\\exp(\\eta\\tilde d_{j,u})},": "q̃_k,u+1 = q_k,u·exp(ηd̃_k,u) / Σ_{j∈F}[q_j,u·exp(ηd̃_j,u)]",
     "q_{u+1}=\\Pi_{\\mathcal Q}\\left[(1-\\beta)q_u+\\beta\\tilde q_{u+1}\\right].": "q_u+1 = Π_Q[(1 − β)q_u + βq̃_u+1]",
-    "\\frac{J_{F0}^{D}}{J_{F0}^{U}}<0.70\n\\quad\\text{且}\\quad\n\\frac{J_{\\mathrm{OOD,worst}}^{D}}{J_{\\mathrm{OOD,worst}}^{U}}<0.85,": "J_F0(D)/J_F0(U) < 0.70，且 J_OOD,worst(D)/J_OOD,worst(U) < 0.85",
-    "\\frac{J_{\\mathrm{OOD,worst}}^{D}}{J_{\\mathrm{OOD,worst}}^{U}}<0.70\n\\quad\\text{且}\\quad\n\\frac{J_{F0}^{D}}{J_{F0}^{U}}<0.85.": "J_OOD,worst(D)/J_OOD,worst(U) < 0.70，且 J_F0(D)/J_F0(U) < 0.85",
+    "\\frac{J_{F0}^{D}}{J_{F0}^{U}}<0.70\n\\quad\\text{且}\\quad\n\\frac{J_{\\mathrm{pert,worst}}^{D}}{J_{\\mathrm{pert,worst}}^{U}}<0.85,": "J_F0(D)/J_F0(U) < 0.70，且 J_pert,worst(D)/J_pert,worst(U) < 0.85",
+    "\\frac{J_{\\mathrm{pert,worst}}^{D}}{J_{\\mathrm{pert,worst}}^{U}}<0.70\n\\quad\\text{且}\\quad\n\\frac{J_{F0}^{D}}{J_{F0}^{U}}<0.85.": "J_pert,worst(D)/J_pert,worst(U) < 0.70，且 J_F0(D)/J_F0(U) < 0.85",
     "\\text{中继节点故障}\n\\rightarrow\n\\text{topology/path reconfiguration}\n\\rightarrow\n\\text{mission degradation},": "中继节点故障 → topology/path reconfiguration → mission degradation",
 }
 
@@ -136,10 +136,10 @@ def format_display_math(raw: str) -> str:
         return "t_f = 44，d_f = 80"
     if "0\\rightarrow1\\rightarrow2" in compact:
         return "0 -> 1 -> 2  重构为  0 -> 2"
-    if "J_{\\mathrm{nominal}}" in compact and "J_{F0}" in compact and "OOD" not in compact:
+    if "J_{\\mathrm{nominal}}" in compact and "J_{F0}" in compact and "pert" not in compact:
         return "J_nominal，J_F0"
-    if "J_{\\mathrm{OOD,mean}}" in compact:
-        return "J_OOD,mean = 十个 OOD 条件任务得分的平均值；J_OOD,worst = 十个 OOD 条件中的最小任务得分"
+    if "J_{\\mathrm{pert,mean}}" in compact:
+        return "J_pert,mean = 十个冻结跨扰动条件任务得分的平均值；J_pert,worst = 十个条件中的最小任务得分"
     if "\\Delta J_c" in compact:
         return "Delta J_c = J_nominal - J_c"
     if "V_{\\mathrm{trigger},c}" in compact:
@@ -166,10 +166,10 @@ def format_display_math(raw: str) -> str:
         return "去均值难度 d_tilde(k,u) = d(k,u) - 六个故障组难度的平均值。"
     if "q_{u+1}=\\Pi" in compact:
         return "更新权重 q(u+1)：将当前权重与候选权重平滑混合后投影回有界集合 Q。"
-    if compact.startswith("\\frac{J_{\\mathrm{OOD,worst}}^{D}"):
-        return "灾难性条件 B：J_OOD,worst(D) / J_OOD,worst(U) < 0.70，且 J_F0(D) / J_F0(U) < 0.85。"
+    if compact.startswith("\\frac{J_{\\mathrm{pert,worst}}^{D}"):
+        return "灾难性条件 B：J_pert,worst(D) / J_pert,worst(U) < 0.70，且 J_F0(D) / J_F0(U) < 0.85。"
     if compact.startswith("\\frac{J_{F0}^{D}"):
-        return "灾难性条件 A：J_F0(D) / J_F0(U) < 0.70，且 J_OOD,worst(D) / J_OOD,worst(U) < 0.85。"
+        return "灾难性条件 A：J_F0(D) / J_F0(U) < 0.70，且 J_pert,worst(D) / J_pert,worst(U) < 0.85。"
     if "topology/path reconfiguration" in compact:
         return "中继节点故障 -> topology/path reconfiguration -> mission degradation"
     return plain_math(raw)

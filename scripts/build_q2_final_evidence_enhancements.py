@@ -33,9 +33,11 @@ DISPLAY = {"utr_sg": "UTR-SG-MAPPO", "drtp_sg": "DRTP-SG-MAPPO"}
 FAMILIES = {
     "正常工况": ("nominal",),
     "F0": ("f0_seen_44_80",),
-    "时机 OOD": ("timing_28_80", "timing_36_80", "timing_52_80", "timing_60_80"),
-    "持续时间 OOD": ("duration_44_40", "duration_44_60", "duration_44_100", "duration_44_120"),
-    "复合 OOD": ("compound_28_120", "compound_60_120"),
+    # These members were in the frozen training sampler support.  They are
+    # cross-perturbation conditions, not strict unseen/OOD conditions.
+    "时机扰动": ("timing_28_80", "timing_36_80", "timing_52_80", "timing_60_80"),
+    "持续时间扰动": ("duration_44_40", "duration_44_60", "duration_44_100", "duration_44_120"),
+    "复合扰动": ("compound_28_120", "compound_60_120"),
 }
 METRICS = (
     ("success_at_horizon", "任务完成率", (0.0, 0.4)),
@@ -120,6 +122,62 @@ def write_terminal_source(rows: list[dict[str, object]]) -> None:
     SOURCE_DATA.mkdir(parents=True, exist_ok=True)
     path = SOURCE_DATA / "formal_terminal_outcomes_by_seed_family.csv"
     fields = ["method", "train_seed", "family", "episodes", "success_at_horizon", "timeout", "collision", "constraint_violation", "terminal_step"]
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def formal_failure_safety() -> list[dict[str, object]]:
+    """Summarize all planned-failure records without censoring pre-trigger exits.
+
+    ``failure_exposed`` is the evaluator's recorded trigger outcome.  An
+    episode is in the trigger risk set when it survives to its scheduled onset;
+    records terminating earlier remain in the unconditional safety denominator.
+    """
+    path = RESULTS / "evaluations" / "final_10m" / "raw_episode_metrics.csv"
+    rows = read_csv(path)
+    by_cell: dict[tuple[str, int], list[dict[str, str]]] = defaultdict(list)
+    for row in rows:
+        if row["topology_condition"] != "nominal":
+            by_cell[(row["method"], int(row["train_seed"]))].append(row)
+    output: list[dict[str, object]] = []
+    for arm in ARMS:
+        for seed in SEEDS:
+            cell_rows = by_cell[(arm, seed)]
+            require(len(cell_rows) == 1100, f"unexpected failure record count: {arm}/{seed}")
+            risk_set = [row for row in cell_rows if int(float(row["terminal_step"])) >= int(row["onset"])]
+            pretrigger_collision = [row for row in cell_rows
+                                    if int(float(row["terminal_step"])) < int(row["onset"])
+                                    and float(row["collision"]) == 1.0]
+            require(len(pretrigger_collision) == len(cell_rows) - len(risk_set),
+                    f"non-collision pre-trigger termination: {arm}/{seed}")
+            triggered = [row for row in risk_set if float(row["failure_exposed"]) == 1.0]
+            output.append({
+                "method": arm,
+                "train_seed": seed,
+                "planned_failure_episodes": len(cell_rows),
+                "collision_rate": sum(float(row["collision"]) for row in cell_rows) / len(cell_rows),
+                "timeout_rate": sum(float(row["timeout"]) for row in cell_rows) / len(cell_rows),
+                "constraint_violation_rate": sum(float(row["constraint_violation"]) for row in cell_rows) / len(cell_rows),
+                "pretrigger_collision_count": len(pretrigger_collision),
+                "pretrigger_collision_rate": len(pretrigger_collision) / len(cell_rows),
+                "survival_to_onset_fraction": len(risk_set) / len(cell_rows),
+                "risk_set_size": len(risk_set),
+                "triggered_in_risk_set": len(triggered),
+                "failure_trigger_success_rate": len(triggered) / len(risk_set) if risk_set else float("nan"),
+            })
+    return output
+
+
+def write_failure_safety_source(rows: list[dict[str, object]]) -> None:
+    path = SOURCE_DATA / "formal_failure_safety_by_seed.csv"
+    fields = [
+        "method", "train_seed", "planned_failure_episodes", "collision_rate", "timeout_rate",
+        "constraint_violation_rate", "pretrigger_collision_count", "pretrigger_collision_rate",
+        "survival_to_onset_fraction", "risk_set_size", "triggered_in_risk_set",
+        "failure_trigger_success_rate",
+    ]
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
@@ -227,7 +285,8 @@ def plot_training_monitor(rows: list[dict[str, object]]) -> None:
     save_figure(fig, "figS1_training_diagnostics")
 
 
-def write_report(terminal_rows: list[dict[str, object]], monitor_rows: list[dict[str, object]]) -> None:
+def write_report(terminal_rows: list[dict[str, object]], monitor_rows: list[dict[str, object]],
+                 safety_rows: list[dict[str, object]]) -> None:
     by = {(row["method"], row["family"]): [] for row in terminal_rows}
     for row in terminal_rows:
         by[(row["method"], row["family"])].append(row)
@@ -236,7 +295,7 @@ def write_report(terminal_rows: list[dict[str, object]], monitor_rows: list[dict
         "## 执行边界", "",
         "本审计只读取正式五种子共同 10M 最终检查点的既有日志和 12,000 条原始评估记录；未启动训练、未重新运行评估、未选择中间 checkpoint，也未修改历史裁决。", "",
         "## 图表合同", "",
-        "- 图7核心结论：DRTP 的任务得分改善能对应到更高的任务完成率和更低的超时率；碰撞率的小幅升高必须同步展示。",
+        "- 图7核心结论：DRTP 的任务得分改善伴随更高的任务完成率和更低的超时率；碰撞率的小幅升高必须同步展示。",
         "- 图S1核心结论：十条轨迹完整训练至相同 10M 终点，训练期监控数据可用于透明展示优化过程；其回报因两方法采样分布不同，不作为最终方法优劣证据。",
         "- 统计单位：训练种子（n=5）；每个菱形是五个种子均值，细线连接同一配对种子。",
         "- 终止记录：所有 episode 均保留；没有删除故障前碰撞或提前终止记录。", "",
@@ -248,8 +307,20 @@ def write_report(terminal_rows: list[dict[str, object]], monitor_rows: list[dict
             left = np.mean([float(row[metric]) for row in by[("utr_sg", family)]])
             right = np.mean([float(row[metric]) for row in by[("drtp_sg", family)]])
             lines.append(f"| {family} | {label} | {left:.3f} | {right:.3f} | {right-left:+.3f} |")
+    lines += ["", "## 故障条件逐种子安全性与风险集触发审计", "",
+              "所有 11 个计划故障条件和所有 episode 均保留在安全分母中。风险集只用于检查存活至计划起始时刻后，故障是否正确触发。", "",
+              "| 种子 | 方法 | 碰撞率 | 超时率 | 约束违规率 | 触发前碰撞率 | 存活至起始时刻 | 风险集大小 | 触发有效性 |",
+              "|---:|---|---:|---:|---:|---:|---:|---:|---:|"]
+    for row in safety_rows:
+        lines.append(
+            f"| {row['train_seed']} | {DISPLAY[str(row['method'])]} | {float(row['collision_rate']):.3f} | "
+            f"{float(row['timeout_rate']):.3f} | {float(row['constraint_violation_rate']):.3f} | "
+            f"{float(row['pretrigger_collision_rate']):.3f} | {float(row['survival_to_onset_fraction']):.3f} | "
+            f"{int(row['risk_set_size'])} | {float(row['failure_trigger_success_rate']):.3f} |"
+        )
     lines += ["", "## 数据与产物", "",
               "- `formal_results/source_data/formal_terminal_outcomes_by_seed_family.csv`：图7的逐种子、逐条件族源数据；",
+              "- `formal_results/source_data/formal_failure_safety_by_seed.csv`：表5a和风险集触发审计的逐种子源数据；",
               "- `formal_results/source_data/formal_training_monitor_binned.csv`：图S1的 500-update 分箱源数据；",
               "- `formal_results/figures/fig7_formal_terminal_outcomes.*`：主文图；",
               "- `formal_results/figures/figS1_training_diagnostics.*`：补充性训练诊断图。", "",
@@ -262,11 +333,13 @@ def main() -> None:
     configure_style()
     terminal_rows = formal_terminal_outcomes()
     write_terminal_source(terminal_rows)
+    safety_rows = formal_failure_safety()
+    write_failure_safety_source(safety_rows)
     plot_terminal_outcomes(terminal_rows)
     monitor_rows = binned_training_monitor()
     write_monitor_source(monitor_rows)
     plot_training_monitor(monitor_rows)
-    write_report(terminal_rows, monitor_rows)
+    write_report(terminal_rows, monitor_rows, safety_rows)
     print("PASS: generated terminal-outcome and training-diagnostic evidence without training or re-evaluation")
 
 

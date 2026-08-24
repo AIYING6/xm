@@ -17,15 +17,15 @@
 
 - machine verdict: `FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE`；
 - catastrophic seeds: 0/5；
-- 所有预注册 gate: PASS。
+- 所有训练前冻结 gate: PASS。
 
 ## 论文写作边界
 
-- 可写：在冻结三无人机中继故障任务、共同 10M 预算和预注册五 seed 合同下，DRTP 的 F0、OOD mean 和 OOD worst 的配对均值与中位数为正；
+- 可写：在冻结三无人机中继故障任务、共同 10M 预算和训练前冻结五 seed 合同下，DRTP 的 F0、跨扰动均值和跨扰动最差的配对均值与中位数为正；
 - 不可写：DRTP 对所有随机初始化稳定优越、一般分布鲁棒最优、恢复丢失信息或已完成真实飞行验证；
 - 需保留：seed2302 的正常工况反转、历史 seed sensitivity、仅三无人机 3DOF 仿真、内部参数匹配主消融和无外部同合同基线。
 
-## OOD 条件审计
+## 跨扰动条件审计
 
 | 条件 | 平均配对ΔJ | 胜出种子数 | 最差配对ΔJ |
 |---|---:|---:|---:|
@@ -50,5 +50,5 @@
 ## 产物
 
 - `formal_results/source_data/`：冻结 decision、manifest、配对与条件级 CSV；
-- `formal_results/figures/`：主结果、OOD、可靠性/安全性和自适应权重图；
+- `formal_results/figures/`：主结果、跨扰动、可靠性/安全性和自适应权重图；
 - `formal_results/formal_result_tables.md`：主文与补充表源。

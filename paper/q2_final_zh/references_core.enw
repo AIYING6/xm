@@ -134,3 +134,53 @@
 %P 103440
 %R 10.1016/j.cja.2025.103440
 %U https://www.sciencedirect.com/science/article/pii/S1000936125000469
+
+%0 Conference Paper
+%A Schulman, John
+%A Wolski, Filip
+%A Dhariwal, Prafulla
+%A Radford, Alec
+%A Klimov, Oleg
+%T Proximal Policy Optimization Algorithms
+%B arXiv
+%D 2017
+%R 10.48550/arXiv.1707.06347
+%U https://arxiv.org/abs/1707.06347
+
+%0 Conference Paper
+%A Sagawa, Shiori
+%A Koh, Pang Wei
+%A Hashimoto, Tatsunori B.
+%A Liang, Percy
+%T Distributionally Robust Neural Networks for Group Shifts: On the Importance of Regularization for Worst-Case Generalization
+%B International Conference on Learning Representations
+%D 2020
+%U https://openreview.net/forum?id=ryxGuJrFvS
+
+%0 Conference Paper
+%A Mehta, Bhairav
+%A Diaz, Manfred
+%A Golemo, Florian
+%A Pal, Christopher J.
+%A Paull, Liam
+%T Active Domain Randomization
+%B Conference on Robot Learning
+%D 2020
+%V 155
+%P 1162-1176
+%U https://proceedings.mlr.press/v155/mehta21a.html
+
+%0 Journal Article
+%A Narvekar, Sanmit
+%A Peng, Bei
+%A Leonetti, Matteo
+%A Sinapov, Jivko
+%A Taylor, Matthew E.
+%A Stone, Peter
+%T Curriculum Learning for Reinforcement Learning Domains: A Framework and Survey
+%J Journal of Machine Learning Research
+%D 2020
+%V 21
+%N 181
+%P 1-50
+%U https://jmlr.org/papers/v21/20-212.html

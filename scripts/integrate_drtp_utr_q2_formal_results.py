@@ -187,7 +187,7 @@ def save_figure(fig: plt.Figure, stem: str) -> None:
 def plot_primary(cells: dict[tuple[str, int, str], dict[str, float]], decision: dict) -> None:
     endpoints = [
         ("J_nominal", "J_nominal"), ("J_F0", "J_F0"),
-        ("J_OOD_mean", "J_OOD mean"), ("J_OOD_worst", "J_OOD worst"),
+        ("J_OOD_mean", "J_pert mean"), ("J_OOD_worst", "J_pert worst"),
     ]
     fig, axes = plt.subplots(1, 4, figsize=(7.2, 2.25), sharex=True)
     for axis, (key, label) in zip(axes, endpoints):
@@ -239,7 +239,7 @@ def plot_ood(condition_rows: list[dict[str, object]]) -> None:
     axis.axhline(0, color="#374151", linewidth=0.8)
     axis.set_xticks(range(len(labels)), labels, rotation=35, ha="right")
     axis.set_ylabel("配对 ΔJ（DRTP - UTR）")
-    axis.set_title("OOD 条件分解：故障时机、持续时间与复合扰动",
+    axis.set_title("跨扰动条件分解：故障时机、持续时间与复合扰动",
                    fontweight="bold")
     axis.grid(axis="y", linestyle=":", linewidth=0.6, alpha=0.6)
     for bar, value, win in zip(bars, values, wins):
@@ -251,8 +251,8 @@ def plot_ood(condition_rows: list[dict[str, object]]) -> None:
 
 def plot_reliability(decision: dict) -> None:
     paired = decision["paired_rows"]
-    endpoints = [("delta_J_F0", "F0"), ("delta_J_OOD_mean", "OOD mean"),
-                 ("delta_J_OOD_worst", "OOD worst")]
+    endpoints = [("delta_J_F0", "F0"), ("delta_J_OOD_mean", "跨扰动均值"),
+                 ("delta_J_OOD_worst", "跨扰动最差")]
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.55), gridspec_kw={"width_ratios": [1.25, 1]})
     axis = axes[0]
     x = np.arange(len(SEEDS))
@@ -348,7 +348,7 @@ def write_tables(decision: dict, condition_rows: list[dict[str, object]], sample
     lines = ["# 正式五种子结果表", "",
              "所有数值来自冻结的 10M 最终检查点和 episode ID 490000–490099；训练种子为独立统计单位（n=5）。", "",
              "## 表2｜正式五种子总体结果", "",
-             "| 方法 | 参数量 | J_nominal | J_F0 | J_OOD_mean | J_OOD_worst | 碰撞率 | 超时率 | 约束违规率 |",
+             "| 方法 | 参数量 | J_nominal | J_F0 | J_pert,mean | J_pert,worst | 碰撞率 | 超时率 | 约束违规率 |",
              "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for arm in ARMS:
         item = pooled[arm]
@@ -359,7 +359,7 @@ def write_tables(decision: dict, condition_rows: list[dict[str, object]], sample
             f"{fmt(item['constraint_failure_mean'], 3)} |"
         )
     lines += ["", "## 表3｜配对种子效应与可靠性", "",
-              "| 训练种子 | Δ正常工况 | ΔF0 | ΔOOD均值 | ΔOOD最差 | Δ碰撞率 | Δ超时率 | 灾难性 |",
+              "| 训练种子 | Δ正常工况 | ΔF0 | Δ跨扰动均值 | Δ跨扰动最差 | Δ碰撞率 | Δ超时率 | 灾难性 |",
               "|---:|---:|---:|---:|---:|---:|---:|---|"]
     for row in decision["paired_rows"]:
         lines.append(
@@ -371,13 +371,13 @@ def write_tables(decision: dict, condition_rows: list[dict[str, object]], sample
     lines += ["", "| 端点 | 均值 | 中位数 | SD | IQR | MAD | 胜出种子数 | 最差差值 |",
               "|---|---:|---:|---:|---:|---:|---:|---:|"]
     for key, label in (("J_nominal", "J_nominal"), ("J_F0", "J_F0"),
-                       ("J_OOD_mean", "J_OOD_mean"), ("J_OOD_worst", "J_OOD_worst")):
+                       ("J_OOD_mean", "J_pert,mean"), ("J_OOD_worst", "J_pert,worst")):
         item = paired[key]
         lines.append(
             f"| {label} | {fmt(item['mean'])} | {fmt(item['median'])} | {fmt(item['sample_sd'])} | "
             f"{fmt(item['iqr'])} | {fmt(item['mad'])} | {item['wins']}/5 | {fmt(item['worst'])} |"
         )
-    lines += ["", "## 表4｜OOD 条件分解", "",
+    lines += ["", "## 表4｜跨扰动条件分解", "",
               "| 条件 | UTR均值 | DRTP均值 | 平均配对ΔJ | 中位数ΔJ | 胜出种子数 | 最差配对ΔJ |",
               "|---|---:|---:|---:|---:|---:|---:|"]
     for item in condition_rows:
@@ -415,12 +415,12 @@ def write_audit(results_root: Path, tape: dict, decision: dict, condition_rows: 
         "## 冻结裁决", "",
         f"- machine verdict: `{decision['verdict']}`；",
         f"- catastrophic seeds: {decision['catastrophic_seed_count']}/5；",
-        "- 所有预注册 gate: PASS。", "",
+        "- 所有训练前冻结 gate: PASS。", "",
         "## 论文写作边界", "",
-        "- 可写：在冻结三无人机中继故障任务、共同 10M 预算和预注册五 seed 合同下，DRTP 的 F0、OOD mean 和 OOD worst 的配对均值与中位数为正；",
+        "- 可写：在冻结三无人机中继故障任务、共同 10M 预算和训练前冻结五 seed 合同下，DRTP 的 F0、跨扰动均值和跨扰动最差的配对均值与中位数为正；",
         "- 不可写：DRTP 对所有随机初始化稳定优越、一般分布鲁棒最优、恢复丢失信息或已完成真实飞行验证；",
         "- 需保留：seed2302 的正常工况反转、历史 seed sensitivity、仅三无人机 3DOF 仿真、内部参数匹配主消融和无外部同合同基线。", "",
-        "## OOD 条件审计", "",
+        "## 跨扰动条件审计", "",
         "| 条件 | 平均配对ΔJ | 胜出种子数 | 最差配对ΔJ |",
         "|---|---:|---:|---:|",
     ]
@@ -434,7 +434,7 @@ def write_audit(results_root: Path, tape: dict, decision: dict, condition_rows: 
               "这些遥测仅表明自适应器实际偏离均匀权重；它们不单独建立策略机制的因果解释。", "",
               "## 产物", "",
               "- `formal_results/source_data/`：冻结 decision、manifest、配对与条件级 CSV；",
-              "- `formal_results/figures/`：主结果、OOD、可靠性/安全性和自适应权重图；",
+              "- `formal_results/figures/`：主结果、跨扰动、可靠性/安全性和自适应权重图；",
               "- `formal_results/formal_result_tables.md`：主文与补充表源。", ""]
     (PAPER / "14_formal_result_integration_audit.md").write_text("\n".join(lines), encoding="utf-8")
 

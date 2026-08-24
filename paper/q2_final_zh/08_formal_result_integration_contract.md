@@ -44,7 +44,7 @@ Any failed integrity row stops manuscript result insertion and is reported as a 
 | Abstract | decision JSON and paired summary | verdict-bounded primary result, 3/5 direction, catastrophe and safety boundary |
 | Section 6.2 | pooled cells | absolute UTR/DRTP values before deltas |
 | Section 6.3 | paired seed results | all five seed deltas, dispersion, win count and catastrophe |
-| Section 6.4 | per-condition summary | ten OOD conditions and worst condition |
+| Section 6.4 | per-condition summary | ten cross-perturbation conditions and the frozen-condition worst value |
 | Section 6.5 | raw/condition summaries | collision, timeout, constraint, pre-trigger collision and risk-set validity |
 | Section 6.6 | sampler logs and telemetry | q/EMA/difficulty/group counts and bounded mechanism description |
 | Discussion/Conclusion | frozen verdict | only the wording authorized below |
@@ -76,4 +76,3 @@ No formal performance conclusion is inserted. The manuscript remains a working d
 - adding a new favorable threshold;
 - rewriting historical FAIL/NO-GO decisions;
 - starting a new algorithm, seed rescue, or extra training from this writing stage.
-

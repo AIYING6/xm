@@ -35,6 +35,7 @@ REQUIRED_FILES = [
     "14_formal_result_integration_audit.md",
     "15_formal_statistics_and_figure_legend_contract.md",
     "16_no_training_evidence_enhancement_audit.md",
+    "17_major_revision_rectification_log.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
     "formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json",
@@ -44,6 +45,7 @@ REQUIRED_FILES = [
     "formal_results/source_data/per_seed_condition_summary.csv",
     "formal_results/source_data/sampler_telemetry_summary.json",
     "formal_results/source_data/formal_terminal_outcomes_by_seed_family.csv",
+    "formal_results/source_data/formal_failure_safety_by_seed.csv",
     "formal_results/source_data/formal_training_monitor_binned.csv",
     "formal_results/figures/fig3_formal_primary_performance.svg",
     "formal_results/figures/fig4_ood_condition_decomposition.svg",
@@ -125,12 +127,12 @@ def main() -> None:
             "citation debt is not explicitly marked")
     require("不等同于最终参考文献表" in citation_ledger,
             "citation ledger boundary is missing")
-    require(all(f"R{idx}" in citation_ledger for idx in range(1, 10)),
+    require(all(f"R{idx}" in citation_ledger for idx in range(1, 14)),
             "verified core citation ledger is incomplete")
 
     reference_export = (PAPER / "references_core.enw").read_text(encoding="utf-8")
-    require(reference_export.count("%0 ") == 9,
-            "EndNote core-reference export must contain nine records")
+    require(reference_export.count("%0 ") == 13,
+            "EndNote core-reference export must contain thirteen records")
 
     chinese_contract = (PAPER / "10_chinese_submission_contract.md").read_text(
         encoding="utf-8"

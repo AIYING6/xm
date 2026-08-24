@@ -9,6 +9,8 @@
     "fig3_formal_primary_performance.svg",
     "fig4_ood_condition_decomposition.svg",
     "fig5_seed_reliability_and_safety.svg",
-    "fig6_adaptive_weight_telemetry.svg"
+    "fig6_adaptive_weight_telemetry.svg",
+    "fig7_formal_terminal_outcomes.svg",
+    "figS1_training_diagnostics.svg"
   ]
 }

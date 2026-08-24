@@ -11,8 +11,8 @@
 | C7 | No fair external drop-in comparator was identified. | `external_comparator_matrix.csv` | supported as audit outcome | Not evidence that no related work exists. |
 | C8 | Results are limited to the frozen 3-UAV simulation. | environment and method contracts | supported | No scalability/deployment claim. |
 | C9 | DRTP is stable, universally robust, or consistently superior. | none | prohibited | Delete rather than hedge. |
-| C10 | A new prospective paired UTR/DRTP confirmation is required before upgrading DRTP beyond a historical seed-sensitive result. | `docs/DRTP_UTR_Q2_FORMAL_FIVE_SEED_CONFIRMATION_CONTRACT.md`; preflight artifact | authorized and frozen; result pending | Use seeds 2301–2305, common 10M final checkpoints, tape 490000–490099, and retain all outcomes. |
-| C11 | The prospective five-seed experiment determines whether DRTP remains the paper's primary method. | formal decision JSON, paired tables, safety/OOD tables, and per-seed manifests | pending | No partial cloud result, intermediate checkpoint, or subset of seeds may enter the manuscript. |
+| C10 | Prospective paired UTR/DRTP confirmation was required before upgrading DRTP beyond a historical seed-sensitive result. | `docs/DRTP_UTR_Q2_FORMAL_FIVE_SEED_CONFIRMATION_CONTRACT.md`; preflight artifact | completed | Seeds 2301–2305, common 10M final checkpoints, tape 490000–490099, and all outcomes retained. |
+| C11 | The prospective five-seed experiment determines whether DRTP remains the paper's primary method. | formal decision JSON, paired tables, safety/跨扰动 tables, and per-seed manifests | supported with boundary | Formal verdict is `FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE`; no partial cloud result, intermediate checkpoint, or subset of seeds enters the manuscript. |
 | C12 | Formal results must be integrated through a fail-closed claim map. | `08_formal_result_integration_contract.md` | supported as writing protocol | Historical NO-GO/FAIL evidence remains visible under every future verdict. |
 
 ## Missing but non-blocking presentation inputs

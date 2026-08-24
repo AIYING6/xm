@@ -25,7 +25,7 @@
 | Problem Formulation | Define roles, graph legality, failure conditions, estimands, and information boundary. | No ambiguity about what the actor can know or what failure changes. |
 | Method | Define UTR and DRTP under a matched SG backbone. | Peer can reproduce the group sampler and bounded weight update. |
 | Experimental Protocol | Freeze seeds, budgets, tapes, checkpoint rules, safety, and statistics. | Reader can audit fairness and independent units. |
-| Results | Report absolute values, paired effects, OOD, safety, and reliability. | Every observation is adjacent to its source and contract stratum. |
+| Results | Report absolute values, paired effects, cross-perturbation results, safety, and reliability. | Every observation is adjacent to its source and contract stratum. |
 | Discussion | Interpret high average upside together with seed sensitivity and mixed safety. | Alternative explanations and limits are explicit. |
 | Conclusion | State contribution, decisive evidence, implication, and boundary. | No new result or unbounded promise appears. |
 
@@ -34,7 +34,7 @@
 1. Prospective formal integrity and evaluation-validity audit.
 2. Formal absolute UTR and DRTP values for all five seeds.
 3. Formal paired effects, mean/median/spread, win count, and catastrophic-seed verdict.
-4. Formal timing, duration, and compound OOD decomposition.
+4. Formal timing, duration, and compound cross-perturbation decomposition (not strict unseen OOD).
 5. Formal timeout, collision, constraint, pre-trigger collision, and risk-set exposure validity.
 6. Historical development/held-out/REL-A0 reliability evidence, kept in separate strata.
 7. Mechanism telemetry and what it does not prove.

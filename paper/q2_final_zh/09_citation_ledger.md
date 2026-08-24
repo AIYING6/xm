@@ -19,6 +19,10 @@
 | R7 | Zhao B, Huo M, Li Z, et al. *Graph-based multi-agent reinforcement learning for large-scale UAVs swarm system control*. Aerospace Science and Technology, 2024, 150:109166. DOI: 10.1016/j.ast.2024.109166. | 大规模无人机图 MARL | 背景支撑 | 图表示和局部信息已用于无人机集群运动控制 | 本文已经证明规模扩展 |
 | R8 | Lv Z, Xiao L, Du Y, et al. *Multi-Agent Reinforcement Learning Based UAV Swarm Communications Against Jamming*. IEEE Transactions on Wireless Communications, 2023, 22(12):9063–9075. DOI: 10.1109/TWC.2023.3268082. | 通信扰动下无人机 MARL | 部分支撑 | MARL 已用于干扰条件下的中继选择和功率分配 | 抗干扰通信等同于中继节点故障后的任务协同 |
 | R9 | Bai H, Wang H, He R, et al. *Multi-hop UAV relay covert communication: A multi-agent reinforcement learning approach*. Chinese Journal of Aeronautics, 2025, 38(10):103440. DOI: 10.1016/j.cja.2025.103440. | 多跳中继与 MAPPO 应用 | 部分支撑 | MAPPO 已用于多跳无人机中继通信的轨迹与功率联合决策 | 该文验证了本文的拓扑路径鲁棒性 |
+| R10 | Schulman J, Wolski F, Dhariwal P, et al. *Proximal Policy Optimization Algorithms*. arXiv:1707.06347, 2017. | PPO 裁剪目标与训练设置 | 强支撑 | PPO 的裁剪策略优化是本文共同训练器的直接来源 | PPO 自动保证多智能体或拓扑鲁棒性 |
+| R11 | Sagawa S, Koh P W, Hashimoto T B, Liang P. *Distributionally Robust Neural Networks for Group Shifts: On the Importance of Regularization for Worst-Case Generalization*. ICLR 2020. | 组鲁棒重加权定位 | 背景支撑 | 预定义组的最坏组/重加权思想可作为 DRTP 的知识背景 | DRTP 等价于 group DRO，或获得其理论保证 |
+| R12 | Mehta B, Diaz M, Golemo F, et al. *Active Domain Randomization*. CoRL 2020, PMLR 155:1162–1176. | 自适应场景参数采样定位 | 部分支撑 | 训练期可根据学习过程选择环境参数/场景 | DRTP 与该方法使用同一目标或同一采样器 |
+| R13 | Narvekar S, Peng B, Leonetti M, et al. *Curriculum Learning for Reinforcement Learning Domains: A Framework and Survey*. JMLR, 2020, 21(181):1–50. | 训练分布/课程术语背景 | 背景支撑（综述） | 训练任务分布与任务序列会影响 RL 优化过程 | 该综述直接证明 DRTP 的性能优势 |
 
 ## 2. 正文引用映射
 
@@ -31,14 +35,15 @@
 | 分布鲁棒 RL 优化分布扰动下的策略 | R5 | 不把理论保证迁移到 DRTP |
 | GNN/GAT 已进入多无人机协同与集群控制 | R6、R7 | 支撑“使用图本身不足以构成创新” |
 | 通信干扰、多跳中继和轨迹/功率联合决策已有 MARL 研究 | R8、R9 | 支撑应用背景和区别，不作直接性能基线 |
+| PPO 裁剪目标与共同优化器 | R10 | 说明两种方法采用相同 PPO 训练器 |
+| 组重加权与自适应采样的知识来源 | R11、R12 | 仅作方法定位，不转移理论保证 |
+| 训练分布会影响强化学习优化过程 | R13 | 综述性术语背景，不作为性能因果证据 |
 
 ## 3. 仍待补充的引用主题
 
-- PPO 原始算法论文，用于 PPO 裁剪目标的直接来源；
 - CTDE 的经典来源或最接近 MAPPO 的正式定义；
 - 一篇通信拓扑故障/节点失效对无人机任务级协同影响的直接文献；
 - 目标中文期刊近 3–5 年的高度相关论文，用于投稿定位；
-- 若保留 EMA/指数加权动机，需要补充与自适应采样最接近的原始方法来源。
 
 ## 4. 引用纪律
 
@@ -47,4 +52,4 @@
 - 不把 R3–R9 写成已在本文合同下被 DRTP 击败的外部基线；
 - 不把 R5 的 Q-learning 理论保证移植到 DRTP；
 - 不使用“首次”或“尚无研究”等排他性措辞，除非完成可复核的系统检索；
-- 正式投稿前将 `[R1–R9]` 转换为目标期刊的顺序编码格式。
+- 正式投稿前将 `[R1–R13]` 转换为目标期刊的顺序编码格式。
