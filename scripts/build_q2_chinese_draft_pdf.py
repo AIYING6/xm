@@ -166,6 +166,8 @@ def format_display_math(raw: str) -> str:
         return "去均值难度 d_tilde(k,u) = d(k,u) - 六个故障组难度的平均值。"
     if "q_{u+1}=\\Pi" in compact:
         return "更新权重 q(u+1)：将当前权重与候选权重平滑混合后投影回有界集合 Q。"
+    if "\\min\\{0.35" in compact and "\\lambda" in compact:
+        return "有界单纯形投影：q_k = min{0.35, max{0.05, x_k − λ}}，且六个故障组权重之和为 1。"
     if compact.startswith("\\frac{J_{\\mathrm{pert,worst}}^{D}"):
         return "灾难性条件 B：J_pert,worst(D) / J_pert,worst(U) < 0.70，且 J_F0(D) / J_F0(U) < 0.85。"
     if compact.startswith("\\frac{J_{F0}^{D}"):

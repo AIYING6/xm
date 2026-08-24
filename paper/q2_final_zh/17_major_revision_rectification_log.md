@@ -18,4 +18,4 @@
 
 若作者未来单独授权并接受完整计算成本，唯一建议的新增训练是 **static-nonuniform topology weighting** 对照：网络、PPO、七组、50% normal anchor、训练种子、10M 预算和评估合同与 UTR/DRTP 完全相同；只使用一个在训练开始前固定、且不依赖正式最终 DRTP 权重或回报的静态六组分布。它回答的是“DRTP 的优势来自动态反馈，还是任意固定非均匀暴露已足够”。
 
-该实验不是当前主文证据的一部分，未获单独授权前不创建合同、不生成样本带、不启动训练。
+该实验不是当前主文证据的一部分。作者已授权冻结独立的训练前合同（`docs/DRTP_STATIC_NONUNIFORM_COMPARATOR_PRETRAINING_CONTRACT.md`），但尚未生成样本带或启动训练；其结果不得预先写入或改变当前 UTR--DRTP 主文结论。

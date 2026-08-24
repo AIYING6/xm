@@ -36,6 +36,7 @@ REQUIRED_FILES = [
     "15_formal_statistics_and_figure_legend_contract.md",
     "16_no_training_evidence_enhancement_audit.md",
     "17_major_revision_rectification_log.md",
+    "18_p1_review_response_and_submission_gap.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
     "formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json",
@@ -93,6 +94,17 @@ def main() -> None:
     require("490000–490099" in manuscript, "formal evaluation tape is not stated")
     require("10,000,128" in manuscript, "formal training budget is not stated")
     require("116,728" in manuscript, "matched parameter count is not stated")
+    require("总体门槛，而非“每个种子均不退化”的承诺" in manuscript,
+            "aggregate nominal-retention boundary is not explicit")
+    require("0.760" in manuscript and "seed2302" in manuscript,
+            "formal seed2302 nominal regression is not retained")
+    require("100 次二分" in manuscript and "有界单纯形投影" in manuscript,
+            "bounded-simplex implementation detail is missing")
+    require(manuscript.count("FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE") == 1,
+            "machine verdict must be retained exactly once in Appendix B")
+    main_body = manuscript.split("## 附录B", maxsplit=1)[0]
+    require("FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE" not in main_body,
+            "machine verdict must not appear before Appendix B")
 
     state = json.loads((PAPER / "state.json").read_text(encoding="utf-8"))
     require(state.get("nonresult_manuscript_sections_drafted") is True,
