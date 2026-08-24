@@ -29,8 +29,9 @@ No training is authorized in this audit.
 - Status: **COMPLETE_ZERO_TRAINING**
 - Requirement: Report parameter count, training budget, wall-clock provenance where available, inference path, tape hashes, and checkpoint provenance.
 ## M7 — MUST_HAVE — Prospective common-contract five-seed confirmation
-- Status: **AUTHORIZED; TECHNICAL_PREFLIGHT_PASS; LOCAL_LONG_TRAINING_IN_PROGRESS**
-- Requirement: Run only the frozen paired UTR/DRTP seeds `2301–2305` at the common 10M budget and evaluate all final checkpoints on tape `490000–490099`. Preserve every seed and all historical negative evidence. This single experiment closes the main causal-comparison and prospective-reliability gap; it does not authorize a new algorithm, canonical seeds, scalability, HIL, or extra ablation training.
+- Status: **COMPLETE — FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE**
+- Evidence: paired UTR/DRTP seeds `2301–2305` completed at the common 10M budget and all final checkpoints were evaluated on tape `490000–490099` (12,000 raw records). All five scheduled seeds were retained; no formal catastrophic seed occurred. Historical development/held-out negative evidence remains unchanged.
+- Boundary: This closes the prospective matched-comparison gap, not strict unseen-condition OOD, general DRL theory, scalability, HIL, or an adaptive-versus-static-nonuniform causal comparison.
 ## D0 — DO_NOT_DO — New algorithm search/rescue
 - Status: **CLOSED**
 - Requirement: No DRTP-v2, SAM-v2, EDR-v2, new encoder, loss, or curriculum.
