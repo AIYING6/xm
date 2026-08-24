@@ -11,14 +11,17 @@ No training is authorized in this audit.
 - Status: **COMPLETE_ZERO_TRAINING**
 - Requirement: Report all paired seeds, mean, median, IQR/MAD, worst delta, and contract-stratified summaries.
 ## M2 — MUST_HAVE — OOD and safety decomposition
-- Status: **COMPLETE_AUDIT; PRESENTATION_REQUIRED**
-- Requirement: Show F0, timing, duration, compound, worst condition, timeout, collision, constraints, exposure.
+- Status: **COMPLETE_IN_MAIN_DRAFT**
+- Evidence: The Chinese main draft now shows F0, timing, duration, compound, worst-condition, timeout, collision, constraint, risk-set exposure, task-completion and terminal-outcome evidence from the same 12,000 formal records.
+- Boundary: Pre-trigger collisions remain in every unconditional outcome denominator; risk-set exposure is only an evaluator-validity estimand.
 ## M3 — MUST_HAVE — One strong external comparator
-- Status: **OPEN; NO TRAINING AUTHORIZED**
-- Requirement: Assess whether a directly relevant robust/topology-aware MARL comparator can be implemented under a separately frozen contract; do not substitute an incomparable legacy table.
+- Status: **COMPLETE_AUDIT — E2 NO_FAIR_EXTERNAL_COMPARATOR**
+- Evidence: TAPE and M3DDPG were assessed as scientifically relevant but not fair frozen-contract drop-ins because they change the action/task or learner/information contract.
+- Manuscript handling: State this boundary, retain UTR versus DRTP as the primary capacity- and exposure-matched ablation, and do not substitute an incomparable legacy table.
 ## M4 — HIGH_VALUE — Ablation of DRTP components
-- Status: **OPEN; NO TRAINING AUTHORIZED**
-- Requirement: Uniform topology training, nominal anchor, and adaptive weighting ablations only if a new contract is separately authorized.
+- Status: **COMPLETE_FOR_THE_CLAIMED_METHOD_DIFFERENCE**
+- Evidence: The main ablation is UTR-SG-MAPPO versus DRTP-SG-MAPPO. Both share the SG backbone, 116,728 parameters, PPO, seven topology groups, fixed 50% nominal anchor, budget and evaluation tape; the sole intervened factor is uniform versus adaptive perturbation weighting.
+- Boundary: The nominal anchor is not claimed as a standalone innovation because it is shared. A new removal ablation would be required only if a later manuscript version claims an independent anchor contribution.
 ## M5 — HIGH_VALUE — Scalability
 - Status: **OPEN; NO TRAINING AUTHORIZED**
 - Requirement: 4/5-UAV or a defensible scope limitation; use only fair matched protocols.

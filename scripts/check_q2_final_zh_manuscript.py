@@ -34,6 +34,7 @@ REQUIRED_FILES = [
     "13_chinese_manuscript_readiness_audit.md",
     "14_formal_result_integration_audit.md",
     "15_formal_statistics_and_figure_legend_contract.md",
+    "16_no_training_evidence_enhancement_audit.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
     "formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json",
@@ -42,10 +43,14 @@ REQUIRED_FILES = [
     "formal_results/source_data/paired_seed_results.csv",
     "formal_results/source_data/per_seed_condition_summary.csv",
     "formal_results/source_data/sampler_telemetry_summary.json",
+    "formal_results/source_data/formal_terminal_outcomes_by_seed_family.csv",
+    "formal_results/source_data/formal_training_monitor_binned.csv",
     "formal_results/figures/fig3_formal_primary_performance.svg",
     "formal_results/figures/fig4_ood_condition_decomposition.svg",
     "formal_results/figures/fig5_seed_reliability_and_safety.svg",
     "formal_results/figures/fig6_adaptive_weight_telemetry.svg",
+    "formal_results/figures/fig7_formal_terminal_outcomes.svg",
+    "formal_results/figures/figS1_training_diagnostics.svg",
     "main_zh.md",
     "state.json",
 ]
@@ -152,6 +157,8 @@ def main() -> None:
         "fig4_ood_condition_decomposition",
         "fig5_seed_reliability_and_safety",
         "fig6_adaptive_weight_telemetry",
+        "fig7_formal_terminal_outcomes",
+        "figS1_training_diagnostics",
     )
     for stem in figure_stems:
         for extension in (".svg", ".pdf", ".png", ".tiff"):
@@ -165,7 +172,7 @@ def main() -> None:
 
     print(
         "PASS: Chinese manuscript evidence package is integrated; no formal-result "
-        "placeholders remain, all six figures pass artifact checks, and the paper-facing "
+        "placeholders remain, all eight figures pass artifact checks, and the paper-facing "
         "frozen decision is PASS_SEED_SENSITIVE."
     )
 
