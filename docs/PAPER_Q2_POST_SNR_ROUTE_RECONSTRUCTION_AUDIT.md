@@ -1,9 +1,9 @@
 # Q2 论文 Post-SNR 路线重构审计
 
-**状态：** `PAPER_ROUTE_B — TOPOLOGY-RECONFIGURATION AND TRAINING-RELIABILITY STUDY`
+**状态：** `PAPER_ROUTE_C — DRTP ALGORITHM WITH EXPLICIT SEED-SENSITIVITY LIMITATION`
 
 **日期：** 2026-08-26
-**训练授权：** 无。本审计及其稿件修订均为零训练工作。
+**训练授权：** 无。本次路线恢复和稳定化机制设计均为零训练工作。
 
 ## 1. 不可改写的历史事实
 
@@ -33,14 +33,14 @@
 
 **一语论点：** 在冻结的中继故障拓扑重构任务中，前瞻性三方法、五训练种子和 12 个评估条件表明，固定均匀拓扑随机化在该新样本中优于固定非均匀和自适应扰动加权；因此，拓扑鲁棒 MARL 的结论必须同时报告路径重构、安全和训练种子可靠性，而不能由单一高收益 cohort 推出。
 
-论文不再将 DRTP 写成成功主算法。DRTP 与 SNR 转为**受控训练分布比较器**：其历史强结果、历史反转与新 cohort 的整体劣势共同说明，基于训练分布加权的收益对训练轨迹敏感，不能被包装为通用或稳定增益。
+论文恢复 DRTP 算法主线，但采用受限表述：DRTP 是一个具有较高平均收益、同时存在明确训练种子敏感性的拓扑扰动训练策略。SNR 保留为内部机制审计材料，不作为论文主比较；其结果用于防止把 DRTP 的高收益过度解释为“自适应必然必要”。
 
 ## 4. 证据层级与写作使用规则
 
 | 证据层 | 作用 | 可支持的结论 | 不可支持的结论 |
 |---|---|---|---|
 | S1/S2 环境与合法性审计 | 问题有效性 | 中继故障会改变合法通信—任务支持路径并影响协同 | 完全信息黑障、任意实飞结论 |
-| UTR/SNR/DRTP prospective five-seed comparator | 主性能与方法必要性 | 在该冻结合同中 UTR 为三种权重策略中表现最佳的参考 | UTR 对所有初始化或所有任务都最优 |
+| UTR/DRTP formal paired comparison | 主性能与算法比较 | DRTP 在部分 formal/development cohort 上的平均扰动收益 | DRTP 对所有初始化稳定优越 |
 | 历史 DRTP development/held-out/REL-A0 | 可靠性与反例 | 自适应权重曾产生高收益，也存在可重复的训练种子反转 | DRTP 稳定优越、旧均值可覆盖新 cohort |
 | 轨迹/路径/安全遥测 | 机制边界 | 性能变化需与路径、任务支持、timeout/collision 联合解释 | 单一根因已被证明 |
 
@@ -62,21 +62,21 @@
 
 ## 6. 稿件与图表重构
 
-建议中文稿定位为“中继故障拓扑重构的可信评估与训练可靠性研究”。正文最小结构为：
+建议中文稿定位为“中继故障拓扑重构中的自适应扰动训练与训练可靠性”。正文最小结构为：
 
 1. 合法拓扑—任务支持重构问题及其评价语义；
-2. 匹配 SG backbone 与三类训练分布权重比较器；
+2. 匹配 SG backbone、UTR 基线与 DRTP 自适应扰动训练；
 3. 冻结合同、risk-set trigger validity、seed-level 统计；
-4. 前瞻性五种子主表（UTR/SNR/DRTP）；
+4. DRTP/UTR 主结果与 paired seed-level 统计；
 5. 每 seed 配对差值与安全终止图；
 6. 历史 DRTP 高收益与 catastrophic seed 作为可靠性反例；
-7. 不将自适应加权表述为已验证算法贡献的讨论与局限。
+7. 将高平均收益与 seed sensitivity 同时写入主结论；
 
 主图应优先展示 (i) 故障前后合法路径/任务支持重构示意，(ii) 三方法五 seed 的 paired endpoint 图，(iii) timeout/collision 与 survival-to-onset/risk-set validity 图。算法权重轨迹可放补充材料，不能代替绝对性能与 seed-level 结果。
 
 ## 7. 后续边界
 
-不再启动 DRTP-v2、SNR 变体、更多权重调参或为改善结果而追加训练。投稿前工作只包括：将本路线写入中文稿、完成图表、补齐真实参考文献与可复现实验包，并对主张—证据逐条核验。
+下一步只允许对 R-DRTP 进行零训练技术合同审计；不得直接长训，不得做 SNR 变体或无合同调参。若 R-DRTP 技术门通过，再单独授权前瞻性 paired development；若失败，保留原 DRTP 论文路线，不继续搜索新算法。
 
 **归档来源：** `D:/File/Downloads/drtp_snr_q2_mechanism_comparator_10way_results.tar.gz`
 
