@@ -39,6 +39,12 @@ Q_MIN = 0.05
 Q_MAX = 0.35
 UNIFORM_Q = 1.0 / len(FAILURE_GROUPS)
 
+# Frozen R-DRTP constants; these are selected before any R-DRTP performance.
+RDRTP_N0 = 8.0
+RDRTP_LAMBDA_V = 1.0
+RDRTP_V_MAX = 1.0
+RDRTP_ALPHA_MAX = 1.0
+
 
 @dataclass(frozen=True)
 class DRTPSelection:
@@ -97,8 +103,8 @@ class DRTPTopologySampler:
 
     def __init__(self, mode: str, seed: int, total_updates: int):
         self.mode = str(mode).lower()
-        if self.mode not in {"utr", "drtp"}:
-            raise ValueError("DRTP sampler mode must be 'utr' or 'drtp'")
+        if self.mode not in {"utr", "drtp", "r_drtp"}:
+            raise ValueError("DRTP sampler mode must be 'utr', 'drtp', or 'r_drtp'")
         self.seed = int(seed)
         self.total_updates = int(total_updates)
         if self.total_updates <= 0:
@@ -107,6 +113,9 @@ class DRTPTopologySampler:
         self.ema: dict[str, float | None] = {group: None for group in ALL_GROUPS}
         self.window_returns: dict[str, list[float]] = {group: [] for group in ALL_GROUPS}
         self.last_difficulty = {group: 0.0 for group in FAILURE_GROUPS}
+        self.last_confidence = 0.0
+        self.last_alpha = 0.0
+        self.last_dispersion = {group: 0.0 for group in FAILURE_GROUPS}
         self.adaptation_count = 0
 
     def state_dict(self) -> dict:
@@ -133,6 +142,11 @@ class DRTPTopologySampler:
             },
             "last_difficulty": {
                 group: float(self.last_difficulty[group]) for group in FAILURE_GROUPS
+            },
+            "last_confidence": float(self.last_confidence),
+            "last_alpha": float(self.last_alpha),
+            "last_dispersion": {
+                group: float(self.last_dispersion[group]) for group in FAILURE_GROUPS
             },
             "adaptation_count": int(self.adaptation_count),
         }
@@ -166,6 +180,12 @@ class DRTPTopologySampler:
         self.window_returns = window_returns
         self.last_difficulty = {
             group: float(state["last_difficulty"][group]) for group in FAILURE_GROUPS
+        }
+        self.last_confidence = float(state.get("last_confidence", 0.0))
+        self.last_alpha = float(state.get("last_alpha", 0.0))
+        self.last_dispersion = {
+            group: float(state.get("last_dispersion", {}).get(group, 0.0))
+            for group in FAILURE_GROUPS
         }
         self.adaptation_count = int(state["adaptation_count"])
 
@@ -228,7 +248,7 @@ class DRTPTopologySampler:
         self._refresh_ema()
         adapted = False
         reason = "utr_fixed_uniform" if self.mode == "utr" else "warmup"
-        if self.mode == "drtp" and update > WARMUP_UPDATES:
+        if self.mode in {"drtp", "r_drtp"} and update > WARMUP_UPDATES:
             if self._ema_ready():
                 nominal = float(self.ema[NOMINAL_GROUP])
                 raw_difficulty = {
@@ -242,15 +262,52 @@ class DRTPTopologySampler:
                 }
                 normalizer = sum(logits.values())
                 candidate = [logits[group] / normalizer for group in FAILURE_GROUPS]
-                smoothed = [
-                    (1.0 - SMOOTHING_BETA) * self.q[group] + SMOOTHING_BETA * candidate[index]
-                    for index, group in enumerate(FAILURE_GROUPS)
-                ]
+                if self.mode == "r_drtp":
+                    drtp_smoothed = [
+                        (1.0 - SMOOTHING_BETA) * self.q[group] + SMOOTHING_BETA * candidate[index]
+                        for index, group in enumerate(FAILURE_GROUPS)
+                    ]
+                    drtp_candidate = _bounded_simplex_projection(drtp_smoothed)
+                    confidence = {}
+                    dispersion = {}
+                    for group in FAILURE_GROUPS:
+                        values = self.window_returns[group]
+                        if not values:
+                            confidence[group] = 0.0
+                            dispersion[group] = RDRTP_V_MAX
+                            continue
+                        ordered = sorted(values)
+                        median = ordered[len(ordered) // 2]
+                        deviations = sorted(abs(value - median) for value in values)
+                        mad = deviations[len(deviations) // 2]
+                        relative_dispersion = min(
+                            RDRTP_V_MAX, mad / max(abs(median), EPSILON)
+                        )
+                        dispersion[group] = relative_dispersion
+                        count_confidence = min(1.0, len(values) / (RDRTP_N0 + len(values)))
+                        confidence[group] = count_confidence * math.exp(
+                            -RDRTP_LAMBDA_V * relative_dispersion
+                        )
+                    self.last_confidence = min(confidence.values())
+                    self.last_dispersion = dispersion
+                    self.last_alpha = RDRTP_ALPHA_MAX * self.last_confidence
+                    smoothed = [
+                        (1.0 - self.last_alpha) * UNIFORM_Q
+                        + self.last_alpha * drtp_candidate[index]
+                        for index, group in enumerate(FAILURE_GROUPS)
+                    ]
+                    reason = "reliability_gated_bounded_exponential_gradient"
+                else:
+                    smoothed = [
+                        (1.0 - SMOOTHING_BETA) * self.q[group] + SMOOTHING_BETA * candidate[index]
+                        for index, group in enumerate(FAILURE_GROUPS)
+                    ]
+                    reason = "bounded_exponentiated_gradient"
                 projected = _bounded_simplex_projection(smoothed)
                 self.q = dict(zip(FAILURE_GROUPS, projected))
                 self.last_difficulty = raw_difficulty
                 self.adaptation_count += 1
-                adapted, reason = True, "bounded_exponentiated_gradient"
+                adapted = True
             else:
                 reason = "ema_not_ready"
         self.window_returns = {group: [] for group in ALL_GROUPS}
@@ -275,6 +332,10 @@ class DRTPTopologySampler:
             "epsilon": EPSILON,
             "q_min": Q_MIN,
             "q_max": Q_MAX,
+            "r_drtp_n0": RDRTP_N0,
+            "r_drtp_lambda_v": RDRTP_LAMBDA_V,
+            "r_drtp_v_max": RDRTP_V_MAX,
+            "r_drtp_alpha_max": RDRTP_ALPHA_MAX,
             "actor_or_critic_condition_input": False,
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -291,6 +352,8 @@ class DRTPTopologySampler:
         fields += [f"ema_{group}" for group in ALL_GROUPS]
         fields += [f"difficulty_{group}" for group in FAILURE_GROUPS]
         fields += [f"window_count_{group}" for group in ALL_GROUPS]
+        fields += ["confidence", "alpha"]
+        fields += [f"dispersion_{group}" for group in FAILURE_GROUPS]
         return fields
 
     def _state_row(self) -> dict:
@@ -298,6 +361,9 @@ class DRTPTopologySampler:
         row.update({f"ema_{group}": "" if self.ema[group] is None else self.ema[group] for group in ALL_GROUPS})
         row.update({f"difficulty_{group}": self.last_difficulty[group] for group in FAILURE_GROUPS})
         row.update({f"window_count_{group}": len(self.window_returns[group]) for group in ALL_GROUPS})
+        row["confidence"] = self.last_confidence
+        row["alpha"] = self.last_alpha
+        row.update({f"dispersion_{group}": self.last_dispersion[group] for group in FAILURE_GROUPS})
         return row
 
     def selection_row(self, update: int, env_index: int, episode_index: int,
