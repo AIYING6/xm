@@ -1,5 +1,7 @@
 # 中文投稿稿（Q2 证据链版）
 
+**当前路线：** `PAPER_ROUTE_B — topology reconfiguration and training reliability study`。主结果以 seeds 2401–2405 的 UTR/SNR/DRTP 前瞻性受控比较为准；历史 DRTP 高收益与反向 seed 均作为可靠性证据保留，不能跨合同混合为算法排名。写作前先遵守 [术语与主张边界](00_术语与主张边界.md) 与 [Post-SNR 路线审计](../../docs/PAPER_Q2_POST_SNR_ROUTE_RECONSTRUCTION_AUDIT.md)。
+
 本目录是面向中文投稿的修订稿，依据 `paper/q2_draft/` 的现有证据和冻结 provenance 重组，并吸收 `D:\File\Downloads\论文初稿_v1.14_最终实验与投稿审计_20260820.pdf` 中的结构优点。
 
 ## 使用边界
@@ -8,7 +10,7 @@
 - development 与 held-out 合同分开呈现。
 - 保留 development NO-GO、held-out FAIL、seed1902 限制和 seed2002 反转。
 - 不把 DRTP 写成稳定、普遍优越或具有一般鲁棒性保证的方法。
-- SNR 等尚未进入已核验结果的实验不写入结果段。
+- SNR 已进入已核验的前瞻性主结果；DRTP/SNR 均不得写作已被验证的可靠主算法。
 
 ## 推荐组稿顺序
 
