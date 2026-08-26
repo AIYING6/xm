@@ -13,7 +13,7 @@
 
 ```bash
 cd /root/autodl-tmp
-unzip EA-RG-MAPPO_EGTR_P3_DEVELOPMENT_c88fbaf.zip
+unzip EA-RG-MAPPO_EGTR_P3_DEVELOPMENT_faed3a4.zip
 cd EA-RG-MAPPO_EGTR_P3_DEVELOPMENT
 
 screen -dmS egtr_p3 bash -lc '
