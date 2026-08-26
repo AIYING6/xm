@@ -13,7 +13,9 @@
 
 ```bash
 cd /root/autodl-tmp
-unzip EA-RG-MAPPO_EGTR_P3_DEVELOPMENT_faed3a4.zip
+mkdir -p /root/autodl-tmp/EA-RG-MAPPO_EGTR_P3_DEVELOPMENT
+unzip -q EA-RG-MAPPO_EGTR_P3_DEVELOPMENT_0b65a19.zip \
+  -d /root/autodl-tmp/EA-RG-MAPPO_EGTR_P3_DEVELOPMENT
 cd EA-RG-MAPPO_EGTR_P3_DEVELOPMENT
 
 screen -dmS egtr_p3 bash -lc '
