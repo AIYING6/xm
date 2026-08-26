@@ -15,8 +15,8 @@ export OMP_NUM_THREADS="${OMP_NUM_THREADS:-$(( CPU_THREADS_TOTAL / MAX_PARALLEL 
 if [[ "$OMP_NUM_THREADS" -lt 1 ]]; then export OMP_NUM_THREADS=1; fi
 export MKL_NUM_THREADS="${MKL_NUM_THREADS:-$OMP_NUM_THREADS}"
 
-if [[ -e "$OUTPUT_ROOT" && -n "$(find "$OUTPUT_ROOT" -mindepth 1 -print -quit)" ]]; then
-  echo "Refusing to overwrite non-empty output root: $OUTPUT_ROOT" >&2
+if [[ -e "$OUTPUT_ROOT/runs" && -n "$(find "$OUTPUT_ROOT/runs" -mindepth 1 -print -quit)" ]]; then
+  echo "Refusing to overwrite existing P3 training runs: $OUTPUT_ROOT/runs" >&2
   exit 2
 fi
 mkdir -p "$OUTPUT_ROOT"
