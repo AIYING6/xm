@@ -1,6 +1,6 @@
 # R-DRTP 路线 B 项目阶段合同
 
-**状态：** `P0/P1 FROZEN — P2 TECHNICAL AUDIT NOT STARTED`
+**状态：** `R-DRTP ARCHIVED — EGTR P1 FROZEN — EGTR P2 AUDIT REQUIRED`
 
 **日期：** 2026-08-26  
 **训练授权：** 无
@@ -93,4 +93,4 @@ R-DRTP 只有在同时满足以下条件时，才可描述为“稳定化有效�
 
 ## 7. 当前停止点
 
-本文件与 `R_DRTP_STABILITY_MECHANISM_DESIGN_CONTRACT.md` 完成 P0/P1 归档。当前不实现、不训练、不生成新 tape、不使用 held-out/canonical seeds，等待单独授权 P2 技术审计。
+本文件与 `EGTR_DRTP_METHOD_CONTRACT.md` 完成路线 B 的 P0/P1 归档。当前不训练、不生成新 tape、不使用 held-out/canonical seeds，等待 EGTR P2 技术审计完成。
