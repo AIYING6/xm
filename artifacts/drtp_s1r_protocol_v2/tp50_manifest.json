@@ -1,0 +1,208 @@
+{
+  "count": 50,
+  "episodes": [
+    {
+      "episode_id": 440000,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440001,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440002,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440003,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440004,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440005,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440006,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440007,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440008,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 440009,
+      "tape": "T0"
+    },
+    {
+      "episode_id": 450000,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450001,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450002,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450003,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450004,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450005,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450006,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450007,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450008,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 450009,
+      "tape": "T1"
+    },
+    {
+      "episode_id": 460000,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460001,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460002,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460003,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460004,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460005,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460006,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460007,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460008,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 460009,
+      "tape": "T2"
+    },
+    {
+      "episode_id": 470000,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470001,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470002,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470003,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470004,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470005,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470006,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470007,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470008,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 470009,
+      "tape": "T3"
+    },
+    {
+      "episode_id": 480000,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480001,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480002,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480003,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480004,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480005,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480006,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480007,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480008,
+      "tape": "T4"
+    },
+    {
+      "episode_id": 480009,
+      "tape": "T4"
+    }
+  ],
+  "protocol": "DRTP-S1R-TP50-V2",
+  "rule": "first 10 episode IDs from each imported REL-A0 tape",
+  "sha256": "95c9c8d4c81cb6e983fa63fc72327d8b54e791fd501d1acd4b0f069dda091b70"
+}

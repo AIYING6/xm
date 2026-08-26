@@ -49,6 +49,10 @@ paper_latex_3d_en/*.pdf
 submission_packaging/pdf_review/
 submission_packaging/pdf_review_v2/
 
+# Submission TIFFs are reproduced at 600 dpi by the committed figure scripts;
+# keep the local raster exports without inflating the source repository.
+paper/q2_final_zh/formal_results/figures/*.tiff
+
 # Development-only v1.6R/LER and exploratory audit outputs
 results/ler_*.json
 results/v1_6r_*.json

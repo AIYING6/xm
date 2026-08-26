@@ -1,0 +1,10 @@
+{
+  "alive_immediately_before_onset": true,
+  "episode_id": 910244,
+  "failure_triggered": true,
+  "pass": true,
+  "pre_onset_rows_retained": true,
+  "pre_onset_termination_removed": false,
+  "protocol": "DRTP-S1R-P2-RISK-SET-V1",
+  "scheduled_onset": 44
+}

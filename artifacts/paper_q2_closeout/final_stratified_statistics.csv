@@ -1,0 +1,9 @@
+contract,metric,n_training_seeds,wins,mean_delta,median_delta,std,iqr,mad,worst_delta,inference_boundary
+development_3M,delta_nominal,2,2,23.851,23.851,23.96102038728735,16.942999999999998,16.942999999999998,6.908,descriptive within frozen contract; no population-level claim
+development_3M,delta_F0,2,1,55.951,55.951,109.79671255552236,77.638,77.638,-21.687,descriptive within frozen contract; no population-level claim
+development_3M,delta_OOD_mean,2,1,62.8565,62.8565,97.07374024163279,68.6415,68.6415,-5.785,descriptive within frozen contract; no population-level claim
+development_3M,delta_OOD_worst,2,2,69.0915,69.0915,87.02999552165909,61.53950000000001,61.539500000000004,7.552,descriptive within frozen contract; no population-level claim
+heldout_10M,delta_nominal,3,2,61.151666666666664,50.65,83.15534104513873,82.65650000000001,66.904,-16.254,descriptive within frozen contract; no population-level claim
+heldout_10M,delta_F0,3,2,6.706000000000002,29.804,110.92652463229882,109.10799999999999,74.461,-113.951,descriptive within frozen contract; no population-level claim
+heldout_10M,delta_OOD_mean,3,2,15.126333333333333,26.305,98.14165023237247,97.663,80.89500000000001,-88.126,descriptive within frozen contract; no population-level claim
+heldout_10M,delta_OOD_worst,3,2,6.40466666666667,23.688,96.0365762474555,94.863,68.938,-97.1,descriptive within frozen contract; no population-level claim

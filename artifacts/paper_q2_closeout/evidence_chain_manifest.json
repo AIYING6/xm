@@ -1,0 +1,190 @@
+{
+  "schema": "paper-q2-evidence-chain-manifest-v1",
+  "evidence_freeze_commit": "1680b21",
+  "manifest_built_from_commit": "3c193ee89251d10569c10e765a08d6f900366084",
+  "training_started": false,
+  "independent_unit": "training_seed",
+  "contract_rule": "development_3M and heldout_10M remain separate; cross-stratum summaries are descriptive only",
+  "historical_decisions_required": [
+    "DRTP_Q2_LIMITATION_ONLY",
+    "held-out FAIL",
+    "development NO-GO"
+  ],
+  "required_seeds": [
+    1901,
+    1902,
+    2001,
+    2002,
+    2003
+  ],
+  "sources": [
+    {
+      "source_id": "development_report",
+      "path": "docs/DRTP_SG_MAPPO_DEVELOPMENT_PERFORMANCE_REPORT.md",
+      "role": "upstream result report",
+      "sha256": "1f4e6f3f832c696bd4cabda0a3c9fbd53d69a0d54d6b67f51e8483c0ce4ab292",
+      "bytes": 5886
+    },
+    {
+      "source_id": "heldout_report",
+      "path": "docs/DRTP_HELDOUT_V2_AUDIT_REPORT.md",
+      "role": "upstream result report",
+      "sha256": "9d5bfd2dab72d4e608481e2f273f26e945f459b861e2be6bd1255d448a3f4fec",
+      "bytes": 4271
+    },
+    {
+      "source_id": "publication_viability",
+      "path": "docs/DRTP_Q2_PUBLICATION_VIABILITY_AUDIT.md",
+      "role": "historical paired audit",
+      "sha256": "7773d11a4565876288278a79f4a70ffa30d27504bc971d3c6f763caf84980b10",
+      "bytes": 6178
+    },
+    {
+      "source_id": "topology_mechanism",
+      "path": "docs/PHASE_S1B_TOPOLOGY_RECONFIGURATION_VALIDATION_REPORT.md",
+      "role": "mechanism report",
+      "sha256": "96be420466a7b3c98d8191c91ad0f82da2f6f0f4eec9757cbfe00f9c4a6bb22b",
+      "bytes": 3765
+    },
+    {
+      "source_id": "reliability_a0",
+      "path": "docs/DRTP_REL_A0_FINAL_REPORT.md",
+      "role": "multi-tape reliability audit",
+      "sha256": "0167cd804e930b55572b71874baf33f6baa87b599417f67b25108f47081a5d39",
+      "bytes": 2610
+    },
+    {
+      "source_id": "p1_main",
+      "path": "artifacts/paper_q2_p1/main_table.csv",
+      "role": "intermediate machine table",
+      "sha256": "fd10738d69cb81b09fe353f3cefa81bd827e2840b0924d966fac0b36d95bba7c",
+      "bytes": 928
+    },
+    {
+      "source_id": "p1_seed",
+      "path": "artifacts/paper_q2_p1/seed_level_results.csv",
+      "role": "intermediate seed table",
+      "sha256": "3db0019cf0c5ef4b7cd7ecfd6f5499b7bde3e3f1d1dbaf03a5380c2c89165f35",
+      "bytes": 556
+    },
+    {
+      "source_id": "p1_stats",
+      "path": "artifacts/paper_q2_p1/statistical_summary.json",
+      "role": "canonical statistical calculation",
+      "sha256": "d1c91d4e67f277ebae4338e5a821424cf14fb987d43b2b7e2f5ea2d66c62e5ba",
+      "bytes": 5301
+    },
+    {
+      "source_id": "p1_provenance",
+      "path": "artifacts/paper_q2_p1/result_provenance.json",
+      "role": "intermediate provenance",
+      "sha256": "198dadf6ae9f8bd26f5df2b48851838c5426929f8e21b328cef46dbe89ed55f1",
+      "bytes": 1776
+    },
+    {
+      "source_id": "p1_statistics_report",
+      "path": "docs/PAPER_Q2_P1_STATISTICAL_RESULTS.md",
+      "role": "corrected prose statistics table",
+      "sha256": "be0a3a51b1de712c00e3db539040c7e6c2861ef9ae24928a562861bea1e42c44",
+      "bytes": 2109
+    },
+    {
+      "source_id": "final_main",
+      "path": "artifacts/paper_q2_closeout/final_main_results.csv",
+      "role": "closeout table",
+      "sha256": "f72cb181ff9bd0d34f8d067c5a2197a98f4accd19a00b826f097191631959e73",
+      "bytes": 922
+    },
+    {
+      "source_id": "final_seed",
+      "path": "artifacts/paper_q2_closeout/final_seed_level_results.csv",
+      "role": "closeout seed table",
+      "sha256": "b694d44e44c308561c2777d247c9f1f9c1243dd643ed1aecf7a18f2921eb0ecf",
+      "bytes": 550
+    },
+    {
+      "source_id": "final_reliability",
+      "path": "artifacts/paper_q2_closeout/final_reliability_results.csv",
+      "role": "closeout reliability table",
+      "sha256": "8cf14caa083b11ba8673dc601d73f97c25090257b0068042c025ce2c90cf7b7c",
+      "bytes": 1208
+    },
+    {
+      "source_id": "final_stratified",
+      "path": "artifacts/paper_q2_closeout/final_stratified_statistics.csv",
+      "role": "contract-stratified statistics",
+      "sha256": "9a7071927daca0a6b4a93983eb1ddb39b3d78d95fe3ff569d7742ddaeed5d43c",
+      "bytes": 1407
+    },
+    {
+      "source_id": "final_absolute",
+      "path": "artifacts/paper_q2_closeout/final_paired_absolute_results.csv",
+      "role": "all paired absolute rows",
+      "sha256": "ea5f72357014fd9d8a988d501900be3d621d3b70115c2f4805813637afa8d069",
+      "bytes": 1537
+    },
+    {
+      "source_id": "final_decision",
+      "path": "artifacts/paper_q2_closeout/final_submission_decision.json",
+      "role": "immutable closeout decision",
+      "sha256": "db4dec25f8a442464110fc56b1e06f96bb0c33a8ecc82b350038c1f9f2044125",
+      "bytes": 674
+    },
+    {
+      "source_id": "claim_matrix",
+      "path": "artifacts/paper_q2_closeout/claim_evidence_matrix.csv",
+      "role": "claim routing",
+      "sha256": "ed55800dd2aaf57006b924b167b842170c8a59aff7f407562748ec829810a222",
+      "bytes": 1379
+    },
+    {
+      "source_id": "figure_manifest",
+      "path": "artifacts/paper_q2_closeout/figure_source_manifest.csv",
+      "role": "figure routing",
+      "sha256": "d684ca47960209cd1fc4694a3baa5967d75cbf3ef795046ba5d2a03358337ca1",
+      "bytes": 1296
+    },
+    {
+      "source_id": "manuscript_manifest",
+      "path": "artifacts/paper_q2_closeout/manuscript_source_manifest.csv",
+      "role": "manuscript source policy",
+      "sha256": "6ae06c1be51f97029ccdd319e406ce358f4605a87cbaa5c98d58f857122c8c0d",
+      "bytes": 2104
+    },
+    {
+      "source_id": "edge_manifest",
+      "path": "artifacts/paper_q2_closeout/evidence_chain_edges.csv",
+      "role": "lineage edges",
+      "sha256": "840e9ee7144bb2172bd8dab335d275f851e7cf968424dd9874bc9acf1994d606",
+      "bytes": 2174
+    },
+    {
+      "source_id": "transform_p1",
+      "path": "scripts/build_paper_q2_p1.py",
+      "role": "upstream transformation code",
+      "sha256": "333b802173bd583b4ebf81cc96e7f4099a84883023327ffdd22dd921587e2b16",
+      "bytes": 39025
+    },
+    {
+      "source_id": "transform_closeout",
+      "path": "scripts/build_paper_q2_closeout.py",
+      "role": "closeout transformation code",
+      "sha256": "5f6d84567d33eebf3e3ce3fa9806304f4b3914196bef9986595e64f93f42b99e",
+      "bytes": 20716
+    },
+    {
+      "source_id": "transform_lineage",
+      "path": "scripts/build_paper_q2_evidence_chain.py",
+      "role": "lineage builder code",
+      "sha256": "82db23681388422b67491a2074d0ce93465f317946297304c24da585f2a18a36",
+      "bytes": 11413
+    },
+    {
+      "source_id": "verify_lineage",
+      "path": "scripts/verify_paper_q2_evidence_chain.py",
+      "role": "lineage verification code",
+      "sha256": "1461411bbdacc800e1710a960606b5a79d083382e916aa2294e1c1ee0772fd7d",
+      "bytes": 8909
+    }
+  ]
+}

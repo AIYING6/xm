@@ -1,0 +1,38 @@
+{
+  "derivation": "RNGStreams.from_master(master_seed); blake2b(base_seed, stream_name, components) -> signed-31-bit seed",
+  "intervention_rule": "replace exactly one named stream from B with G while retaining the other five B streams; evaluation stream is fixed",
+  "protocol": "DRTP-S1R-RNG-V2",
+  "source_file": "algorithms/ri_gmappo/rng_streams.py",
+  "source_regression_artifact": "artifacts/drtp_seed_s1/rng_stream_regression.json",
+  "source_regression_sha256": "8b36cd54ca68176623c7ed6b973d1860bf4fc194d9eed344aa9d18d15cc04725",
+  "source_sha256": "70038bfecd81e174d0c2eaa64e2252987a3b92a9dd2bee5d1a7a3c90d69438e7",
+  "streams": [
+    "init",
+    "env",
+    "action",
+    "minibatch",
+    "topology",
+    "eval"
+  ],
+  "training_started": false,
+  "tuples": {
+    "B": {
+      "action_seed": 1728403788,
+      "env_seed": 1426732065,
+      "eval_seed": 1839374455,
+      "init_seed": 222834908,
+      "master_seed": 2002,
+      "minibatch_seed": 277030910,
+      "topology_seed": 1837311832
+    },
+    "G": {
+      "action_seed": 993989929,
+      "env_seed": 2084278804,
+      "eval_seed": 420889792,
+      "init_seed": 1888953741,
+      "master_seed": 2001,
+      "minibatch_seed": 128451329,
+      "topology_seed": 655855597
+    }
+  }
+}

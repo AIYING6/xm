@@ -1,0 +1,16 @@
+source_id,source_path,allowed_use,forbidden_use,status
+S1,docs/PAPER_Q2_FINAL_EVIDENCE_FREEZE.md,scientific scope and immutable decisions,none,authoritative
+S2,artifacts/paper_q2_closeout/final_main_results.csv,absolute contract-stratified result tables,cross-stratum confirmatory pooling,authoritative
+S3,artifacts/paper_q2_closeout/final_seed_level_results.csv,paired training-seed results,seed exclusion,authoritative
+S4,artifacts/paper_q2_closeout/final_reliability_results.csv,descriptive mean median dispersion and worst delta,population-level inference,authoritative
+S5,artifacts/paper_q2_closeout/efficiency_results.csv,parameter equality and training-only controller scope,wall-clock or memory superiority,authoritative_with_missing_wallclock
+S6,artifacts/paper_q2_closeout/external_comparator_matrix.csv,related-work positioning and no-drop-in audit,claim that no related methods exist,authoritative
+S7,docs/PHASE_S1B_TOPOLOGY_RECONFIGURATION_VALIDATION_REPORT.md,topology/path mechanism,information-blackout claim,authoritative
+S8,docs/DRTP_HELDOUT_V2_AUDIT_REPORT.md,held-out result safety and adverse seed,rewriting held-out FAIL,authoritative
+S9,docs/DRTP_REL_A0_FINAL_REPORT.md,multi-tape seed reliability,evaluation-noise explanation for seed2002,authoritative
+S10,paper/q2_draft/,intermediate wording after claim audit,direct value copy without source check,non_authoritative_draft
+S11,paper_latex_3d_en/,generic environment prose after provenance review,legacy recovery EA-RG or Gate claims,legacy_quarantined
+S12,artifacts/paper_q2_closeout/final_paired_absolute_results.csv,all UTR/DRTP absolute method-seed values,episode-level inference,authoritative
+S13,artifacts/paper_q2_closeout/final_stratified_statistics.csv,within-contract descriptive statistics,cross-contract confirmatory inference,authoritative
+S14,artifacts/paper_q2_closeout/evidence_chain_manifest.json,source hashes and evidence freeze identity,manual result replacement,authoritative
+S15,artifacts/paper_q2_closeout/evidence_chain_edges.csv,source-to-claim transformation graph,unlisted transformation,authoritative

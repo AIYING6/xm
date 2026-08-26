@@ -1,0 +1,6 @@
+# Keep reproducible manuscript source artifacts line-ending stable across Windows/Linux.
+paper/q2_final_zh/**/*.md text eol=lf
+paper/q2_final_zh/**/*.json text eol=lf
+paper/q2_final_zh/**/*.csv text eol=lf
+paper/q2_final_zh/**/*.svg text eol=lf
+scripts/*.py text eol=lf

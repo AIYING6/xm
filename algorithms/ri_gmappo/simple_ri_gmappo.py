@@ -34,7 +34,9 @@ from envs import (
 )
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
 from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
-from algorithms.ri_gmappo.drtp_topology_sampler import DRTPSelection, DRTPTopologySampler, EGTRTopologySampler
+from algorithms.ri_gmappo.drtp_topology_sampler import DRTPSelection, DRTPTopologySampler
+from algorithms.ri_gmappo.snr_topology_sampler import StaticNonuniformTopologySampler
+from algorithms.ri_gmappo.drtp_topology_sampler import EGTRTopologySampler
 from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 
@@ -1343,8 +1345,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.updates,
     )
     drtp_mode = str(cfg.drtp_sampler_mode).lower()
-    if drtp_mode not in {"none", "utr", "drtp", "r_drtp", "egtr"}:
-        raise ValueError("drtp_sampler_mode must be none, utr, drtp, r_drtp, or egtr")
+    if drtp_mode not in {"none", "utr", "snr", "drtp", "r_drtp", "egtr"}:
+        raise ValueError("drtp_sampler_mode must be none, utr, snr, drtp, r_drtp, or egtr")
     actor_gradient_mode = str(cfg.actor_gradient_mode).lower()
     if actor_gradient_mode not in {"standard", "utr", "spc", "tcr"}:
         raise ValueError("actor_gradient_mode must be standard, utr, spc, or tcr")
@@ -1370,16 +1372,20 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if cfg.fixed_f0_probability is not None
         else None
     )
+    sampler_seed = cfg.drtp_sampler_seed if cfg.drtp_sampler_seed is not None else cfg.seed
+    sampler_updates = cfg.drtp_sampler_total_updates if cfg.drtp_sampler_total_updates is not None else cfg.updates
     if drtp_mode == "egtr":
         drtp_sampler = EGTRTopologySampler(
-            cfg.drtp_sampler_seed if cfg.drtp_sampler_seed is not None else cfg.seed,
-            cfg.drtp_sampler_total_updates if cfg.drtp_sampler_total_updates is not None else cfg.updates,
+            sampler_seed,
+            sampler_updates,
         )
+    elif drtp_mode == "snr":
+        drtp_sampler = StaticNonuniformTopologySampler(sampler_seed, sampler_updates)
     elif drtp_mode != "none":
         drtp_sampler = DRTPTopologySampler(
             drtp_mode,
-            cfg.drtp_sampler_seed if cfg.drtp_sampler_seed is not None else cfg.seed,
-            cfg.drtp_sampler_total_updates if cfg.drtp_sampler_total_updates is not None else cfg.updates,
+            sampler_seed,
+            sampler_updates,
         )
     else:
         drtp_sampler = None
@@ -1413,6 +1419,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         sampler_name = (
             "fixed_stratified_topology_sampler_manifest.json"
             if cfg.fixed_stratified_topology_sampler
+            else "snr_static_nonuniform_topology_sampler_manifest.json"
+            if drtp_mode == "snr"
             else "drtp_topology_sampler_manifest.json"
         )
         (out_dir / sampler_name).write_text(
@@ -1521,6 +1529,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     drtp_log_path = out_dir / (
         "fixed_stratified_topology_sampler_log.csv"
         if cfg.fixed_stratified_topology_sampler
+        else "snr_static_nonuniform_topology_sampler_log.csv"
+        if drtp_mode == "snr"
         else "drtp_topology_sampler_log.csv"
     )
     actor_gradient_log_path = out_dir / "actor_gradient_telemetry.csv"

@@ -1,0 +1,34 @@
+{
+  "model_path": "results\\development\\drtp_s1r_p2_technical_only\\actor_critic_latest.pt",
+  "model_sha256": "6cbdc354dc8ced2d62938f63a0bee1bcccc71757e535d416df4c41f420e00bcf",
+  "parameter_checksum_exact": true,
+  "pass": true,
+  "probe_output": {
+    "output": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "probe_id": "P2_reload_probe"
+  },
+  "probe_reproduced": true,
+  "protocol": "DRTP-S1R-P2-CHECKPOINT-V1",
+  "reload_process": "independent child process loaded runtime checkpoint from disk",
+  "required_keys_present": true,
+  "required_runtime_keys": [
+    "drtp_sampler_state",
+    "environment_states",
+    "episode_counts",
+    "graph_obs",
+    "model_state",
+    "obs",
+    "optimizer_state",
+    "rng_state",
+    "share_obs",
+    "update"
+  ],
+  "runtime_path": "results\\development\\drtp_s1r_p2_technical_only\\actor_critic_runtime_state_latest.pt",
+  "runtime_sha256": "8568598c85a6df4f0043f82836cd89842af72d3e7ab56d45069d16252845f7ff",
+  "technical_only": true,
+  "update": 1
+}

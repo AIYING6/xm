@@ -1,0 +1,167 @@
+{
+  "fixed_eval_seed": 420889792,
+  "pass": true,
+  "protocol": "DRTP-S1R-P2-RNG-TUPLE-V1",
+  "rows": [
+    {
+      "action_seed": 1728403788,
+      "changed_fields_from_reference": [
+        "init_seed"
+      ],
+      "direction": "B_to_G",
+      "env_seed": 1426732065,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 1888953741,
+      "minibatch_seed": 277030910,
+      "source": "init",
+      "topology_seed": 1837311832,
+      "tuple": "B_to_G_INIT"
+    },
+    {
+      "action_seed": 993989929,
+      "changed_fields_from_reference": [
+        "init_seed"
+      ],
+      "direction": "G_to_B",
+      "env_seed": 2084278804,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 222834908,
+      "minibatch_seed": 128451329,
+      "source": "init",
+      "topology_seed": 655855597,
+      "tuple": "G_to_B_INIT"
+    },
+    {
+      "action_seed": 1728403788,
+      "changed_fields_from_reference": [
+        "env_seed"
+      ],
+      "direction": "B_to_G",
+      "env_seed": 2084278804,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 222834908,
+      "minibatch_seed": 277030910,
+      "source": "env",
+      "topology_seed": 1837311832,
+      "tuple": "B_to_G_ENV"
+    },
+    {
+      "action_seed": 993989929,
+      "changed_fields_from_reference": [
+        "env_seed"
+      ],
+      "direction": "G_to_B",
+      "env_seed": 1426732065,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 1888953741,
+      "minibatch_seed": 128451329,
+      "source": "env",
+      "topology_seed": 655855597,
+      "tuple": "G_to_B_ENV"
+    },
+    {
+      "action_seed": 993989929,
+      "changed_fields_from_reference": [
+        "action_seed"
+      ],
+      "direction": "B_to_G",
+      "env_seed": 1426732065,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 222834908,
+      "minibatch_seed": 277030910,
+      "source": "action",
+      "topology_seed": 1837311832,
+      "tuple": "B_to_G_ACTION"
+    },
+    {
+      "action_seed": 1728403788,
+      "changed_fields_from_reference": [
+        "action_seed"
+      ],
+      "direction": "G_to_B",
+      "env_seed": 2084278804,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 1888953741,
+      "minibatch_seed": 128451329,
+      "source": "action",
+      "topology_seed": 655855597,
+      "tuple": "G_to_B_ACTION"
+    },
+    {
+      "action_seed": 1728403788,
+      "changed_fields_from_reference": [
+        "minibatch_seed"
+      ],
+      "direction": "B_to_G",
+      "env_seed": 1426732065,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 222834908,
+      "minibatch_seed": 128451329,
+      "source": "minibatch",
+      "topology_seed": 1837311832,
+      "tuple": "B_to_G_MINIBATCH"
+    },
+    {
+      "action_seed": 993989929,
+      "changed_fields_from_reference": [
+        "minibatch_seed"
+      ],
+      "direction": "G_to_B",
+      "env_seed": 2084278804,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 1888953741,
+      "minibatch_seed": 277030910,
+      "source": "minibatch",
+      "topology_seed": 655855597,
+      "tuple": "G_to_B_MINIBATCH"
+    },
+    {
+      "action_seed": 1728403788,
+      "changed_fields_from_reference": [
+        "topology_seed"
+      ],
+      "direction": "B_to_G",
+      "env_seed": 1426732065,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 222834908,
+      "minibatch_seed": 277030910,
+      "source": "topology",
+      "topology_seed": 655855597,
+      "tuple": "B_to_G_TOPOLOGY"
+    },
+    {
+      "action_seed": 993989929,
+      "changed_fields_from_reference": [
+        "topology_seed"
+      ],
+      "direction": "G_to_B",
+      "env_seed": 2084278804,
+      "eval_fixed": true,
+      "eval_seed": 420889792,
+      "exactly_one_training_stream_changed": true,
+      "init_seed": 1888953741,
+      "minibatch_seed": 128451329,
+      "source": "topology",
+      "topology_seed": 1837311832,
+      "tuple": "G_to_B_TOPOLOGY"
+    }
+  ]
+}

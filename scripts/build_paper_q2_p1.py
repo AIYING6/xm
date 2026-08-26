@@ -197,9 +197,9 @@ The machine-readable sources are `artifacts/paper_q2_p1/main_table.csv`, `seed_l
 | Metric | Wins | Mean | Median | SD | IQR | MAD | Worst |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Nominal | 4/5 | +46.231 | +40.794 | 63.390 | 43.742 | 33.886 | −16.254 |
-| F0 | 3/5 | +26.404 | +29.804 | 99.467 | 125.952 | 51.491 | −113.951 |
+| F0 | 3/5 | +26.404 | +29.804 | 99.467 | 125.952 | 74.461 | −113.951 |
 | OOD mean | 3/5 | +34.218 | +26.305 | 88.629 | 112.985 | 80.895 | −88.126 |
-| OOD worst | 4/5 | +31.479 | +23.688 | 87.658 | 85.074 | 16.136 | −97.100 |
+| OOD worst | 4/5 | +31.479 | +23.688 | 87.658 | 85.074 | 68.938 | −97.100 |
 
 The exact machine-readable summary is authoritative. These dispersion values are deterministic seed-level descriptive statistics over the five historical paired deltas; they are not population estimates.
 

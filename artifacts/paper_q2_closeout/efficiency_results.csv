@@ -1,0 +1,7 @@
+item,UTR_SG,DRTP_SG,comparison_status,source_or_boundary
+trainable parameters,"116,728","116,728",matched,frozen DRTP method contract
+actor/critic backbone,same Single-Graph MAPPO,same Single-Graph MAPPO,matched,frozen DRTP method contract
+topology training groups,same 7 groups + 50% nominal anchor,same 7 groups + 50% nominal anchor,matched,DRTP method contract
+extra inference module,none,none,matched at inference,adaptive weighting is training-only
+checkpoint model bytes (P3 architecture check),"479,288","479,288",equal architectural serialization example,results/development/drtp_s1r_p3/runs/*/actor_critic_latest.pt
+wall-clock / peak GPU memory,not available under a common hardware log,not available under a common hardware log,not claimed,no cross-hardware or incomplete-log comparison is permitted

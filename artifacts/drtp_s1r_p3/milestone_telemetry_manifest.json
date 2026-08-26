@@ -1,0 +1,21 @@
+{
+  "conditions_per_tape": 5,
+  "milestones": [
+    "250k",
+    "500k",
+    "750k",
+    "1m"
+  ],
+  "protocol": "DRTP-S1R-P3-MILESTONE-TRAJECTORY-V1",
+  "records": 2000,
+  "sha256": "97dff46ca2169110531c90c5a730ec4777f2ecf6a84cabfc612fa7a3e3b8be1c",
+  "step_telemetry_gzip": "results\\development\\drtp_s1r_p3\\milestone_telemetry\\tp50_step_telemetry.jsonl.gz",
+  "tapes": [
+    "T0",
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+  ],
+  "tp50_per_tape": 10
+}
