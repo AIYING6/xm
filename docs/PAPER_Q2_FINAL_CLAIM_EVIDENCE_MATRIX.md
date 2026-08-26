@@ -8,6 +8,6 @@
 | C4 | DRTP is seed-sensitive and has a reproducible catastrophic adverse seed. | held-out seed2002; REL-A0 | Main Fig. 4, 6; Table 4 | mandatory limitation |
 | C5 | Safety is mixed rather than uniformly improved. | main results; held-out audit | Main Fig. 6; Table 4 | mandatory limitation |
 | C6 | All-episode outcomes and risk-set trigger validity are distinct estimands. | Phase-C exposure audits | Supplementary evaluator audit | allowed |
-| C7 | No fair external drop-in comparator was identified under the frozen contract. | external_comparator_matrix.csv | Related work / limitation | not a superiority claim |
+| C7 | MAPPO-NoGraph provides a completed, bounded external performance reference; its different graph input and parameter count prevent causal attribution. | MAPPO-NoGraph five-seed archive, shared tape, SHA256 audit, Table 2b | Results 6.3 / limitation | allowed as external positioning only; not a superiority or graph-causality claim |
 | C8 | The reported setting is a 3-UAV heterogeneous simulation. | frozen environment contract | Methods / limitations | scope restriction |
 | C9 | DRTP is stable, universally robust, or consistently superior. | no supporting evidence | not permitted | prohibited |
