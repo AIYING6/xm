@@ -40,6 +40,7 @@ REQUIRED_FILES = [
     "19_v112_reviewer_reconciliation_and_submission_blockers.md",
     "20_evidence_architecture_writing_upgrade.md",
     "21_external_reference_integration_contract.md",
+    "formal_results/external_reference_summary.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
     "formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json",
@@ -103,14 +104,32 @@ def main() -> None:
             "formal seed2302 nominal regression is not retained")
     require("**表1｜对照与证据层级。**" in manuscript,
             "comparison and evidence hierarchy is not explicit")
-    require("MAPPO-NoGraph 外部参考训练尚无完成结果" in
+    external_summary = (PAPER / "formal_results" / "external_reference_summary.md").read_text(
+        encoding="utf-8"
+    )
+    for token in (
+        "EXTERNAL_REFERENCE_COMPLETE",
+        "2f8b5f1e3025221e70652a6c4d0bcaa05d239cc81f5c70d59301d4f9e66afad5",
+        "84e31ed185ced0608a30c9cb9f9659c7423c952e4603aac53cf691c54fc64ac2",
+        "6,000 条原始 episode 记录",
+        "35,771",
+        "UTR–DRTP 仍是本文唯一的参数匹配主因果消融",
+    ):
+        require(token in external_summary, f"external-reference summary missing: {token}")
+    require("MAPPO-NoGraph 外部参考已进入表2b和有限讨论" in
             (PAPER / "20_evidence_architecture_writing_upgrade.md").read_text(encoding="utf-8"),
-            "external-reference result boundary is missing")
+            "external-reference manuscript integration is not recorded")
     external_contract = (PAPER / "21_external_reference_integration_contract.md").read_text(encoding="utf-8")
     for token in ("EXTERNAL_REFERENCE_COMPLETE", "UTR–DRTP", "不得以训练日志、截图或部分 seed 替代"):
         require(token in external_contract, f"external-reference integration boundary missing: {token}")
     require("100 次二分" in manuscript and "有界单纯形投影" in manuscript,
             "bounded-simplex implementation detail is missing")
+    require("### 6.3 MAPPO-NoGraph 外部性能参考" in manuscript and
+            "**表2b｜MAPPO-NoGraph 外部参考结果。**" in manuscript,
+            "completed external reference is not integrated in the Results section")
+    require("不能据此将 UTR 与 MAPPO 的差异归因于图结构本身" in manuscript and
+            "不能建立图结构或自适应权重的单独因果归因" in manuscript,
+            "external-reference causal boundary is not explicit")
     require("max(|\\bar J_{N,u}|,\\epsilon)" in manuscript and
             "(1-\\beta)q_u+\\beta\\tilde q_{u+1}" in manuscript,
             "difficulty denominator or smoothing equation is not explicit")
@@ -139,6 +158,9 @@ def main() -> None:
     require(state.get("external_reference_integration_contract") ==
             "paper/q2_final_zh/21_external_reference_integration_contract.md",
             "external-reference integration contract is not registered")
+    require("independently SHA256-verified and integrated" in
+            state.get("external_reference_status", ""),
+            "writing state does not record completed external-reference integration")
 
     integration = (PAPER / "08_formal_result_integration_contract.md").read_text(
         encoding="utf-8"

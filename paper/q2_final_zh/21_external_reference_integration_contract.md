@@ -49,6 +49,6 @@
 - 不用外部参考的结果修订 DRTP 历史 development/held-out 结论；
 - 不将 EGTR P3 的内部 1M 结果混入外部参考表或 DRTP 主结论。
 
-## 6. 投稿前状态
+## 6. 已完成接入状态
 
-当前状态为：外部参考训练合同和汇总脚本已冻结，但本地尚未收到可核验的完成归档。因此本合同是“结果到达后的防返工接口”，不是对外部结果的预先肯定，也不阻塞 DRTP 主稿继续完成引用、图表、数据可用性和中文期刊模板工作。
+外部归档已收到并独立完成 SHA256 核验，结果状态为 `EXTERNAL_REFERENCE_COMPLETE`。可引用的归档核验、完整性和数值摘要固定于 `formal_results/external_reference_summary.md`，独立审计记录固定于 `docs/DRTP_MAPPO_EXTERNAL_REFERENCE_AUDIT.md`。因此本文允许按第 3 节的有限方式接入完整五种子外部参考，但仍不得把它升级为同构主消融、图结构的单独因果检验或全算法排行榜。

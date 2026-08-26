@@ -36,8 +36,8 @@
     "author and availability metadata not supplied",
     "wall-clock and peak-memory comparison unavailable under common hardware"
   ],
-  "external_reference_status": "MAPPO-NoGraph frozen external-reference contract prepared; no completed external-baseline archive has been verified or integrated into the manuscript",
+  "external_reference_status": "MAPPO-NoGraph external archive independently SHA256-verified and integrated as a bounded external performance reference; five seeds, shared 10M endpoint, shared tape, and complete safety records audited. It does not replace the UTR-DRTP causal ablation.",
   "external_reference_integration_contract": "paper/q2_final_zh/21_external_reference_integration_contract.md",
   "evidence_architecture_writing_upgrade": "paper/q2_final_zh/20_evidence_architecture_writing_upgrade.md",
-  "next_stage": "complete Chinese manuscript provenance, literature, author metadata, target-journal formatting, and—only after completed frozen external-reference evidence—an explicitly bounded external-comparison update; EGTR P3 remains internal pending its separate frozen safety decision"
+  "next_stage": "complete Chinese manuscript provenance, literature, author metadata, target-journal formatting, and final source-data/claim-boundary audit; MAPPO-NoGraph external-reference integration is complete, while EGTR P3 remains internal pending its separate frozen safety decision"
 }
