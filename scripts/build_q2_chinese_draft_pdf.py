@@ -201,7 +201,7 @@ def image_flow(path_text: str, alt_text: str, style: dict[str, ParagraphStyle], 
 def markdown_table(rows: list[str], width: float) -> Table:
     parsed = []
     for index, line in enumerate(rows):
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        cells = [table_cell_text(cell) for cell in line.strip().strip("|").split("|")]
         if index == 1 and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
             continue
         parsed.append(cells)
@@ -225,6 +225,16 @@ def markdown_table(rows: list[str], width: float) -> Table:
         ("RIGHTPADDING", (0, 0), (-1, -1), 3),
     ]))
     return table
+
+
+def table_cell_text(text: str) -> str:
+    """Render Markdown table cells without exposing manuscript LaTex delimiters."""
+    text = plain_math(text.strip())
+    # Tables contain short metric labels such as ``(J_{nominal})``.  ReportLab
+    # treats them as plain strings, so normalize the manuscript notation rather
+    # than leaving braces and inline-math wrappers in the review PDF.
+    text = re.sub(r"J_\{([^}]+)\}", r"J_\1", text)
+    return text.replace("(", "").replace(")", "").replace("{", "").replace("}", "")
 
 
 def parse_story(width: float) -> list:
