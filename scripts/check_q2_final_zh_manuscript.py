@@ -40,6 +40,7 @@ REQUIRED_FILES = [
     "19_v112_reviewer_reconciliation_and_submission_blockers.md",
     "20_evidence_architecture_writing_upgrade.md",
     "21_external_reference_integration_contract.md",
+    "22_submission_evidence_layer_freeze_audit.md",
     "formal_results/external_reference_summary.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
@@ -138,6 +139,23 @@ def main() -> None:
     main_body = manuscript.split("## 附录B", maxsplit=1)[0]
     require("FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE" not in main_body,
             "machine verdict must not appear before Appendix B")
+    # The Chinese submission route is intentionally limited to the formal
+    # UTR--DRTP cohort.  Historical reliability evidence is reported as a
+    # separate stratum, while SNR and unvalidated stabilization candidates are
+    # internal route-selection evidence rather than paper methods or results.
+    for forbidden in ("SNR", "R-DRTP", "R_DRTP", "EGTR", "Reliability-Gated"):
+        require(forbidden not in manuscript,
+                f"archived or internal-only method leaked into manuscript: {forbidden}")
+    require("J_pert,mean" in manuscript and "J_pert,worst" in manuscript,
+            "paper-facing cross-perturbation endpoint names are missing")
+    require(manuscript.count("J_OOD_mean") == 2 and manuscript.count("J_OOD_worst") == 2,
+            "machine OOD fields must appear only in the two explicit archive mappings")
+    require("不是严格未见分布外（OOD）指标" in manuscript and
+            "不作为严格 OOD 证据" in manuscript,
+            "cross-perturbation conditions are not protected from OOD overclaiming")
+    require("### 6.8 历史可靠性证据" in manuscript and
+            "这些历史结果不能与正式五种子作为一个同质样本合并" in manuscript,
+            "historical reliability stratum is not explicitly separated")
 
     state = json.loads((PAPER / "state.json").read_text(encoding="utf-8"))
     require(state.get("nonresult_manuscript_sections_drafted") is True,
