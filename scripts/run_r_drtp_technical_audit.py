@@ -20,7 +20,7 @@ from algorithms.ri_gmappo.simple_ri_gmappo import load_matching_state_dict, trai
 import torch  # noqa: E402
 
 
-OUT = ROOT / "results" / "development" / "r_drtp_technical_audit_v2"
+OUT = ROOT / "results" / "development" / "r_drtp_technical_audit_v3"
 
 
 def sel(group: str) -> DRTPSelection:
@@ -57,6 +57,17 @@ def sampler_audit() -> dict:
     ) and math.isclose(float(low_row["alpha"]), 0.0, abs_tol=1e-12)
     result["q_bounds_mass"] = math.isclose(sum(high.q.values()), 1.0, abs_tol=1e-10) and all(
         0.05 - 1e-12 <= value <= 0.35 + 1e-12 for value in high.q.values()
+    )
+    original = DRTPTopologySampler("drtp", 9914, 3907)
+    gated = DRTPTopologySampler("r_drtp", 9914, 3907)
+    for update in (32, 64, 96, 128, 160):
+        fill(original, 100.0, 16)
+        fill(gated, 100.0, 16)
+        original.maybe_update(update)
+        gated.maybe_update(update)
+    result["full_confidence_recovers_drtp"] = (
+        math.isclose(gated.last_alpha, 1.0, abs_tol=1e-12)
+        and all(math.isclose(gated.q[group], original.q[group], abs_tol=1e-12) for group in FAILURE_GROUPS)
     )
     replay_left = DRTPTopologySampler("r_drtp", 9912, 3907)
     replay_right = DRTPTopologySampler("r_drtp", 9912, 3907)

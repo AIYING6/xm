@@ -9,7 +9,7 @@
 本次只审计 R-DRTP 的最小 sampler 实现，并执行一次 CPU/单更新 smoke。没有生成 evaluation tape，没有使用 held-out 或 canonical seed，没有启动 development 或长训练。
 
 机器可读结果：
-`results/development/r_drtp_technical_audit_v2/R_DRTP_TECHNICAL_AUDIT.json`
+`results/development/r_drtp_technical_audit_v3/R_DRTP_TECHNICAL_AUDIT.json`
 
 ## 2. 审计结果
 
@@ -20,6 +20,7 @@
 | `alpha` 有界性 | PASS |
 | q 的 floor/cap/simplex/mass | PASS |
 | 空窗口均匀回退 | PASS |
+| 满可信度时恢复原 DRTP | PASS |
 | deterministic replay | PASS |
 | sampler manifest/logging | PASS |
 | one-update finite-value smoke | PASS |
@@ -36,7 +37,7 @@ q^R=(1-\alpha)q^{uniform}+\alpha q^{cand},
 \qquad \alpha=c_u.
 \]
 
-可信度由当前 adaptation window 的每组样本量和归一化 MAD 离散度计算；空组会将可信度降为 0，从而回退至 uniform。所有结果继续经过原 bounded-simplex 约束。
+可信度由当前 adaptation window 的每组样本量和归一化 MAD 离散度计算；每组达到 8 个稳定样本时可信度可达到 1，确保 R-DRTP 能精确恢复原 DRTP；空组会将可信度降为 0，从而回退至 uniform。所有结果继续经过原 bounded-simplex 约束。
 
 ## 4. 重要解释边界
 

@@ -28,7 +28,7 @@ R-DRTP 必须保持：
 
 定义可信度：
 
-`c_{k,u}=clip(n_{k,u}/(n_0+n_{k,u}),0,1) * exp(-lambda_v * clip(v_{k,u},0,v_max))`。
+`c_{k,u}=min(1,n_{k,u}/n_0) * exp(-lambda_v * clip(v_{k,u},0,v_max))`。
 
 取 `c_u=min_k c_{k,u}`，自适应幅度为：
 

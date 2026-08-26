@@ -284,7 +284,10 @@ class DRTPTopologySampler:
                             RDRTP_V_MAX, mad / max(abs(median), EPSILON)
                         )
                         dispersion[group] = relative_dispersion
-                        count_confidence = min(1.0, len(values) / (RDRTP_N0 + len(values)))
+                        # Reach full count confidence once the frozen minimum
+                        # sample count is met; otherwise R-DRTP would never
+                        # be able to recover the original DRTP update exactly.
+                        count_confidence = min(1.0, len(values) / RDRTP_N0)
                         confidence[group] = count_confidence * math.exp(
                             -RDRTP_LAMBDA_V * relative_dispersion
                         )

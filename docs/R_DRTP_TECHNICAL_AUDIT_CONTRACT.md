@@ -19,9 +19,11 @@ v_{k,u}=\min\left(1,\frac{\operatorname{MAD}(Y_{k,u})}{|m_{k,u}|+10^{-8}}\right)
 若窗口没有完成样本，则 `v_{k,u}=1` 且该组可信度为 0。否则：
 
 \[
-c_{k,u}=\frac{n_{k,u}}{8+n_{k,u}}\exp(-v_{k,u}),
+c_{k,u}=\min\left(1,\frac{n_{k,u}}{8}\right)\exp(-v_{k,u}),
 \qquad c_u=\min_k c_{k,u}.
 \]
+
+因此，当每个组至少有 8 个完成样本且 MAD 为 0 时，`c_u=1`，R-DRTP 精确恢复原 DRTP 更新；样本不足或回报离散时才收缩到均匀锚点。
 
 固定常数为：`n_0=8`、`lambda_v=1`、`v_max=1`、`alpha_max=1`。不得根据任何 R-DRTP 性能结果修改。
 
