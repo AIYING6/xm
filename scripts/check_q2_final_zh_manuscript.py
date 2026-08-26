@@ -179,14 +179,21 @@ def main() -> None:
         "figS1_training_diagnostics",
     )
     for stem in figure_stems:
-        for extension in (".svg", ".pdf", ".png", ".tiff"):
+        # SVG/PDF/PNG are the committed figure contract. TIFF exports are
+        # intentionally ignored by .gitignore because they are reproducible
+        # from the committed figure scripts; validate one when present, but
+        # do not make a clean clone depend on an untracked local raster.
+        for extension in (".svg", ".pdf", ".png"):
             require((figures / f"{stem}{extension}").is_file(),
                     f"missing figure artifact: {stem}{extension}")
-        with Image.open(figures / f"{stem}.tiff") as image:
+        raster = figures / f"{stem}.tiff"
+        if not raster.is_file():
+            raster = figures / f"{stem}.png"
+        with Image.open(raster) as image:
             dpi = image.info.get("dpi", (0, 0))
-            require(min(dpi) >= 599, f"{stem} TIFF DPI below 600: {dpi}")
+            require(min(dpi) >= 599, f"{stem} raster DPI below 600: {dpi}")
             require(min(image.size) >= 1400,
-                    f"{stem} TIFF raster dimensions unexpectedly small: {image.size}")
+                    f"{stem} raster dimensions unexpectedly small: {image.size}")
 
     print(
         "PASS: Chinese manuscript evidence package is integrated; no formal-result "

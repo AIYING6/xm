@@ -16,6 +16,7 @@
   "foundation_files_complete": true,
   "evidence_chain_status": "PASS",
   "nonresult_manuscript_sections_drafted": true,
+  "non_training_manuscript_polish_completed": true,
   "formal_result_placeholders_frozen": false,
   "formal_result_integration_contract": "paper/q2_final_zh/08_formal_result_integration_contract.md",
   "chinese_submission_contract": "paper/q2_final_zh/10_chinese_submission_contract.md",
