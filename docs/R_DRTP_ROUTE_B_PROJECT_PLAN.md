@@ -1,6 +1,6 @@
 # R-DRTP 路线 B 项目阶段合同
 
-**状态：** `R-DRTP ARCHIVED — EGTR P1 FROZEN — EGTR P2 AUDIT REQUIRED`
+**状态：** `R-DRTP ARCHIVED — EGTR P2 PASS — P3 AUTHORIZATION REQUIRED`
 
 **日期：** 2026-08-26  
 **训练授权：** 无

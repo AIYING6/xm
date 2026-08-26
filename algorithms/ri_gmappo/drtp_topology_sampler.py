@@ -44,6 +44,10 @@ RDRTP_N0 = 8.0
 RDRTP_LAMBDA_V = 1.0
 RDRTP_V_MAX = 1.0
 RDRTP_ALPHA_MAX = 1.0
+EGTR_CONFIDENCE_KAPPA = 0.20
+EGTR_REQUIRED_SAMPLES = 8.0
+EGTR_TRUST_REGION_L1 = 0.10
+EGTR_MAD_SCALE = 1.4826
 
 
 @dataclass(frozen=True)
@@ -103,8 +107,8 @@ class DRTPTopologySampler:
 
     def __init__(self, mode: str, seed: int, total_updates: int):
         self.mode = str(mode).lower()
-        if self.mode not in {"utr", "drtp", "r_drtp"}:
-            raise ValueError("DRTP sampler mode must be 'utr', 'drtp', or 'r_drtp'")
+        if self.mode not in {"utr", "drtp", "r_drtp", "egtr"}:
+            raise ValueError("DRTP sampler mode must be 'utr', 'drtp', 'r_drtp', or 'egtr'")
         self.seed = int(seed)
         self.total_updates = int(total_updates)
         if self.total_updates <= 0:
@@ -390,3 +394,167 @@ class DRTPTopologySampler:
             "failure_duration_steps": "", "adapted": bool(adapted), "reason": reason,
             "adaptation_count": self.adaptation_count, **state,
         }
+
+
+class EGTRTopologySampler(DRTPTopologySampler):
+    """Per-group evidence gate followed by a sampler L1 trust region."""
+
+    def __init__(self, seed: int, total_updates: int):
+        super().__init__("egtr", seed, total_updates)
+        self.confidence_ema = {group: 0.0 for group in FAILURE_GROUPS}
+        self.stale_duration = {group: 0 for group in FAILURE_GROUPS}
+        self.last_rho = 0.0
+        self.last_trust_distance = 0.0
+        self.last_trust_active = False
+        self.last_q_uniform_distance = 0.0
+        self.last_q_step_l1 = 0.0
+        self.last_q_star = [UNIFORM_Q] * len(FAILURE_GROUPS)
+        self.last_evidence = {group: {"gap": 0.0, "r": 0.0} for group in FAILURE_GROUPS}
+
+    @staticmethod
+    def _median(values: list[float]) -> float:
+        if not values:
+            return 0.0
+        ordered = sorted(float(value) for value in values)
+        middle = len(ordered) // 2
+        return ordered[middle] if len(ordered) % 2 else 0.5 * (ordered[middle - 1] + ordered[middle])
+
+    @classmethod
+    def _robust_se(cls, values: list[float]) -> float:
+        if not values:
+            return 0.0
+        median = cls._median(values)
+        mad = cls._median([abs(float(value) - median) for value in values])
+        return EGTR_MAD_SCALE * mad / math.sqrt(max(len(values), 1))
+
+    def _evidence(self, group: str, nominal_values: list[float]) -> tuple[float, float]:
+        values = self.window_returns[group]
+        n_nominal, n_group = len(nominal_values), len(values)
+        m_nominal, m_group = self._median(nominal_values), self._median(values)
+        s_nominal, s_group = self._robust_se(nominal_values), self._robust_se(values)
+        gap = max(m_nominal - m_group, 0.0)
+        availability = min(1.0, n_nominal / EGTR_REQUIRED_SAMPLES) * min(1.0, n_group / EGTR_REQUIRED_SAMPLES)
+        reliability = availability * gap / (gap + math.sqrt(s_nominal ** 2 + s_group ** 2) + EPSILON)
+        return gap, reliability
+
+    def state_dict(self) -> dict:
+        state = super().state_dict()
+        state["format"] = "egtr_topology_sampler_runtime_state_v1"
+        state.update({
+            "confidence_ema": {group: float(self.confidence_ema[group]) for group in FAILURE_GROUPS},
+            "stale_duration": {group: int(self.stale_duration[group]) for group in FAILURE_GROUPS},
+        })
+        return state
+
+    def load_state_dict(self, state: dict) -> None:
+        if state.get("format") != "egtr_topology_sampler_runtime_state_v1":
+            raise ValueError("unsupported EGTR sampler runtime-state format")
+        base = dict(state)
+        base["format"] = "drtp_topology_sampler_runtime_state_v1"
+        super().load_state_dict(base)
+        self.confidence_ema = {group: float(state["confidence_ema"][group]) for group in FAILURE_GROUPS}
+        self.stale_duration = {group: int(state["stale_duration"][group]) for group in FAILURE_GROUPS}
+        if any(not math.isfinite(value) or not 0.0 <= value <= 1.0 for value in self.confidence_ema.values()):
+            raise ValueError("EGTR confidence EMA out of bounds")
+        if any(value < 0 for value in self.stale_duration.values()):
+            raise ValueError("EGTR stale duration is negative")
+
+    def _state_row(self) -> dict:
+        row = super()._state_row()
+        row.update({f"confidence_ema_{group}": self.confidence_ema[group] for group in FAILURE_GROUPS})
+        row.update({f"stale_duration_{group}": self.stale_duration[group] for group in FAILURE_GROUPS})
+        row.update({f"evidence_gap_{group}": self.last_evidence[group]["gap"] for group in FAILURE_GROUPS})
+        row.update({f"evidence_r_{group}": self.last_evidence[group]["r"] for group in FAILURE_GROUPS})
+        row.update({
+            "rho": self.last_rho,
+            "trust_region_distance": self.last_trust_distance,
+            "trust_region_active": self.last_trust_active,
+            "q_uniform_distance": self.last_q_uniform_distance,
+            "q_step_l1": self.last_q_step_l1,
+        })
+        return row
+
+    @staticmethod
+    def log_fields() -> list[str]:
+        fields = DRTPTopologySampler.log_fields()
+        fields += [f"confidence_ema_{group}" for group in FAILURE_GROUPS]
+        fields += [f"stale_duration_{group}" for group in FAILURE_GROUPS]
+        fields += [f"evidence_gap_{group}" for group in FAILURE_GROUPS]
+        fields += [f"evidence_r_{group}" for group in FAILURE_GROUPS]
+        fields += ["rho", "trust_region_distance", "trust_region_active", "q_uniform_distance", "q_step_l1"]
+        return fields
+
+    def maybe_update(self, update: int) -> dict | None:
+        update = int(update)
+        if update % ADAPT_INTERVAL != 0:
+            return None
+        counts = {group: len(values) for group, values in self.window_returns.items()}
+        self._refresh_ema()
+        nominal_values = self.window_returns[NOMINAL_GROUP]
+        for group in FAILURE_GROUPS:
+            gap, reliability = self._evidence(group, nominal_values)
+            self.last_evidence[group] = {"gap": gap, "r": reliability}
+            self.stale_duration[group] = 0 if counts[group] > 0 else self.stale_duration[group] + 1
+            self.confidence_ema[group] = ((1.0 - EGTR_CONFIDENCE_KAPPA) * self.confidence_ema[group]
+                                          + EGTR_CONFIDENCE_KAPPA * reliability)
+        self.last_rho = sum(self.confidence_ema.values()) / len(FAILURE_GROUPS)
+        previous = [self.q[group] for group in FAILURE_GROUPS]
+        self.last_trust_distance = 0.0
+        self.last_trust_active = False
+        self.last_q_step_l1 = 0.0
+        adapted = False
+        reason = "warmup"
+        egtr_ready = (
+            update > WARMUP_UPDATES
+            and self.ema[NOMINAL_GROUP] is not None
+            and any(self.ema[group] is not None for group in FAILURE_GROUPS)
+        )
+        if egtr_ready:
+            nominal = float(self.ema[NOMINAL_GROUP])
+            difficulty = {
+                group: 0.0 if self.ema[group] is None else min(
+                    DIFFICULTY_MAX,
+                    max(0.0, (nominal - float(self.ema[group])) / max(abs(nominal), EPSILON)),
+                )
+                for group in FAILURE_GROUPS
+            }
+            h = {group: self.confidence_ema[group] * difficulty[group] for group in FAILURE_GROUPS}
+            center = sum(h.values()) / len(FAILURE_GROUPS)
+            logits = {group: self.q[group] * math.exp(TEMPERATURE_ETA * (h[group] - center)) for group in FAILURE_GROUPS}
+            normalizer = sum(logits.values())
+            q_e = [logits[group] / normalizer for group in FAILURE_GROUPS]
+            q_a = [(1.0 - self.last_rho) * UNIFORM_Q + self.last_rho * q_e[index]
+                   for index in range(len(FAILURE_GROUPS))]
+            z = [(1.0 - SMOOTHING_BETA) * self.q[group] + SMOOTHING_BETA * q_a[index]
+                 for index, group in enumerate(FAILURE_GROUPS)]
+            q_star = _bounded_simplex_projection(z)
+            self.last_q_star = list(q_star)
+            self.last_trust_distance = sum(abs(q_star[index] - previous[index]) for index in range(len(previous)))
+            gamma = min(1.0, EGTR_TRUST_REGION_L1 / (self.last_trust_distance + EPSILON))
+            self.last_trust_active = gamma < 1.0
+            final_q = [previous[index] + gamma * (q_star[index] - previous[index]) for index in range(len(previous))]
+            self.last_q_step_l1 = sum(abs(final_q[index] - previous[index]) for index in range(len(previous)))
+            if self.last_q_step_l1 > EGTR_TRUST_REGION_L1 + 1e-10:
+                raise AssertionError("EGTR final q step exceeded L1 trust region")
+            self.q = dict(zip(FAILURE_GROUPS, final_q))
+            self.last_difficulty = difficulty
+            self.last_alpha = self.last_rho
+            self.adaptation_count += 1
+            adapted = True
+            reason = "egtr_evidence_then_project_then_l1_trust_region"
+        self.last_q_uniform_distance = sum(abs(self.q[group] - UNIFORM_Q) for group in FAILURE_GROUPS)
+        self.window_returns = {group: [] for group in ALL_GROUPS}
+        return self.update_row(update, counts, adapted, reason)
+
+    def manifest(self) -> dict:
+        payload = super().manifest()
+        payload.update({
+            "protocol": "EGTR-DRTP-SG-MAPPO-CONTRACT-V1",
+            "egtr_confidence_kappa": EGTR_CONFIDENCE_KAPPA,
+            "egtr_required_samples": EGTR_REQUIRED_SAMPLES,
+            "egtr_trust_region_l1": EGTR_TRUST_REGION_L1,
+            "egtr_mad_scale": EGTR_MAD_SCALE,
+            "trust_region_after_projection": True,
+        })
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return {**payload, "sampler_hash": hashlib.sha256(encoded).hexdigest()}

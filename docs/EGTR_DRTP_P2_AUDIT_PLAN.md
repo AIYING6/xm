@@ -1,6 +1,6 @@
 # EGTR-DRTP P2 技术审计计划
 
-**状态：** `P2 NOT STARTED — NO TRAINING AUTHORIZED`  
+**状态：** `P2 PASS — NO TRAINING AUTHORIZED`  
 **绑定合同：** `docs/EGTR_DRTP_METHOD_CONTRACT.md`
 
 ## 1. 必须通过的硬门
