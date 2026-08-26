@@ -38,6 +38,7 @@ REQUIRED_FILES = [
     "17_major_revision_rectification_log.md",
     "18_p1_review_response_and_submission_gap.md",
     "19_v112_reviewer_reconciliation_and_submission_blockers.md",
+    "20_evidence_architecture_writing_upgrade.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
     "formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json",
@@ -99,6 +100,11 @@ def main() -> None:
             "aggregate nominal-retention boundary is not explicit")
     require("0.760" in manuscript and "seed2302" in manuscript,
             "formal seed2302 nominal regression is not retained")
+    require("**表1｜对照与证据层级。**" in manuscript,
+            "comparison and evidence hierarchy is not explicit")
+    require("MAPPO-NoGraph 外部参考训练尚无完成结果" in
+            (PAPER / "20_evidence_architecture_writing_upgrade.md").read_text(encoding="utf-8"),
+            "external-reference result boundary is missing")
     require("100 次二分" in manuscript and "有界单纯形投影" in manuscript,
             "bounded-simplex implementation detail is missing")
     require("max(|\\bar J_{N,u}|,\\epsilon)" in manuscript and

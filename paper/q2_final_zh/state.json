@@ -4,7 +4,7 @@
   "publication_language_route": "chinese_only",
   "parallel_english_full_manuscript": false,
   "english_metadata_only_if_required_by_chinese_journal": true,
-  "stage": "formal_result_integrated_chinese_manuscript_finalization",
+  "stage": "formal_result_integrated_chinese_manuscript_evidence_architecture_upgrade",
   "scientific_training_authorized": false,
   "formal_confirmation_started": true,
   "formal_confirmation_completed": true,
@@ -36,5 +36,7 @@
     "author and availability metadata not supplied",
     "wall-clock and peak-memory comparison unavailable under common hardware"
   ],
-  "next_stage": "complete Chinese manuscript provenance, literature, author metadata, and target-journal formatting without changing the frozen formal result"
+  "external_reference_status": "MAPPO-NoGraph contract prepared; no external-baseline result integrated into the manuscript",
+  "evidence_architecture_writing_upgrade": "paper/q2_final_zh/20_evidence_architecture_writing_upgrade.md",
+  "next_stage": "complete Chinese manuscript provenance, literature, author metadata, target-journal formatting, and—only after completed frozen external-reference evidence—an explicitly bounded external-comparison update"
 }
