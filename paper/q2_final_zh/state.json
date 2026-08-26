@@ -4,7 +4,7 @@
   "publication_language_route": "chinese_only",
   "parallel_english_full_manuscript": false,
   "english_metadata_only_if_required_by_chinese_journal": true,
-  "stage": "formal_result_integrated_chinese_manuscript_evidence_architecture_upgrade",
+  "stage": "formal_result_integrated_chinese_manuscript_parallel_closeout",
   "scientific_training_authorized": false,
   "formal_confirmation_started": true,
   "formal_confirmation_completed": true,
@@ -36,7 +36,8 @@
     "author and availability metadata not supplied",
     "wall-clock and peak-memory comparison unavailable under common hardware"
   ],
-  "external_reference_status": "MAPPO-NoGraph contract prepared; no external-baseline result integrated into the manuscript",
+  "external_reference_status": "MAPPO-NoGraph frozen external-reference contract prepared; no completed external-baseline archive has been verified or integrated into the manuscript",
+  "external_reference_integration_contract": "paper/q2_final_zh/21_external_reference_integration_contract.md",
   "evidence_architecture_writing_upgrade": "paper/q2_final_zh/20_evidence_architecture_writing_upgrade.md",
-  "next_stage": "complete Chinese manuscript provenance, literature, author metadata, target-journal formatting, and—only after completed frozen external-reference evidence—an explicitly bounded external-comparison update"
+  "next_stage": "complete Chinese manuscript provenance, literature, author metadata, target-journal formatting, and—only after completed frozen external-reference evidence—an explicitly bounded external-comparison update; EGTR P3 remains internal pending its separate frozen safety decision"
 }

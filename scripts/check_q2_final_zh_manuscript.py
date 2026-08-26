@@ -39,6 +39,7 @@ REQUIRED_FILES = [
     "18_p1_review_response_and_submission_gap.md",
     "19_v112_reviewer_reconciliation_and_submission_blockers.md",
     "20_evidence_architecture_writing_upgrade.md",
+    "21_external_reference_integration_contract.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
     "formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json",
@@ -105,6 +106,9 @@ def main() -> None:
     require("MAPPO-NoGraph 外部参考训练尚无完成结果" in
             (PAPER / "20_evidence_architecture_writing_upgrade.md").read_text(encoding="utf-8"),
             "external-reference result boundary is missing")
+    external_contract = (PAPER / "21_external_reference_integration_contract.md").read_text(encoding="utf-8")
+    for token in ("EXTERNAL_REFERENCE_COMPLETE", "UTR–DRTP", "不得以训练日志、截图或部分 seed 替代"):
+        require(token in external_contract, f"external-reference integration boundary missing: {token}")
     require("100 次二分" in manuscript and "有界单纯形投影" in manuscript,
             "bounded-simplex implementation detail is missing")
     require("max(|\\bar J_{N,u}|,\\epsilon)" in manuscript and
@@ -132,6 +136,9 @@ def main() -> None:
             "publication route is not frozen to Chinese")
     require(state.get("parallel_english_full_manuscript") is False,
             "parallel English full manuscript must remain disabled")
+    require(state.get("external_reference_integration_contract") ==
+            "paper/q2_final_zh/21_external_reference_integration_contract.md",
+            "external-reference integration contract is not registered")
 
     integration = (PAPER / "08_formal_result_integration_contract.md").read_text(
         encoding="utf-8"
