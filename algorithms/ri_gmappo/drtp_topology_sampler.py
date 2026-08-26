@@ -439,6 +439,8 @@ class EGTRTopologySampler(DRTPTopologySampler):
 
     def state_dict(self) -> dict:
         state = super().state_dict()
+        for key in ("last_confidence", "last_alpha", "last_dispersion"):
+            state.pop(key, None)
         state["format"] = "egtr_topology_sampler_runtime_state_v1"
         state.update({
             "confidence_ema": {group: float(self.confidence_ema[group]) for group in FAILURE_GROUPS},
@@ -461,6 +463,8 @@ class EGTRTopologySampler(DRTPTopologySampler):
 
     def _state_row(self) -> dict:
         row = super()._state_row()
+        for key in ("confidence", "alpha", *[f"dispersion_{group}" for group in FAILURE_GROUPS]):
+            row.pop(key, None)
         row.update({f"confidence_ema_{group}": self.confidence_ema[group] for group in FAILURE_GROUPS})
         row.update({f"stale_duration_{group}": self.stale_duration[group] for group in FAILURE_GROUPS})
         row.update({f"evidence_gap_{group}": self.last_evidence[group]["gap"] for group in FAILURE_GROUPS})
@@ -476,7 +480,10 @@ class EGTRTopologySampler(DRTPTopologySampler):
 
     @staticmethod
     def log_fields() -> list[str]:
-        fields = DRTPTopologySampler.log_fields()
+        fields = [
+            field for field in DRTPTopologySampler.log_fields()
+            if field not in {"confidence", "alpha", *[f"dispersion_{group}" for group in FAILURE_GROUPS]}
+        ]
         fields += [f"confidence_ema_{group}" for group in FAILURE_GROUPS]
         fields += [f"stale_duration_{group}" for group in FAILURE_GROUPS]
         fields += [f"evidence_gap_{group}" for group in FAILURE_GROUPS]
@@ -548,6 +555,8 @@ class EGTRTopologySampler(DRTPTopologySampler):
 
     def manifest(self) -> dict:
         payload = super().manifest()
+        for key in ("protocol", "r_drtp_n0", "r_drtp_lambda_v", "r_drtp_v_max", "r_drtp_alpha_max"):
+            payload.pop(key, None)
         payload.update({
             "protocol": "EGTR-DRTP-SG-MAPPO-CONTRACT-V1",
             "egtr_confidence_kappa": EGTR_CONFIDENCE_KAPPA,

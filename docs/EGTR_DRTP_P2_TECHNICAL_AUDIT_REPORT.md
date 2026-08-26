@@ -6,10 +6,10 @@
 
 ## 1. 审计边界
 
-本次只验证冻结 EGTR 方法合同的实现语义。未生成 evaluation tape，未使用 held-out/canonical seeds，未启动 development、1M 或 3M 长训练。one-update smoke 仅用于检查训练入口、日志和 checkpoint wiring。
+本次只验证冻结 EGTR 方法合同的实现语义。P2 审计阶段未生成 evaluation tape，未使用 held-out/canonical seeds，未启动 development、1M 或 3M 长训练。one-update smoke 仅用于检查训练入口、日志和 checkpoint wiring。
 
 机器可读结果：
-`results/development/egtr_p2_technical_audit_v3/EGTR_DRTP_P2_TECHNICAL_AUDIT.json`
+`results/development/egtr_p2_technical_audit_v4/EGTR_DRTP_P2_TECHNICAL_AUDIT.json`
 
 ## 2. 结果
 
@@ -59,4 +59,4 @@ q_k\in[0.05,0.35],\qquad \sum_kq_k=1,
 
 ## 6. 当前停止点
 
-EGTR P2 已 PASS。下一步只能冻结 P3 development contract；未经单独授权不得生成新 tape 或启动训练。
+EGTR P2 已 PASS。P3 合同与独立 development tape 必须另行冻结；P2 本身不授权长训练。

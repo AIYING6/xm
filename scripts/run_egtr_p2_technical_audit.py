@@ -19,7 +19,7 @@ from algorithms.ri_gmappo.simple_ri_gmappo import load_matching_state_dict, trai
 from scripts.run_drtp_sg_technical_verification import build_sg, frozen_cfg
 
 
-OUT = ROOT / "results" / "development" / "egtr_p2_technical_audit_v3"
+OUT = ROOT / "results" / "development" / "egtr_p2_technical_audit_v4"
 
 
 def selection(group: str) -> DRTPSelection:
