@@ -3,6 +3,12 @@
 **状态：** `PREPARED_FOR_AUTHOR_HOSTING`
 **范围：** 本清单只整理现有证据，不运行新训练、不重算 checkpoint、不改变任何训练或评价结果。
 
+## 0. 已完成的本地匿名包构建
+
+本清单现已由 `scripts/build_drtp_anonymous_reproducibility_package.py` 落地为本地匿名审稿 staging package，并由 `scripts/check_drtp_anonymous_reproducibility_package.py` 完整性核验。构建包保留正式 UTR--DRTP 的 12,000 条原始记录、无图 MAPPO 性能参考的 6,000 条原始记录及独立 UTR/SNR/DRTP cohort 的 18,000 条原始记录，另含其三层 manifest、run provenance、sampler log、合同、代码和图表资产。独立 cohort 仍不得与正式 cohort 合并为 `n=10`。精确命令、归档 SHA256、提取范围和核验条件见文档28。
+
+该状态仅表示“可匿名托管的本地包已生成并自检”；未获得匿名外部链接、许可证和 checkpoint 获取策略前，正文仍不得写为“数据和代码已公开”。
+
 ## 1. 投稿前必须完成的两步
 
 1. 作者将本清单对应的文件复制至一个可匿名访问的版本化仓库或数据仓库；匿名审稿阶段使用不暴露作者身份的审稿链接，接收后转换为公开永久记录。

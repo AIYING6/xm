@@ -32,7 +32,7 @@
   ],
   "technical_debts": [
     "target journal and article format not selected",
-    "nine core references verified; PPO/CTDE, node-failure, adaptive-sampling, and target-journal literature still pending",
+    "target-journal-specific literature and reference style remain pending until the journal is selected",
     "author and availability metadata not supplied",
     "wall-clock and peak-memory comparison unavailable under common hardware"
   ],
@@ -42,10 +42,11 @@
   "snr_cohort_publication_boundary": "The completed SNR three-arm cohort is disclosed as a complete independent replication/reliability stratum with all methods, all seeds, common 10M endpoints, safety outcomes, source archive SHA256, and raw records. It is never pooled with the formal 2301-2305 UTR-DRTP cohort and is not used to selectively rewrite that cohort's result.",
   "snr_replication_supplement": "paper/q2_final_zh/supplementary/S4_independent_three_arm_replication.md",
   "anonymous_reproducibility_package": "paper/q2_final_zh/24_anonymous_reproducibility_package.md",
+  "anonymous_reproducibility_package_staging_audit": "paper/q2_final_zh/28_anonymous_package_staging_audit.md",
   "final_evidence_manifest": "paper/q2_final_zh/25_final_evidence_manifest.json",
   "novelty_and_prior_art_positioning": "paper/q2_final_zh/26_novelty_and_prior_art_positioning.md",
   "presubmission_reviewer_simulation": "paper/q2_final_zh/27_presubmission_reviewer_simulation.md",
-  "data_code_availability_status": "anonymous reproducibility package prepared; author hosting link, persistent identifier, licence, and checkpoint-access policy remain required before submission",
+  "data_code_availability_status": "anonymous reproducibility package locally built and checksum-validated from all three raw evidence strata; author hosting link, persistent identifier, licence, and checkpoint-access policy remain required before submission",
   "evidence_architecture_writing_upgrade": "paper/q2_final_zh/20_evidence_architecture_writing_upgrade.md",
-  "next_stage": "complete real-reference and claim-evidence audit, submission-style equations/figures, anonymous reproducibility package, author metadata, target-journal selection, and final source-data/claim-boundary audit; EGTR remains a separate internal research line and is not a method in this manuscript"
+  "next_stage": "author-host the locally verified anonymous package, choose a target Chinese journal, provide author metadata, migrate to the journal template, and run the final target-format audit; EGTR remains a separate internal research line and is not a method in this manuscript"
 }
