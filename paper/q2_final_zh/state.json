@@ -49,7 +49,8 @@
   "submission_release_gate": "paper/q2_final_zh/29_submission_release_gate.md",
   "submission_release_metadata_template": "paper/q2_final_zh/submission_release_metadata.template.json",
   "final_scientific_version_reviewer_assessment": "paper/q2_final_zh/30_final_scientific_version_reviewer_assessment.md",
+  "target_chinese_journal_shortlist": "paper/q2_final_zh/31_target_chinese_journal_shortlist.md",
   "data_code_availability_status": "anonymous reproducibility package locally built and checksum-validated from all three raw evidence strata; author hosting link, persistent identifier, licence, and checkpoint-access policy remain required before submission",
   "evidence_architecture_writing_upgrade": "paper/q2_final_zh/20_evidence_architecture_writing_upgrade.md",
-  "next_stage": "author-host the locally verified anonymous package, choose a target Chinese journal, provide author metadata, migrate to the journal template, and run the final target-format audit; EGTR remains a separate internal research line and is not a method in this manuscript"
+  "next_stage": "author-select a target Chinese journal from the official-scope shortlist, host the locally verified anonymous package, provide author metadata, migrate to the journal template, and run the final target-format audit; EGTR remains a separate internal research line and is not a method in this manuscript"
 }

@@ -49,6 +49,7 @@ REQUIRED_FILES = [
     "28_anonymous_package_staging_audit.md",
     "29_submission_release_gate.md",
     "30_final_scientific_version_reviewer_assessment.md",
+    "31_target_chinese_journal_shortlist.md",
     "submission_release_metadata.template.json",
     "supplementary/S1_full_formal_condition_and_safety.md",
     "supplementary/S2_training_and_ppo_diagnostics.md",
@@ -239,6 +240,9 @@ def main() -> None:
     require(state.get("presubmission_reviewer_simulation") ==
             "paper/q2_final_zh/27_presubmission_reviewer_simulation.md",
             "presubmission reviewer simulation is not registered")
+    require(state.get("target_chinese_journal_shortlist") ==
+            "paper/q2_final_zh/31_target_chinese_journal_shortlist.md",
+            "target Chinese-journal shortlist is not registered")
 
     reproducibility_plan = (PAPER / "24_anonymous_reproducibility_package.md").read_text(
         encoding="utf-8"
@@ -280,6 +284,21 @@ def main() -> None:
                   "Risk / unsupported claims", "2401--2405"):
         require(token in final_review,
                 f"final scientific-version reviewer assessment is incomplete: {token}")
+    journal_shortlist = (PAPER / "31_target_chinese_journal_shortlist.md").read_text(
+        encoding="utf-8"
+    )
+    for token in (
+        "AUTHOR_SELECTION_REQUIRED",
+        "2301--2305",
+        "2401--2405",
+        "`n=10`",
+        "《航空学报》",
+        "《系统工程与电子技术》",
+        "《控制与决策》",
+        "《航空工程进展》",
+    ):
+        require(token in journal_shortlist,
+                f"target-journal shortlist is incomplete: {token}")
 
     for supplement_name, token in (
         ("S1_full_formal_condition_and_safety.md", "risk-set"),
