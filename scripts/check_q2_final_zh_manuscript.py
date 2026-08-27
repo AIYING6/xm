@@ -50,6 +50,7 @@ REQUIRED_FILES = [
     "29_submission_release_gate.md",
     "30_final_scientific_version_reviewer_assessment.md",
     "31_target_chinese_journal_shortlist.md",
+    "32_preselection_submission_package.md",
     "submission_release_metadata.template.json",
     "supplementary/S1_full_formal_condition_and_safety.md",
     "supplementary/S2_training_and_ppo_diagnostics.md",
@@ -243,6 +244,9 @@ def main() -> None:
     require(state.get("target_chinese_journal_shortlist") ==
             "paper/q2_final_zh/31_target_chinese_journal_shortlist.md",
             "target Chinese-journal shortlist is not registered")
+    require(state.get("preselection_submission_package") ==
+            "paper/q2_final_zh/32_preselection_submission_package.md",
+            "preselection submission package is not registered")
 
     reproducibility_plan = (PAPER / "24_anonymous_reproducibility_package.md").read_text(
         encoding="utf-8"
@@ -299,6 +303,19 @@ def main() -> None:
     ):
         require(token in journal_shortlist,
                 f"target-journal shortlist is incomplete: {token}")
+    submission_package = (PAPER / "32_preselection_submission_package.md").read_text(
+        encoding="utf-8"
+    )
+    for token in (
+        "READY_WITH_AUTHOR_CHECKS",
+        "2401--2405",
+        "不与主 cohort 合并为 `n=10`",
+        "初次投稿信模板",
+        "AUTHOR_INPUT_NEEDED",
+        "SUBMISSION_RELEASE_READY",
+    ):
+        require(token in submission_package,
+                f"preselection submission package is incomplete: {token}")
 
     for supplement_name, token in (
         ("S1_full_formal_condition_and_safety.md", "risk-set"),
