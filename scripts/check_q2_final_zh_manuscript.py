@@ -48,6 +48,7 @@ REQUIRED_FILES = [
     "27_presubmission_reviewer_simulation.md",
     "28_anonymous_package_staging_audit.md",
     "29_submission_release_gate.md",
+    "30_final_scientific_version_reviewer_assessment.md",
     "submission_release_metadata.template.json",
     "supplementary/S1_full_formal_condition_and_safety.md",
     "supplementary/S2_training_and_ppo_diagnostics.md",
@@ -272,6 +273,13 @@ def main() -> None:
                   "Risk / unsupported claims", "reproducibility"):
         require(token in reviewer_simulation,
                 f"presubmission reviewer simulation is incomplete: {token}")
+    final_review = (PAPER / "30_final_scientific_version_reviewer_assessment.md").read_text(
+        encoding="utf-8"
+    )
+    for token in ("Reviewer 1", "Reviewer 2", "Reviewer 3", "Cross-review synthesis",
+                  "Risk / unsupported claims", "2401--2405"):
+        require(token in final_review,
+                f"final scientific-version reviewer assessment is incomplete: {token}")
 
     for supplement_name, token in (
         ("S1_full_formal_condition_and_safety.md", "risk-set"),

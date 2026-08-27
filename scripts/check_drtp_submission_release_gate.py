@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper" / "q2_final_zh"
-PDF = PAPER / "output" / "DRTP_SG_MAPPO_中文论文初稿_投稿证据整合终版.pdf"
+PDF = PAPER / "output" / "DRTP_SG_MAPPO_中文论文终稿_投稿前审稿版.pdf"
 PACKAGE = ROOT / "output" / "drtp_relay_failure_anonymous_reproducibility_v1"
 
 AUTHOR_REQUIRED_TEXT_FIELDS = (

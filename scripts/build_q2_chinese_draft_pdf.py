@@ -1,8 +1,8 @@
-"""Build an internally reviewable Chinese PDF draft from the frozen Markdown manuscript.
+"""Build a pre-submission Chinese PDF from the frozen Markdown manuscript.
 
 This is a layout export only. It does not modify results, figures, data, or the
 manuscript text.  Equations are converted to readable plain-text math for this
-internal review draft; target-journal LaTeX/Word typesetting remains a later
+pre-submission scientific version; target-journal LaTeX/Word typesetting remains a later
 formatting step.
 """
 from __future__ import annotations
@@ -35,7 +35,7 @@ from reportlab.platypus import (
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper" / "q2_final_zh"
 SOURCE = PAPER / "main_zh.md"
-OUT = PAPER / "output" / "DRTP_SG_MAPPO_中文论文初稿_投稿证据整合终版.pdf"
+OUT = PAPER / "output" / "DRTP_SG_MAPPO_中文论文终稿_投稿前审稿版.pdf"
 FONT = Path(r"C:\Windows\Fonts\NotoSansSC-VF.ttf")
 
 
@@ -131,6 +131,11 @@ def plain_math(text: str) -> str:
     text = text.replace("\\mathrm{", "").replace("\\mathcal{", "")
     text = text.replace("\\text{", "").replace("\\}", "}")
     text = text.replace("\\_", "_").replace("\\", "")
+    # Markdown prose contains a small number of inline LaTeX metric labels.
+    # ReportLab is intentionally not used as a TeX engine here, so flatten
+    # their subscript braces into legible paper-facing symbols.
+    text = re.sub(r"([A-Za-z]+)_\{([^{}]+)\}", r"\1_\2", text)
+    text = re.sub(r"([A-Za-z]+)\^\{([^{}]+)\}", r"\1^\2", text)
     return text
 
 
@@ -334,20 +339,20 @@ def footer(canvas, doc) -> None:
     canvas.line(2.0 * cm, 1.5 * cm, A4[0] - 2.0 * cm, 1.5 * cm)
     canvas.setFont("NotoSansSC", 7.2)
     canvas.setFillColor(colors.HexColor("#627d98"))
-    canvas.drawString(2.0 * cm, 1.0 * cm, "中文投稿初稿｜三层证据整合版｜待迁移至目标期刊模板")
+    canvas.drawString(2.0 * cm, 1.0 * cm, "中文投稿科学终稿｜三层证据整合｜作者与期刊元数据待补")
     canvas.drawRightString(A4[0] - 2.0 * cm, 1.0 * cm, f"第 {doc.page} 页")
     canvas.restoreState()
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Export the frozen Chinese Q2 manuscript as an internally reviewable PDF."
+        description="Export the frozen Chinese manuscript as a pre-submission scientific PDF."
     )
     parser.add_argument(
         "--output",
         type=Path,
         default=OUT,
-        help="PDF path to create (defaults to the standard review-draft path).",
+        help="PDF path to create (defaults to the pre-submission scientific version).",
     )
     args = parser.parse_args()
     output = args.output.resolve()
@@ -355,7 +360,7 @@ def main() -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     document = SimpleDocTemplate(str(output), pagesize=A4, leftMargin=2.0 * cm, rightMargin=2.0 * cm,
                                  topMargin=1.75 * cm, bottomMargin=2.0 * cm,
-                                 title="DRTP-SG-MAPPO 中文论文初稿")
+                                 title="中继节点故障下异构多无人机拓扑鲁棒协同")
     story = parse_story(A4[0] - 4.0 * cm)
     document.build(story, onFirstPage=footer, onLaterPages=footer)
     print(output)

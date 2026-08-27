@@ -12,7 +12,7 @@
 | 三层 cohort 保留 | 主 cohort、无图 MAPPO 性能参考、独立 UTR/SNR/DRTP cohort 均在证据 manifest 中 | PASS |
 | 不跨 cohort 合并 | manifest 与主文均禁止将 2301--2305 与 2401--2405 合并为 `n=10` | PASS |
 | 主张边界 | claim audit 禁止 strict OOD、一般 DRO、跨 cohort 稳定优越与 adaptive necessity | PASS |
-| 中文终稿 PDF | `paper/q2_final_zh/output/DRTP_SG_MAPPO_中文论文初稿_投稿证据整合终版.pdf` | PASS |
+| 中文终稿 PDF | `paper/q2_final_zh/output/DRTP_SG_MAPPO_中文论文终稿_投稿前审稿版.pdf` | PASS |
 | 匿名复现包 staging | `output/drtp_relay_failure_anonymous_reproducibility_v1/` 与其 checksum 核验器 | PASS |
 
 ## 2. 仍须作者完成，不能由本地代码代替
