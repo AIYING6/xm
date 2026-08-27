@@ -7,6 +7,7 @@ formatting step.
 """
 from __future__ import annotations
 
+import argparse
 from html import escape
 from pathlib import Path
 import re
@@ -322,14 +323,25 @@ def footer(canvas, doc) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Export the frozen Chinese Q2 manuscript as an internally reviewable PDF."
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=OUT,
+        help="PDF path to create (defaults to the standard review-draft path).",
+    )
+    args = parser.parse_args()
+    output = args.output.resolve()
     register_fonts()
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    document = SimpleDocTemplate(str(OUT), pagesize=A4, leftMargin=2.0 * cm, rightMargin=2.0 * cm,
+    output.parent.mkdir(parents=True, exist_ok=True)
+    document = SimpleDocTemplate(str(output), pagesize=A4, leftMargin=2.0 * cm, rightMargin=2.0 * cm,
                                  topMargin=1.75 * cm, bottomMargin=2.0 * cm,
                                  title="DRTP-SG-MAPPO 中文论文初稿")
     story = parse_story(A4[0] - 4.0 * cm)
     document.build(story, onFirstPage=footer, onLaterPages=footer)
-    print(OUT)
+    print(output)
 
 
 if __name__ == "__main__":
