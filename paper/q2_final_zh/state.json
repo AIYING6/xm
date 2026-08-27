@@ -4,7 +4,7 @@
   "publication_language_route": "chinese_only",
   "parallel_english_full_manuscript": false,
   "english_metadata_only_if_required_by_chinese_journal": true,
-  "stage": "cross_cohort_reliability_disclosure_and_submission_closeout",
+  "stage": "project_side_submission_closeout_completed_author_actions_pending",
   "scientific_training_authorized": false,
   "formal_confirmation_started": true,
   "formal_confirmation_completed": true,
@@ -51,6 +51,7 @@
   "final_scientific_version_reviewer_assessment": "paper/q2_final_zh/30_final_scientific_version_reviewer_assessment.md",
   "target_chinese_journal_shortlist": "paper/q2_final_zh/31_target_chinese_journal_shortlist.md",
   "preselection_submission_package": "paper/q2_final_zh/32_preselection_submission_package.md",
+  "project_side_completion_audit": "paper/q2_final_zh/33_project_side_completion_audit.md",
   "data_code_availability_status": "anonymous reproducibility package locally built and checksum-validated from all three raw evidence strata; author hosting link, persistent identifier, licence, and checkpoint-access policy remain required before submission",
   "evidence_architecture_writing_upgrade": "paper/q2_final_zh/20_evidence_architecture_writing_upgrade.md",
   "next_stage": "author-select a target Chinese journal from the official-scope shortlist, host the locally verified anonymous package, provide author metadata, migrate to the journal template, and run the final target-format audit; EGTR remains a separate internal research line and is not a method in this manuscript"

@@ -1,9 +1,9 @@
 """Build a pre-submission Chinese PDF from the frozen Markdown manuscript.
 
 This is a layout export only. It does not modify results, figures, data, or the
-manuscript text.  Equations are converted to readable plain-text math for this
-pre-submission scientific version; target-journal LaTeX/Word typesetting remains a later
-formatting step.
+manuscript text. Display equations are normalized from the frozen Markdown and
+rendered with ReportLab subscript markup for a paper-facing mathematical layout;
+target-journal LaTeX/Word typesetting remains a later formatting step.
 """
 from __future__ import annotations
 
@@ -70,7 +70,8 @@ def styles() -> dict[str, ParagraphStyle]:
                                    fontSize=8, leading=12, alignment=TA_CENTER,
                                    textColor=colors.HexColor("#334e68"), spaceAfter=8, wordWrap="CJK"),
         "equation": ParagraphStyle("Equation", parent=base["BodyText"], fontName="NotoSansSC",
-                                    fontSize=8.2, leading=12, leftIndent=14, rightIndent=14,
+                                    fontSize=9.0, leading=14, alignment=TA_CENTER,
+                                    leftIndent=10, rightIndent=10,
                                     textColor=colors.HexColor("#243b53"), backColor=colors.HexColor("#f4f7fb"),
                                     borderColor=colors.HexColor("#d9e2ec"), borderWidth=.4,
                                     borderPadding=5, spaceBefore=5, spaceAfter=7),
@@ -84,7 +85,7 @@ def inline(text: str) -> str:
     # content in Courier would silently drop CJK glyphs, so preserve it as text.
     text = re.sub(r"`([^`]+)`", r"\1", text)
     text = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
-    return text.replace("\\(", "").replace("\\)", "")
+    return subscript_markup(text).replace("\\(", "").replace("\\)", "")
 
 
 EQUATION_REPLACEMENTS = {
@@ -140,7 +141,7 @@ def plain_math(text: str) -> str:
 
 
 def format_display_math(raw: str) -> str:
-    """Use robust substring routing rather than raw LaTex typesetting in a review PDF."""
+    """Normalize frozen display equations into concise paper-facing notation."""
     compact = " ".join(raw.split())
     if "G_t=" in compact:
         return "G_t = (V, E_t, X_t, Z_t)"
@@ -193,6 +194,38 @@ def format_display_math(raw: str) -> str:
     return plain_math(raw)
 
 
+def subscript_markup(safe: str) -> str:
+    """Apply ReportLab subscript markup to an already escaped text fragment."""
+    safe = safe.replace("Pi", "Π")
+
+    def subscript(match: re.Match[str]) -> str:
+        base = match.group("base")
+        index = match.group("index").replace("_", ",")
+        return f"{base}<sub>{index}</sub>"
+
+    return re.sub(
+        r"(?P<base>Jbar|Jhat|q_tilde|d_tilde|[A-Za-zΑ-Ωα-ωΠΣΔ])_"
+        r"(?P<index>[A-Za-z0-9,+-]+(?:_[A-Za-z0-9,+-]+)*)",
+        subscript,
+        safe,
+    )
+
+
+def math_markup(text: str) -> str:
+    """Render compact mathematical subscripts without exposing Markdown/LaTex syntax.
+
+    The report package does not depend on a full TeX engine.  It nevertheless
+    preserves the semantic visual distinction between a variable and its index
+    (for example, ``J_F0`` becomes ``J`` with subscript ``F0``), rather than
+    leaving code-style underscores in the scientific PDF.
+    """
+    safe = escape(text)
+    # Inputs have already been normalized by ``format_display_math``.  This
+    # deliberately supports the compact labels used throughout the manuscript,
+    # including J_pert,mean and q_u+1.
+    return subscript_markup(safe)
+
+
 def image_flow(path_text: str, alt_text: str, style: dict[str, ParagraphStyle], width: float) -> list:
     image_path = PAPER / path_text
     if not image_path.is_file():
@@ -219,12 +252,27 @@ def markdown_table(rows: list[str], width: float) -> Table:
         if index == 1 and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
             continue
         cell_style = header_cell if not parsed else normal_cell
-        parsed.append([Paragraph(inline(cell), cell_style) for cell in cells])
+        parsed.append([Paragraph(math_markup(cell), cell_style) for cell in cells])
     column_count = max(len(row) for row in parsed)
     for row in parsed:
         row.extend([Paragraph("", normal_cell)] * (column_count - len(row)))
-    col_width = width / column_count
-    table = Table(parsed, colWidths=[col_width] * column_count, repeatRows=1, hAlign="CENTER")
+    # Performance tables carry long method labels and many compact numerical
+    # columns. Give the first column a modest priority so method names do not
+    # break into a stray final character while keeping all endpoint columns
+    # legible at the frozen 6.6 pt table font.
+    if column_count >= 8:
+        weights = [1.8] + [1.0] * (column_count - 1)
+        scale = width / sum(weights)
+        col_widths = [weight * scale for weight in weights]
+    elif column_count >= 5:
+        # Compact paired-effect tables use a descriptive first column (for
+        # example, DRTP − MAPPO-NoGraph).  Prevent a one-letter orphan line.
+        weights = [1.35] + [1.0] * (column_count - 1)
+        scale = width / sum(weights)
+        col_widths = [weight * scale for weight in weights]
+    else:
+        col_widths = [width / column_count] * column_count
+    table = Table(parsed, colWidths=col_widths, repeatRows=1, hAlign="CENTER")
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#d9eaf7")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#102a43")),
@@ -279,7 +327,7 @@ def parse_story(width: float) -> list:
     def flush_equation() -> None:
         if equation:
             raw = "\n".join(equation).strip()
-            story.append(Paragraph(inline(format_display_math(raw)), style["equation"]))
+            story.append(Paragraph(math_markup(format_display_math(raw)), style["equation"]))
             equation.clear()
 
     for raw in lines:

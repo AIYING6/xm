@@ -51,6 +51,7 @@ REQUIRED_FILES = [
     "30_final_scientific_version_reviewer_assessment.md",
     "31_target_chinese_journal_shortlist.md",
     "32_preselection_submission_package.md",
+    "33_project_side_completion_audit.md",
     "submission_release_metadata.template.json",
     "supplementary/S1_full_formal_condition_and_safety.md",
     "supplementary/S2_training_and_ppo_diagnostics.md",
@@ -247,6 +248,12 @@ def main() -> None:
     require(state.get("preselection_submission_package") ==
             "paper/q2_final_zh/32_preselection_submission_package.md",
             "preselection submission package is not registered")
+    require(state.get("project_side_completion_audit") ==
+            "paper/q2_final_zh/33_project_side_completion_audit.md",
+            "project-side completion audit is not registered")
+    require(state.get("stage") ==
+            "project_side_submission_closeout_completed_author_actions_pending",
+            "writing state does not distinguish project completion from author actions")
 
     reproducibility_plan = (PAPER / "24_anonymous_reproducibility_package.md").read_text(
         encoding="utf-8"
@@ -316,6 +323,20 @@ def main() -> None:
     ):
         require(token in submission_package,
                 f"preselection submission package is incomplete: {token}")
+
+    project_completion = (PAPER / "33_project_side_completion_audit.md").read_text(
+        encoding="utf-8"
+    )
+    for token in (
+        "PROJECT_SIDE_COMPLETE_AUTHOR_ACTION_REMAINS",
+        "TECHNICAL_READY_AUTHOR_ACTION_REQUIRED",
+        "2401--2405",
+        "不得与 2301--2305 合并",
+        "19 页 PDF",
+        "未启动训练",
+    ):
+        require(token in project_completion,
+                f"project-side completion audit is incomplete: {token}")
 
     for supplement_name, token in (
         ("S1_full_formal_condition_and_safety.md", "risk-set"),
