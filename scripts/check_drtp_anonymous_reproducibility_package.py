@@ -6,10 +6,13 @@ import csv
 import hashlib
 import json
 from pathlib import Path
+import re
 
 
 REQUIRED = ("README.md", "CITATION.cff", "RELEASE_BLOCKERS.md", "LICENSE-REQUIRED-BEFORE-PUBLIC-RELEASE.md", "checkpoints/README.md", "source_data/DATA_DICTIONARY.md", "manifests/FILE_MANIFEST_SHA256.csv", "manifests/PACKAGE_PROVENANCE.json")
 STRATA = ("formal_2301_2305", "mappo_nograph_2301_2305", "independent_2401_2405")
+TEXT_SUFFIXES = {".md", ".txt", ".json", ".csv", ".py", ".yml", ".yaml", ".cff"}
+IDENTITY_PATTERN = re.compile(r"AIYING6|C:\\Users\\|D:\\Code\\|github\.com/AIYING6", re.IGNORECASE)
 
 
 def digest(path: Path) -> str:
@@ -34,6 +37,12 @@ def main() -> None:
             if not path.is_file() or digest(path) != row["sha256"]: mismatch.append(row["relative_path"])
     provenance = json.loads((root / "manifests" / "PACKAGE_PROVENANCE.json").read_text(encoding="utf-8"))
     if provenance.get("package_status") != "PREPARED_FOR_AUTHOR_HOSTING" or len(provenance.get("archives", [])) != 3: mismatch.append("package provenance")
+    identity_hits = []
+    for path in root.rglob("*"):
+        if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            if IDENTITY_PATTERN.search(text): identity_hits.append(path.relative_to(root).as_posix())
+    if identity_hits: mismatch.append("identity markers: " + ", ".join(identity_hits))
     if mismatch: raise SystemExit(f"FAIL: checksum/provenance mismatch: {mismatch}")
     print("PASS: anonymous staging package contains all three raw evidence strata and verified manifests.")
 

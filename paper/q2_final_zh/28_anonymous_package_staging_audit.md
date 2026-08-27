@@ -36,7 +36,7 @@ D:/Anaconda/envs/.conda/envs/cac/python.exe `
   --package-root output/drtp_relay_failure_anonymous_reproducibility_v1
 ```
 
-通过条件：三层均具有 `raw_episode_metrics.csv` 与 `evaluation_manifest.json`，所有已列入 `FILE_MANIFEST_SHA256.csv` 的文件 checksum 一致，且 package provenance 精确记录三份源归档及本稿源代码 revision。
+通过条件：三层均具有 `raw_episode_metrics.csv` 与 `evaluation_manifest.json`，所有已列入 `FILE_MANIFEST_SHA256.csv` 的文件 checksum 一致，package provenance 精确记录三份源归档及本稿源代码 revision，且对文本资产执行匿名标记扫描（作者仓库名、个人路径与预定义身份标识均不得出现）。
 
 ## 3. 仍必须由作者完成
 
