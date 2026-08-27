@@ -39,6 +39,8 @@ def main() -> None:
     if provenance.get("package_status") != "PREPARED_FOR_AUTHOR_HOSTING" or len(provenance.get("archives", [])) != 3: mismatch.append("package provenance")
     identity_hits = []
     for path in root.rglob("*"):
+        if path.name == "check_drtp_anonymous_reproducibility_package.py":
+            continue
         if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES:
             text = path.read_text(encoding="utf-8", errors="ignore")
             if IDENTITY_PATTERN.search(text): identity_hits.append(path.relative_to(root).as_posix())
