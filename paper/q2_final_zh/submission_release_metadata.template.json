@@ -1,0 +1,13 @@
+{
+  "schema": "drtp-chinese-submission-release-metadata-v1",
+  "target_journal": "[待作者填写]",
+  "article_type": "[待作者填写]",
+  "anonymous_reviewer_repository_url": "[待作者填写]",
+  "public_repository_persistent_identifier": "[待作者填写]",
+  "licence": "[待作者填写]",
+  "checkpoint_access_policy": "[待作者填写]",
+  "corresponding_author": "[待作者填写]",
+  "author_metadata_complete": false,
+  "external_download_and_checksum_verified": false,
+  "target_template_migration_verified": false
+}
