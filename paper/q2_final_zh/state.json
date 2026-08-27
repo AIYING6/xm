@@ -38,6 +38,8 @@
   ],
   "external_reference_status": "MAPPO-NoGraph external archive independently SHA256-verified and integrated as a bounded external performance reference; five seeds, shared 10M endpoint, shared tape, and complete safety records audited. It does not replace the UTR-DRTP causal ablation.",
   "external_reference_integration_contract": "paper/q2_final_zh/21_external_reference_integration_contract.md",
+  "snr_cohort_publication_disposition": "internal_only_by_author_decision_2026-08-27",
+  "snr_cohort_publication_boundary": "The completed SNR mechanism-comparator cohort is retained as internal route-selection evidence and is excluded from the Chinese DRTP submission manuscript, figures, tables, and conclusions. It must not be selectively quoted.",
   "evidence_architecture_writing_upgrade": "paper/q2_final_zh/20_evidence_architecture_writing_upgrade.md",
   "next_stage": "complete Chinese manuscript provenance, literature, author metadata, target-journal formatting, and final source-data/claim-boundary audit; MAPPO-NoGraph external-reference integration is complete, while EGTR P3 remains internal pending its separate frozen safety decision"
 }

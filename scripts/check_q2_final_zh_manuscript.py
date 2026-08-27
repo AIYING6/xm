@@ -179,6 +179,12 @@ def main() -> None:
     require("independently SHA256-verified and integrated" in
             state.get("external_reference_status", ""),
             "writing state does not record completed external-reference integration")
+    require(state.get("snr_cohort_publication_disposition") ==
+            "internal_only_by_author_decision_2026-08-27",
+            "SNR publication disposition is not frozen to the author decision")
+    require("excluded from the Chinese DRTP submission manuscript" in
+            state.get("snr_cohort_publication_boundary", ""),
+            "SNR internal-only boundary is not explicit in writing state")
 
     integration = (PAPER / "08_formal_result_integration_contract.md").read_text(
         encoding="utf-8"
