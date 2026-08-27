@@ -41,6 +41,23 @@ REQUIRED_FILES = [
     "20_evidence_architecture_writing_upgrade.md",
     "21_external_reference_integration_contract.md",
     "22_submission_evidence_layer_freeze_audit.md",
+    "23_claim_evidence_audit.md",
+    "24_anonymous_reproducibility_package.md",
+    "25_final_evidence_manifest.json",
+    "26_novelty_and_prior_art_positioning.md",
+    "27_presubmission_reviewer_simulation.md",
+    "supplementary/S1_full_formal_condition_and_safety.md",
+    "supplementary/S2_training_and_ppo_diagnostics.md",
+    "supplementary/S3_hyperparameters_projection_and_provenance.md",
+    "supplementary/S4_independent_three_arm_replication.md",
+    "supplementary/source_data/snr_independent_replication/archive_provenance.json",
+    "supplementary/source_data/snr_independent_replication/raw_episode_metrics.csv",
+    "supplementary/source_data/snr_independent_replication/per_seed_condition_summary.csv",
+    "supplementary/source_data/snr_independent_replication/per_seed_endpoint_summary.csv",
+    "supplementary/source_data/snr_independent_replication/drtp_minus_utr_paired_seed_effects.csv",
+    "supplementary/source_data/snr_independent_replication/drtp_minus_utr_paired_summary.csv",
+    "supplementary/source_data/snr_independent_replication/pooled_endpoint_summary.csv",
+    "supplementary/source_data/snr_independent_replication/evaluation_manifest.json",
     "formal_results/external_reference_summary.md",
     "formal_results/integration_manifest.json",
     "formal_results/formal_result_tables.md",
@@ -125,8 +142,8 @@ def main() -> None:
         require(token in external_contract, f"external-reference integration boundary missing: {token}")
     require("100 次二分" in manuscript and "有界单纯形投影" in manuscript,
             "bounded-simplex implementation detail is missing")
-    require("### 6.3 MAPPO-NoGraph 外部性能参考" in manuscript and
-            "**表2b｜MAPPO-NoGraph 外部参考结果。**" in manuscript,
+    require("### 6.3 无图 MAPPO 性能参考（Non-Graph MAPPO Performance Reference）" in manuscript and
+            "**表2b｜无图 MAPPO 性能参考结果。**" in manuscript,
             "completed external reference is not integrated in the Results section")
     require("不能据此将 UTR 与 MAPPO 的差异归因于图结构本身" in manuscript and
             "不能建立图结构或自适应权重的单独因果归因" in manuscript,
@@ -134,20 +151,29 @@ def main() -> None:
     require("max(|\\bar J_{N,u}|,\\epsilon)" in manuscript and
             "(1-\\beta)q_u+\\beta\\tilde q_{u+1}" in manuscript,
             "difficulty denominator or smoothing equation is not explicit")
-    require(manuscript.count("FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE") == 1,
-            "machine verdict must be retained exactly once in Appendix B")
-    main_body = manuscript.split("## 附录B", maxsplit=1)[0]
-    require("FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE" not in main_body,
-            "machine verdict must not appear before Appendix B")
-    # The Chinese submission route is intentionally limited to the formal
-    # UTR--DRTP cohort.  Historical reliability evidence is reported as a
-    # separate stratum, while SNR and unvalidated stabilization candidates are
-    # internal route-selection evidence rather than paper methods or results.
-    for forbidden in ("SNR", "R-DRTP", "R_DRTP", "EGTR", "Reliability-Gated"):
+    require("FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE" not in manuscript,
+            "machine verdict must not leak into the submission manuscript")
+    # The completed SNR cohort is now an explicit, complete independent
+    # replication stratum.  It must be present with all seeds and must never
+    # be pooled with the formal 2301--2305 cohort.  Unvalidated stabilization
+    # candidates remain excluded.
+    for forbidden in ("R-DRTP", "R_DRTP", "EGTR", "Reliability-Gated"):
         require(forbidden not in manuscript,
-                f"archived or internal-only method leaked into manuscript: {forbidden}")
+                f"unvalidated stabilization method leaked into manuscript: {forbidden}")
+    require("### 6.9 独立三方法重复 cohort 与跨 cohort 可靠性" in manuscript and
+            "固定非均匀 SNR-SG-MAPPO" in manuscript and
+            "18,000 条原始 episode 记录" in manuscript,
+            "complete independent SNR replication cohort is not disclosed")
+    require(all(seed in manuscript for seed in ("2401", "2402", "2403", "2404", "2405")),
+            "independent replication seed set is incomplete")
+    require("不与表2的正式种子 2301--2305 合并为 (n=10)" in manuscript,
+            "cross-cohort pooling prohibition is not explicit")
     require("J_pert,mean" in manuscript and "J_pert,worst" in manuscript,
             "paper-facing cross-perturbation endpoint names are missing")
+    require("## 参考文献" in manuscript and "[16] Xiao H" in manuscript,
+            "submission manuscript does not contain the completed real reference list")
+    require("[R" not in manuscript,
+            "placeholder-style R citations remain in the submission manuscript")
     require(manuscript.count("J_OOD_mean") == 2 and manuscript.count("J_OOD_worst") == 2,
             "machine OOD fields must appear only in the two explicit archive mappings")
     require("不是严格未见分布外（OOD）指标" in manuscript and
@@ -156,6 +182,15 @@ def main() -> None:
     require("### 6.8 历史可靠性证据" in manuscript and
             "这些历史结果不能与正式五种子作为一个同质样本合并" in manuscript,
             "historical reliability stratum is not explicitly separated")
+    claim_audit = (PAPER / "23_claim_evidence_audit.md").read_text(encoding="utf-8")
+    for token in (
+        "PASS WITH BOUNDED CROSS-COHORT CLAIMS",
+        "跨 cohort 尚未稳定复现",
+        "strict OOD",
+        "R-DRTP、EGTR",
+        "episode",
+    ):
+        require(token in claim_audit, f"claim-evidence audit missing: {token}")
 
     state = json.loads((PAPER / "state.json").read_text(encoding="utf-8"))
     require(state.get("nonresult_manuscript_sections_drafted") is True,
@@ -180,11 +215,70 @@ def main() -> None:
             state.get("external_reference_status", ""),
             "writing state does not record completed external-reference integration")
     require(state.get("snr_cohort_publication_disposition") ==
-            "internal_only_by_author_decision_2026-08-27",
-            "SNR publication disposition is not frozen to the author decision")
-    require("excluded from the Chinese DRTP submission manuscript" in
+            "transparent_independent_replication_disclosure_by_current_publication_goal_2026-08-27",
+            "SNR publication disposition is not frozen to transparent disclosure")
+    require("never pooled with the formal 2301-2305" in
             state.get("snr_cohort_publication_boundary", ""),
-            "SNR internal-only boundary is not explicit in writing state")
+            "SNR cohort pooling boundary is not explicit in writing state")
+    require(state.get("snr_replication_supplement") ==
+            "paper/q2_final_zh/supplementary/S4_independent_three_arm_replication.md",
+            "SNR replication supplement is not registered")
+    require(state.get("anonymous_reproducibility_package") ==
+            "paper/q2_final_zh/24_anonymous_reproducibility_package.md",
+            "anonymous reproducibility package is not registered")
+    require(state.get("final_evidence_manifest") ==
+            "paper/q2_final_zh/25_final_evidence_manifest.json",
+            "final evidence manifest is not registered")
+    require(state.get("novelty_and_prior_art_positioning") ==
+            "paper/q2_final_zh/26_novelty_and_prior_art_positioning.md",
+            "novelty positioning is not registered")
+    require(state.get("presubmission_reviewer_simulation") ==
+            "paper/q2_final_zh/27_presubmission_reviewer_simulation.md",
+            "presubmission reviewer simulation is not registered")
+
+    reproducibility_plan = (PAPER / "24_anonymous_reproducibility_package.md").read_text(
+        encoding="utf-8"
+    )
+    for token in (
+        "PREPARED_FOR_AUTHOR_HOSTING",
+        "18,000",
+        "n=10",
+        "Data Availability",
+    ):
+        require(token in reproducibility_plan,
+                f"anonymous reproducibility plan missing: {token}")
+    evidence_manifest = json.loads((PAPER / "25_final_evidence_manifest.json").read_text(
+        encoding="utf-8"
+    ))
+    require(evidence_manifest.get("new_training_authorized") is False,
+            "final evidence manifest must not authorize new training")
+    require(len(evidence_manifest.get("evidence_strata", [])) == 3,
+            "final evidence manifest must retain all three evidence strata")
+    require("No n=10 pooling across cohorts" in
+            evidence_manifest.get("required_transparency", []),
+            "final evidence manifest does not prohibit cross-cohort pooling")
+    novelty_map = (PAPER / "26_novelty_and_prior_art_positioning.md").read_text(
+        encoding="utf-8"
+    )
+    for token in ("PPO", "SNR", "116,728", "cohort", "DRO"):
+        require(token in novelty_map, f"novelty map is incomplete: {token}")
+    reviewer_simulation = (PAPER / "27_presubmission_reviewer_simulation.md").read_text(
+        encoding="utf-8"
+    )
+    for token in ("Reviewer 1", "Reviewer 2", "Reviewer 3", "Cross-review synthesis",
+                  "Risk / unsupported claims", "reproducibility"):
+        require(token in reviewer_simulation,
+                f"presubmission reviewer simulation is incomplete: {token}")
+
+    for supplement_name, token in (
+        ("S1_full_formal_condition_and_safety.md", "risk-set"),
+        ("S2_training_and_ppo_diagnostics.md", "PPO"),
+        ("S3_hyperparameters_projection_and_provenance.md", "100"),
+        ("S4_independent_three_arm_replication.md", "18,000"),
+    ):
+        supplement = (PAPER / "supplementary" / supplement_name).read_text(encoding="utf-8")
+        require(token in supplement,
+                f"supplementary package is incomplete: {supplement_name}")
 
     integration = (PAPER / "08_formal_result_integration_contract.md").read_text(
         encoding="utf-8"
@@ -198,16 +292,14 @@ def main() -> None:
         require(token in integration, f"missing formal verdict branch: {token}")
 
     citation_ledger = (PAPER / "09_citation_ledger.md").read_text(encoding="utf-8")
-    require("仍待补充的引用主题" in citation_ledger,
-            "citation debt is not explicitly marked")
-    require("不等同于最终参考文献表" in citation_ledger,
-            "citation ledger boundary is missing")
-    require(all(f"R{idx}" in citation_ledger for idx in range(1, 14)),
+    require("目标期刊" in citation_ledger,
+            "citation ledger does not retain target-journal adaptation boundary")
+    require(all(f"R{idx}" in citation_ledger for idx in range(1, 17)),
             "verified core citation ledger is incomplete")
 
     reference_export = (PAPER / "references_core.enw").read_text(encoding="utf-8")
-    require(reference_export.count("%0 ") == 13,
-            "EndNote core-reference export must contain thirteen records")
+    require(reference_export.count("%0 ") == 16,
+            "EndNote core-reference export must contain sixteen records")
 
     chinese_contract = (PAPER / "10_chinese_submission_contract.md").read_text(
         encoding="utf-8"
@@ -256,8 +348,8 @@ def main() -> None:
 
     print(
         "PASS: Chinese manuscript evidence package is integrated; no formal-result "
-        "placeholders remain, all eight figures pass artifact checks, and the paper-facing "
-        "frozen decision is PASS_SEED_SENSITIVE."
+        "placeholders remain, all eight figures pass artifact checks, and the independent "
+        "three-arm replication is transparently retained without cross-cohort pooling."
     )
 
 

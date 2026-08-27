@@ -13,7 +13,7 @@
 | 图3 | 正式五种子主要性能比较 | DRTP 是否在公平合同下优于 UTR | (a) `J_nominal`；(b) `J_F0`；(c) `J_pert,mean`；(d) `J_pert,worst`，显示全部配对种子、均值与中位数 | 正式 decision JSON 与 paired CSV | 已生成；12,000 条记录、五个配对训练种子 |
 | 图4 | 跨扰动条件分解 | 收益是否跨 timing/duration/compound 条件存在 | 十个已见跨扰动条件的配对差值和绝对值；标出最差条件 | per-seed-condition summary | 已生成；保留 D40/D60 的不利单种子 |
 | 图5 | 可靠性与安全边界 | 平均收益是否掩盖不利种子或安全代价 | (a) 每种子三项鲁棒指标方向；(b) 碰撞/超时/约束违规；(c) pre-trigger collision 与存活比例；(d) catastrophic 标记 | 正式 paired/safety/risk-set 产物；历史证据单独标层 | 已生成；触发技术有效性在表文中报告 |
-| 图6（可选） | DRTP 自适应权重演化 | 自适应机制是否实际被使用 | 各训练组 `q`、EMA、difficulty 与 realized count 随训练变化 | 正式 sampler logs | 已生成；仅作机制一致性遥测 |
+| 图6 | DRTP 自适应权重演化 | 自适应机制是否实际被使用 | 各训练组 `q`、EMA、difficulty 与 realized count 随训练变化 | 正式 sampler logs | 已生成；仅作机制一致性遥测 |
 
 ## 3. 主文建议表
 
@@ -28,12 +28,12 @@
 
 ## 4. 补充材料建议
 
-- 12 个条件的全部 method×seed 绝对值；
-- 训练曲线与 0.5M milestones，仅作成熟度展示；
-- 完整 sampler 权重日志；
-- 风险集触发有效性逐 cell 审计；
-- checkpoint、tape 和统计产物 SHA256；
-- 历史 development/held-out/REL-A0 结果，按合同分层呈现。
+- 补充图S1：正式 cohort 的任务完成、碰撞与超时终止结局；
+- 补充图S2：训练曲线与 PPO 诊断，仅作训练纪律展示；
+- 12 个条件的全部 method×seed 绝对值和种子级安全性表；
+- 完整 sampler 权重日志、风险集触发有效性逐 cell 审计；
+- checkpoint、tape、统计产物 SHA256 与 runtime-state schema；
+- 历史 development/held-out strata 及独立三方法 cohort，按合同分层呈现，不合并为 `n=10`。
 
 ## 5. 图表生成硬门槛
 

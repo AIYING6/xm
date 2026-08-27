@@ -1,10 +1,10 @@
 # 09 核心引用核验账本
 
-**检索日期：** 2026-08-24
+**检索日期：** 2026-08-27
 
 **检索范围：** 不限定 CNS；优先原始算法论文、官方会议/期刊页面和 DOI 元数据。
 
-**用途：** 本文件是中文稿的核心引用账本，不等同于最终参考文献表。目标期刊确定后仍需按其格式输出。
+**用途：** 本文件是中文稿的核心引用账本，用于约束每条文献支撑的论断。`main_zh.md` 已纳入 16 条真实参考文献；目标期刊确定后仅调整格式，不删除或伪造条目。
 
 ## 1. 已核验核心文献
 
@@ -23,6 +23,9 @@
 | R11 | Sagawa S, Koh P W, Hashimoto T B, Liang P. *Distributionally Robust Neural Networks for Group Shifts: On the Importance of Regularization for Worst-Case Generalization*. ICLR 2020. | 组鲁棒重加权定位 | 背景支撑 | 预定义组的最坏组/重加权思想可作为 DRTP 的知识背景 | DRTP 等价于 group DRO，或获得其理论保证 |
 | R12 | Mehta B, Diaz M, Golemo F, et al. *Active Domain Randomization*. CoRL 2020, PMLR 155:1162–1176. | 自适应场景参数采样定位 | 部分支撑 | 训练期可根据学习过程选择环境参数/场景 | DRTP 与该方法使用同一目标或同一采样器 |
 | R13 | Narvekar S, Peng B, Leonetti M, et al. *Curriculum Learning for Reinforcement Learning Domains: A Framework and Survey*. JMLR, 2020, 21(181):1–50. | 训练分布/课程术语背景 | 背景支撑（综述） | 训练任务分布与任务序列会影响 RL 优化过程 | 该综述直接证明 DRTP 的性能优势 |
+| R14 | Lowe R, Wu Y, Tamar A, et al. *Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments*. NeurIPS 2017, 30. arXiv:1706.02275. | CTDE 与执行信息边界 | 强背景支撑 | actor 可在执行期只用局部信息，而 critic 可在训练期使用额外信息 | 本文的 CTDE 设置必然保证拓扑鲁棒性 |
+| R15 | Luo J, Wang Z, Xia M, et al. *Path Planning for UAV Communication Networks: Related Technologies, Solutions, and Opportunities*. ACM Computing Surveys, 2023, 55(9):1–37. DOI: 10.1145/3560261. | UAV 通信拓扑、节点失效与重组背景 | 背景支撑（综述） | 多无人机通信网络可在链路/节点失效后重构路径或拓扑 | 该综述验证本文的任务奖励、策略或数值优势 |
+| R16 | Xiao H, Yang Y, Yu D, et al. *3D Self-Triggered-Organized Communication Topology Based UAV Swarm Consensus System With Distributed Extended State Observer*. IEEE TNSE, 2025, 12(5):3985–4000. DOI: 10.1109/TNSE.2025.3567462. | UAV 单元失效下的通信拓扑改变 | 强背景支撑 | UAV 单元失效/损失可造成需要重构的通信拓扑改变 | 共识控制结论可直接迁移为本文 MARL 性能保证 |
 
 ## 2. 正文引用映射
 
@@ -38,12 +41,15 @@
 | PPO 裁剪目标与共同优化器 | R10 | 说明两种方法采用相同 PPO 训练器 |
 | 组重加权与自适应采样的知识来源 | R11、R12 | 仅作方法定位，不转移理论保证 |
 | 训练分布会影响强化学习优化过程 | R13 | 综述性术语背景，不作为性能因果证据 |
+| CTDE 下 actor 的执行信息边界 | R14 | 只支撑一般训练/执行范式，不证明本文环境语义 |
+| UAV 节点故障与通信拓扑重组的工程背景 | R15、R16 | 不作为当前任务或算法的性能对照 |
 
-## 3. 仍待补充的引用主题
+## 3. 投稿前可选补充
 
-- CTDE 的经典来源或最接近 MAPPO 的正式定义；
-- 一篇通信拓扑故障/节点失效对无人机任务级协同影响的直接文献；
 - 目标中文期刊近 3–5 年的高度相关论文，用于投稿定位；
+- 作者选定目标期刊后的格式化引用、中文网络首发页码及其近年专题文献。
+
+这些属于期刊适配，而不是本稿主张成立的前置条件。新增条目必须逐条写明支撑位置和不可推断的结论，不能为增加引用数量而堆砌无关文献。
 
 ## 4. 引用纪律
 
@@ -52,4 +58,4 @@
 - 不把 R3–R9 写成已在本文合同下被 DRTP 击败的外部基线；
 - 不把 R5 的 Q-learning 理论保证移植到 DRTP；
 - 不使用“首次”或“尚无研究”等排他性措辞，除非完成可复核的系统检索；
-- 正式投稿前将 `[R1–R13]` 转换为目标期刊的顺序编码格式。
+- 主稿已采用顺序编码 `[1]--[16]`；投稿前只按目标期刊的标点、作者截断和刊名格式做机械转换。

@@ -184,3 +184,47 @@
 %N 181
 %P 1-50
 %U https://jmlr.org/papers/v21/20-212.html
+
+%0 Conference Paper
+%A Lowe, Ryan
+%A Wu, Yi
+%A Tamar, Aviv
+%A Harb, Jean
+%A Abbeel, Pieter
+%A Mordatch, Igor
+%T Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments
+%B Advances in Neural Information Processing Systems
+%D 2017
+%V 30
+%U https://arxiv.org/abs/1706.02275
+
+%0 Journal Article
+%A Luo, Junhai
+%A Wang, Zhiyan
+%A Xia, Ming
+%A Wu, Linyong
+%A Tian, Yuxin
+%A Chen, Yu
+%T Path Planning for UAV Communication Networks: Related Technologies, Solutions, and Opportunities
+%J ACM Computing Surveys
+%D 2023
+%V 55
+%N 9
+%P 1-37
+%R 10.1145/3560261
+%U https://doi.org/10.1145/3560261
+
+%0 Journal Article
+%A Xiao, Hanzhen
+%A Yang, Yang
+%A Yu, Dengxiu
+%A Lai, Guanyu
+%A Chen, C. L. Philip
+%T 3D Self-Triggered-Organized Communication Topology Based UAV Swarm Consensus System With Distributed Extended State Observer
+%J IEEE Transactions on Network Science and Engineering
+%D 2025
+%V 12
+%N 5
+%P 3985-4000
+%R 10.1109/TNSE.2025.3567462
+%U https://doi.org/10.1109/TNSE.2025.3567462

@@ -35,7 +35,7 @@ from reportlab.platypus import (
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper" / "q2_final_zh"
 SOURCE = PAPER / "main_zh.md"
-OUT = PAPER / "output" / "DRTP_SG_MAPPO_中文论文初稿_正式五种子结果版.pdf"
+OUT = PAPER / "output" / "DRTP_SG_MAPPO_中文论文初稿_投稿证据整合终版.pdf"
 FONT = Path(r"C:\Windows\Fonts\NotoSansSC-VF.ttf")
 
 
@@ -200,21 +200,27 @@ def image_flow(path_text: str, alt_text: str, style: dict[str, ParagraphStyle], 
 
 
 def markdown_table(rows: list[str], width: float) -> Table:
-    parsed = []
+    normal_cell = ParagraphStyle(
+        "ZhTableCell", fontName="NotoSansSC", fontSize=6.6, leading=8.6,
+        alignment=TA_CENTER, wordWrap="CJK",
+    )
+    header_cell = ParagraphStyle(
+        "ZhTableHeader", parent=normal_cell, fontName="NotoSansSCBold",
+        textColor=colors.HexColor("#102a43"),
+    )
+    parsed: list[list[Paragraph]] = []
     for index, line in enumerate(rows):
         cells = [table_cell_text(cell) for cell in line.strip().strip("|").split("|")]
         if index == 1 and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
             continue
-        parsed.append(cells)
+        cell_style = header_cell if not parsed else normal_cell
+        parsed.append([Paragraph(inline(cell), cell_style) for cell in cells])
     column_count = max(len(row) for row in parsed)
     for row in parsed:
-        row.extend([""] * (column_count - len(row)))
+        row.extend([Paragraph("", normal_cell)] * (column_count - len(row)))
     col_width = width / column_count
     table = Table(parsed, colWidths=[col_width] * column_count, repeatRows=1, hAlign="CENTER")
     table.setStyle(TableStyle([
-        ("FONTNAME", (0, 0), (-1, -1), "NotoSansSC"),
-        ("FONTSIZE", (0, 0), (-1, -1), 6.3),
-        ("LEADING", (0, 0), (-1, -1), 8.1),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#d9eaf7")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#102a43")),
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
@@ -246,6 +252,7 @@ def parse_story(width: float) -> list:
     table_rows: list[str] = []
     equation: list[str] = []
     in_equation = False
+    pending_table_caption: Paragraph | None = None
 
     def flush_paragraph() -> None:
         if paragraph:
@@ -254,9 +261,15 @@ def parse_story(width: float) -> list:
             paragraph.clear()
 
     def flush_table() -> None:
+        nonlocal pending_table_caption
         if table_rows:
-            story.extend([Spacer(1, 3), markdown_table(table_rows, width), Spacer(1, 7)])
+            block = []
+            if pending_table_caption is not None:
+                block.extend([pending_table_caption, Spacer(1, 3)])
+            block.extend([markdown_table(table_rows, width), Spacer(1, 7)])
+            story.append(KeepTogether(block))
             table_rows.clear()
+            pending_table_caption = None
 
     def flush_equation() -> None:
         if equation:
@@ -306,6 +319,10 @@ def parse_story(width: float) -> list:
             flush_paragraph()
             story.append(Paragraph(inline("• " + line[2:]), style["body_noindent"]))
             continue
+        if re.match(r"^表\s*\d+", line):
+            flush_paragraph()
+            pending_table_caption = Paragraph(inline(line), style["caption"])
+            continue
         paragraph.append(line)
     flush_paragraph(); flush_table(); flush_equation()
     return story
@@ -317,7 +334,7 @@ def footer(canvas, doc) -> None:
     canvas.line(2.0 * cm, 1.5 * cm, A4[0] - 2.0 * cm, 1.5 * cm)
     canvas.setFont("NotoSansSC", 7.2)
     canvas.setFillColor(colors.HexColor("#627d98"))
-    canvas.drawString(2.0 * cm, 1.0 * cm, "内部审阅初稿｜正式五种子结果版｜未按目标期刊模板定稿")
+    canvas.drawString(2.0 * cm, 1.0 * cm, "中文投稿初稿｜三层证据整合版｜待迁移至目标期刊模板")
     canvas.drawRightString(A4[0] - 2.0 * cm, 1.0 * cm, f"第 {doc.page} 页")
     canvas.restoreState()
 

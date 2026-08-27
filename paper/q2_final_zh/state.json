@@ -4,7 +4,7 @@
   "publication_language_route": "chinese_only",
   "parallel_english_full_manuscript": false,
   "english_metadata_only_if_required_by_chinese_journal": true,
-  "stage": "formal_result_integrated_chinese_manuscript_parallel_closeout",
+  "stage": "cross_cohort_reliability_disclosure_and_submission_closeout",
   "scientific_training_authorized": false,
   "formal_confirmation_started": true,
   "formal_confirmation_completed": true,
@@ -38,8 +38,14 @@
   ],
   "external_reference_status": "MAPPO-NoGraph external archive independently SHA256-verified and integrated as a bounded external performance reference; five seeds, shared 10M endpoint, shared tape, and complete safety records audited. It does not replace the UTR-DRTP causal ablation.",
   "external_reference_integration_contract": "paper/q2_final_zh/21_external_reference_integration_contract.md",
-  "snr_cohort_publication_disposition": "internal_only_by_author_decision_2026-08-27",
-  "snr_cohort_publication_boundary": "The completed SNR mechanism-comparator cohort is retained as internal route-selection evidence and is excluded from the Chinese DRTP submission manuscript, figures, tables, and conclusions. It must not be selectively quoted.",
+  "snr_cohort_publication_disposition": "transparent_independent_replication_disclosure_by_current_publication_goal_2026-08-27",
+  "snr_cohort_publication_boundary": "The completed SNR three-arm cohort is disclosed as a complete independent replication/reliability stratum with all methods, all seeds, common 10M endpoints, safety outcomes, source archive SHA256, and raw records. It is never pooled with the formal 2301-2305 UTR-DRTP cohort and is not used to selectively rewrite that cohort's result.",
+  "snr_replication_supplement": "paper/q2_final_zh/supplementary/S4_independent_three_arm_replication.md",
+  "anonymous_reproducibility_package": "paper/q2_final_zh/24_anonymous_reproducibility_package.md",
+  "final_evidence_manifest": "paper/q2_final_zh/25_final_evidence_manifest.json",
+  "novelty_and_prior_art_positioning": "paper/q2_final_zh/26_novelty_and_prior_art_positioning.md",
+  "presubmission_reviewer_simulation": "paper/q2_final_zh/27_presubmission_reviewer_simulation.md",
+  "data_code_availability_status": "anonymous reproducibility package prepared; author hosting link, persistent identifier, licence, and checkpoint-access policy remain required before submission",
   "evidence_architecture_writing_upgrade": "paper/q2_final_zh/20_evidence_architecture_writing_upgrade.md",
-  "next_stage": "complete Chinese manuscript provenance, literature, author metadata, target-journal formatting, and final source-data/claim-boundary audit; MAPPO-NoGraph external-reference integration is complete, while EGTR P3 remains internal pending its separate frozen safety decision"
+  "next_stage": "complete real-reference and claim-evidence audit, submission-style equations/figures, anonymous reproducibility package, author metadata, target-journal selection, and final source-data/claim-boundary audit; EGTR remains a separate internal research line and is not a method in this manuscript"
 }

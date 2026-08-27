@@ -1,0 +1,26 @@
+{
+  "schema": "drtp-snr-independent-replication-publication-bundle-v1",
+  "integration_mode": "zero_training_archive_verification_and_disclosure",
+  "source_archive": "D:\\File\\Downloads\\drtp_snr_q2_mechanism_comparator_10way_results.tar.gz",
+  "source_archive_sha256": "86a708244fa4d30935159a08d234c48feeb7a4c455208d58fbc58d308b4f4ae1",
+  "source_protocol": "DRTP-SNR-Q2-MECHANISM-COMPARATOR-EVALUATION-V1",
+  "training_contract": "DRTP-SNR-Q2-MECHANISM-COMPARATOR-TRAINING-V1",
+  "independent_training_seeds": [
+    2401,
+    2402,
+    2403,
+    2404,
+    2405
+  ],
+  "methods": [
+    "utr_sg",
+    "snr_sg",
+    "drtp_sg"
+  ],
+  "training_budget_env_steps": 10000128,
+  "common_final_checkpoint": "10m",
+  "evaluation_tape_hash": "c89f63bc5a11e3def88fa677356796ea681ca227d31e47dc584764a3a3084fc2",
+  "raw_episode_records": 18000,
+  "condition_summary_rows": 180,
+  "publication_boundary": "A complete independent three-arm replication stratum. It is never pooled with the formal 2301-2305 UTR--DRTP cohort and must be disclosed with all methods, all seeds, endpoints, and safety outcomes."
+}

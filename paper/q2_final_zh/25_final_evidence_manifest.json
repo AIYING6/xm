@@ -1,0 +1,67 @@
+{
+  "schema": "drtp-q2-chinese-submission-evidence-manifest-v1",
+  "status": "submission_closeout_prepared_author_hosting_required",
+  "publication_route": "Chinese manuscript only",
+  "new_training_authorized": false,
+  "manuscript": "paper/q2_final_zh/main_zh.md",
+  "claim_audit": "paper/q2_final_zh/23_claim_evidence_audit.md",
+  "reproducibility_package_plan": "paper/q2_final_zh/24_anonymous_reproducibility_package.md",
+  "author_metadata_checklist": "paper/q2_final_zh/12_author_input_checklist.md",
+  "evidence_strata": [
+    {
+      "name": "formal_paired_primary_cohort",
+      "methods": ["UTR-SG-MAPPO", "DRTP-SG-MAPPO"],
+      "training_seeds": [2301, 2302, 2303, 2304, 2305],
+      "environment_steps": 10000128,
+      "evaluation_tape_hash": "84e31ed185ced0608a30c9cb9f9659c7423c952e4603aac53cf691c54fc64ac2",
+      "raw_episode_records": 12000,
+      "archive_sha256": "cc3e2d29f382c332563c33957f5c109bbee4f42abb91b0d06b2b26cd3e618bdd",
+      "source_data": "paper/q2_final_zh/formal_results/source_data",
+      "role": "only parameter-matched causal ablation"
+    },
+    {
+      "name": "non_graph_mappo_performance_reference",
+      "methods": ["UTR-SG-MAPPO", "DRTP-SG-MAPPO", "MAPPO-NoGraph"],
+      "training_seeds": [2301, 2302, 2303, 2304, 2305],
+      "environment_steps": 10000128,
+      "evaluation_tape_hash": "84e31ed185ced0608a30c9cb9f9659c7423c952e4603aac53cf691c54fc64ac2",
+      "raw_episode_records": 6000,
+      "archive_sha256": "2f8b5f1e3025221e70652a6c4d0bcaa05d239cc81f5c70d59301d4f9e66afad5",
+      "source_data": "paper/q2_final_zh/formal_results/external_reference_summary.md",
+      "role": "architecture-mismatched performance reference; not causal attribution"
+    },
+    {
+      "name": "independent_three_arm_reliability_replication",
+      "methods": ["UTR-SG-MAPPO", "SNR-SG-MAPPO", "DRTP-SG-MAPPO"],
+      "training_seeds": [2401, 2402, 2403, 2404, 2405],
+      "environment_steps": 10000128,
+      "evaluation_tape_hash": "c89f63bc5a11e3def88fa677356796ea681ca227d31e47dc584764a3a3084fc2",
+      "raw_episode_records": 18000,
+      "archive_sha256": "86a708244fa4d30935159a08d234c48feeb7a4c455208d58fbc58d308b4f4ae1",
+      "source_data": "paper/q2_final_zh/supplementary/source_data/snr_independent_replication",
+      "role": "complete independent reliability stratum; never pooled with primary cohort"
+    }
+  ],
+  "prohibited_claims": [
+    "strict OOD generalization",
+    "general DRO guarantee",
+    "universal topology robustness",
+    "seed-stable superiority",
+    "information recovery",
+    "online adaptation is necessary relative to every fixed nonuniform distribution"
+  ],
+  "required_transparency": [
+    "No seed exclusion",
+    "No checkpoint promotion",
+    "No n=10 pooling across cohorts",
+    "Report collision-timeout trade-off",
+    "Keep complete independent adverse cohort"
+  ],
+  "author_actions_required_before_submission": [
+    "Select target Chinese journal and article format",
+    "Create anonymous reviewer repository link",
+    "Choose release licence and public repository with persistent identifier",
+    "Supply author, affiliation, funding, conflict-of-interest, and CRediT metadata",
+    "Validate the repository manifest and reproducibility instructions outside the author environment"
+  ]
+}
