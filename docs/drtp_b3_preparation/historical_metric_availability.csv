@@ -1,0 +1,12 @@
+metric,available,role
+train_avg_reward,yes,descriptive archived PPO/train diagnostic
+entropy,yes,descriptive archived PPO/train diagnostic
+approx_kl,yes,descriptive archived PPO/train diagnostic
+policy_loss,yes,descriptive archived PPO/train diagnostic
+value_loss,yes,descriptive archived PPO/train diagnostic
+grad_norm,yes,descriptive archived PPO/train diagnostic
+q_distance_from_uniform,no,not reconstructable from archived long table
+q_ranking,no,not reconstructable from archived long table
+nominal_ema,no,not reconstructable from archived long table
+group_ema,no,not reconstructable from archived long table
+difficulty,no,not reconstructable from archived long table

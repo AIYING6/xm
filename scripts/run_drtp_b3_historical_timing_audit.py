@@ -22,21 +22,32 @@ COHORTS = ("formal_2301_2305", "independent_2401_2405")
 BIN_UPDATES = 500
 PERSISTENT_BINS = 2
 STEPS_PER_UPDATE = 256
+AVAILABLE_DIAGNOSTICS = (
+    "train_avg_reward", "entropy", "approx_kl", "policy_loss", "value_loss", "grad_norm",
+)
+UNAVAILABLE_REQUIRED_HISTORY = ("q_distance_from_uniform", "q_ranking", "nominal_ema", "group_ema", "difficulty")
 
 
 def median(values: list[float]) -> float:
     return float(statistics.median(values)) if values else float("nan")
 
 
-def read_paired_bins() -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+def read_paired_bins() -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]]:
     values: dict[tuple[str, str, int, int], list[float]] = defaultdict(list)
+    diagnostics: dict[tuple[str, str, int, int, str], list[float]] = defaultdict(list)
     with INPUT.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
-            value = row.get("train_avg_reward")
-            if row["method"] not in {"utr_sg", "drtp_sg"} or value in {None, ""}:
+            if row["method"] not in {"utr_sg", "drtp_sg"}:
                 continue
             update = int(row["update"])
-            values[(row["cohort"], row["method"], int(row["seed"]), (update - 1) // BIN_UPDATES)].append(float(value))
+            key = (row["cohort"], row["method"], int(row["seed"]), (update - 1) // BIN_UPDATES)
+            for metric in AVAILABLE_DIAGNOSTICS:
+                value = row.get(metric)
+                if value not in {None, ""}:
+                    diagnostics[(*key, metric)].append(float(value))
+            value = row.get("train_avg_reward")
+            if value not in {None, ""}:
+                values[key].append(float(value))
     bins: list[dict[str, object]] = []
     by_seed: list[dict[str, object]] = []
     for cohort in COHORTS:
@@ -71,7 +82,16 @@ def read_paired_bins() -> tuple[list[dict[str, object]], list[dict[str, object]]
                 "negative_seeds": sum(item < 0.0 for item in differences),
                 "paired_deltas": ";".join(f"{item:.8f}" for item in differences),
             })
-    return bins, by_seed
+    metric_rows: list[dict[str, object]] = []
+    for (cohort, method, seed, bin_id, metric), metric_values in diagnostics.items():
+        metric_rows.append({
+            "cohort": cohort, "method": method, "seed": seed, "bin_id": bin_id,
+            "update_start": bin_id * BIN_UPDATES + 1,
+            "update_end": (bin_id + 1) * BIN_UPDATES,
+            "environment_steps_million_end": (bin_id + 1) * BIN_UPDATES * STEPS_PER_UPDATE / 1_000_000,
+            "metric": metric, "mean_value": statistics.fmean(metric_values),
+        })
+    return bins, by_seed, metric_rows
 
 
 def directional_separation(formal: dict[str, object], independent: dict[str, object]) -> str | None:
@@ -110,7 +130,7 @@ def main() -> None:
     if output.exists() and any(output.iterdir()):
         raise FileExistsError(f"refusing to overwrite: {output}")
     output.mkdir(parents=True, exist_ok=False)
-    rows, by_seed = read_paired_bins()
+    rows, by_seed, metric_rows = read_paired_bins()
     first, events = first_persistent_separation(rows)
     first_million = None if first is None else float(first["environment_steps_million_end"])
     one_million_has_proxy = first_million is not None and first_million <= 1.0
@@ -123,6 +143,17 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=list(by_seed[0]))
         writer.writeheader()
         writer.writerows(by_seed)
+    with (output / "historical_available_diagnostics_by_500_updates.csv").open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(metric_rows[0]))
+        writer.writeheader()
+        writer.writerows(metric_rows)
+    with (output / "historical_metric_availability.csv").open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["metric", "available", "role"])
+        writer.writeheader()
+        writer.writerows(
+            [{"metric": metric, "available": "yes", "role": "descriptive archived PPO/train diagnostic"} for metric in AVAILABLE_DIAGNOSTICS]
+            + [{"metric": metric, "available": "no", "role": "not reconstructable from archived long table"} for metric in UNAVAILABLE_REQUIRED_HISTORY]
+        )
     with (output / "timing_rule.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=["bin_id", "direction"])
         writer.writeheader()
@@ -138,6 +169,8 @@ def main() -> None:
         "## Result", "",
         f"- first persistent proxy separation: {first_description}",
         f"- 1M gate recommendation: `{recommendation}`", "",
+        "## Diagnostic availability", "",
+        "The archived long table contains training reward, entropy, approximate KL, policy loss, value loss, and gradient norm; their binned descriptive values are exported. It does not contain q distance/ranking, nominal/group EMA, or difficulty. Those unavailable sampler fields are explicitly recorded as unavailable rather than inferred.", "",
         "This result only sizes the prospective B3 observation horizon. The proxy is not a mechanism variable and cannot support sampler causality without behavior telemetry.",
     ]
     (output / "historical_timing_audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
