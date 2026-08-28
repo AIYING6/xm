@@ -157,6 +157,20 @@ class FailureAwareTelemetryWriter:
             dtype=np.float32,
         )
         failure_active = bool(float(info.get("node_failure_active", 0.0) or 0.0) > 0.5)
+        # Every telemetry value is an immutable snapshot.  ``np.asarray``
+        # alone may retain an environment-owned buffer, which would corrupt a
+        # previously buffered event row after later transitions or a resume.
+        blue_position = np.asarray(env.blue_pos, dtype=np.float32).copy()
+        target_position = np.asarray(getattr(env, "red_pos", np.zeros((1, 3), dtype=np.float32))[0], dtype=np.float32).copy()
+        def distance(left: int, right: int) -> float:
+            return float(np.linalg.norm(blue_position[left] - blue_position[right]))
+        direct_available = bool(float(info.get("attacker_direct_target_information_t", 0.0) or 0.0) > 0.5)
+        # The environment represents a usable relay route as a path string
+        # (for example ``"0-1-2"``), not as a numeric indicator.  Preserve
+        # that semantic representation rather than coercing it to float.
+        relay_path = info.get("attacker_cache_paths_t")
+        relay_available = bool(relay_path) and str(relay_path).lower() not in {"none", "null", "nan", "0"}
+        information_path_state = "direct" if direct_available else "relay" if relay_available else "no_path"
         cache_age = getattr(env, "target_cache_delivery_step", None)
         if cache_age is not None:
             cache_age = (int(env_step) - np.asarray(cache_age, dtype=np.int64)).tolist()
@@ -178,13 +192,23 @@ class FailureAwareTelemetryWriter:
             "scheduled_failure_duration": int(state["scheduled_failure_duration"]),
             "failure_active": failure_active,
             "failure_relative_step": rel,
-            "blue_position": np.asarray(env.blue_pos, dtype=np.float32),
+            "blue_position": blue_position,
             "blue_velocity": blue_velocity,
-            "blue_heading": np.asarray(env.blue_heading, dtype=np.float32),
-            "blue_gamma": np.asarray(env.blue_gamma, dtype=np.float32),
-            "legal_communication_edges": np.asarray(graph_before.get("relation_adj", np.zeros((3, 4, 4)))[1]),
-            "legal_union_edges": np.asarray(graph_before.get("adj", np.zeros((4, 4)))),
+            "blue_heading": np.asarray(env.blue_heading, dtype=np.float32).copy(),
+            "blue_gamma": np.asarray(env.blue_gamma, dtype=np.float32).copy(),
+            "target_position": target_position,
+            "pairwise_geometry": {
+                "scout_relay_distance": distance(0, 1),
+                "relay_attacker_distance": distance(1, 2),
+                "scout_attacker_distance": distance(0, 2),
+                "scout_target_distance": float(np.linalg.norm(blue_position[0] - target_position)),
+                "relay_target_distance": float(np.linalg.norm(blue_position[1] - target_position)),
+                "attacker_target_distance": float(np.linalg.norm(blue_position[2] - target_position)),
+            },
+            "legal_communication_edges": np.asarray(graph_before.get("relation_adj", np.zeros((3, 4, 4)))[1]).copy(),
+            "legal_union_edges": np.asarray(graph_before.get("adj", np.zeros((4, 4))).copy()),
             "direct_information_path": {
+                "state": information_path_state,
                 "attacker_direct_target_information": info.get("attacker_direct_target_information_t"),
                 "attacker_direct_recovery_path": info.get("attacker_direct_recovery_path_t"),
                 "attacker_window_direct_info": info.get("attacker_window_direct_info"),
@@ -196,25 +220,25 @@ class FailureAwareTelemetryWriter:
                 "relay1_required_for_support": info.get("attacker_support_path_relay1_required_t"),
                 "attacker_window_comm_info": info.get("attacker_window_comm_info"),
             },
-            "scout_detection": np.asarray(getattr(env, "detected_by", []), dtype=np.float32),
+            "scout_detection": np.asarray(getattr(env, "detected_by", []), dtype=np.float32).copy(),
             "attacker_valid_target_information": info.get("attacker_legal_target_information_t"),
             "attacker_has_fresh_target_information": info.get("attacker_has_fresh_target_info"),
-            "cache_source": np.asarray(getattr(env, "target_cache_source", []), dtype=np.int64),
+            "cache_source": np.asarray(getattr(env, "target_cache_source", []), dtype=np.int64).copy(),
             "cache_freshness": {
                 "age_by_agent": cache_age,
                 "mean_age": info.get("target_cache_age_mean"),
                 "confidence_mean": info.get("target_cache_confidence_mean"),
                 "stale_rate": info.get("target_cache_stale_rate"),
             },
-            "attack_window_state": np.asarray(getattr(env, "attack_window", []), dtype=np.float32),
+            "attack_window_state": np.asarray(getattr(env, "attack_window", []), dtype=np.float32).copy(),
             "task_support_state": {
                 "chain_support": info.get("chain_support_t"),
                 "chain_closed": info.get("chain_closed"),
                 "relay_dependency_eligible": info.get("relay_dependency_eligible_t"),
             },
-            "action": np.asarray(action, dtype=np.int64),
+            "action": np.asarray(action, dtype=np.int64).copy(),
             "policy_entropy": policy_entropy,
-            "reward": np.asarray(reward, dtype=np.float32),
+            "reward": np.asarray(reward, dtype=np.float32).copy(),
             "reward_components": info.get("reward_components", {}),
             "cumulative_return": float(state["total_reward"] + float(np.asarray(reward).sum())),
             "success": info.get("success"),
@@ -308,4 +332,3 @@ class FailureAwareTelemetryWriter:
         self.states.clear()
         self._summary_file.close()
         self._window_file.close()
-
