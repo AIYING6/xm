@@ -141,8 +141,15 @@ def main() -> None:
     args = parser.parse_args()
     if not args.execute:
         raise SystemExit("NO-GO: explicit --execute is required")
-    if args.workers < 1 or args.output_root.exists() and any(args.output_root.iterdir()):
-        raise RuntimeError("workers must be positive and output root must be new or empty")
+    if args.workers < 1:
+        raise RuntimeError("workers must be positive")
+    # Tape freezing necessarily creates the output directory first.  Permit that
+    # single immutable file, but never overwrite an earlier evaluation product.
+    if args.output_root.exists():
+        allowed = {"additional_unseen_tape_manifest.json"}
+        unexpected = [path.name for path in args.output_root.iterdir() if path.name not in allowed]
+        if unexpected:
+            raise RuntimeError(f"refusing non-tape evaluation output: {unexpected}")
     tape_path = args.output_root / "additional_unseen_tape_manifest.json"
     if not tape_path.is_file():
         raise FileNotFoundError("freeze the unseen tape before evaluation")
