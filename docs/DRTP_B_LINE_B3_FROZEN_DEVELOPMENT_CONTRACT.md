@@ -18,14 +18,14 @@ B3 **不**回答“DRTP 是否比 UTR 分数高”，也不生成投稿主结论
 | 新 paired seeds | `2701, 2702, 2703` |
 | 训练预算 | 每条 `3,907 × 4 × 64 = 1,000,192` environment steps |
 | milestone | update `976/1953/2930/3907`（约 `0.25/0.50/0.75/1.00M`） |
-| 初始代码基线 | `2bec1b026480aad9e42563510ae6cfde28411399` |
+| 初始代码基线 | 见 `docs/drtp_b3_preparation/B3_READY_FOR_AUTHORIZATION.md` 中的最终 source-freeze commit |
 | development tape | `configs/drtp_b3_development_tape.json`，SHA256 `e01c905b04257fd6b373dbbe3ca25cf5f0dece0864e89b6713bd7647107ce9ed` |
 
 算法、PPO、reward、环境、故障语义、观测、actor/critic、DRTP 参数与训练支持集均冻结。禁止 EGTR、R-DRTP、trust region、confidence gate、warm-up、新网络、辅助 loss、checkpoint promotion、early stop、换 seed、删差 seed 和 10M 训练。
 
 ## 3. 遥测与评价
 
-每条训练必须启用 B2 通过的 read-only telemetry，包含 sampler 状态与实际 exposure、PPO、failure-relative behavior、信息路径、pairwise geometry、task support、终止和 reward components。训练期日志按 0.25M block 汇总；每个 milestone 都使用冻结 development-only tape 进行同一批诊断评价。
+每条训练必须启用 B2 通过的 read-only telemetry，包含 sampler 状态与实际 exposure、现有 PPO CSV 指标、failure-relative behavior、信息路径、path-switch、pairwise geometry、task support、终止和环境真实 reward components。训练期日志按 0.25M block 汇总；每个 milestone 都使用冻结 development-only tape 进行同一批诊断评价。
 
 tape 有 5 个条件（Nominal / F0 / T28 / D120 / C28-120）、每条件 100 个相同 base episode IDs；共 `2 methods × 3 seeds × 5 conditions × 100 = 3,000` episodes。它是机制诊断资产，不是 held-out 或 confirmatory OOD。
 

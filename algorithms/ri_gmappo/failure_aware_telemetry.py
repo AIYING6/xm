@@ -16,7 +16,7 @@ from typing import Any
 
 import numpy as np
 
-from envs.uav_intercept_3d_env import velocity_from_state
+from envs.uav_intercept_3d_env import ACTION3D_TABLE, velocity_from_state
 
 
 PROTOCOL = "DRTP-TRAINING-FAILURE-MECHANISM-V1"
@@ -121,6 +121,7 @@ class FailureAwareTelemetryWriter:
             "collision": 0,
             "timeout": 0,
             "constraint_violation": 0,
+            "previous_information_path_state": None,
             "event_rows": [],
         }
 
@@ -171,6 +172,8 @@ class FailureAwareTelemetryWriter:
         relay_path = info.get("attacker_cache_paths_t")
         relay_available = bool(relay_path) and str(relay_path).lower() not in {"none", "null", "nan", "0"}
         information_path_state = "direct" if direct_available else "relay" if relay_available else "no_path"
+        action_array = np.asarray(action, dtype=np.int64).copy()
+        action_commands = [list(ACTION3D_TABLE[int(index)]) for index in action_array]
         cache_age = getattr(env, "target_cache_delivery_step", None)
         if cache_age is not None:
             cache_age = (int(env_step) - np.asarray(cache_age, dtype=np.int64)).tolist()
@@ -209,6 +212,10 @@ class FailureAwareTelemetryWriter:
             "legal_union_edges": np.asarray(graph_before.get("adj", np.zeros((4, 4))).copy()),
             "direct_information_path": {
                 "state": information_path_state,
+                "path_switch_event": bool(
+                    state["previous_information_path_state"] is not None
+                    and state["previous_information_path_state"] != information_path_state
+                ),
                 "attacker_direct_target_information": info.get("attacker_direct_target_information_t"),
                 "attacker_direct_recovery_path": info.get("attacker_direct_recovery_path_t"),
                 "attacker_window_direct_info": info.get("attacker_window_direct_info"),
@@ -236,7 +243,13 @@ class FailureAwareTelemetryWriter:
                 "chain_closed": info.get("chain_closed"),
                 "relay_dependency_eligible": info.get("relay_dependency_eligible_t"),
             },
-            "action": np.asarray(action, dtype=np.int64).copy(),
+            "action": action_array,
+            "action_command": {
+                "per_agent_turn_climb_accel": action_commands,
+                "action_probability_recorded": False,
+                "max_action_probability": None,
+                "max_action_probability_reason": "not exposed by the production action API; telemetry does not add a second actor forward pass",
+            },
             "policy_entropy": policy_entropy,
             "reward": np.asarray(reward, dtype=np.float32).copy(),
             "reward_components": info.get("reward_components", {}),
@@ -277,6 +290,7 @@ class FailureAwareTelemetryWriter:
             graph_before=graph_before, action=action, reward=reward,
             policy_entropy=policy_entropy, info=info,
         )
+        state["previous_information_path_state"] = row["direct_information_path"]["state"]
         state["step_count"] += 1
         state["total_reward"] += float(np.asarray(reward, dtype=np.float32).sum())
         components = info.get("reward_components", {})
@@ -307,7 +321,11 @@ class FailureAwareTelemetryWriter:
     def _finalize(self, env_index: int, state: dict[str, Any], *, partial: bool) -> None:
         for row in state["event_rows"]:
             self._window_file.write(canonical_line(row) + "\n")
-        summary = {key: value for key, value in state.items() if key != "event_rows"}
+        summary = {
+            key: value
+            for key, value in state.items()
+            if key not in {"event_rows", "previous_information_path_state"}
+        }
         summary["summary_status"] = "training_boundary_partial" if partial and not state["terminal"] else "completed"
         summary["reward_components_sum"] = dict(state["reward_components_sum"])
         summary["event_window_step_count"] = len(state["event_rows"])

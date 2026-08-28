@@ -28,7 +28,7 @@ def median(values: list[float]) -> float:
     return float(statistics.median(values)) if values else float("nan")
 
 
-def read_paired_bins() -> list[dict[str, object]]:
+def read_paired_bins() -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     values: dict[tuple[str, str, int, int], list[float]] = defaultdict(list)
     with INPUT.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
@@ -38,6 +38,7 @@ def read_paired_bins() -> list[dict[str, object]]:
             update = int(row["update"])
             values[(row["cohort"], row["method"], int(row["seed"]), (update - 1) // BIN_UPDATES)].append(float(value))
     bins: list[dict[str, object]] = []
+    by_seed: list[dict[str, object]] = []
     for cohort in COHORTS:
         seed_ids = sorted({key[2] for key in values if key[0] == cohort and key[1] == "utr_sg"})
         for bin_id in sorted({key[3] for key in values if key[0] == cohort}):
@@ -46,7 +47,17 @@ def read_paired_bins() -> list[dict[str, object]]:
                 utr = values.get((cohort, "utr_sg", seed, bin_id), [])
                 drtp = values.get((cohort, "drtp_sg", seed, bin_id), [])
                 if utr and drtp:
-                    differences.append(statistics.fmean(drtp) - statistics.fmean(utr))
+                    delta = statistics.fmean(drtp) - statistics.fmean(utr)
+                    differences.append(delta)
+                    by_seed.append({
+                        "cohort": cohort, "seed": seed, "bin_id": bin_id,
+                        "update_start": bin_id * BIN_UPDATES + 1,
+                        "update_end": (bin_id + 1) * BIN_UPDATES,
+                        "environment_steps_million_end": (bin_id + 1) * BIN_UPDATES * STEPS_PER_UPDATE / 1_000_000,
+                        "utr_mean_train_reward": statistics.fmean(utr),
+                        "drtp_mean_train_reward": statistics.fmean(drtp),
+                        "drtp_minus_utr_train_reward": delta,
+                    })
             if len(differences) != len(seed_ids):
                 continue
             bins.append({
@@ -60,7 +71,7 @@ def read_paired_bins() -> list[dict[str, object]]:
                 "negative_seeds": sum(item < 0.0 for item in differences),
                 "paired_deltas": ";".join(f"{item:.8f}" for item in differences),
             })
-    return bins
+    return bins, by_seed
 
 
 def directional_separation(formal: dict[str, object], independent: dict[str, object]) -> str | None:
@@ -99,7 +110,7 @@ def main() -> None:
     if output.exists() and any(output.iterdir()):
         raise FileExistsError(f"refusing to overwrite: {output}")
     output.mkdir(parents=True, exist_ok=False)
-    rows = read_paired_bins()
+    rows, by_seed = read_paired_bins()
     first, events = first_persistent_separation(rows)
     first_million = None if first is None else float(first["environment_steps_million_end"])
     one_million_has_proxy = first_million is not None and first_million <= 1.0
@@ -108,6 +119,10 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
+    with (output / "divergence_timing_by_seed.csv").open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(by_seed[0]))
+        writer.writeheader()
+        writer.writerows(by_seed)
     with (output / "timing_rule.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=["bin_id", "direction"])
         writer.writeheader()

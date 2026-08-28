@@ -146,9 +146,26 @@ def on_off_equivalence(root: Path) -> dict[str, Any]:
     manifest = json.loads((logged / "failure_telemetry" / "telemetry_manifest.json").read_text(encoding="utf-8"))
     assert int(manifest["training_seed"]) == AUDIT_SEED, "telemetry seed provenance"
     sample = json.loads((logged / "failure_telemetry" / "failure_event_window.jsonl").read_text(encoding="utf-8").splitlines()[0])
-    fields = {"pairwise_geometry", "target_position", "direct_information_path", "relay_information_path", "action", "policy_entropy", "reward_components"}
+    fields = {
+        "pairwise_geometry", "target_position", "direct_information_path",
+        "relay_information_path", "action", "action_command", "policy_entropy",
+        "reward_components",
+    }
     assert fields.issubset(sample), "B2 event-window schema"
-    return {"pass": True, "transition_count": len(plain_trace), "parallel_episode_ids": len(episode_ids), "model_sha256_equal": sha256(plain / "actor_critic_latest.pt") == sha256(logged / "actor_critic_latest.pt")}
+    assert "path_switch_event" in sample["direct_information_path"], "path-switch schema"
+    assert sample["action_command"]["max_action_probability"] is None, "action-confidence boundary"
+    telemetry_dir = logged / "failure_telemetry"
+    telemetry_bytes = sum(item.stat().st_size for item in telemetry_dir.iterdir() if item.is_file())
+    event_rows = len((telemetry_dir / "failure_event_window.jsonl").read_text(encoding="utf-8").splitlines())
+    return {
+        "pass": True,
+        "transition_count": len(plain_trace),
+        "parallel_episode_ids": len(episode_ids),
+        "event_window_rows": event_rows,
+        "telemetry_bytes": telemetry_bytes,
+        "telemetry_bytes_per_event_row": telemetry_bytes / max(event_rows, 1),
+        "model_sha256_equal": sha256(plain / "actor_critic_latest.pt") == sha256(logged / "actor_critic_latest.pt"),
+    }
 
 
 def runtime_reload_exact(root: Path) -> dict[str, Any]:
