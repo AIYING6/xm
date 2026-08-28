@@ -46,7 +46,8 @@ def main() -> None:
     }
     tape["tape_hash"] = hashlib.sha256(canonical(tape)).hexdigest()
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(tape, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with output.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(tape, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"output": str(output), "tape_hash": tape["tape_hash"]}, indent=2))
 
 
