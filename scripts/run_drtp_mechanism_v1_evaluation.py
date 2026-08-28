@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import csv
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from collections import defaultdict
 import json
 import multiprocessing as mp
 from pathlib import Path
@@ -42,7 +43,9 @@ def main() -> None:
     if eval_root.exists() and any(eval_root.iterdir()):
         raise FileExistsError(f"refusing to overwrite: {eval_root}")
     eval_root.mkdir(parents=True, exist_ok=False)
-    episode_ids = [int(item["episode_id"]) for item in tape["episodes"]]
+    episode_ids_by_condition: dict[str, list[int]] = defaultdict(list)
+    for episode in tape["episodes"]:
+        episode_ids_by_condition[str(episode["condition"])].append(int(episode["episode_id"]))
     condition_rows = []
     for condition in tape["conditions"]:
         condition_rows.append({
@@ -72,10 +75,17 @@ def main() -> None:
             checkpoint = run_dir / "actor_critic_latest.pt"
             if not checkpoint.exists():
                 raise FileNotFoundError(checkpoint)
-            tasks.append((arm, seed, str(checkpoint), "1m", episode_ids, condition_rows, tape["tape_hash"]))
+            for condition in condition_rows:
+                condition_episode_ids = episode_ids_by_condition[condition["name"]]
+                if len(condition_episode_ids) != tape["episodes_per_condition"]:
+                    raise RuntimeError(f"invalid frozen episode allocation for {condition['name']}")
+                # Each fixed condition receives only its pre-registered 100
+                # episode IDs.  Passing all IDs to every condition would turn
+                # the 3,000-episode contract into an unauthorized 15,000 run.
+                tasks.append((arm, seed, str(checkpoint), "1m", condition_episode_ids, [condition], tape["tape_hash"]))
             source.append(manifest)
     workers = min(args.workers, len(tasks))
-    total = len(tasks) * len(tape["conditions"]) * len(episode_ids)
+    total = len(tasks) * tape["episodes_per_condition"]
     print(f"mechanism evaluation: workers={workers}, cells={len(tasks)}, episodes={total}", flush=True)
     rows, completed = [], 0
     with ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context("spawn")) as pool:
