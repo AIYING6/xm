@@ -18,7 +18,7 @@ B3 **不**回答“DRTP 是否比 UTR 分数高”，也不生成投稿主结论
 | 新 paired seeds | `2701, 2702, 2703` |
 | 训练预算 | 每条 `3,907 × 4 × 64 = 1,000,192` environment steps |
 | milestone | update `976/1953/2930/3907`（约 `0.25/0.50/0.75/1.00M`） |
-| 初始代码基线 | `79b0f5cc30dd74f042e3a2c7c5961c5095c09b01` |
+| 初始代码基线 | `79b0f5ccd8a262c95e0ff9f788f011c67c209db0` |
 | development tape | `configs/drtp_b3_development_tape.json`，SHA256 `e01c905b04257fd6b373dbbe3ca25cf5f0dece0864e89b6713bd7647107ce9ed` |
 
 算法、PPO、reward、环境、故障语义、观测、actor/critic、DRTP 参数与训练支持集均冻结。禁止 EGTR、R-DRTP、trust region、confidence gate、warm-up、新网络、辅助 loss、checkpoint promotion、early stop、换 seed、删差 seed 和 10M 训练。

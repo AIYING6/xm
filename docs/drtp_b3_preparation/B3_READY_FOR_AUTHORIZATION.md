@@ -6,7 +6,7 @@ This is a preparation decision, not a training authorization. No B3 training,
 evaluation, checkpoint, or algorithm variant has been launched locally or in
 the cloud.
 
-The source freeze is commit `79b0f5cc30dd74f042e3a2c7c5961c5095c09b01`.
+The source freeze is commit `79b0f5ccd8a262c95e0ff9f788f011c67c209db0`.
 
 ## Readiness checklist
 
