@@ -54,6 +54,7 @@ PAPER_ASSETS = (
     "paper/q2_final_zh/main_zh.md", "paper/q2_final_zh/references_core.enw",
     "paper/q2_final_zh/34_cross_tape_reliability_diagnostic_contract.md",
     "paper/q2_final_zh/35_cross_tape_reliability_integration_audit.md",
+    "paper/q2_final_zh/36_cohort_mechanism_evidence_audit.md",
     "paper/q2_final_zh/22_submission_evidence_layer_freeze_audit.md",
     "paper/q2_final_zh/23_claim_evidence_audit.md", "paper/q2_final_zh/25_final_evidence_manifest.json",
     "paper/q2_final_zh/26_novelty_and_prior_art_positioning.md",

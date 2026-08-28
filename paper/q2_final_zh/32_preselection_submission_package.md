@@ -17,7 +17,7 @@
 |---|---|---|---|
 | 匿名主稿 | 已完成 | `paper/q2_final_zh/output/DRTP_SG_MAPPO_中文论文终稿_投稿前审稿版.pdf` | 按目标刊模板迁移并人工核验 |
 | 补充材料 | 已完成 | `paper/q2_final_zh/supplementary/` | 确认目标刊的附件命名/文件大小要求 |
-| 证据与复现包 | 本地 staging 已完成 | `output/drtp_relay_failure_anonymous_reproducibility_v1/` | 外部匿名托管、独立下载与 checksum 验证 |
+| 证据与复现包 | 本地 staging 已完成 | `output/drtp_relay_failure_anonymous_reproducibility_v8/` | 外部匿名托管、独立下载与 checksum 验证 |
 | 题名页 | 已有模板 | 本文第 4 节 | 填真实作者、单位、通讯方式、基金 |
 | 投稿信 | 已有模板 | 本文第 5 节 | 填期刊、编辑称谓、通讯作者与原创性事实 |
 | Highlights/编辑摘要 | 已有模板 | 本文第 6 节 | 核对目标刊是否要求、字符上限与语言 |

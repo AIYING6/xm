@@ -95,7 +95,8 @@ EQUATION_REPLACEMENTS = {
     "0\\rightarrow1\\rightarrow2\n\\quad\\longrightarrow\\quad\n0\\rightarrow2,": "0 → 1 → 2  重构为  0 → 2",
     "J_{\\mathrm{nominal}},\\qquad J_{F0},": "J_nominal，J_F0",
     "J_{\\mathrm{pert,mean}}=\\frac{1}{10}\\sum_{c\\in\\mathcal C_{\\mathrm{pert}}}J_c,\n\\qquad\nJ_{\\mathrm{pert,worst}}=\\min_{c\\in\\mathcal C_{\\mathrm{pert}}}J_c.": "J_pert,mean = 十个冻结跨扰动条件任务得分的平均值；J_pert,worst = 十个条件中的最小任务得分。",
-    "\\Delta J_c=J_{\\mathrm{nominal}}-J_c.": "ΔJ_c = J_nominal − J_c",
+    "D_c=J_{\\mathrm{nominal}}-J_c.": "D_c = J_nominal − J_c",
+    "\\Delta J_c^{D-U}=J_c^{\\mathrm{DRTP}}-J_c^{\\mathrm{UTR}}.": "ΔJ_c(D-U) = J_c(DRTP) − J_c(UTR)",
     "V_{\\mathrm{trigger},c}=\n\\frac{\\#\\{\\text{在 }R_c\\text{ 中正确触发故障的 episodes}\\}}\n{|R_c|}.": "V_trigger,c = 风险集 R_c 内正确触发故障的 episode 数 / |R_c|",
     "a_{i,t}\\sim\\pi_\\theta(a_{i,t}\\mid o_{i,t},G_{i,t}).": "a_i,t ∼ π_θ(a_i,t | o_i,t, G_i,t)",
     "\\mathcal G=\\{N,F0,TE,TL,DS,DL,CP\\}.": "训练组 G = {N, F0, TE, TL, DS, DL, CP}",
@@ -155,8 +156,10 @@ def format_display_math(raw: str) -> str:
         return "J_nominal，J_F0"
     if "J_{\\mathrm{pert,mean}}" in compact:
         return "J_pert,mean = 十个冻结跨扰动条件任务得分的平均值；J_pert,worst = 十个条件中的最小任务得分"
-    if "\\Delta J_c" in compact:
-        return "Delta J_c = J_nominal - J_c"
+    if "D_c=J_{\\mathrm{nominal}}-J_c" in compact:
+        return "D_c = J_nominal - J_c"
+    if "\\Delta J_c^{D-U}" in compact:
+        return "Delta J_c(D-U) = J_c(DRTP) - J_c(UTR)"
     if "V_{\\mathrm{trigger},c}" in compact:
         return "V_trigger,c = 风险集 R_c 内正确触发故障的 episode 数 / |R_c|"
     if "a_{i,t}\\sim" in compact:
