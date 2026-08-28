@@ -52,6 +52,8 @@ CONTRACTS = (
 )
 PAPER_ASSETS = (
     "paper/q2_final_zh/main_zh.md", "paper/q2_final_zh/references_core.enw",
+    "paper/q2_final_zh/34_cross_tape_reliability_diagnostic_contract.md",
+    "paper/q2_final_zh/35_cross_tape_reliability_integration_audit.md",
     "paper/q2_final_zh/22_submission_evidence_layer_freeze_audit.md",
     "paper/q2_final_zh/23_claim_evidence_audit.md", "paper/q2_final_zh/25_final_evidence_manifest.json",
     "paper/q2_final_zh/26_novelty_and_prior_art_positioning.md",
@@ -71,6 +73,7 @@ SCRIPTS = (
     "scripts/build_paper_q2_evidence_chain.py", "scripts/check_q2_final_zh_manuscript.py",
     "scripts/build_drtp_anonymous_reproducibility_package.py",
     "scripts/check_drtp_anonymous_reproducibility_package.py",
+    "scripts/run_drtp_cross_tape_reliability.py",
 )
 
 
@@ -141,15 +144,21 @@ def copy_sources(output: Path) -> None:
     for path in (ROOT / "paper" / "q2_final_zh" / "formal_results" / "figures").glob("*"):
         if path.suffix.lower() in {".png", ".svg", ".pdf"}:
             copy_file(path, output / "figures" / path.name)
+    diagnostic_root = ROOT / "results" / "analysis" / "drtp_cross_tape_reliability"
+    if diagnostic_root.is_dir():
+        for path in diagnostic_root.rglob("*"):
+            if path.is_file():
+                copy_file(path, output / "source_data" / "cross_tape_reliability" / path.relative_to(diagnostic_root))
 
 
 def write_documents(output: Path, revision: str) -> None:
     write(output / "README.md", [
         "# DRTP relay-failure reproducibility package (anonymous-review staging)", "",
-        "This package supports the DRTP relay-failure manuscript. It contains three non-pooled evidence strata:",
+        "This package supports the DRTP relay-failure manuscript. It contains three non-pooled training evidence strata plus one zero-training diagnostic:",
         "1. primary matched UTR--DRTP cohort (2301--2305; 12,000 raw records);",
         "2. Non-Graph MAPPO performance reference (2301--2305; 6,000 raw records);",
-        "3. independent UTR/SNR/DRTP cohort (2401--2405; 18,000 raw records, with an adverse DRTP direction).", "",
+        "3. independent UTR/SNR/DRTP cohort (2401--2405; 18,000 raw records, with an adverse DRTP direction).",
+        "4. zero-training cross-tape reliability diagnostic (48,000 raw records; cohort-stratified and not a new training experiment).", "",
         "The independent cohort must not be pooled with the primary cohort as n=10. The manuscript claims only a bounded empirical DRTP gain over uniform weighting in the frozen primary cohort. It does not claim strict OOD generalization, general DRO guarantees, information recovery, seed-stable superiority, or adaptive necessity against all static nonuniform distributions.", "",
         "## Verification", "Run `python scripts/check_drtp_anonymous_reproducibility_package.py --package-root .` after download. Raw records, manifests, run provenance and sampler logs are under `source_data/`. Checkpoint SHA256 values are in per-run manifests; binaries are not duplicated here.", "",
         f"Built from source revision `{revision}`. Before external hosting, complete every item in `RELEASE_BLOCKERS.md`.",
@@ -173,7 +182,7 @@ def write_documents(output: Path, revision: str) -> None:
         "# Checkpoint and runtime-state policy", "", "Final checkpoint/runtime-state SHA256 values are retained in each extracted `run_manifest.json`. Large checkpoint binaries are intentionally not duplicated into this staging package. Before release, authors must either deposit them or state a concrete access route; the manuscript must not claim public checkpoint availability before that decision.",
     ])
     write(output / "source_data" / "DATA_DICTIONARY.md", [
-        "# Source-data dictionary", "", "Each stratum includes final raw episode metrics, evaluation/tape manifests, a frozen report, preflight record, per-run manifests and sampler logs.",
+        "# Source-data dictionary", "", "Each training stratum includes final raw episode metrics, evaluation/tape manifests, a frozen report, preflight record, per-run manifests and sampler logs. The cross-tape diagnostic additionally includes its raw records, decision, manifest and integration report.",
         "Training seed is the independent statistical unit. No pre-trigger termination is removed from overall task or safety outcomes. Legacy archive fields named J_OOD_mean/J_OOD_worst map to manuscript J_pert,mean/J_pert,worst and are not strict unseen-condition OOD metrics.",
     ])
 

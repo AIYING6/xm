@@ -11,6 +11,11 @@ import re
 
 REQUIRED = ("README.md", "CITATION.cff", "RELEASE_BLOCKERS.md", "LICENSE-REQUIRED-BEFORE-PUBLIC-RELEASE.md", "checkpoints/README.md", "source_data/DATA_DICTIONARY.md", "manifests/FILE_MANIFEST_SHA256.csv", "manifests/PACKAGE_PROVENANCE.json")
 STRATA = ("formal_2301_2305", "mappo_nograph_2301_2305", "independent_2401_2405")
+CROSS_TAPE_FILES = (
+    "source_data/cross_tape_reliability/raw_episode_metrics.csv",
+    "source_data/cross_tape_reliability/evaluation_manifest.json",
+    "source_data/cross_tape_reliability/DRTP_CROSS_TAPE_RELIABILITY_DECISION.json",
+)
 TEXT_SUFFIXES = {".md", ".txt", ".json", ".csv", ".py", ".yml", ".yaml", ".cff"}
 IDENTITY_PATTERN = re.compile(r"AIYING6|C:\\Users\\|D:\\Code\\|github\.com/AIYING6", re.IGNORECASE)
 
@@ -29,6 +34,8 @@ def main() -> None:
     for stratum in STRATA:
         for item in ("evaluations/final_10m/raw_episode_metrics.csv", "evaluations/final_10m/evaluation_manifest.json"):
             if not (root / "source_data" / stratum / item).is_file(): missing.append(f"source_data/{stratum}/{item}")
+    for item in CROSS_TAPE_FILES:
+        if not (root / item).is_file(): missing.append(item)
     if missing: raise SystemExit(f"FAIL: missing package assets: {missing}")
     mismatch = []
     with (root / "manifests" / "FILE_MANIFEST_SHA256.csv").open(newline="", encoding="utf-8") as handle:
@@ -46,7 +53,7 @@ def main() -> None:
             if IDENTITY_PATTERN.search(text): identity_hits.append(path.relative_to(root).as_posix())
     if identity_hits: mismatch.append("identity markers: " + ", ".join(identity_hits))
     if mismatch: raise SystemExit(f"FAIL: checksum/provenance mismatch: {mismatch}")
-    print("PASS: anonymous staging package contains all three raw evidence strata and verified manifests.")
+    print("PASS: anonymous staging package contains three training evidence strata plus the cross-tape diagnostic and verified manifests.")
 
 
 if __name__ == "__main__": main()

@@ -5,7 +5,7 @@
 
 ## 0. 已完成的本地匿名包构建
 
-本清单现已由 `scripts/build_drtp_anonymous_reproducibility_package.py` 落地为本地匿名审稿 staging package，并由 `scripts/check_drtp_anonymous_reproducibility_package.py` 完整性核验。构建包保留正式 UTR--DRTP 的 12,000 条原始记录、无图 MAPPO 性能参考的 6,000 条原始记录及独立 UTR/SNR/DRTP cohort 的 18,000 条原始记录，另含其三层 manifest、run provenance、sampler log、合同、代码和图表资产。独立 cohort 仍不得与正式 cohort 合并为 `n=10`。精确命令、归档 SHA256、提取范围和核验条件见文档28。
+本清单现已由 `scripts/build_drtp_anonymous_reproducibility_package.py` 落地为本地匿名审稿 staging package，并由 `scripts/check_drtp_anonymous_reproducibility_package.py` 完整性核验。构建包保留正式 UTR--DRTP 的 12,000 条原始记录、无图 MAPPO 性能参考的 6,000 条原始记录、独立 UTR/SNR/DRTP cohort 的 18,000 条原始记录，以及零训练跨 tape 诊断的 48,000 条原始记录；后者仅作为 cohort-stratified reliability diagnostic，不是新训练证据。包内另含各层 manifest、run provenance、sampler log、合同、代码和图表资产。独立 cohort 仍不得与正式 cohort 合并为 `n=10`。精确命令、归档 SHA256、提取范围和核验条件见文档28。
 
 该状态仅表示“可匿名托管的本地包已生成并自检”；未获得匿名外部链接、许可证和 checkpoint 获取策略前，正文仍不得写为“数据和代码已公开”。
 
@@ -30,7 +30,8 @@ drtp-relay-failure-reproducibility/
 ├─ source_data/
 │  ├─ formal_2301_2305/              # 主 cohort 的 12,000 条记录及汇总
 │  ├─ mappo_nograph_2301_2305/       # 无图 MAPPO 性能参考的 6,000 条记录及汇总
-│  └─ independent_2401_2405/         # UTR/SNR/DRTP 18,000 条完整独立重复记录
+│  ├─ independent_2401_2405/         # UTR/SNR/DRTP 18,000 条完整独立重复记录
+│  └─ cross_tape_reliability/        # 两 cohort 交叉评价的 48,000 条零训练诊断记录
 ├─ checkpoints/README.md             # checkpoint/runtime-state 哈希、获取方式与大小
 ├─ figures/                          # 主图、补充图、矢量源和生成脚本
 ├─ supplementary/                    # 条件表、安全表、历史 strata 与可靠性说明
@@ -45,6 +46,7 @@ drtp-relay-failure-reproducibility/
 | 主 cohort 完整性 | 决策 JSON、tape manifest、正式归档 SHA256、checkpoint/runtime-state 哈希 | `formal_results/source_data/DRTP_UTR_Q2_FORMAL_DECISION.json`、主稿附录B | checkpoint 可受限，但哈希和获取说明必须公开 |
 | 无图 MAPPO 性能参考 | 五种子结果、6,000 条记录、安全指标、归档 SHA256 | `formal_results/external_reference_summary.md` | 不得只公开 pooled 结果 |
 | 独立三方法反向重复 | UTR/SNR/DRTP 全部 18,000 条记录、三个方法全部种子、端点和安全汇总 | `supplementary/source_data/snr_independent_replication/`、`supplementary/S4_independent_three_arm_replication.md` | 必须整套公开；不得删除不利 seed |
+| 跨评价带可靠性诊断 | 两 cohort×两 tape 的 48,000 条 raw records、decision、manifest 和配对汇总 | `results/analysis/drtp_cross_tape_reliability/`、`paper/q2_final_zh/35_cross_tape_reliability_integration_audit.md` | 作为零训练、cohort-stratified diagnostic；不得与 cohort pooling 或新 superiority claim 混用 |
 | 方法复现 | 环境、SG 主干、UTR/DRTP sampler、PPO 参数、解析与统计脚本 | `envs/`、`algorithms/`、`configs/`、`scripts/` | 固定到本稿对应 commit；README 给出运行顺序 |
 | 图表复现 | SVG/PDF/PNG/TIFF、源数据与作图脚本 | `formal_results/figures/`、`scripts/build_paper_assets.py` | 图号/表号与主稿一致 |
 
@@ -57,6 +59,7 @@ drtp-relay-failure-reproducibility/
 | 无图 MAPPO 性能参考归档 | `2f8b5f1e3025221e70652a6c4d0bcaa05d239cc81f5c70d59301d4f9e66afad5` | 五种子、共同 10M 终点和主 tape |
 | 独立三方法重复归档 | `86a708244fa4d30935159a08d234c48feeb7a4c455208d58fbc58d308b4f4ae1` | 种子 2401--2405，UTR/SNR/DRTP |
 | 独立重复 evaluation tape | `c89f63bc5a11e3def88fa677356796ea681ca227d31e47dc584764a3a3084fc2` | episode ID 500000--500099 |
+| 跨 tape 诊断 evaluation tapes | `84e31ed185ced0608a30c9cb9f9659c7423c952e4603aac53cf691c54fc64ac2` / `c89f63bc5a11e3def88fa677356796ea681ca227d31e47dc584764a3a3084fc2` | tape490 与 tape500 交叉使用；raw rows=48,000 |
 
 ## 5. README 最低内容
 

@@ -189,6 +189,10 @@ def main() -> None:
     require("### 6.8 历史可靠性证据" in manuscript and
             "这些历史结果不能与正式五种子作为一个同质样本合并" in manuscript,
             "historical reliability stratum is not explicitly separated")
+    require("### 6.10 跨评价带可靠性诊断" in manuscript and
+            "48,000 条原始 episode 记录" in manuscript and
+            "正式 2301--2305 cohort 在 tape490 和 tape500 上均保持正向" in manuscript,
+            "cross-tape reliability diagnostic is not integrated")
     claim_audit = (PAPER / "23_claim_evidence_audit.md").read_text(encoding="utf-8")
     for token in (
         "PASS WITH BOUNDED CROSS-COHORT CLAIMS",
@@ -208,6 +212,9 @@ def main() -> None:
             "writing state does not record formal-result integration")
     require(state.get("formal_verdict") == "FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE",
             "formal manuscript verdict mismatch")
+    require(state.get("cross_tape_reliability_status") ==
+            "COMPLETE_ZERO_TRAINING_DIAGNOSTIC_COHORT_DIRECTION_PERSISTS_ACROSS_TAPES",
+            "cross-tape diagnostic status is missing or incorrect")
     require(state.get("formal_confirmation_contract") ==
             "DRTP-UTR-Q2-FORMAL-PAIRED-5SEED-V1",
             "formal confirmation contract mismatch")
@@ -271,8 +278,11 @@ def main() -> None:
     ))
     require(evidence_manifest.get("new_training_authorized") is False,
             "final evidence manifest must not authorize new training")
-    require(len(evidence_manifest.get("evidence_strata", [])) == 3,
-            "final evidence manifest must retain all three evidence strata")
+    require(len(evidence_manifest.get("evidence_strata", [])) >= 3 and
+            {item.get("name") for item in evidence_manifest.get("evidence_strata", [])} >=
+            {"formal_paired_primary_cohort", "non_graph_mappo_performance_reference",
+             "independent_three_arm_reliability_replication"},
+            "final evidence manifest must retain the three training evidence strata")
     require("No n=10 pooling across cohorts" in
             evidence_manifest.get("required_transparency", []),
             "final evidence manifest does not prohibit cross-cohort pooling")
