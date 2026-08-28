@@ -1,0 +1,6 @@
+criterion,status,interpretation
+early-state precedes final reversal,partial,"Seed2702 has elevated early value loss/KL, but its early training return is not weak."
+adaptive sampler interaction,partial,"Seed2702 q deviation rises at 0.25–0.50M, but favorable seed2703 also has large q deviation."
+behavior/support layer,partial,"At tau=60 during 0.25–0.50M seed2702 has lower path availability/task support than paired UTR and favorable DRTP seeds; later path availability recovers."
+paired UTR control,partial,"UTR-2702 has stronger early failure-relative support, but critic-state differences alone are not DRTP-specific causal proof."
+cross-seed replication,fail,"Only seed2702 is adverse; the required repeated seed-level mechanism evidence is absent."
