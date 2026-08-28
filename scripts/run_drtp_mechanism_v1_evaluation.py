@@ -43,6 +43,16 @@ def main() -> None:
         raise FileExistsError(f"refusing to overwrite: {eval_root}")
     eval_root.mkdir(parents=True, exist_ok=False)
     episode_ids = [int(item["episode_id"]) for item in tape["episodes"]]
+    condition_rows = []
+    for condition in tape["conditions"]:
+        condition_rows.append({
+            **condition,
+            # The frozen tape uses explicit failure_* names; the shared
+            # evaluator uses the shorter aliases.  Normalize only at this
+            # read-only boundary; the tape bytes and hash remain unchanged.
+            "start_step": int(condition.get("start_step", condition["failure_start_step"])),
+            "duration_steps": int(condition.get("duration_steps", condition["failure_duration_steps"])),
+        })
     tasks, source = [], []
     for arm in ARMS:
         for seed in SEEDS:
@@ -62,7 +72,7 @@ def main() -> None:
             checkpoint = run_dir / "actor_critic_latest.pt"
             if not checkpoint.exists():
                 raise FileNotFoundError(checkpoint)
-            tasks.append((arm, seed, str(checkpoint), "1m", episode_ids, tape["conditions"], tape["tape_hash"]))
+            tasks.append((arm, seed, str(checkpoint), "1m", episode_ids, condition_rows, tape["tape_hash"]))
             source.append(manifest)
     workers = min(args.workers, len(tasks))
     total = len(tasks) * len(tape["conditions"]) * len(episode_ids)
@@ -84,7 +94,7 @@ def main() -> None:
         writer.writeheader(); writer.writerows(rows)
     manifest = {
         "protocol": PROTOCOL, "status": "completed", "tape_hash": tape["tape_hash"],
-        "episodes_per_condition": tape["episodes_per_condition"], "conditions": tape["conditions"],
+        "episodes_per_condition": tape["episodes_per_condition"], "conditions": condition_rows,
         "raw_rows": len(rows), "cells": len(tasks), "workers": workers,
         "source_runs": source, "inference_unit": "training_seed", "checkpoint_label": "1m",
         "all_original_episodes_retained": True, "canonical_seeds_used": False,
