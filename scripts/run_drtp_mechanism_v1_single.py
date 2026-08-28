@@ -37,7 +37,15 @@ def sha256(path: Path) -> str:
 
 
 def commit() -> str:
-    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        # Cloud delivery uses a Git archive, which deliberately has no .git
+        # directory.  The training manifest still records its frozen protocol,
+        # config hash and tape hash; provenance is marked explicitly.
+        return "git-archive-no-working-tree"
 
 
 def shared_config_hash(cfg) -> str:
