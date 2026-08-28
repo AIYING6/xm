@@ -50,7 +50,10 @@ def shared_config_hash(cfg) -> str:
 def training_config(arm: str, seed: int, out_dir: Path):
     if arm not in ARMS or seed not in SEEDS:
         raise ValueError("unauthorized Mechanism V1 arm or seed")
-    probe = base.training_config("utr_sg", seed, out_dir)
+    # Borrow only the frozen architecture/PPO/environment defaults.  The
+    # historical runner validates its own seed namespace, so its authorized
+    # reference seed must be used while constructing this template.
+    probe = base.training_config("utr_sg", base.SEEDS[0], out_dir)
     return replace(
         probe,
         updates=UPDATES,
