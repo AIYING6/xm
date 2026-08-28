@@ -1,0 +1,14 @@
+{
+  "authorization_required": true,
+  "cloud_only_for_training_and_evaluation": true,
+  "launch_status": "NOT_AUTHORIZED",
+  "methods": ["utr_sg", "drtp_sg"],
+  "paired_training_seeds": [2701, 2702, 2703],
+  "budget_environment_steps_per_run": 1000192,
+  "milestone_updates": {"976": "0.25M", "1953": "0.50M", "2930": "0.75M", "3907": "1.00M"},
+  "development_tape": "configs/drtp_b3_development_tape.json",
+  "development_tape_hash": "e01c905b04257fd6b373dbbe3ca25cf5f0dece0864e89b6713bd7647107ce9ed",
+  "required_seed_provenance_assertion": ["requested_seed", "cfg.seed", "drtp_sampler_seed", "runtime_rng_seed", "telemetry_seed"],
+  "forbidden": ["algorithm_change", "checkpoint_promotion", "early_stop", "seed_replacement", "seed_exclusion", "local_large_scale_training", "10M_training"],
+  "automatic_follow_on": false
+}
