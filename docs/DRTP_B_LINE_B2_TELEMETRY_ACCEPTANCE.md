@@ -1,6 +1,6 @@
 # DRTP B线 B2：行为遥测技术验收
 
-状态：`B2_TECHNICAL_PASS`  
+状态：`B2_TECHNICAL_PASS`
 执行范围：短 CPU smoke；未启动新 cohort、云端长训练、诊断 tape 或算法修改。
 
 ## 验收结果
