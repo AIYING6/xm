@@ -1,0 +1,38 @@
+{
+  "checks": {
+    "actor_critic_information_boundary": {
+      "basis": "telemetry is a sink and is never passed to get_action_and_value",
+      "pass": true
+    },
+    "missing_value_handling": {
+      "basis": "JSON-safe null handling and explicit optional fields",
+      "pass": true
+    },
+    "parallel_env_isolation": {
+      "env_count": 4,
+      "pass": true
+    },
+    "reward_and_failure_semantics_invariance": {
+      "basis": "trajectory equivalence includes rewards, dones, and positions",
+      "pass": true
+    },
+    "runtime_checkpoint_save_reload": {
+      "pass": true,
+      "runtime_checkpoint": true,
+      "telemetry_state_persisted": true
+    },
+    "storage_performance_smoke": {
+      "basis": "one 260-step episode and one PPO update completed",
+      "pass": true
+    },
+    "telemetry_on_off_trajectory_equivalence": {
+      "pass": true,
+      "steps": 260,
+      "summary_records": 1,
+      "window_records": 81
+    }
+  },
+  "large_scale_training_or_evaluation": false,
+  "protocol": "DRTP-TRAINING-FAILURE-MECHANISM-V1",
+  "status": "P3_TECHNICAL_PASS"
+}

@@ -1,0 +1,29 @@
+{
+  "protocol": "DRTP-TRAINING-FAILURE-MECHANISM-V1",
+  "status": "P0_P3_FROZEN_P4_READY",
+  "methods": ["utr_sg", "drtp_sg"],
+  "training_seeds": [2601, 2602, 2603],
+  "environment_steps_per_run": 1000192,
+  "updates_per_run": 3907,
+  "num_envs": 4,
+  "rollout_steps": 64,
+  "milestones": {"976": "250k", "1953": "500k", "2930": "750k", "3907": "1m"},
+  "failure_event_window": {"pre_steps": 20, "post_steps": 60},
+  "matched_nominal_pseudo_onset": 44,
+  "diagnostic_conditions": ["Nominal", "F0", "T28", "D120", "C28-120"],
+  "parameter_count": 116728,
+  "telemetry_is_read_only": true,
+  "held_out_seeds_used": false,
+  "canonical_seeds_used": false,
+  "historical_cohorts_merged": false,
+  "checkpoint_promotion": false,
+  "early_stopping": false,
+  "p3_technical_audit": "P3_TECHNICAL_PASS",
+  "large_scale_local_training_or_evaluation": false,
+  "mechanism_go_rule": {
+    "time_leading": true,
+    "drtp_repetition_min_seeds": 2,
+    "utr_control_required": true,
+    "contiguous_evidence_layers_min": 3
+  }
+}

@@ -323,6 +323,9 @@ class UAVIntercept3DEnv:
         self.detected_by = np.zeros(cfg.num_blue, dtype=np.float32)
         self.attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
         self.local_attack_window = np.zeros(cfg.num_blue, dtype=np.float32)
+        # Read-only reward decomposition for failure-mechanism telemetry.
+        # This state is not used by transitions, observations, or learning.
+        self.last_reward_components: dict[str, object] = {}
         self._update_sensing_and_comm()
 
         self.history = {
@@ -885,16 +888,38 @@ class UAVIntercept3DEnv:
             progress = float(np.clip((prev_range - cur_range) / 1_000.0, -1.0, 1.0))
             geometry = self._attack_geometry_score()
             base = 0.35 * progress + 0.65 * geometry
+            components: dict[str, object] = {
+                "progress": 0.35 * progress,
+                "attack_geometry": 0.65 * geometry,
+            }
             if self.success:
                 base += 2.0
+                components["success"] = 2.0
             if self.collision:
                 base -= 2.0
+                components["collision"] = -2.0
             if self.constraint_violation:
                 base -= 1.5
+                components["constraint_violation"] = -1.5
+            self.last_reward_components = components
             return np.full((self.config.num_blue, 1), base, dtype=np.float32)
         progress = np.clip((prev_range - cur_range) / 1_000.0, -1.0, 1.0)
         connectivity = self._comm_connectivity()
         age_penalty = min(1.0, self._mean_message_age() / 80.0)
+        components = {
+            "progress": 0.25 * float(progress),
+            "tracking": 0.12 * tracking,
+            "attack_window": 0.18 * window,
+            "connectivity": 0.05 * connectivity,
+            "message_age_penalty": -0.03 * age_penalty,
+            "tracking_gain": 0.05 * max(0.0, tracking - prev_tracking),
+            "attack_window_gain": 0.08 * max(0.0, window - prev_window),
+            "attack_geometry": self.config.attack_geometry_reward_weight * self._attack_geometry_score(),
+            "reclosure_bonus": self.post_loss_chain_reclosure_bonus,
+            "safety_proximity_penalty": -self.config.safety_proximity_penalty_weight * self._safety_proximity_penalty(),
+        }
+        # Keep the production arithmetic/order unchanged; ``components`` is
+        # an observational mirror only.
         base = 0.25 * progress + 0.12 * tracking + 0.18 * window + 0.05 * connectivity - 0.03 * age_penalty
         base += 0.05 * max(0.0, tracking - prev_tracking) + 0.08 * max(0.0, window - prev_window)
         base += self.config.attack_geometry_reward_weight * self._attack_geometry_score()
@@ -902,19 +927,28 @@ class UAVIntercept3DEnv:
         base -= self.config.safety_proximity_penalty_weight * self._safety_proximity_penalty()
         if self.success:
             base += 2.0
+            components["success"] = 2.0
         if self.collision:
             base -= 2.0
+            components["collision"] = -2.0
         if self.constraint_violation:
             base -= 1.5
+            components["constraint_violation"] = -1.5
+        role_bonus = np.zeros(self.config.num_blue, dtype=np.float32)
+        energy_penalty = np.zeros(self.config.num_blue, dtype=np.float32)
         rewards = np.full((self.config.num_blue, 1), base, dtype=np.float32)
         for i, typ in enumerate(self.config.blue_types):
             if typ.role == ROLE_SCOUT:
-                rewards[i, 0] += 0.08 * self.detected_by[i]
+                role_bonus[i] += 0.08 * self.detected_by[i]
             if typ.role == ROLE_RELAY:
-                rewards[i, 0] += 0.05 * connectivity
+                role_bonus[i] += 0.05 * connectivity
             if typ.role in {ROLE_ATTACKER, ROLE_INTERCEPTOR}:
-                rewards[i, 0] += 0.12 * self.attack_window[i]
-            rewards[i, 0] -= 0.02 * (1.0 - self.blue_energy[i])
+                role_bonus[i] += 0.12 * self.attack_window[i]
+            energy_penalty[i] -= 0.02 * (1.0 - self.blue_energy[i])
+            rewards[i, 0] += role_bonus[i] + energy_penalty[i]
+        components["role_specific_bonus_by_agent"] = role_bonus
+        components["energy_penalty_by_agent"] = energy_penalty
+        self.last_reward_components = components
         return rewards
 
     def _comm_connectivity(self) -> float:
@@ -1143,6 +1177,7 @@ class UAVIntercept3DEnv:
             "node_failure_active": float(any(self._is_comm_failed(i) for i in range(self.config.num_blue))),
             "failed_blue_agent": float(self.config.failed_blue_agent),
             "step": float(self.step_count),
+            "reward_components": copy.deepcopy(self.last_reward_components),
         }
 
     def _target_state_for_observation(self) -> tuple[np.ndarray, float, float, float, np.ndarray]:

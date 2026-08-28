@@ -39,6 +39,7 @@ from algorithms.ri_gmappo.snr_topology_sampler import StaticNonuniformTopologySa
 from algorithms.ri_gmappo.drtp_topology_sampler import EGTRTopologySampler
 from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
+from algorithms.ri_gmappo.failure_aware_telemetry import FailureAwareTelemetryWriter
 
 
 ROLE_SCOUT_ID = 0
@@ -185,6 +186,12 @@ class RIGMAPPOConfig:
     fixed_stratified_topology_sampler_seed: int | None = None
     actor_gradient_mode: str = "standard"
     actor_gradient_logging: bool = False
+    # Zero-training failure-mechanism diagnosis.  The writer is a read-only
+    # sink and never enters actor/critic inputs or reward/sampler decisions.
+    failure_aware_telemetry: bool = False
+    failure_telemetry_pre_steps: int = 20
+    failure_telemetry_post_steps: int = 60
+    failure_telemetry_pseudo_onset: int = 44
     # TC-SAM-UTR: standard Euclidean SAM applied to actor parameters only.
     # These fields are inert unless sam_enabled=True and are intentionally
     # fixed rather than adapted from returns, topology, or training seed.
@@ -1210,6 +1217,7 @@ def save_runtime_training_checkpoint(
     action_generator: torch.Generator | None = None,
     minibatch_rng: np.random.Generator | None = None,
     env_rngs: list[random.Random] | None = None,
+    failure_telemetry_state: dict | None = None,
 ) -> None:
     """Persist every state that can alter the following rollout/update.
 
@@ -1247,6 +1255,7 @@ def save_runtime_training_checkpoint(
             "minibatch_rng": None if minibatch_rng is None else copy.deepcopy(minibatch_rng.bit_generator.state),
             "env_rngs": None if env_rngs is None else [rng.getstate() for rng in env_rngs],
         },
+        "failure_telemetry_state": copy.deepcopy(failure_telemetry_state),
     }
     torch.save(payload, path)
 
@@ -1431,6 +1440,17 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         )
 
     envs = make_envs(cfg, rng_streams=rng_streams)
+    telemetry_writer = None
+    if cfg.failure_aware_telemetry:
+        telemetry_method = "utr" if drtp_mode == "utr" else "drtp" if drtp_mode == "drtp" else drtp_mode
+        telemetry_writer = FailureAwareTelemetryWriter(
+            out_dir / "failure_telemetry",
+            training_seed=cfg.seed,
+            method=telemetry_method,
+            pre_steps=cfg.failure_telemetry_pre_steps,
+            post_steps=cfg.failure_telemetry_post_steps,
+            pseudo_onset=cfg.failure_telemetry_pseudo_onset,
+        )
     env_rngs = (
         [rng_streams.python_rng("env", env_index, 1) for env_index in range(cfg.num_envs)]
         if rng_streams is not None else None
@@ -1511,6 +1531,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             if runtime_payload["drtp_sampler_state"] is None:
                 raise ValueError("runtime checkpoint is missing DRTP/UTR sampler state")
             drtp_sampler.load_state_dict(runtime_payload["drtp_sampler_state"])
+        if telemetry_writer is not None and runtime_payload.get("failure_telemetry_state") is not None:
+            telemetry_writer.load_state_dict(runtime_payload["failure_telemetry_state"])
         _restore_runtime_rng_state(runtime_payload["rng_state"])
     elif cfg.init_checkpoint:
         load_matching_state_dict(agent, cfg.init_checkpoint, device)
@@ -1619,12 +1641,12 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
-        telemetry_writer = None
+        role_gate_writer = None
         if cfg.role_gate_telemetry:
             telemetry_fields = ["update", "relation", "receiver_role", "sender_role", "edge_count", "attention_mean", "gate_mean", "effective_payload_mean"]
-            telemetry_writer = csv.DictWriter(telemetry_file, fieldnames=telemetry_fields)
+            role_gate_writer = csv.DictWriter(telemetry_file, fieldnames=telemetry_fields)
             if not cfg.append_log or not telemetry_path.exists() or telemetry_path.stat().st_size == 0:
-                telemetry_writer.writeheader()
+                role_gate_writer.writeheader()
         curriculum_writer = None
         curriculum_logged_count = 0
         if curriculum_file is not None:
@@ -1683,6 +1705,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 drtp_rows=drtp_rows,
                 action_generator=action_generator,
                 env_rngs=env_rngs,
+                telemetry_writer=telemetry_writer,
             )
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
             if drtp_sampler is not None:
@@ -1702,9 +1725,9 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 "value_target_std": float(np.asarray(batch["returns"]).std()),
                 "learning_rate": float(optimizer.param_groups[0]["lr"]),
             })
-            if telemetry_writer is not None:
+            if role_gate_writer is not None:
                 for telemetry_row in summarize_role_gate_telemetry(agent, batch, device):
-                    telemetry_writer.writerow({"update": update, **telemetry_row})
+                    role_gate_writer.writerow({"update": update, **telemetry_row})
                 telemetry_file.flush()
             if actor_gradient_file is not None:
                 gradient_fields = [
@@ -1790,6 +1813,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                          episode_counts, drtp_episode_returns, drtp_selections, drtp_sampler,
                          rng_streams=rng_streams, action_generator=action_generator,
                          minibatch_rng=minibatch_rng, env_rngs=env_rngs,
+                         failure_telemetry_state=None if telemetry_writer is None else telemetry_writer.state_dict(),
                         )
             milestone_label = (cfg.milestone_updates or {}).get(update)
             if milestone_label is not None:
@@ -1808,7 +1832,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                          episode_counts, drtp_episode_returns, drtp_selections, drtp_sampler,
                          rng_streams=rng_streams, action_generator=action_generator,
                          minibatch_rng=minibatch_rng, env_rngs=env_rngs,
+                         failure_telemetry_state=None if telemetry_writer is None else telemetry_writer.state_dict(),
                     )
+    if telemetry_writer is not None:
+        telemetry_writer.close()
     return log_path
 
 
@@ -1831,6 +1858,7 @@ def collect_rollout(
     drtp_rows: list[dict] | None = None,
     action_generator: torch.Generator | None = None,
     env_rngs: list[random.Random] | None = None,
+    telemetry_writer: FailureAwareTelemetryWriter | None = None,
 ) -> dict:
     obs_buf, share_buf, node_buf, edge_buf, role_buf, adj_buf, intent_buf = [], [], [], [], [], [], []
     relation_adj_buf = []
@@ -1847,7 +1875,7 @@ def collect_rollout(
                 [selection.group == "N" for selection in drtp_selections], dtype=bool
             )
         with torch.no_grad():
-            actions, logp, _, values, _, _, _ = agent.get_action_and_value(
+            actions, logp, entropy, values, _, _, _ = agent.get_action_and_value(
                 torch.as_tensor(obs, dtype=torch.float32, device=device),
                 torch.as_tensor(graph_obs["node_feat"], dtype=torch.float32, device=device),
                 torch.as_tensor(graph_obs["edge_feat"], dtype=torch.float32, device=device),
@@ -1862,11 +1890,29 @@ def collect_rollout(
             )
 
         actions_np = actions.cpu().numpy()
+        entropy_np = entropy.mean(dim=1).cpu().numpy()
         values_np = values.cpu().numpy()
         logp_np = logp.cpu().numpy()
         next_obs, next_share, next_graphs, rewards, dones = [], [], [], [], []
         for e, env in enumerate(envs):
-            o, s, g, r, d, _ = env.step(actions_np[e])
+            pre_step = int(getattr(env, "step_count", 0))
+            graph_before = {key: value[e] for key, value in graph_obs.items()}
+            o, s, g, r, d, info = env.step(actions_np[e])
+            if telemetry_writer is not None:
+                telemetry_writer.record_step(
+                    update=current_update,
+                    env_index=e,
+                    episode_index=0 if episode_counts is None else episode_counts[e],
+                    env_step=int(info.get("step", pre_step + 1)),
+                    pre_step=pre_step,
+                    env=env,
+                    graph_before=graph_before,
+                    action=actions_np[e],
+                    reward=r[:, 0],
+                    policy_entropy=float(entropy_np[e]),
+                    info=info,
+                    selection=None if drtp_selections is None else drtp_selections[e],
+                )
             if drtp_sampler is not None and getattr(drtp_sampler, "uses_completed_return_feedback", False):
                 if drtp_episode_returns is None:
                     raise ValueError("DRTP episode-return bookkeeping is required")
@@ -1947,6 +1993,8 @@ def collect_rollout(
                         cfg.node_failure_duration_random_max,
                         rng=rng,
                     )
+                if telemetry_writer is not None:
+                    telemetry_writer.finalize_episode(e)
                 o, s, g = env.reset()
             next_obs.append(o)
             next_share.append(s)
