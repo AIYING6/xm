@@ -1,0 +1,13 @@
+{
+  "protocol": "DRTP-STABLE-V2-D7-PP-DRTP-DESIGN-AUDIT-V1",
+  "decision": "D7_DESIGN_AUDIT_PASS",
+  "source_d6_decision_sha256": "67030744e9304782a346a488b7abd6e3e2f39f92d0d693668efef35c8f09c177",
+  "candidate": "paired_probe_drtp",
+  "candidate_scope": "sampler return-estimation stream only",
+  "actor_critic_ppo_reward_environment_changes": false,
+  "mainline_a_modified": false,
+  "implementation_authorized": false,
+  "training_authorized": false,
+  "default_probe_base_identifiers_per_boundary": 4,
+  "required_next_action": "P2 technical implementation audit only"
+}
