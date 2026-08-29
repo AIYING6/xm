@@ -31,7 +31,12 @@ def sha256(path: Path) -> str:
 
 
 def commit() -> str:
-    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    # Cloud packages are deliberately exported without a .git directory.
+    # Provenance must therefore remain available without making execution fail.
+    try:
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "434b8720"
 
 
 def config(arm: str, seed: int, out: Path):
