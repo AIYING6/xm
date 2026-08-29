@@ -111,7 +111,7 @@ class DRTPTopologySampler:
 
     def __init__(self, mode: str, seed: int, total_updates: int):
         self.mode = str(mode).lower()
-        if self.mode not in {"utr", "drtp", "r_drtp", "egtr", "drtp_tr", "conservative_drtp"}:
+        if self.mode not in {"utr", "drtp", "pp_drtp", "r_drtp", "egtr", "drtp_tr", "conservative_drtp"}:
             raise ValueError("unsupported DRTP sampler mode")
         self.seed = int(seed)
         self.total_updates = int(total_updates)
@@ -467,6 +467,219 @@ class DRTPTopologySampler:
             "failure_duration_steps": "", "adapted": bool(adapted), "reason": reason,
             "adaptation_count": self.adaptation_count, **state,
         }
+
+
+class PairedProbeTopologySampler(DRTPTopologySampler):
+    """DRTP whose sampler evidence comes from balanced paired probe rollouts.
+
+    Training selections still use ``q`` exactly as in DRTP.  The only semantic
+    change is that completed training returns are never used to update the
+    group EMAs.  Instead, a caller supplies an equal-count, common-base-id
+    probe batch immediately before each post-warm-up adaptation boundary.
+    """
+
+    uses_completed_return_feedback = False
+
+    def __init__(self, seed: int, total_updates: int, probe_count: int = 4):
+        super().__init__("pp_drtp", seed, total_updates)
+        if int(probe_count) <= 0:
+            raise ValueError("PP-DRTP probe_count must be positive")
+        self.probe_count = int(probe_count)
+        self.pending_probe_update: int | None = None
+        self.pending_probe_returns: dict[str, list[float]] = {group: [] for group in ALL_GROUPS}
+        self.pending_probe_base_ids: tuple[int, ...] = ()
+        self.last_probe_counts = {group: 0 for group in ALL_GROUPS}
+        self.last_probe_base_id_count = 0
+        self.last_probe_returns: dict[str, float | None] = {group: None for group in ALL_GROUPS}
+        self.last_probe_gaps = {group: 0.0 for group in FAILURE_GROUPS}
+
+    @staticmethod
+    def _median(values: list[float]) -> float:
+        if not values:
+            raise ValueError("median requires at least one value")
+        ordered = sorted(float(value) for value in values)
+        midpoint = len(ordered) // 2
+        return ordered[midpoint] if len(ordered) % 2 else (ordered[midpoint - 1] + ordered[midpoint]) / 2.0
+
+    def record_probe_batch(self, update: int, records: list[dict]) -> None:
+        """Accept one complete, balanced training-only probe batch.
+
+        Every group must have exactly ``probe_count`` records on the same base
+        identifiers.  This check is intentionally strict: an incomplete probe
+        batch must never silently fall back to exposure-dependent returns.
+        """
+        update = int(update)
+        if update % ADAPT_INTERVAL != 0 or update <= WARMUP_UPDATES:
+            raise ValueError("PP-DRTP probes are valid only at post-warm-up adaptation boundaries")
+        if self.pending_probe_update is not None:
+            raise RuntimeError("PP-DRTP already has a pending probe batch")
+        grouped: dict[str, dict[int, float]] = {group: {} for group in ALL_GROUPS}
+        for record in records:
+            group = str(record["group"])
+            base_id = int(record["base_id"])
+            episode_return = float(record["episode_return"])
+            if group not in grouped or not math.isfinite(episode_return):
+                raise ValueError("invalid PP-DRTP probe record")
+            if base_id in grouped[group]:
+                raise ValueError("duplicate PP-DRTP group/base-id probe record")
+            grouped[group][base_id] = episode_return
+        reference_ids = None
+        for group in ALL_GROUPS:
+            identifiers = tuple(sorted(grouped[group]))
+            if len(identifiers) != self.probe_count:
+                raise ValueError("PP-DRTP probe batch has incorrect group count")
+            if reference_ids is None:
+                reference_ids = identifiers
+            elif identifiers != reference_ids:
+                raise ValueError("PP-DRTP probe groups do not share base identifiers")
+        self.pending_probe_update = update
+        self.pending_probe_base_ids = () if reference_ids is None else reference_ids
+        self.pending_probe_returns = {
+            group: [grouped[group][base_id] for base_id in self.pending_probe_base_ids]
+            for group in ALL_GROUPS
+        }
+
+    def _refresh_probe_ema(self) -> None:
+        for group in ALL_GROUPS:
+            observed = self._median(self.pending_probe_returns[group])
+            old = self.ema[group]
+            self.ema[group] = observed if old is None else (1.0 - EMA_KAPPA) * old + EMA_KAPPA * observed
+            self.last_probe_returns[group] = observed
+        nominal = float(self.last_probe_returns[NOMINAL_GROUP])
+        self.last_probe_gaps = {
+            group: nominal - float(self.last_probe_returns[group])
+            for group in FAILURE_GROUPS
+        }
+
+    def maybe_update(self, update: int) -> dict | None:
+        update = int(update)
+        if update % ADAPT_INTERVAL != 0:
+            return None
+        counts = {group: len(self.pending_probe_returns[group]) for group in ALL_GROUPS}
+        adapted = False
+        reason = "warmup"
+        if update > WARMUP_UPDATES:
+            if self.pending_probe_update != update:
+                raise RuntimeError("PP-DRTP requires a complete probe batch before every adaptation")
+            self._refresh_probe_ema()
+            nominal = float(self.ema[NOMINAL_GROUP])
+            raw_difficulty = {
+                group: min(
+                    DIFFICULTY_MAX,
+                    max(0.0, (nominal - float(self.ema[group])) / max(abs(nominal), EPSILON)),
+                )
+                for group in FAILURE_GROUPS
+            }
+            mean_difficulty = sum(raw_difficulty.values()) / len(FAILURE_GROUPS)
+            logits = {
+                group: self.q[group] * math.exp(TEMPERATURE_ETA * (raw_difficulty[group] - mean_difficulty))
+                for group in FAILURE_GROUPS
+            }
+            normalizer = sum(logits.values())
+            candidate = [logits[group] / normalizer for group in FAILURE_GROUPS]
+            smoothed = [
+                (1.0 - SMOOTHING_BETA) * self.q[group] + SMOOTHING_BETA * candidate[index]
+                for index, group in enumerate(FAILURE_GROUPS)
+            ]
+            projected = _bounded_simplex_projection(smoothed)
+            self.last_adaptive_target = dict(zip(FAILURE_GROUPS, smoothed))
+            self.last_projected_target = dict(zip(FAILURE_GROUPS, projected))
+            self.last_anchored_target = dict(zip(FAILURE_GROUPS, projected))
+            self.last_target_l1 = 0.0
+            self.last_pre_tr_l1 = 0.0
+            self.last_q_step_l1 = 0.0
+            self.last_trust_region_active = False
+            self.q = dict(zip(FAILURE_GROUPS, projected))
+            self.last_difficulty = raw_difficulty
+            self.adaptation_count += 1
+            adapted = True
+            reason = "paired_probe_bounded_exponentiated_gradient"
+        self.last_probe_counts = dict(counts)
+        self.last_probe_base_id_count = len(self.pending_probe_base_ids)
+        self.pending_probe_update = None
+        self.pending_probe_returns = {group: [] for group in ALL_GROUPS}
+        self.pending_probe_base_ids = ()
+        return self.update_row(update, counts, adapted, reason)
+
+    def state_dict(self) -> dict:
+        state = super().state_dict()
+        state["format"] = "paired_probe_drtp_topology_sampler_runtime_state_v1"
+        state.update({
+            "probe_count": self.probe_count,
+            "pending_probe_update": self.pending_probe_update,
+            "pending_probe_returns": {group: list(self.pending_probe_returns[group]) for group in ALL_GROUPS},
+            "pending_probe_base_ids": list(self.pending_probe_base_ids),
+            "last_probe_counts": dict(self.last_probe_counts),
+            "last_probe_base_id_count": self.last_probe_base_id_count,
+            "last_probe_returns": dict(self.last_probe_returns),
+            "last_probe_gaps": dict(self.last_probe_gaps),
+        })
+        return state
+
+    def load_state_dict(self, state: dict) -> None:
+        if state.get("format") != "paired_probe_drtp_topology_sampler_runtime_state_v1":
+            raise ValueError("unsupported PP-DRTP sampler runtime state")
+        if int(state.get("probe_count", -1)) != self.probe_count:
+            raise ValueError("PP-DRTP runtime state uses another probe_count")
+        base = dict(state)
+        base["format"] = "drtp_topology_sampler_runtime_state_v1"
+        super().load_state_dict(base)
+        pending = state.get("pending_probe_returns", {})
+        self.pending_probe_returns = {
+            group: [float(value) for value in pending.get(group, [])]
+            for group in ALL_GROUPS
+        }
+        if any(not math.isfinite(value) for values in self.pending_probe_returns.values() for value in values):
+            raise ValueError("PP-DRTP runtime state has non-finite pending probe return")
+        self.pending_probe_update = (
+            None if state.get("pending_probe_update") is None else int(state["pending_probe_update"])
+        )
+        self.pending_probe_base_ids = tuple(int(value) for value in state.get("pending_probe_base_ids", []))
+        self.last_probe_counts = {
+            group: int(state.get("last_probe_counts", {}).get(group, 0))
+            for group in ALL_GROUPS
+        }
+        self.last_probe_base_id_count = int(state.get("last_probe_base_id_count", 0))
+        self.last_probe_returns = {
+            group: None if state.get("last_probe_returns", {}).get(group) is None
+            else float(state["last_probe_returns"][group])
+            for group in ALL_GROUPS
+        }
+        self.last_probe_gaps = {
+            group: float(state.get("last_probe_gaps", {}).get(group, 0.0))
+            for group in FAILURE_GROUPS
+        }
+
+    def manifest(self) -> dict:
+        payload = super().manifest()
+        payload.update({
+            "protocol": "PP-DRTP-SG-MAPPO-CONTRACT-V1",
+            "probe_count": self.probe_count,
+            "probe_estimator": "same-base-id per-group median return",
+            "uses_completed_training_return_feedback": False,
+        })
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return {**payload, "sampler_hash": hashlib.sha256(encoded).hexdigest()}
+
+    @staticmethod
+    def log_fields() -> list[str]:
+        fields = DRTPTopologySampler.log_fields()
+        fields += [f"probe_count_{group}" for group in ALL_GROUPS]
+        fields += [f"probe_return_{group}" for group in ALL_GROUPS]
+        fields += [f"probe_gap_{group}" for group in FAILURE_GROUPS]
+        fields += ["probe_base_id_count"]
+        return fields
+
+    def _state_row(self) -> dict:
+        row = super()._state_row()
+        row.update({f"probe_count_{group}": self.last_probe_counts[group] for group in ALL_GROUPS})
+        row.update({
+            f"probe_return_{group}": "" if self.last_probe_returns[group] is None else self.last_probe_returns[group]
+            for group in ALL_GROUPS
+        })
+        row.update({f"probe_gap_{group}": self.last_probe_gaps[group] for group in FAILURE_GROUPS})
+        row["probe_base_id_count"] = self.last_probe_base_id_count
+        return row
 
 
 class EGTRTopologySampler(DRTPTopologySampler):

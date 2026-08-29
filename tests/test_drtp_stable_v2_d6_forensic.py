@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from scripts.run_drtp_stable_v2_d6_forensic import first_q_divergence, q_uniform_l1
 
 

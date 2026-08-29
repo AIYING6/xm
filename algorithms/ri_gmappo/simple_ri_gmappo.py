@@ -34,7 +34,17 @@ from envs import (
 )
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
 from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
-from algorithms.ri_gmappo.drtp_topology_sampler import DRTPSelection, DRTPTopologySampler
+from algorithms.ri_gmappo.drtp_topology_sampler import (
+    ADAPT_INTERVAL,
+    ALL_GROUPS,
+    FAILURE_GROUPS,
+    GROUP_MEMBERS,
+    NOMINAL_GROUP,
+    WARMUP_UPDATES,
+    DRTPSelection,
+    DRTPTopologySampler,
+    PairedProbeTopologySampler,
+)
 from algorithms.ri_gmappo.snr_topology_sampler import StaticNonuniformTopologySampler
 from algorithms.ri_gmappo.drtp_topology_sampler import EGTRTopologySampler
 from algorithms.ri_gmappo.rng_streams import RNGStreams
@@ -188,6 +198,10 @@ class RIGMAPPOConfig:
     # The sampler's protocol horizon can differ from this invocation's local
     # update count during an exact runtime continuation.
     drtp_sampler_total_updates: int | None = None
+    # PP-DRTP uses deterministic paired probe rollouts only to update sampler
+    # evidence. These fields are inert unless ``drtp_sampler_mode=pp_drtp``.
+    pp_drtp_probe_count: int = 4
+    pp_drtp_probe_seed: int | None = None
     # Phase-B TCR/SPC fixed-exposure condition sampler and actor-only update
     # mode.  Both are training-side metadata; neither changes policy inputs.
     fixed_stratified_topology_sampler: bool = False
@@ -1328,6 +1342,93 @@ def eval_policy(agent: RIGMAPPOAgent, cfg: RIGMAPPOConfig, base_seed: int = 10_0
     }
 
 
+def _pp_drtp_probe_base_seed(probe_seed: int, update: int, base_index: int) -> int:
+    """Derive a local-only probe seed without touching training RNG streams."""
+    payload = f"pp-drtp-v1/{int(probe_seed)}/{int(update)}/{int(base_index)}".encode("utf-8")
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big") % 2_000_000_000
+
+
+def _pp_probe_initial_hash(obs: np.ndarray, share_obs: np.ndarray, graph: dict) -> str:
+    """Hash reset state to audit nominal/failure paired-reset equivalence."""
+    digest = hashlib.sha256()
+    for value in (obs, share_obs, graph["node_feat"], graph["edge_feat"], graph["role"], graph["adj"]):
+        digest.update(np.ascontiguousarray(value).tobytes())
+    return digest.hexdigest()
+
+
+def run_pp_drtp_probe_rollouts(
+    agent: RIGMAPPOAgent,
+    cfg: RIGMAPPOConfig,
+    device: torch.device,
+    *,
+    update: int,
+    probe_seed: int,
+    probe_count: int,
+) -> list[dict]:
+    """Run isolated, deterministic, same-base-id probe episodes.
+
+    The returned records are deliberately plain Python data.  They never enter
+    a rollout buffer, optimizer transaction, training environment, or training
+    RNG stream.  New environments are seeded before every reset.
+    """
+    if update % ADAPT_INTERVAL != 0 or update <= WARMUP_UPDATES:
+        raise ValueError("PP-DRTP probe requested outside a post-warm-up adaptation boundary")
+    if int(probe_count) <= 0:
+        raise ValueError("PP-DRTP probe_count must be positive")
+    was_training = agent.training
+    records: list[dict] = []
+    agent.eval()
+    try:
+        with torch.no_grad():
+            for base_index in range(int(probe_count)):
+                base_id = _pp_drtp_probe_base_seed(probe_seed, update, base_index)
+                for group in ALL_GROUPS:
+                    members = GROUP_MEMBERS[group]
+                    condition, onset, duration = members[base_id % len(members)]
+                    env = make_env(cfg, base_id, training=False)
+                    env.seed(base_id)
+                    env.config.failed_blue_agent = -1 if group == NOMINAL_GROUP else 1
+                    env.config.node_failure_start_step = int(onset)
+                    env.config.node_failure_duration_steps = int(duration)
+                    obs, share_obs, graph = env.reset()
+                    initial_hash = _pp_probe_initial_hash(obs, share_obs, graph)
+                    episode_return = 0.0
+                    while True:
+                        stacked = stack_graphs([graph])
+                        actions, _, _, _, _, _, _ = agent.get_action_and_value(
+                            torch.as_tensor(obs[None, ...], dtype=torch.float32, device=device),
+                            torch.as_tensor(stacked["node_feat"], dtype=torch.float32, device=device),
+                            torch.as_tensor(stacked["edge_feat"], dtype=torch.float32, device=device),
+                            torch.as_tensor(stacked["role"], dtype=torch.long, device=device),
+                            torch.as_tensor(stacked["adj"], dtype=torch.float32, device=device),
+                            torch.as_tensor(share_obs[None, ...], dtype=torch.float32, device=device),
+                            relation_adj=torch.as_tensor(stacked["relation_adj"], dtype=torch.float32, device=device),
+                            deterministic=True,
+                            intent_label=torch.as_tensor(stacked["intent_label"], dtype=torch.long, device=device),
+                            detach_intent=cfg.detach_intent,
+                            oracle_intent=cfg.oracle_intent,
+                        )
+                        obs, share_obs, graph, reward, dones, info = env.step(actions.squeeze(0).cpu().numpy())
+                        episode_return += float(np.sum(reward))
+                        if np.all(dones):
+                            break
+                    records.append({
+                        "update": int(update),
+                        "base_id": int(base_id),
+                        "group": group,
+                        "condition": condition,
+                        "failed_blue_agent": -1 if group == NOMINAL_GROUP else 1,
+                        "failure_start_step": int(onset),
+                        "failure_duration_steps": int(duration),
+                        "initial_state_hash": initial_hash,
+                        "episode_return": episode_return,
+                        "steps": int(info.get("step", 0)),
+                    })
+    finally:
+        agent.train(was_training)
+    return records
+
+
 def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     if cfg.env_name == "3d_intercept" and cfg.oracle_intent:
         raise ValueError("oracle_intent is unavailable for 3d_intercept because it has no intent supervision")
@@ -1362,7 +1463,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.updates,
     )
     drtp_mode = str(cfg.drtp_sampler_mode).lower()
-    if drtp_mode not in {"none", "utr", "snr", "drtp", "r_drtp", "egtr", "drtp_tr", "conservative_drtp"}:
+    if drtp_mode not in {"none", "utr", "snr", "drtp", "pp_drtp", "r_drtp", "egtr", "drtp_tr", "conservative_drtp"}:
         raise ValueError("unsupported drtp_sampler_mode")
     actor_gradient_mode = str(cfg.actor_gradient_mode).lower()
     if actor_gradient_mode not in {"standard", "utr", "spc", "tcr"}:
@@ -1406,6 +1507,12 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             sampler_seed,
             sampler_updates,
         )
+    elif drtp_mode == "pp_drtp":
+        drtp_sampler = PairedProbeTopologySampler(
+            sampler_seed,
+            sampler_updates,
+            probe_count=cfg.pp_drtp_probe_count,
+        )
     elif drtp_mode == "snr":
         drtp_sampler = StaticNonuniformTopologySampler(sampler_seed, sampler_updates)
     elif drtp_mode != "none":
@@ -1425,6 +1532,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         )
     curriculum_rows: list[dict] = []
     drtp_rows: list[dict] = []
+    pp_probe_rows: list[dict] = []
     episode_counts = [0 for _ in range(cfg.num_envs)]
     drtp_episode_returns = [0.0 for _ in range(cfg.num_envs)]
     drtp_selections: list[DRTPSelection | None] = [None for _ in range(cfg.num_envs)]
@@ -1573,6 +1681,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if drtp_mode == "snr"
         else "drtp_topology_sampler_log.csv"
     )
+    pp_probe_log_path = out_dir / "pp_drtp_probe_log.csv"
     actor_gradient_log_path = out_dir / "actor_gradient_telemetry.csv"
     fieldnames = [
         "update",
@@ -1679,6 +1788,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if drtp_sampler is not None and cfg.drtp_sampler_logging
         else nullcontext()
     )
+    pp_probe_log_context = (
+        pp_probe_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
+        if isinstance(drtp_sampler, PairedProbeTopologySampler)
+        else nullcontext()
+    )
     actor_gradient_log_context = (
         actor_gradient_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
         if cfg.actor_gradient_logging
@@ -1686,7 +1800,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     )
     with log_path.open(mode, newline="", encoding="utf-8") as f, (
         telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
-    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file, actor_gradient_log_context as actor_gradient_file:
+    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file, pp_probe_log_context as pp_probe_file, actor_gradient_log_context as actor_gradient_file:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
@@ -1734,6 +1848,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 drtp_writer.writerow(drtp_row)
             drtp_file.flush()
             drtp_logged_count = len(drtp_rows)
+        pp_probe_writer = None
+        pp_probe_logged_count = 0
+        if pp_probe_file is not None:
+            pp_probe_fields = [
+                "update", "base_id", "group", "condition", "failed_blue_agent",
+                "failure_start_step", "failure_duration_steps", "initial_state_hash", "episode_return", "steps",
+            ]
+            pp_probe_writer = csv.DictWriter(pp_probe_file, fieldnames=pp_probe_fields)
+            if not cfg.append_log or not pp_probe_log_path.exists() or pp_probe_log_path.stat().st_size == 0:
+                pp_probe_writer.writeheader()
         f.flush()
         best_eval_key = (
             tuple(float(value) for value in runtime_payload["best_eval_key"])
@@ -1757,6 +1881,17 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 telemetry_writer=telemetry_writer,
             )
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
+            if isinstance(drtp_sampler, PairedProbeTopologySampler) and update % ADAPT_INTERVAL == 0 and update > WARMUP_UPDATES:
+                records = run_pp_drtp_probe_rollouts(
+                    agent,
+                    cfg,
+                    device,
+                    update=update,
+                    probe_seed=(cfg.pp_drtp_probe_seed if cfg.pp_drtp_probe_seed is not None else cfg.seed),
+                    probe_count=cfg.pp_drtp_probe_count,
+                )
+                drtp_sampler.record_probe_batch(update, records)
+                pp_probe_rows.extend(records)
             if drtp_sampler is not None:
                 drtp_update_row = drtp_sampler.maybe_update(update)
                 if drtp_update_row is not None:
@@ -1818,6 +1953,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     drtp_writer.writerow(drtp_row)
                 drtp_file.flush()
                 drtp_logged_count = len(drtp_rows)
+            if pp_probe_writer is not None:
+                for probe_row in pp_probe_rows[pp_probe_logged_count:]:
+                    pp_probe_writer.writerow(probe_row)
+                pp_probe_file.flush()
+                pp_probe_logged_count = len(pp_probe_rows)
             if cfg.evaluation_enabled and (update % cfg.eval_interval == 0 or update == 1):
                 eval_base_seed = cfg.eval_base_seed if cfg.eval_base_seed is not None else 10_000 + update * 100
                 row.update(eval_policy(agent, cfg, base_seed=eval_base_seed))

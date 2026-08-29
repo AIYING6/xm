@@ -1,0 +1,317 @@
+{
+  "checks": {
+    "agent_training_mode_restored": true,
+    "agent_weights_unchanged": true,
+    "all_groups_per_base_id": true,
+    "deterministic_replay": true,
+    "exact_28_probe_records": true,
+    "global_rng_unchanged": true,
+    "no_ppo_or_optimizer_invocation": true,
+    "paired_initial_state_before_failure": true,
+    "post_warmup_boundary_only": true,
+    "probe_sampler_save_reload_exact": true,
+    "simplex_floor_cap": true
+  },
+  "environment_steps_used_for_probe_only": 14224,
+  "ppo_updates": 0,
+  "probe_count": 4,
+  "probe_records_per_replay": 28,
+  "probe_update": 160,
+  "protocol": "PP-DRTP-P2-TECHNICAL-AUDIT-V1",
+  "q_after_probe_feedback": {
+    "CP": 0.16255794695306144,
+    "DL": 0.16990792585779987,
+    "DS": 0.16879784900709374,
+    "F0": 0.16990792585779987,
+    "TE": 0.17026789958081398,
+    "TL": 0.15856045274343114
+  },
+  "records": [
+    {
+      "base_id": 637379620,
+      "condition": "nominal",
+      "episode_return": -45.90203029662371,
+      "failure_duration_steps": 0,
+      "failure_start_step": -1,
+      "group": "N",
+      "initial_state_hash": "277b5be23bad58b3d6ac0da3fee58b9f5aca7b7d403873182ced713058c6f521",
+      "steps": 260
+    },
+    {
+      "base_id": 637379620,
+      "condition": "f0",
+      "episode_return": -62.44736120849848,
+      "failure_duration_steps": 80,
+      "failure_start_step": 44,
+      "group": "F0",
+      "initial_state_hash": "277b5be23bad58b3d6ac0da3fee58b9f5aca7b7d403873182ced713058c6f521",
+      "steps": 260
+    },
+    {
+      "base_id": 637379620,
+      "condition": "te_28_80",
+      "episode_return": -61.87989000976086,
+      "failure_duration_steps": 80,
+      "failure_start_step": 28,
+      "group": "TE",
+      "initial_state_hash": "277b5be23bad58b3d6ac0da3fee58b9f5aca7b7d403873182ced713058c6f521",
+      "steps": 260
+    },
+    {
+      "base_id": 637379620,
+      "condition": "tl_52_80",
+      "episode_return": -57.08140463382006,
+      "failure_duration_steps": 80,
+      "failure_start_step": 52,
+      "group": "TL",
+      "initial_state_hash": "277b5be23bad58b3d6ac0da3fee58b9f5aca7b7d403873182ced713058c6f521",
+      "steps": 231
+    },
+    {
+      "base_id": 637379620,
+      "condition": "ds_44_40",
+      "episode_return": -60.90798569470644,
+      "failure_duration_steps": 40,
+      "failure_start_step": 44,
+      "group": "DS",
+      "initial_state_hash": "277b5be23bad58b3d6ac0da3fee58b9f5aca7b7d403873182ced713058c6f521",
+      "steps": 260
+    },
+    {
+      "base_id": 637379620,
+      "condition": "dl_44_100",
+      "episode_return": -62.44736120849848,
+      "failure_duration_steps": 100,
+      "failure_start_step": 44,
+      "group": "DL",
+      "initial_state_hash": "277b5be23bad58b3d6ac0da3fee58b9f5aca7b7d403873182ced713058c6f521",
+      "steps": 260
+    },
+    {
+      "base_id": 637379620,
+      "condition": "cp_28_120",
+      "episode_return": -61.87989000976086,
+      "failure_duration_steps": 120,
+      "failure_start_step": 28,
+      "group": "CP",
+      "initial_state_hash": "277b5be23bad58b3d6ac0da3fee58b9f5aca7b7d403873182ced713058c6f521",
+      "steps": 260
+    },
+    {
+      "base_id": 977192814,
+      "condition": "nominal",
+      "episode_return": -46.594836853444576,
+      "failure_duration_steps": 0,
+      "failure_start_step": -1,
+      "group": "N",
+      "initial_state_hash": "8ba2ac976f48f98be423c1df57c05f03fa749137ac399c34f5b16130f097f939",
+      "steps": 260
+    },
+    {
+      "base_id": 977192814,
+      "condition": "f0",
+      "episode_return": -63.06167124956846,
+      "failure_duration_steps": 80,
+      "failure_start_step": 44,
+      "group": "F0",
+      "initial_state_hash": "8ba2ac976f48f98be423c1df57c05f03fa749137ac399c34f5b16130f097f939",
+      "steps": 260
+    },
+    {
+      "base_id": 977192814,
+      "condition": "te_28_80",
+      "episode_return": -62.43967071920633,
+      "failure_duration_steps": 80,
+      "failure_start_step": 28,
+      "group": "TE",
+      "initial_state_hash": "8ba2ac976f48f98be423c1df57c05f03fa749137ac399c34f5b16130f097f939",
+      "steps": 260
+    },
+    {
+      "base_id": 977192814,
+      "condition": "tl_52_80",
+      "episode_return": -59.22143366187811,
+      "failure_duration_steps": 80,
+      "failure_start_step": 52,
+      "group": "TL",
+      "initial_state_hash": "8ba2ac976f48f98be423c1df57c05f03fa749137ac399c34f5b16130f097f939",
+      "steps": 233
+    },
+    {
+      "base_id": 977192814,
+      "condition": "ds_44_40",
+      "episode_return": -61.86563592404127,
+      "failure_duration_steps": 40,
+      "failure_start_step": 44,
+      "group": "DS",
+      "initial_state_hash": "8ba2ac976f48f98be423c1df57c05f03fa749137ac399c34f5b16130f097f939",
+      "steps": 260
+    },
+    {
+      "base_id": 977192814,
+      "condition": "dl_44_100",
+      "episode_return": -63.06167124956846,
+      "failure_duration_steps": 100,
+      "failure_start_step": 44,
+      "group": "DL",
+      "initial_state_hash": "8ba2ac976f48f98be423c1df57c05f03fa749137ac399c34f5b16130f097f939",
+      "steps": 260
+    },
+    {
+      "base_id": 977192814,
+      "condition": "cp_28_120",
+      "episode_return": -62.43967071920633,
+      "failure_duration_steps": 120,
+      "failure_start_step": 28,
+      "group": "CP",
+      "initial_state_hash": "8ba2ac976f48f98be423c1df57c05f03fa749137ac399c34f5b16130f097f939",
+      "steps": 260
+    },
+    {
+      "base_id": 1754182113,
+      "condition": "nominal",
+      "episode_return": -46.0843299026601,
+      "failure_duration_steps": 0,
+      "failure_start_step": -1,
+      "group": "N",
+      "initial_state_hash": "4343bbd268360fc0fe62b3fa2a8206426ec50f019d144863e5a686139fe83400",
+      "steps": 260
+    },
+    {
+      "base_id": 1754182113,
+      "condition": "f0",
+      "episode_return": -62.96643072320148,
+      "failure_duration_steps": 80,
+      "failure_start_step": 44,
+      "group": "F0",
+      "initial_state_hash": "4343bbd268360fc0fe62b3fa2a8206426ec50f019d144863e5a686139fe83400",
+      "steps": 260
+    },
+    {
+      "base_id": 1754182113,
+      "condition": "te_36_80",
+      "episode_return": -63.97298861993477,
+      "failure_duration_steps": 80,
+      "failure_start_step": 36,
+      "group": "TE",
+      "initial_state_hash": "4343bbd268360fc0fe62b3fa2a8206426ec50f019d144863e5a686139fe83400",
+      "steps": 260
+    },
+    {
+      "base_id": 1754182113,
+      "condition": "tl_60_80",
+      "episode_return": -55.457906290423125,
+      "failure_duration_steps": 80,
+      "failure_start_step": 60,
+      "group": "TL",
+      "initial_state_hash": "4343bbd268360fc0fe62b3fa2a8206426ec50f019d144863e5a686139fe83400",
+      "steps": 231
+    },
+    {
+      "base_id": 1754182113,
+      "condition": "ds_44_60",
+      "episode_return": -62.96643072320148,
+      "failure_duration_steps": 60,
+      "failure_start_step": 44,
+      "group": "DS",
+      "initial_state_hash": "4343bbd268360fc0fe62b3fa2a8206426ec50f019d144863e5a686139fe83400",
+      "steps": 260
+    },
+    {
+      "base_id": 1754182113,
+      "condition": "dl_44_120",
+      "episode_return": -62.96643072320148,
+      "failure_duration_steps": 120,
+      "failure_start_step": 44,
+      "group": "DL",
+      "initial_state_hash": "4343bbd268360fc0fe62b3fa2a8206426ec50f019d144863e5a686139fe83400",
+      "steps": 260
+    },
+    {
+      "base_id": 1754182113,
+      "condition": "cp_60_120",
+      "episode_return": -55.457906290423125,
+      "failure_duration_steps": 120,
+      "failure_start_step": 60,
+      "group": "CP",
+      "initial_state_hash": "4343bbd268360fc0fe62b3fa2a8206426ec50f019d144863e5a686139fe83400",
+      "steps": 231
+    },
+    {
+      "base_id": 613616489,
+      "condition": "nominal",
+      "episode_return": -46.978313469327986,
+      "failure_duration_steps": 0,
+      "failure_start_step": -1,
+      "group": "N",
+      "initial_state_hash": "8392513db12a1434587a2ee66c70e81759dded7fd95a29e18051b1bcb07058e8",
+      "steps": 260
+    },
+    {
+      "base_id": 613616489,
+      "condition": "f0",
+      "episode_return": -63.31146749202162,
+      "failure_duration_steps": 80,
+      "failure_start_step": 44,
+      "group": "F0",
+      "initial_state_hash": "8392513db12a1434587a2ee66c70e81759dded7fd95a29e18051b1bcb07058e8",
+      "steps": 260
+    },
+    {
+      "base_id": 613616489,
+      "condition": "te_36_80",
+      "episode_return": -64.30126639548689,
+      "failure_duration_steps": 80,
+      "failure_start_step": 36,
+      "group": "TE",
+      "initial_state_hash": "8392513db12a1434587a2ee66c70e81759dded7fd95a29e18051b1bcb07058e8",
+      "steps": 260
+    },
+    {
+      "base_id": 613616489,
+      "condition": "tl_60_80",
+      "episode_return": -55.92577605787665,
+      "failure_duration_steps": 80,
+      "failure_start_step": 60,
+      "group": "TL",
+      "initial_state_hash": "8392513db12a1434587a2ee66c70e81759dded7fd95a29e18051b1bcb07058e8",
+      "steps": 233
+    },
+    {
+      "base_id": 613616489,
+      "condition": "ds_44_60",
+      "episode_return": -63.31146749202162,
+      "failure_duration_steps": 60,
+      "failure_start_step": 44,
+      "group": "DS",
+      "initial_state_hash": "8392513db12a1434587a2ee66c70e81759dded7fd95a29e18051b1bcb07058e8",
+      "steps": 260
+    },
+    {
+      "base_id": 613616489,
+      "condition": "dl_44_120",
+      "episode_return": -63.31146749202162,
+      "failure_duration_steps": 120,
+      "failure_start_step": 44,
+      "group": "DL",
+      "initial_state_hash": "8392513db12a1434587a2ee66c70e81759dded7fd95a29e18051b1bcb07058e8",
+      "steps": 260
+    },
+    {
+      "base_id": 613616489,
+      "condition": "cp_60_120",
+      "episode_return": -55.92577605787665,
+      "failure_duration_steps": 120,
+      "failure_start_step": 60,
+      "group": "CP",
+      "initial_state_hash": "8392513db12a1434587a2ee66c70e81759dded7fd95a29e18051b1bcb07058e8",
+      "steps": 233
+    }
+  ],
+  "source_hashes": {
+    "drtp_topology_sampler": "3127bf78b5d89b349abee2da925afb0695a2ab77f8cd8aaee6c30d2ab14e9dc1",
+    "simple_ri_gmappo": "5156bdf127b3f006e8d1faf7a644dbc3d94f5b0a6b21066c3d6ccb12ced9ca8a"
+  },
+  "status": "P2_TECHNICAL_PASS",
+  "training_started": false
+}
