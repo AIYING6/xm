@@ -1,0 +1,92 @@
+{
+  "protocol": "DRTP-STABLE-V2-D5-PREFLIGHT-V1",
+  "status": "D5_READY_FOR_CLOUD_AUTHORIZATION",
+  "checks": {
+    "d4_technical_pass": true,
+    "d4_source_hash_unchanged": true,
+    "seed_provenance_clean": true,
+    "tape_hash_frozen": true,
+    "tape_hash_recomputed": true,
+    "tape_namespace_exact": true,
+    "conditions_exact": true,
+    "budget_exact": true,
+    "milestones_exact": true,
+    "candidate_exact": true,
+    "epsilon_exact": true,
+    "no_training_or_continuation": true,
+    "mainline_a_untouched": true,
+    "trajectory_utr_sg_seed3201": true,
+    "trajectory_utr_sg_seed3202": true,
+    "trajectory_utr_sg_seed3203": true,
+    "trajectory_drtp_sg_seed3201": true,
+    "trajectory_drtp_sg_seed3202": true,
+    "trajectory_drtp_sg_seed3203": true,
+    "trajectory_drtp_klb_sg_seed3201": true,
+    "trajectory_drtp_klb_sg_seed3202": true,
+    "trajectory_drtp_klb_sg_seed3203": true
+  },
+  "trajectories": {
+    "utr_sg/seed3201": {
+      "sampler": "utr",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "utr_sg/seed3202": {
+      "sampler": "utr",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "utr_sg/seed3203": {
+      "sampler": "utr",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "drtp_sg/seed3201": {
+      "sampler": "drtp",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "drtp_sg/seed3202": {
+      "sampler": "drtp",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "drtp_sg/seed3203": {
+      "sampler": "drtp",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "drtp_klb_sg/seed3201": {
+      "sampler": "drtp",
+      "guard": "post_step_actor_backtrack",
+      "target_kl": 0.02,
+      "updates": 1953
+    },
+    "drtp_klb_sg/seed3202": {
+      "sampler": "drtp",
+      "guard": "post_step_actor_backtrack",
+      "target_kl": 0.02,
+      "updates": 1953
+    },
+    "drtp_klb_sg/seed3203": {
+      "sampler": "drtp",
+      "guard": "post_step_actor_backtrack",
+      "target_kl": 0.02,
+      "updates": 1953
+    }
+  },
+  "source_sha256": "5b31d3a2576c6a732fe221486eff58db570b05ff2dbc8de87899773b579bb724",
+  "tape_sha256": "7b2904aac8a8acb7fef0c9ea18733d3ee896c5bde7a6b3470a4b17296b8111c7",
+  "freeze_sha256": "aa136172f71d4b9126a2b2a8a6947b3387b187e9d5893d3df55edd079ffa76f8",
+  "seed_audit_sha256": "67d48347fa1e5a062ba9fc0ff33ead6b65e8c580b7b2bd7608903456cfea1ca1",
+  "local_training_started": false,
+  "environment_created": false,
+  "pilot_training_authorized": false,
+  "mainline_a_modified": false
+}

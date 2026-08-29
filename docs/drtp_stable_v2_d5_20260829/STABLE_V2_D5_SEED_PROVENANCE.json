@@ -1,0 +1,19 @@
+{
+  "protocol": "DRTP-STABLE-V2-D5-SEED-PROVENANCE-V1",
+  "candidate_seeds": [
+    3201,
+    3202,
+    3203
+  ],
+  "status": "CLEAN",
+  "semantic_hits": {
+    "3201": [],
+    "3202": [],
+    "3203": []
+  },
+  "scanned_text_files": 3137,
+  "selection_rule": "next consecutive unused namespace after the completed 3101-3103 D2 pilot",
+  "scientific_results_seen_before_freeze": false,
+  "training_started": false,
+  "limitations": "Binary archives and text files over 5 MiB are not content-scanned; maintained paths, configs, manifests, scripts and docs are covered."
+}

@@ -1,0 +1,39 @@
+{
+  "protocol": "DRTP-STABLE-V2-D5-PILOT-FREEZE-V1",
+  "status": "FROZEN_BEFORE_PILOT_RESULTS",
+  "algorithm": "DRTP-KLB",
+  "algorithm_freeze_commit": "7ebab8d4",
+  "arms": [
+    "utr_sg",
+    "drtp_sg",
+    "drtp_klb_sg"
+  ],
+  "seeds": [
+    3201,
+    3202,
+    3203
+  ],
+  "updates_per_trajectory": 1953,
+  "environment_steps_per_trajectory": 499968,
+  "target_kl": 0.02,
+  "backtrack_bisection_steps": 24,
+  "epsilon_J": 7.874919837916801,
+  "epsilon_J_source": "DRTP-STABILIZATION-S0-V1 pooled P90 absolute same-checkpoint cross-tape endpoint variation",
+  "practical_downside_improvement_margin": 7.874919837916801,
+  "pooled_safety_margin": 0.05,
+  "seed_condition_safety_margin": 0.1,
+  "maximum_intervention_rate": 0.1,
+  "minimum_intervention_count": 1,
+  "candidate_catastrophic_count_max": 0,
+  "candidate_negative_gain_count_max": 0,
+  "tape_hash": "02f72f2041827838f30b29eb6ff46d47c78d9041f1350f0700309b1f237835b3",
+  "upper_tail_rule": "Original DRTP paired robust-mean gain > epsilon_J",
+  "upper_tail_unassessable_decision": "D5_PILOT_INCONCLUSIVE_UPPER_TAIL",
+  "early_stopping": false,
+  "checkpoint_promotion": false,
+  "seed_replacement": false,
+  "performance_rerun": false,
+  "automatic_continuation": false,
+  "training_started": false,
+  "mainline_a_modified": false
+}

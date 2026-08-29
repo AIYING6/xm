@@ -1,0 +1,21 @@
+{
+  "decision": "D5_READY_FOR_CLOUD_AUTHORIZATION",
+  "training_authorized": false,
+  "candidate": "DRTP-KLB",
+  "arms": [
+    "utr_sg",
+    "drtp_sg",
+    "drtp_klb_sg"
+  ],
+  "seeds": [
+    3201,
+    3202,
+    3203
+  ],
+  "environment_steps_per_trajectory": 499968,
+  "trajectory_count": 9,
+  "maximum_concurrency": 9,
+  "automatic_continuation": false,
+  "mainline_a_modified": false,
+  "required_next_action": "explicit human authorization for the frozen cloud package"
+}
