@@ -44,6 +44,10 @@ RDRTP_N0 = 8.0
 RDRTP_LAMBDA_V = 1.0
 RDRTP_V_MAX = 1.0
 RDRTP_ALPHA_MAX = 1.0
+# Frozen by DRTP-STABILIZATION-S0-V1 from label-free pooled, post-projection
+# original-DRTP q movements.  These are method constants, not sweep options.
+DRTP_TRUST_REGION_L1 = 0.02513300038143937
+CONSERVATIVE_UNIFORM_ANCHOR = 0.20
 EGTR_CONFIDENCE_KAPPA = 0.20
 EGTR_REQUIRED_SAMPLES = 8.0
 EGTR_TRUST_REGION_L1 = 0.10
@@ -107,8 +111,8 @@ class DRTPTopologySampler:
 
     def __init__(self, mode: str, seed: int, total_updates: int):
         self.mode = str(mode).lower()
-        if self.mode not in {"utr", "drtp", "r_drtp", "egtr"}:
-            raise ValueError("DRTP sampler mode must be 'utr', 'drtp', 'r_drtp', or 'egtr'")
+        if self.mode not in {"utr", "drtp", "r_drtp", "egtr", "drtp_tr", "conservative_drtp"}:
+            raise ValueError("unsupported DRTP sampler mode")
         self.seed = int(seed)
         self.total_updates = int(total_updates)
         if self.total_updates <= 0:
@@ -120,6 +124,9 @@ class DRTPTopologySampler:
         self.last_confidence = 0.0
         self.last_alpha = 0.0
         self.last_dispersion = {group: 0.0 for group in FAILURE_GROUPS}
+        self.last_target_l1 = 0.0
+        self.last_q_step_l1 = 0.0
+        self.last_trust_region_active = False
         self.adaptation_count = 0
 
     def state_dict(self) -> dict:
@@ -152,6 +159,9 @@ class DRTPTopologySampler:
             "last_dispersion": {
                 group: float(self.last_dispersion[group]) for group in FAILURE_GROUPS
             },
+            "last_target_l1": float(self.last_target_l1),
+            "last_q_step_l1": float(self.last_q_step_l1),
+            "last_trust_region_active": bool(self.last_trust_region_active),
             "adaptation_count": int(self.adaptation_count),
         }
 
@@ -191,6 +201,9 @@ class DRTPTopologySampler:
             group: float(state.get("last_dispersion", {}).get(group, 0.0))
             for group in FAILURE_GROUPS
         }
+        self.last_target_l1 = float(state.get("last_target_l1", 0.0))
+        self.last_q_step_l1 = float(state.get("last_q_step_l1", 0.0))
+        self.last_trust_region_active = bool(state.get("last_trust_region_active", False))
         self.adaptation_count = int(state["adaptation_count"])
 
     def _rng(self, update: int, env_index: int, episode_index: int) -> random.Random:
@@ -252,7 +265,7 @@ class DRTPTopologySampler:
         self._refresh_ema()
         adapted = False
         reason = "utr_fixed_uniform" if self.mode == "utr" else "warmup"
-        if self.mode in {"drtp", "r_drtp"} and update > WARMUP_UPDATES:
+        if self.mode in {"drtp", "r_drtp", "drtp_tr", "conservative_drtp"} and update > WARMUP_UPDATES:
             if self._ema_ready():
                 nominal = float(self.ema[NOMINAL_GROUP])
                 raw_difficulty = {
@@ -311,6 +324,32 @@ class DRTPTopologySampler:
                     ]
                     reason = "bounded_exponentiated_gradient"
                 projected = _bounded_simplex_projection(smoothed)
+                self.last_target_l1 = 0.0
+                self.last_q_step_l1 = 0.0
+                self.last_trust_region_active = False
+                if self.mode in {"drtp_tr", "conservative_drtp"}:
+                    # S1: DRTP target -> bounded-simplex projection -> final
+                    # L1 trust region.  S2 blends its uniform anchor into the
+                    # target before that same final bound, so no post-TR step
+                    # can invalidate the frozen L1 guarantee.
+                    if self.mode == "conservative_drtp":
+                        projected = [
+                            (1.0 - CONSERVATIVE_UNIFORM_ANCHOR) * value
+                            + CONSERVATIVE_UNIFORM_ANCHOR * UNIFORM_Q
+                            for value in projected
+                        ]
+                    current = [self.q[group] for group in FAILURE_GROUPS]
+                    self.last_target_l1 = sum(abs(left - right) for left, right in zip(projected, current))
+                    scale = 1.0 if self.last_target_l1 <= DRTP_TRUST_REGION_L1 else DRTP_TRUST_REGION_L1 / self.last_target_l1
+                    projected = [left + scale * (right - left) for left, right in zip(current, projected)]
+                    self.last_q_step_l1 = sum(abs(left - right) for left, right in zip(projected, current))
+                    self.last_trust_region_active = scale < 1.0
+                    if self.last_q_step_l1 > DRTP_TRUST_REGION_L1 + 1e-10:
+                        raise AssertionError("DRTP-TR final q movement violated frozen L1 bound")
+                    if not math.isclose(sum(projected), 1.0, rel_tol=0.0, abs_tol=1e-10):
+                        raise AssertionError("DRTP-TR final q lost simplex mass")
+                    if any(value < Q_MIN - 1e-12 or value > Q_MAX + 1e-12 for value in projected):
+                        raise AssertionError("DRTP-TR final q violated floor/cap")
                 self.q = dict(zip(FAILURE_GROUPS, projected))
                 self.last_difficulty = raw_difficulty
                 self.adaptation_count += 1
@@ -343,6 +382,8 @@ class DRTPTopologySampler:
             "r_drtp_lambda_v": RDRTP_LAMBDA_V,
             "r_drtp_v_max": RDRTP_V_MAX,
             "r_drtp_alpha_max": RDRTP_ALPHA_MAX,
+            "drtp_trust_region_l1": DRTP_TRUST_REGION_L1,
+            "conservative_uniform_anchor": CONSERVATIVE_UNIFORM_ANCHOR,
             "actor_or_critic_condition_input": False,
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -359,7 +400,7 @@ class DRTPTopologySampler:
         fields += [f"ema_{group}" for group in ALL_GROUPS]
         fields += [f"difficulty_{group}" for group in FAILURE_GROUPS]
         fields += [f"window_count_{group}" for group in ALL_GROUPS]
-        fields += ["confidence", "alpha"]
+        fields += ["confidence", "alpha", "target_l1", "q_step_l1", "trust_region_active"]
         fields += [f"dispersion_{group}" for group in FAILURE_GROUPS]
         return fields
 
@@ -370,6 +411,9 @@ class DRTPTopologySampler:
         row.update({f"window_count_{group}": len(self.window_returns[group]) for group in ALL_GROUPS})
         row["confidence"] = self.last_confidence
         row["alpha"] = self.last_alpha
+        row["target_l1"] = self.last_target_l1
+        row["q_step_l1"] = self.last_q_step_l1
+        row["trust_region_active"] = self.last_trust_region_active
         row.update({f"dispersion_{group}": self.last_dispersion[group] for group in FAILURE_GROUPS})
         return row
 

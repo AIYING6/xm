@@ -1,0 +1,336 @@
+{
+  "delta_q_l1": 0.02513300038143937,
+  "delta_statistics": {
+    "P50": 0.009768565346808117,
+    "P75": 0.016532437443088924,
+    "P90": 0.02513300038143937,
+    "P95": 0.03266316188150112,
+    "max": 0.21558703325790862,
+    "n": 12781
+  },
+  "epsilon_J": 7.874919837916801,
+  "epsilon_J_definition": "P90 of absolute pairwise same-checkpoint cross-tape differences; this is evaluation-tape variation, not training-cohort variation.",
+  "evaluation_rerun_started": false,
+  "offline_replay": {
+    "all_simplex_and_floor_cap_checks_pass": true,
+    "global_activation_rate": 0.15976840622799468,
+    "l1_bound_violations": 0,
+    "per_source": [
+      {
+        "activation_count": 192,
+        "activation_rate": 0.1580246913580247,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.17227151922708162,
+        "max_tr_final_l1": 0.025133000381439424,
+        "simplex_failures": 0,
+        "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\development\\drtp_sg_strict_continuous_10m\\runs\\drtp_sg\\seed1901\\drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 193,
+        "activation_rate": 0.1588477366255144,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.1729790776161387,
+        "max_tr_final_l1": 0.025133000381439424,
+        "simplex_failures": 0,
+        "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\development\\drtp_sg_strict_continuous_10m\\runs\\drtp_sg\\seed1902\\drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 133,
+        "activation_rate": 0.1094650205761317,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.13514774502780097,
+        "max_tr_final_l1": 0.025133000381439424,
+        "simplex_failures": 0,
+        "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2001\\drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 82,
+        "activation_rate": 0.06748971193415639,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.15822658991388858,
+        "max_tr_final_l1": 0.025133000381439424,
+        "simplex_failures": 0,
+        "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2002\\drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 104,
+        "activation_rate": 0.08559670781893004,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.16586124289362078,
+        "max_tr_final_l1": 0.025133000381439424,
+        "simplex_failures": 0,
+        "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2003\\drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 78,
+        "activation_rate": 0.6666666666666666,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.10222927073562926,
+        "max_tr_final_l1": 0.025133000381439417,
+        "simplex_failures": 0,
+        "source": "drtp_b3_1m_results.tar.gz:drtp_b3/runs/drtp_sg/seed2701/drtp_topology_sampler_log.csv",
+        "updates": 117
+      },
+      {
+        "activation_count": 57,
+        "activation_rate": 0.48717948717948717,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.12462980092755868,
+        "max_tr_final_l1": 0.025133000381439417,
+        "simplex_failures": 0,
+        "source": "drtp_b3_1m_results.tar.gz:drtp_b3/runs/drtp_sg/seed2702/drtp_topology_sampler_log.csv",
+        "updates": 117
+      },
+      {
+        "activation_count": 54,
+        "activation_rate": 0.46153846153846156,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.15519487303814422,
+        "max_tr_final_l1": 0.025133000381439403,
+        "simplex_failures": 0,
+        "source": "drtp_b3_1m_results.tar.gz:drtp_b3/runs/drtp_sg/seed2703/drtp_topology_sampler_log.csv",
+        "updates": 117
+      },
+      {
+        "activation_count": 48,
+        "activation_rate": 0.8571428571428571,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.11768570366127981,
+        "max_tr_final_l1": 0.02513300038143941,
+        "simplex_failures": 0,
+        "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2801/drtp_topology_sampler_log.csv",
+        "updates": 56
+      },
+      {
+        "activation_count": 36,
+        "activation_rate": 0.6428571428571429,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.1880425095280266,
+        "max_tr_final_l1": 0.025133000381439397,
+        "simplex_failures": 0,
+        "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2802/drtp_topology_sampler_log.csv",
+        "updates": 56
+      },
+      {
+        "activation_count": 56,
+        "activation_rate": 1.0,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.15619123923594475,
+        "max_tr_final_l1": 0.02513300038143941,
+        "simplex_failures": 0,
+        "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2803/drtp_topology_sampler_log.csv",
+        "updates": 56
+      },
+      {
+        "activation_count": 43,
+        "activation_rate": 0.7678571428571429,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.16862850650052652,
+        "max_tr_final_l1": 0.025133000381439397,
+        "simplex_failures": 0,
+        "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2804/drtp_topology_sampler_log.csv",
+        "updates": 56
+      },
+      {
+        "activation_count": 55,
+        "activation_rate": 0.9821428571428571,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.19554977065504886,
+        "max_tr_final_l1": 0.02513300038143941,
+        "simplex_failures": 0,
+        "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2805/drtp_topology_sampler_log.csv",
+        "updates": 56
+      },
+      {
+        "activation_count": 314,
+        "activation_rate": 0.2584362139917695,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.21558703325790862,
+        "max_tr_final_l1": 0.02513300038143943,
+        "simplex_failures": 0,
+        "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2301/drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 168,
+        "activation_rate": 0.1382716049382716,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.12933222616536832,
+        "max_tr_final_l1": 0.025133000381439424,
+        "simplex_failures": 0,
+        "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2302/drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 119,
+        "activation_rate": 0.09794238683127572,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.11653853713660031,
+        "max_tr_final_l1": 0.02513300038143941,
+        "simplex_failures": 0,
+        "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2303/drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 137,
+        "activation_rate": 0.11275720164609053,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.11214293319776794,
+        "max_tr_final_l1": 0.025133000381439417,
+        "simplex_failures": 0,
+        "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2304/drtp_topology_sampler_log.csv",
+        "updates": 1215
+      },
+      {
+        "activation_count": 173,
+        "activation_rate": 0.14238683127572016,
+        "floor_cap_failures": 0,
+        "max_observed_l1": 0.11508609483761403,
+        "max_tr_final_l1": 0.025133000381439417,
+        "simplex_failures": 0,
+        "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2305/drtp_topology_sampler_log.csv",
+        "updates": 1215
+      }
+    ]
+  },
+  "practical_downside_improvement_margin": 7.874919837916801,
+  "protocol": "DRTP-STABILIZATION-S0-V1",
+  "s2_adaptive_mass": 0.8,
+  "s2_uniform_anchor": 0.2,
+  "selection_rule": "label-free pooled P90 of final post-projection original-DRTP q movement",
+  "source_inventory": [
+    {
+      "adapted_movement_count": 1215,
+      "origin": "direct",
+      "sha256": "4ed9292497a62c5504773eb0be49ef097d70ffd4b4afb0a81f2ab76ef3c68fe6",
+      "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\development\\drtp_sg_strict_continuous_10m\\runs\\drtp_sg\\seed1901\\drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "direct",
+      "sha256": "f97493d3d6292f83297c5302de333b2d9b9b812f738695fbf6e20aed8477b7d9",
+      "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\development\\drtp_sg_strict_continuous_10m\\runs\\drtp_sg\\seed1902\\drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "direct",
+      "sha256": "cf9243c8d635124deea82fce1a254513e94c1adf66ed6be3824526ebff691afb",
+      "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2001\\drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "direct",
+      "sha256": "fbfb5cd8da0bf11bc2092822ec102c2d0fe75752e402457a406504052ee53811",
+      "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2002\\drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "direct",
+      "sha256": "acc617167be4d038aba42301b3fcdbfc0fa2b0cf22b4466ac4a130077a80c13e",
+      "source": "artifacts\\drtp_stab_a0\\source_logs\\results\\heldout\\drtp_sg_heldout_v2\\runs\\drtp_sg\\seed2003\\drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "archive",
+      "sha256": "f119655fa97891285fe05cf2e2ab4f4c78dd62de7f889c438762a68b37f98776",
+      "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2301/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "archive",
+      "sha256": "4f551d40cbc3b34ccca17e5d26a9cb0c7e2379cc19871a0d66f1a1b80eef2dbb",
+      "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2302/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "archive",
+      "sha256": "e9200c250e5e4aaebfded309829b1d34c5ca4678099e4bec5df2c46311b58af5",
+      "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2303/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "archive",
+      "sha256": "97b1f912e381d310889c94d4defd80bb6fc3a78035e608762411fe08b47dbabf",
+      "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2304/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 1215,
+      "origin": "archive",
+      "sha256": "62483d340cbc5a01bc3a9be545842dbac54e8d7c0d57fc1493e3f7566d86e3d5",
+      "source": "drtp_utr_q2_paired_5seed_cloud_10way.tar.gz:results/formal/drtp_utr_q2_paired_5seed_cloud_10way/runs/drtp_sg/seed2305/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 117,
+      "origin": "archive",
+      "sha256": "3e7f491a2945c986299b6156ec9079c91602f94c6f267ce0613ea9c812bbd5b7",
+      "source": "drtp_b3_1m_results.tar.gz:drtp_b3/runs/drtp_sg/seed2701/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 117,
+      "origin": "archive",
+      "sha256": "82cb6388a9883e0b97c85ea34bc7af8c838d8bd8b7fd4c67c823b3ae53f1cf7f",
+      "source": "drtp_b3_1m_results.tar.gz:drtp_b3/runs/drtp_sg/seed2702/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 117,
+      "origin": "archive",
+      "sha256": "5f0d8bed8b30cdfa7dd399fb7b753b47be91898993b86d1374757b2e7d1db02d",
+      "source": "drtp_b3_1m_results.tar.gz:drtp_b3/runs/drtp_sg/seed2703/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 56,
+      "origin": "archive",
+      "sha256": "1310b8b61e35a19e44a901b0069f91ba31ab139eb949124cd139d76d97ebfc1c",
+      "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2801/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 56,
+      "origin": "archive",
+      "sha256": "79bc526ab862bb8d601b367b42edf837b7c78f640140c0b2992021df6066ea7e",
+      "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2802/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 56,
+      "origin": "archive",
+      "sha256": "6f01b33b57cffa33740c517d182dcb5e04fcc9ec5e1de818d1cb717745493418",
+      "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2803/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 56,
+      "origin": "archive",
+      "sha256": "087105bb922776237ea5f33eefe78a3347d4b047253d6c76c67360428d8a2ca0",
+      "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2804/drtp_topology_sampler_log.csv",
+      "status": "included"
+    },
+    {
+      "adapted_movement_count": 56,
+      "origin": "archive",
+      "sha256": "c7682adb4f439088543dc5423ee5e7da789d9fc201e3c35971a6a17a0c81d529",
+      "source": "drtp_h2_confirmation_stage1_05m_results.tar.gz:results/development/drtp_h2_confirmation_stage1/runs/drtp_sg/seed2805/drtp_topology_sampler_log.csv",
+      "status": "included"
+    }
+  ],
+  "source_script_sha256": "5060da588cd707c04f22d454b1505b6b1cc12b0199bfcda5c4231297f26b461b",
+  "training_started": false
+}

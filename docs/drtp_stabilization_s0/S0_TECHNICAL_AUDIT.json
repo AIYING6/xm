@@ -1,0 +1,25 @@
+{
+  "checks": {
+    "candidate_telemetry_fields_present": true,
+    "conservative_final_l1_bound": true,
+    "conservative_remains_nonuniform_under_steep_evidence": true,
+    "conservative_simplex_floor_cap": true,
+    "constants_match_s0_freeze": true,
+    "drtp_tr_activates_on_steep_target": true,
+    "drtp_tr_final_l1_bound": true,
+    "drtp_tr_mid_window_save_resume_exact": true,
+    "drtp_tr_recovers_original_when_final_movement_within_delta": true,
+    "drtp_tr_simplex_floor_cap": true,
+    "pre_adaptation_rng_selection_equivalence": true
+  },
+  "delta_q_l1": 0.02513300038143937,
+  "environment_created": false,
+  "evaluation_started": false,
+  "implementation_order": "adaptive target -> bounded simplex projection -> [S2 target anchor] -> final L1 trust region; no post-TR projection",
+  "protocol": "DRTP-STABILIZATION-S0-TECHNICAL-AUDIT-V1",
+  "scope_note": "Forced-target history replay tests algebra only; counterfactual learning is not claimed.",
+  "source_sha256": "7d281a975603dff2b16089aa1fba63e8b38baeeaa5b11cfcf91ca57dd4f9e6e3",
+  "status": "PASS",
+  "training_started": false,
+  "uniform_anchor": 0.2
+}

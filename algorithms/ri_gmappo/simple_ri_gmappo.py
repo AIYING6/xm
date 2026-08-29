@@ -1354,8 +1354,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.updates,
     )
     drtp_mode = str(cfg.drtp_sampler_mode).lower()
-    if drtp_mode not in {"none", "utr", "snr", "drtp", "r_drtp", "egtr"}:
-        raise ValueError("drtp_sampler_mode must be none, utr, snr, drtp, r_drtp, or egtr")
+    if drtp_mode not in {"none", "utr", "snr", "drtp", "r_drtp", "egtr", "drtp_tr", "conservative_drtp"}:
+        raise ValueError("unsupported drtp_sampler_mode")
     actor_gradient_mode = str(cfg.actor_gradient_mode).lower()
     if actor_gradient_mode not in {"standard", "utr", "spc", "tcr"}:
         raise ValueError("actor_gradient_mode must be standard, utr, spc, or tcr")
