@@ -54,15 +54,19 @@ def metric_cell(summary: list[dict[str, str]], arm: str, seed: int) -> dict[str,
     }
 
 
-def ratio(numerator: float, denominator: float) -> float:
-    if denominator <= 0.0:
-        raise RuntimeError("catastrophic gate requires positive UTR score endpoints")
-    return numerator / denominator
+def retention_ratio(candidate: float, utr: float, scale_floor: float) -> float:
+    """Return a UTR-relative retention score for any signed score endpoint."""
+    if utr > 0.0:
+        return candidate / utr
+    scale = max(abs(utr), scale_floor)
+    return 1.0 + (candidate - utr) / scale
 
 
-def catastrophic(candidate: dict[str, float], utr: dict[str, float]) -> bool:
-    f0_ratio = ratio(candidate["J_F0"], utr["J_F0"])
-    worst_ratio = ratio(candidate["J_pert_worst"], utr["J_pert_worst"])
+def catastrophic(candidate: dict[str, float], utr: dict[str, float], scale_floor: float) -> bool:
+    f0_ratio = retention_ratio(candidate["J_F0"], utr["J_F0"], scale_floor)
+    worst_ratio = retention_ratio(
+        candidate["J_pert_worst"], utr["J_pert_worst"], scale_floor
+    )
     reward_collapse = (
         (f0_ratio < 0.70 and worst_ratio < 0.85)
         or (worst_ratio < 0.70 and f0_ratio < 0.85)
@@ -154,6 +158,8 @@ def main() -> None:
     if not integrity:
         raise RuntimeError("TECHNICAL_INVALID: incomplete or contract-violating Stable-v2 pilot")
     metrics = {arm: {seed: metric_cell(summary, arm, seed) for seed in SEEDS} for arm in ARMS}
+    epsilon = float(freeze["epsilon_J"])
+    margin = float(freeze["practical_downside_improvement_margin"])
     seed_rows = []
     for seed in SEEDS:
         utr, original, candidate = metrics["utr_sg"][seed], metrics["drtp_sg"][seed], metrics["drtp_klr_sg"][seed]
@@ -162,16 +168,14 @@ def main() -> None:
             "G_original": original["J_pert_mean"] - utr["J_pert_mean"],
             "G_klr": candidate["J_pert_mean"] - utr["J_pert_mean"],
             "klr_minus_original": candidate["J_pert_mean"] - original["J_pert_mean"],
-            "original_catastrophic": catastrophic(original, utr),
-            "klr_catastrophic": catastrophic(candidate, utr),
+            "original_catastrophic": catastrophic(original, utr, epsilon),
+            "klr_catastrophic": catastrophic(candidate, utr, epsilon),
         }
         for endpoint in ENDPOINTS:
             row[f"original_{endpoint}"] = original[endpoint]
             row[f"klr_{endpoint}"] = candidate[endpoint]
             row[f"klr_minus_original_{endpoint}"] = candidate[endpoint] - original[endpoint]
         seed_rows.append(row)
-    epsilon = float(freeze["epsilon_J"])
-    margin = float(freeze["practical_downside_improvement_margin"])
     original_gains = [row["G_original"] for row in seed_rows]
     candidate_gains = [row["G_klr"] for row in seed_rows]
     original_dispersion, candidate_dispersion = dispersion(original_gains), dispersion(candidate_gains)
@@ -272,6 +276,11 @@ def main() -> None:
         "endpoint_retention": endpoint_retention,
         "epsilon_J": epsilon,
         "downside_margin": margin,
+        "catastrophic_retention_definition": {
+            "positive_utr": "candidate / UTR (historical definition)",
+            "nonpositive_utr": "1 + (candidate - UTR) / max(abs(UTR), epsilon_J)",
+            "thresholds_unchanged": True,
+        },
         "original_gain_dispersion": original_dispersion,
         "klr_gain_dispersion": candidate_dispersion,
         "upper_tail_reference_seeds": [row["seed"] for row in upper_tail_rows],

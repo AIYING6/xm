@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 from scripts import run_drtp_stable_v2_pilot_single as pilot
+from scripts.aggregate_drtp_stable_v2_pilot import catastrophic, retention_ratio
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -117,3 +118,18 @@ def test_gate_rejects_inactive_guard_even_when_scores_look_stable(tmp_path):
     assert decision["decision"] == "PILOT_NO_GO"
     assert decision["criteria"]["mechanism_activity"] is False
     assert "mechanism_activity" in decision["no_go_reasons"]
+
+
+def test_catastrophic_retention_preserves_positive_reference_definition():
+    assert retention_ratio(70.0, 100.0, 7.0) == 0.70
+    assert retention_ratio(85.0, 100.0, 7.0) == 0.85
+
+
+def test_catastrophic_retention_is_signed_safe_for_nonpositive_utr():
+    assert retention_ratio(-20.0, -20.0, 7.0) == 1.0
+    assert retention_ratio(-10.0, -20.0, 7.0) == 1.5
+    assert retention_ratio(-30.0, -20.0, 7.0) == 0.5
+    assert retention_ratio(-7.0, 0.0, 7.0) == 0.0
+    utr = {"J_F0": -20.0, "J_pert_worst": -20.0, "timeout": 0.2}
+    candidate = {"J_F0": -30.0, "J_pert_worst": -30.0, "timeout": 0.2}
+    assert catastrophic(candidate, utr, 7.0)
