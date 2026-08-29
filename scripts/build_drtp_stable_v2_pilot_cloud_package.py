@@ -71,7 +71,8 @@ def main() -> None:
             archive.writestr(name, data)
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     checksum = output.with_suffix(output.suffix + ".sha256")
-    checksum.write_text(f"{digest}  {output.name}\n", encoding="utf-8", newline="\n")
+    with checksum.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(f"{digest}  {output.name}\n")
     print(json.dumps({
         "package": str(output),
         "sha256_file": str(checksum),
