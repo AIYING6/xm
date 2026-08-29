@@ -1,0 +1,7 @@
+{
+  "archive_sha256": "a54406e8d2d14c4bc9fa25ea43388595c19f41d476631e1c743512c6c30c0b10",
+  "training_started": false,
+  "evaluation_started": false,
+  "gate": "R1_NO_GO",
+  "safety_per_cell_reconciliation_required": true
+}
