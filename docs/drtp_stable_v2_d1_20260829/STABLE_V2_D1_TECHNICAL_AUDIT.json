@@ -1,0 +1,38 @@
+{
+  "status": "D1_TECHNICAL_PASS",
+  "zero_training": true,
+  "environment_rollout_executed": false,
+  "checkpoint_evaluation_executed": false,
+  "training_authorized": false,
+  "candidate": "DRTP-KLR",
+  "guard_mode": "post_step_actor_rollback",
+  "target_kl": 0.02,
+  "target_kl_formula": "clip_coef ** 2 / 2 with clip_coef=0.2",
+  "pytest_command": [
+    "D:\\Anaconda\\envs\\.conda\\envs\\cac\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests\\test_drtp_stable_v2_kl_guard.py",
+    "tests\\test_tc_sam.py",
+    "tests\\test_drtp_utr_q2_formal.py"
+  ],
+  "pytest_returncode": 0,
+  "pytest_stdout": ".............                                                            [100%]\n13 passed in 8.56s",
+  "pytest_stderr": "",
+  "static_checks": {
+    "default_guard_is_off": true,
+    "actor_parameter_transaction_present": true,
+    "critic_step_is_not_rolled_back_on_kl_rejection": true,
+    "nonfinite_full_transaction_restore_present": true,
+    "accepted_kl_uses_current_rollout_old_logp": true,
+    "cumulative_intervention_telemetry_present": true
+  },
+  "sha256": {
+    "algorithms/ri_gmappo/simple_ri_gmappo.py": "93fd279fdbf3b24ac2386e9b86d0b7ba79ea81c14bedad7b4e6804dfd8c0ad17",
+    "tests/test_drtp_stable_v2_kl_guard.py": "be4d12cd5a55ce32ba163dc98258335da118537ae274b518a4a8c66cae1f866c",
+    "tests/test_tc_sam.py": "8818ca28be89ea1ce4b859d5e839dc9957577243f7e74c11f88333deff2f18d9",
+    "tests/test_drtp_utr_q2_formal.py": "d215283dc55bd699f76f8d73f0e29c6bf85da7b3638968570bd7e38dd59cbde8"
+  },
+  "next_gate": "D2_PILOT_CONTRACT_FREEZE_AND_HUMAN_AUTHORIZATION"
+}

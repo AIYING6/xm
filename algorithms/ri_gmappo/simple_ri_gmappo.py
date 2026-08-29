@@ -96,6 +96,10 @@ class RIGMAPPOConfig:
     oracle_intent: bool = False
     max_grad_norm: float = 0.5
     target_kl: float | None = None
+    # Stable-v2 opt-in actor update transaction.  The default preserves every
+    # historical PPO path.  When enabled, target_kl is a hard post-step
+    # empirical-KL acceptance boundary rather than only an epoch-stop hint.
+    policy_update_guard_mode: str = "none"
     critic_warmup_updates: int = 0
     ppo_epochs: int = 4
     minibatch_graphs: int = 256
@@ -1366,6 +1370,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             raise ValueError("sam_rho must be a finite non-negative scalar")
         if not math.isfinite(float(cfg.sam_epsilon)) or float(cfg.sam_epsilon) <= 0.0:
             raise ValueError("sam_epsilon must be a finite positive scalar")
+    policy_guard_mode = str(cfg.policy_update_guard_mode).lower()
+    if policy_guard_mode not in {"none", "post_step_actor_rollback"}:
+        raise ValueError("unsupported policy_update_guard_mode")
+    if policy_guard_mode != "none":
+        if actor_gradient_mode != "standard" or cfg.sam_enabled:
+            raise ValueError("post-step actor rollback is defined only for standard non-SAM PPO")
+        if cfg.target_kl is None or not math.isfinite(float(cfg.target_kl)) or float(cfg.target_kl) <= 0.0:
+            raise ValueError("post-step actor rollback requires a finite positive target_kl")
+        if cfg.rollout_steps * cfg.num_envs != cfg.minibatch_graphs:
+            raise ValueError("post-step actor rollback requires one complete rollout minibatch per PPO epoch")
     if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none", cfg.fixed_stratified_topology_sampler)) > 1:
         raise ValueError("curriculum, fixed mixture, DRTP sampler, and fixed stratified sampler are mutually exclusive")
     if actor_gradient_mode != "standard":
@@ -1612,9 +1626,35 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "value_target_mean",
         "value_target_std",
         "learning_rate",
+        "policy_kl_post_step",
+        "policy_kl_attempted_max",
+        "policy_kl_threshold",
+        "policy_guard_triggered",
+        "policy_guard_reason",
+        "policy_guard_epoch",
+        "policy_steps_attempted",
+        "policy_steps_accepted",
+        "actor_attempted_update_l2",
+        "actor_accepted_update_l2",
+        "actor_rollback_l2",
+        "actor_optimizer_state_restored",
+        "critic_step_retained_after_actor_rollback",
+        "policy_guard_cumulative_triggers",
+        "policy_guard_cumulative_attempts",
+        "policy_guard_cumulative_intervention_rate",
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
+    policy_guard_cumulative_triggers = 0
+    policy_guard_cumulative_attempts = 0
+    if cfg.append_log and log_path.exists():
+        with log_path.open("r", newline="", encoding="utf-8") as prior_log:
+            for prior_row in csv.DictReader(prior_log):
+                try:
+                    policy_guard_cumulative_triggers += int(float(prior_row.get("policy_guard_triggered", 0) or 0))
+                    policy_guard_cumulative_attempts += int(float(prior_row.get("policy_steps_attempted", 0) or 0))
+                except (TypeError, ValueError):
+                    raise ValueError("invalid Stable-v2 cumulative telemetry in existing train_log.csv")
     curriculum_log_context = (
         curriculum_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
         if curriculum.enabled and cfg.topology_curriculum_logging
@@ -1713,6 +1753,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 if drtp_update_row is not None:
                     drtp_rows.append(drtp_update_row)
             train_info = update_policy(agent, optimizer, batch, cfg, device, update, minibatch_rng=minibatch_rng)
+            policy_guard_cumulative_triggers += int(train_info["policy_guard_triggered"])
+            policy_guard_cumulative_attempts += int(train_info["policy_steps_attempted"])
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
             row.update({
                 "actor_gradient_norm": "NOT_AVAILABLE",
@@ -1724,6 +1766,13 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 "value_target_mean": float(np.asarray(batch["returns"]).mean()),
                 "value_target_std": float(np.asarray(batch["returns"]).std()),
                 "learning_rate": float(optimizer.param_groups[0]["lr"]),
+                "policy_guard_cumulative_triggers": policy_guard_cumulative_triggers,
+                "policy_guard_cumulative_attempts": policy_guard_cumulative_attempts,
+                "policy_guard_cumulative_intervention_rate": (
+                    float(policy_guard_cumulative_triggers / policy_guard_cumulative_attempts)
+                    if policy_guard_cumulative_attempts
+                    else 0.0
+                ),
             })
             if role_gate_writer is not None:
                 for telemetry_row in summarize_role_gate_telemetry(agent, batch, device):
@@ -2462,6 +2511,47 @@ def _update_policy_conditioned_actor(
     }
 
 
+def _snapshot_optimizer_parameter_states(
+    optimizer: optim.Optimizer,
+    parameters: list[torch.nn.Parameter],
+) -> dict[torch.nn.Parameter, dict | None]:
+    """Copy Adam state slots for an exact parameter-local rollback."""
+    return {
+        parameter: copy.deepcopy(optimizer.state[parameter]) if parameter in optimizer.state else None
+        for parameter in parameters
+    }
+
+
+def _restore_optimizer_parameter_states(
+    optimizer: optim.Optimizer,
+    snapshots: dict[torch.nn.Parameter, dict | None],
+) -> None:
+    for parameter, state in snapshots.items():
+        if state is None:
+            optimizer.state.pop(parameter, None)
+        else:
+            optimizer.state[parameter] = copy.deepcopy(state)
+
+
+def _parameter_displacement_l2(
+    parameters: list[torch.nn.Parameter],
+    originals: list[torch.Tensor],
+) -> float:
+    with torch.no_grad():
+        total = sum((parameter.detach() - original).square().sum() for parameter, original in zip(parameters, originals))
+        return float(torch.sqrt(total).cpu())
+
+
+def _nested_tensors_are_finite(value) -> bool:
+    if isinstance(value, torch.Tensor):
+        return bool(torch.isfinite(value).all().item())
+    if isinstance(value, dict):
+        return all(_nested_tensors_are_finite(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return all(_nested_tensors_are_finite(item) for item in value)
+    return True
+
+
 def update_policy(
     agent: RIGMAPPOAgent,
     optimizer: optim.Optimizer,
@@ -2497,6 +2587,23 @@ def update_policy(
     chain_aux_losses, chain_aux_accs = [], []
     approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], []
     gate_grad_norms, gate_means, gate_stds, gate_mins, gate_maxs, gate_displacements = [], [], [], [], [], []
+    policy_guard_mode = str(cfg.policy_update_guard_mode).lower()
+    policy_guard_enabled = policy_guard_mode == "post_step_actor_rollback"
+    if policy_guard_enabled and num_graphs != cfg.minibatch_graphs:
+        raise RuntimeError("post-step actor rollback requires one complete rollout minibatch per PPO epoch")
+    actor_parameters = [parameter for parameter in agent.actor.parameters() if parameter.requires_grad]
+    policy_post_step_kls: list[float] = []
+    actor_attempted_update_norms: list[float] = []
+    actor_accepted_update_norms: list[float] = []
+    policy_steps_attempted = 0
+    policy_steps_accepted = 0
+    policy_guard_triggered = False
+    policy_guard_reason = ""
+    policy_guard_epoch = 0
+    actor_rollback_l2 = 0.0
+    actor_optimizer_state_restored = False
+    critic_step_retained_after_actor_rollback = False
+    final_accepted_policy_kl = 0.0
     indices = np.arange(num_graphs)
     epochs_ran = 0
     stop_ppo = False
@@ -2583,7 +2690,63 @@ def update_policy(
                 float(torch.sqrt(sum(gradient.square().sum() for gradient in gate_grads)).cpu()) if gate_grads else 0.0
             )
             grad_norm = nn.utils.clip_grad_norm_(agent.parameters(), cfg.max_grad_norm)
+            if policy_guard_enabled:
+                actor_state_before = copy.deepcopy(agent.actor.state_dict())
+                actor_parameters_before = [parameter.detach().clone() for parameter in actor_parameters]
+                actor_optimizer_state_before = _snapshot_optimizer_parameter_states(optimizer, actor_parameters)
+                transaction_model_state_before = copy.deepcopy(agent.state_dict())
+                transaction_optimizer_state_before = copy.deepcopy(optimizer.state_dict())
             optimizer.step()
+
+            if policy_guard_enabled:
+                policy_steps_attempted += 1
+                attempted_update_l2 = _parameter_displacement_l2(actor_parameters, actor_parameters_before)
+                actor_attempted_update_norms.append(attempted_update_l2)
+                finite_precheck = (
+                    math.isfinite(float(grad_norm.detach().cpu()))
+                    and _nested_tensors_are_finite(agent.state_dict())
+                    and _nested_tensors_are_finite(optimizer.state_dict())
+                )
+                if not finite_precheck:
+                    agent.load_state_dict(transaction_model_state_before, strict=True)
+                    optimizer.load_state_dict(transaction_optimizer_state_before)
+                    raise FloatingPointError("non-finite Stable-v2 policy update transaction")
+                with torch.no_grad():
+                    _, post_logp, _, _, _, _, _ = agent.get_action_and_value(
+                        obs, node_feat, edge_feat, role, adj, share_obs,
+                        relation_adj=relation_adj, action=actions, intent_label=intent_label,
+                        detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
+                    )
+                    post_log_ratio = post_logp - old_logp
+                    post_ratio = post_log_ratio.exp()
+                    post_step_kl = ((post_ratio - 1.0) - post_log_ratio).mean()
+                post_step_kl_value = float(post_step_kl.detach().cpu())
+                policy_post_step_kls.append(post_step_kl_value)
+                finite_transaction = (
+                    math.isfinite(post_step_kl_value)
+                    and _nested_tensors_are_finite(agent.state_dict())
+                    and _nested_tensors_are_finite(optimizer.state_dict())
+                )
+                if not finite_transaction:
+                    agent.load_state_dict(transaction_model_state_before, strict=True)
+                    optimizer.load_state_dict(transaction_optimizer_state_before)
+                    raise FloatingPointError("non-finite Stable-v2 policy update transaction")
+                if post_step_kl_value > float(cfg.target_kl):
+                    agent.actor.load_state_dict(actor_state_before, strict=True)
+                    _restore_optimizer_parameter_states(optimizer, actor_optimizer_state_before)
+                    policy_guard_triggered = True
+                    policy_guard_reason = "post_step_kl_exceeded"
+                    policy_guard_epoch = epochs_ran
+                    actor_rollback_l2 = attempted_update_l2
+                    actor_optimizer_state_restored = True
+                    critic_step_retained_after_actor_rollback = True
+                    actor_accepted_update_norms.append(0.0)
+                    final_accepted_policy_kl = float(approx_kl.detach().cpu())
+                    stop_ppo = True
+                else:
+                    policy_steps_accepted += 1
+                    actor_accepted_update_norms.append(attempted_update_l2)
+                    final_accepted_policy_kl = post_step_kl_value
 
             gates = [
                 torch.sigmoid(parameter.detach())
@@ -2615,7 +2778,9 @@ def update_policy(
             clip_fractions.append(float(clip_fraction.detach().cpu()))
             grad_norms.append(float(grad_norm.detach().cpu()))
             explained_variances.append(float(explained_variance.detach().cpu()))
-        if cfg.target_kl is not None and approx_kls and float(np.mean(approx_kls[-max(1, num_graphs // cfg.minibatch_graphs) :])) > cfg.target_kl:
+            if stop_ppo:
+                break
+        if not policy_guard_enabled and cfg.target_kl is not None and approx_kls and float(np.mean(approx_kls[-max(1, num_graphs // cfg.minibatch_graphs) :])) > cfg.target_kl:
             stop_ppo = True
         if stop_ppo:
             break
@@ -2641,4 +2806,17 @@ def update_policy(
         "role_gate_min": float(np.mean(gate_mins)) if gate_mins else 1.0,
         "role_gate_max": float(np.mean(gate_maxs)) if gate_maxs else 1.0,
         "role_gate_displacement_l2": float(np.mean(gate_displacements)) if gate_displacements else 0.0,
+        "policy_kl_post_step": final_accepted_policy_kl if policy_guard_enabled else 0.0,
+        "policy_kl_attempted_max": float(max(policy_post_step_kls)) if policy_post_step_kls else 0.0,
+        "policy_kl_threshold": float(cfg.target_kl) if policy_guard_enabled else 0.0,
+        "policy_guard_triggered": float(policy_guard_triggered),
+        "policy_guard_reason": policy_guard_reason,
+        "policy_guard_epoch": policy_guard_epoch,
+        "policy_steps_attempted": policy_steps_attempted,
+        "policy_steps_accepted": policy_steps_accepted,
+        "actor_attempted_update_l2": float(np.mean(actor_attempted_update_norms)) if actor_attempted_update_norms else 0.0,
+        "actor_accepted_update_l2": float(np.mean(actor_accepted_update_norms)) if actor_accepted_update_norms else 0.0,
+        "actor_rollback_l2": actor_rollback_l2,
+        "actor_optimizer_state_restored": float(actor_optimizer_state_restored),
+        "critic_step_retained_after_actor_rollback": float(critic_step_retained_after_actor_rollback),
     }

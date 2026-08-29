@@ -41,7 +41,11 @@ R1 每个 rollout 含 256 graph，PPO 重用该完整 batch 四个 epoch。对�
 - critic 与 actor 是代码中的分离模块，actor rollback 不恢复已接受的 critic parameter/state；
 - 同一 optimizer 的 Adam state 按 parameter 保存，因此 actor state slot 可精确恢复；技术验收必须证明这点以及 save/resume 一致性。
 
-## 计划修改文件（尚未实施）
+## 后续实施状态
+
+本节是 D0 时冻结的实施清单。D1 已在 2026-08-29 完成核心 opt-in guard、synthetic technical audit 与治理合同；pilot runner、development tape、evaluation 和 aggregate gate 仍属于 D2 零训练准备，不代表训练授权。
+
+## D0 计划修改文件
 
 | 文件 | 计划变更 |
 |---|---|
