@@ -2,9 +2,9 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${OUTPUT_ROOT:-${ROOT}/results/development/drtp_stabilization_s1}"
-MAX_PARALLEL="${MAX_PARALLEL:-6}"
+MAX_PARALLEL="${MAX_PARALLEL:-9}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
-[[ "$MAX_PARALLEL" == "6" ]] || { echo "S1 frozen maximum safe concurrency is exactly 6" >&2; exit 2; }
+[[ "$MAX_PARALLEL" =~ ^[1-9]$ ]] || { echo "S1 permits 1–9 concurrent trajectories only" >&2; exit 2; }
 [[ ! -e "$OUT" ]] || { echo "refusing existing output root: $OUT" >&2; exit 2; }
 [[ -f "$ROOT/configs/drtp_stabilization_s0_freeze.json" && -f "$ROOT/configs/drtp_stabilization_s1_development_tape.json" ]] || { echo "missing frozen S0/S1 inputs" >&2; exit 2; }
 available_kb=$(df -Pk "$ROOT" | awk 'NR==2 {print $4}')
