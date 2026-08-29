@@ -1,0 +1,6 @@
+hypothesis,existing_supporting_evidence,contradicting_evidence,status
+q_deviation_alone_causes_failure,"B3 seed2702 has q change before a poor final result","B3 seed2703 and H2 seed2802 show q shift without the corresponding reversal or downstream support failure",CLOSED
+direct_sampler_exposure_support_outcome_chain,"B3 seed2702 has a local sampler/support/outcome pattern","B3 only has one adverse DRTP seed; the frozen 2/3 replication condition failed",CLOSED
+early_critic_or_policy_weakness_is_required,"B3 seed2702 has selected value-loss/KL differences","H2 seed2805 has optimization-only signal and the H2 confirmation has 0/5 complete signatures",CLOSED
+H2_full_optimization_q_behavior_chain,"Seed2702 supplied a descriptive time-ordered sequence","Five clean confirmation seeds yield 0/5 complete signatures under the preregistered paired-UTR definition",CLOSED
+q_distance_from_uniform_is_sufficient,"Formal/independent DRTP both deviate from uniform","Good and adverse seeds can both have large q distance; it has no repeated behavior/outcome linkage",CLOSED

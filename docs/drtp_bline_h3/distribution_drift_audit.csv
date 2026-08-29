@@ -1,0 +1,5 @@
+cohort,method,mean_L1_q_change,sd_L1_q_change,mean_max_L1_q_change,mean_distance_from_uniform,mean_KL,late_training_reward,interpretation
+formal_2301_2305,drtp_sg,0.000605,0.000077,0.139596,0.542946,0.001366,0.276372,"positive evaluation cohort"
+independent_2401_2405,drtp_sg,0.000546,0.000062,0.164585,0.611320,0.001354,0.242910,"negative evaluation cohort"
+formal_2301_2305,utr_sg,0.000000,0.000000,0.000000,0.000000,0.001409,0.264135,"uniform control"
+independent_2401_2405,utr_sg,0.000000,0.000000,0.000000,0.000000,0.001389,0.270590,"uniform control"

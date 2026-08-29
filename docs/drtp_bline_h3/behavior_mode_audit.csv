@@ -1,0 +1,4 @@
+evidence_source,comparison,observable_finding,interpretation,status
+B3_2701_2702_2703,DRTP2702_vs_2701_2703,"2702 has lower tau60 information-path availability/task support in one 0.25-0.50M block but later path availability recovers","single adverse seed and no persistent, repeated mode separation",WEAK
+H2_confirmation_2801_2805,new_clean_DRTP_seeds,"No seed meets the paired optimization-q-behavior/support signature; no repeated adverse behavior mode is identified","does not support a stable behavior-mode bifurcation",CONTRADICTED_FOR_CONFIRMATION
+formal_2301_2305_vs_independent_2401_2405,cohort_level,"No per-step behavior/action/geometry telemetry exists in either historical cohort","cannot test whether cohort reversal is a stable multivariate policy mode",NOT_OBSERVABLE_WITH_CURRENT_DATA

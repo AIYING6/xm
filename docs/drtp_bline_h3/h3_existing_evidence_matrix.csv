@@ -1,0 +1,7 @@
+candidate,existing_support,existing_counterevidence,paired_UTR_control,temporal_chain_available,screen_status
+policy_basin_initialization,"seed-dependent final outcomes and one local B3 behavior contrast","no repeated adverse policy mode; historical cohorts lack behavioral trajectories",partial,no,WEAK
+group_conditioned_credit_assignment,"adaptive groups differ in training exposure","no group-conditioned value-error/credit telemetry",partial,no,NOT_OBSERVABLE_WITH_CURRENT_DATA
+distribution_drift,"independent cohort has higher peak q change and q distance","lower mean q change; H1/H2 show q dynamics are not sufficient; no repeated support link",partial,partial,CONTRADICTED
+rare_trajectory_composition,"trajectory stochasticity is plausible","no preregistered rare-event predictor or repeated outcome link",no,no,NOT_OBSERVABLE_WITH_CURRENT_DATA
+behavior_mode_bifurcation,"B3 2702 has a local tau60 support deficit","later recovery and no replication in H2 confirmation",partial,partial,WEAK
+generic_PPO_instability,"PPO/MARL is seed-sensitive in principle","cohort-level KL is similar and UTR does not reverse in the same way",yes,no,WEAK
