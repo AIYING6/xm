@@ -62,6 +62,10 @@ CHAIN_AUX_LABEL_NAMES = (
 RSG_TC_EDGE_FEATURE_INDICES = (3, 11, 12, 13, 15, 16)
 RSG_TC_RELATION_COUNT = 3
 
+# D4 frozen numerical resolution for the opt-in KL-boundary projection.  This
+# is an implementation tolerance, not a scientific hyperparameter or sweep.
+POLICY_KL_BACKTRACK_BISECTION_STEPS = 24
+
 
 @dataclass
 class RIGMAPPOConfig:
@@ -97,8 +101,8 @@ class RIGMAPPOConfig:
     max_grad_norm: float = 0.5
     target_kl: float | None = None
     # Stable-v2 opt-in actor update transaction.  The default preserves every
-    # historical PPO path.  When enabled, target_kl is a hard post-step
-    # empirical-KL acceptance boundary rather than only an epoch-stop hint.
+    # historical PPO path.  Guard modes make target_kl a hard post-step
+    # empirical-KL boundary rather than only an epoch-stop hint.
     policy_update_guard_mode: str = "none"
     critic_warmup_updates: int = 0
     ppo_epochs: int = 4
@@ -1371,15 +1375,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if not math.isfinite(float(cfg.sam_epsilon)) or float(cfg.sam_epsilon) <= 0.0:
             raise ValueError("sam_epsilon must be a finite positive scalar")
     policy_guard_mode = str(cfg.policy_update_guard_mode).lower()
-    if policy_guard_mode not in {"none", "post_step_actor_rollback"}:
+    if policy_guard_mode not in {"none", "post_step_actor_rollback", "post_step_actor_backtrack"}:
         raise ValueError("unsupported policy_update_guard_mode")
     if policy_guard_mode != "none":
         if actor_gradient_mode != "standard" or cfg.sam_enabled:
-            raise ValueError("post-step actor rollback is defined only for standard non-SAM PPO")
+            raise ValueError("post-step actor guards are defined only for standard non-SAM PPO")
         if cfg.target_kl is None or not math.isfinite(float(cfg.target_kl)) or float(cfg.target_kl) <= 0.0:
-            raise ValueError("post-step actor rollback requires a finite positive target_kl")
+            raise ValueError("post-step actor guards require a finite positive target_kl")
         if cfg.rollout_steps * cfg.num_envs != cfg.minibatch_graphs:
-            raise ValueError("post-step actor rollback requires one complete rollout minibatch per PPO epoch")
+            raise ValueError("post-step actor guards require one complete rollout minibatch per PPO epoch")
     if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none", cfg.fixed_stratified_topology_sampler)) > 1:
         raise ValueError("curriculum, fixed mixture, DRTP sampler, and fixed stratified sampler are mutually exclusive")
     if actor_gradient_mode != "standard":
@@ -1637,8 +1641,13 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "actor_attempted_update_l2",
         "actor_accepted_update_l2",
         "actor_rollback_l2",
+        "actor_projection_l2",
+        "policy_backtrack_alpha",
+        "policy_backtrack_iterations",
         "actor_optimizer_state_restored",
+        "actor_optimizer_state_retained_after_projection",
         "critic_step_retained_after_actor_rollback",
+        "critic_step_retained_after_policy_guard",
         "policy_guard_cumulative_triggers",
         "policy_guard_cumulative_attempts",
         "policy_guard_cumulative_intervention_rate",
@@ -2542,6 +2551,18 @@ def _parameter_displacement_l2(
         return float(torch.sqrt(total).cpu())
 
 
+def _set_parameter_interpolation_(
+    parameters: list[torch.nn.Parameter],
+    originals: list[torch.Tensor],
+    attempted: list[torch.Tensor],
+    alpha: float,
+) -> None:
+    """Set parameters to original + alpha * (attempted - original)."""
+    with torch.no_grad():
+        for parameter, original, target in zip(parameters, originals, attempted):
+            parameter.copy_(original + float(alpha) * (target - original))
+
+
 def _nested_tensors_are_finite(value) -> bool:
     if isinstance(value, torch.Tensor):
         return bool(torch.isfinite(value).all().item())
@@ -2588,9 +2609,11 @@ def update_policy(
     approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], []
     gate_grad_norms, gate_means, gate_stds, gate_mins, gate_maxs, gate_displacements = [], [], [], [], [], []
     policy_guard_mode = str(cfg.policy_update_guard_mode).lower()
-    policy_guard_enabled = policy_guard_mode == "post_step_actor_rollback"
+    rollback_guard_enabled = policy_guard_mode == "post_step_actor_rollback"
+    backtrack_guard_enabled = policy_guard_mode == "post_step_actor_backtrack"
+    policy_guard_enabled = rollback_guard_enabled or backtrack_guard_enabled
     if policy_guard_enabled and num_graphs != cfg.minibatch_graphs:
-        raise RuntimeError("post-step actor rollback requires one complete rollout minibatch per PPO epoch")
+        raise RuntimeError("post-step actor guards require one complete rollout minibatch per PPO epoch")
     actor_parameters = [parameter for parameter in agent.actor.parameters() if parameter.requires_grad]
     policy_post_step_kls: list[float] = []
     actor_attempted_update_norms: list[float] = []
@@ -2601,9 +2624,26 @@ def update_policy(
     policy_guard_reason = ""
     policy_guard_epoch = 0
     actor_rollback_l2 = 0.0
+    actor_projection_l2 = 0.0
+    policy_backtrack_alpha = 1.0
+    policy_backtrack_iterations = 0
     actor_optimizer_state_restored = False
+    actor_optimizer_state_retained_after_projection = False
     critic_step_retained_after_actor_rollback = False
+    critic_step_retained_after_policy_guard = False
     final_accepted_policy_kl = 0.0
+
+    def current_policy_kl() -> float:
+        with torch.no_grad():
+            _, current_logp, _, _, _, _, _ = agent.get_action_and_value(
+                obs, node_feat, edge_feat, role, adj, share_obs,
+                relation_adj=relation_adj, action=actions, intent_label=intent_label,
+                detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
+            )
+            current_log_ratio = current_logp - old_logp
+            current_ratio = current_log_ratio.exp()
+            current_kl = ((current_ratio - 1.0) - current_log_ratio).mean()
+        return float(current_kl.detach().cpu())
     indices = np.arange(num_graphs)
     epochs_ran = 0
     stop_ppo = False
@@ -2711,16 +2751,7 @@ def update_policy(
                     agent.load_state_dict(transaction_model_state_before, strict=True)
                     optimizer.load_state_dict(transaction_optimizer_state_before)
                     raise FloatingPointError("non-finite Stable-v2 policy update transaction")
-                with torch.no_grad():
-                    _, post_logp, _, _, _, _, _ = agent.get_action_and_value(
-                        obs, node_feat, edge_feat, role, adj, share_obs,
-                        relation_adj=relation_adj, action=actions, intent_label=intent_label,
-                        detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
-                    )
-                    post_log_ratio = post_logp - old_logp
-                    post_ratio = post_log_ratio.exp()
-                    post_step_kl = ((post_ratio - 1.0) - post_log_ratio).mean()
-                post_step_kl_value = float(post_step_kl.detach().cpu())
+                post_step_kl_value = current_policy_kl()
                 policy_post_step_kls.append(post_step_kl_value)
                 finite_transaction = (
                     math.isfinite(post_step_kl_value)
@@ -2732,16 +2763,60 @@ def update_policy(
                     optimizer.load_state_dict(transaction_optimizer_state_before)
                     raise FloatingPointError("non-finite Stable-v2 policy update transaction")
                 if post_step_kl_value > float(cfg.target_kl):
-                    agent.actor.load_state_dict(actor_state_before, strict=True)
-                    _restore_optimizer_parameter_states(optimizer, actor_optimizer_state_before)
                     policy_guard_triggered = True
-                    policy_guard_reason = "post_step_kl_exceeded"
                     policy_guard_epoch = epochs_ran
-                    actor_rollback_l2 = attempted_update_l2
-                    actor_optimizer_state_restored = True
-                    critic_step_retained_after_actor_rollback = True
-                    actor_accepted_update_norms.append(0.0)
-                    final_accepted_policy_kl = float(approx_kl.detach().cpu())
+                    critic_step_retained_after_policy_guard = True
+                    if rollback_guard_enabled:
+                        agent.actor.load_state_dict(actor_state_before, strict=True)
+                        _restore_optimizer_parameter_states(optimizer, actor_optimizer_state_before)
+                        policy_guard_reason = "post_step_kl_exceeded"
+                        actor_rollback_l2 = attempted_update_l2
+                        actor_optimizer_state_restored = True
+                        critic_step_retained_after_actor_rollback = True
+                        actor_accepted_update_norms.append(0.0)
+                        final_accepted_policy_kl = float(approx_kl.detach().cpu())
+                    else:
+                        actor_parameters_attempted = [parameter.detach().clone() for parameter in actor_parameters]
+                        _set_parameter_interpolation_(
+                            actor_parameters, actor_parameters_before, actor_parameters_attempted, 0.0
+                        )
+                        pre_step_kl_value = current_policy_kl()
+                        if not math.isfinite(pre_step_kl_value) or pre_step_kl_value > float(cfg.target_kl):
+                            agent.load_state_dict(transaction_model_state_before, strict=True)
+                            optimizer.load_state_dict(transaction_optimizer_state_before)
+                            raise FloatingPointError("invalid pre-step policy KL for Stable-v2 backtracking")
+                        lower, upper = 0.0, 1.0
+                        for _ in range(POLICY_KL_BACKTRACK_BISECTION_STEPS):
+                            midpoint = 0.5 * (lower + upper)
+                            _set_parameter_interpolation_(
+                                actor_parameters, actor_parameters_before, actor_parameters_attempted, midpoint
+                            )
+                            midpoint_kl = current_policy_kl()
+                            if not math.isfinite(midpoint_kl):
+                                agent.load_state_dict(transaction_model_state_before, strict=True)
+                                optimizer.load_state_dict(transaction_optimizer_state_before)
+                                raise FloatingPointError("non-finite Stable-v2 backtracking transaction")
+                            if midpoint_kl <= float(cfg.target_kl):
+                                lower = midpoint
+                            else:
+                                upper = midpoint
+                        _set_parameter_interpolation_(
+                            actor_parameters, actor_parameters_before, actor_parameters_attempted, lower
+                        )
+                        final_accepted_policy_kl = current_policy_kl()
+                        if not math.isfinite(final_accepted_policy_kl) or final_accepted_policy_kl > float(cfg.target_kl):
+                            agent.load_state_dict(transaction_model_state_before, strict=True)
+                            optimizer.load_state_dict(transaction_optimizer_state_before)
+                            raise FloatingPointError("Stable-v2 backtracking failed its final KL assertion")
+                        accepted_update_l2 = _parameter_displacement_l2(actor_parameters, actor_parameters_before)
+                        actor_projection_l2 = _parameter_displacement_l2(actor_parameters, actor_parameters_attempted)
+                        policy_backtrack_alpha = lower
+                        policy_backtrack_iterations = POLICY_KL_BACKTRACK_BISECTION_STEPS
+                        actor_optimizer_state_retained_after_projection = True
+                        policy_guard_reason = "post_step_kl_backtracked"
+                        if accepted_update_l2 > 0.0:
+                            policy_steps_accepted += 1
+                        actor_accepted_update_norms.append(accepted_update_l2)
                     stop_ppo = True
                 else:
                     policy_steps_accepted += 1
@@ -2817,6 +2892,11 @@ def update_policy(
         "actor_attempted_update_l2": float(np.mean(actor_attempted_update_norms)) if actor_attempted_update_norms else 0.0,
         "actor_accepted_update_l2": float(np.mean(actor_accepted_update_norms)) if actor_accepted_update_norms else 0.0,
         "actor_rollback_l2": actor_rollback_l2,
+        "actor_projection_l2": actor_projection_l2,
+        "policy_backtrack_alpha": policy_backtrack_alpha,
+        "policy_backtrack_iterations": policy_backtrack_iterations,
         "actor_optimizer_state_restored": float(actor_optimizer_state_restored),
+        "actor_optimizer_state_retained_after_projection": float(actor_optimizer_state_retained_after_projection),
         "critic_step_retained_after_actor_rollback": float(critic_step_retained_after_actor_rollback),
+        "critic_step_retained_after_policy_guard": float(critic_step_retained_after_policy_guard),
     }

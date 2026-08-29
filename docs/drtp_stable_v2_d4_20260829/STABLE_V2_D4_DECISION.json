@@ -1,0 +1,14 @@
+{
+  "decision": "D4_READY_FOR_PILOT_CONTRACT_FREEZE",
+  "training_authorized": false,
+  "candidate": "DRTP-KLB",
+  "prohibited": [
+    "training",
+    "checkpoint evaluation",
+    "target_kl tuning",
+    "parallel candidate creation",
+    "reuse of seeds 3101-3103",
+    "mainline A modification"
+  ],
+  "required_next_action": "human review of the D4 contract before any D5 pilot contract is frozen"
+}

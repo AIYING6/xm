@@ -1,0 +1,49 @@
+{
+  "status": "D4_TECHNICAL_PASS",
+  "zero_training": true,
+  "environment_rollout_executed": false,
+  "checkpoint_evaluation_executed": false,
+  "training_authorized": false,
+  "mainline_a_modified": false,
+  "candidate": "DRTP-KLB",
+  "guard_mode": "post_step_actor_backtrack",
+  "target_kl": 0.02,
+  "target_kl_source": "frozen D1 value; no threshold retuning",
+  "bisection_steps": 24,
+  "optimizer_semantics": "attempted Adam actor state retained; actor parameters projected to the largest safe line-search fraction",
+  "critic_semantics": "post-step critic update retained when actor projection is activated",
+  "pytest_command": [
+    "D:\\Anaconda\\envs\\.conda\\envs\\cac\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests\\test_drtp_stable_v2_kl_backtrack.py",
+    "tests\\test_drtp_stable_v2_kl_guard.py",
+    "tests\\test_tc_sam.py",
+    "tests\\test_drtp_utr_q2_formal.py"
+  ],
+  "pytest_returncode": 0,
+  "pytest_stdout": ".................                                                        [100%]\n17 passed in 10.43s",
+  "pytest_stderr": "",
+  "static_checks": {
+    "default_guard_is_off": true,
+    "unique_backtrack_mode_present": true,
+    "target_kl_is_not_changed": true,
+    "fixed_bisection_resolution": true,
+    "attempted_direction_is_interpolated": true,
+    "final_accepted_kl_is_hard_asserted": true,
+    "actor_optimizer_state_is_retained": true,
+    "critic_step_is_retained": true,
+    "nonfinite_full_transaction_restore_present": true,
+    "legacy_rollback_mode_preserved": true
+  },
+  "sha256": {
+    "algorithms/ri_gmappo/simple_ri_gmappo.py": "5b31d3a2576c6a732fe221486eff58db570b05ff2dbc8de87899773b579bb724",
+    "scripts/run_drtp_stable_v2_d4_technical_audit.py": "05aa3df3d03814042483d38c7902ee795f02dddb4888c4adb52b14731dfe45c7",
+    "tests/test_drtp_stable_v2_kl_backtrack.py": "f765c90668063151ae7c4100c2d1a4b7f71c7f3877bb11172c25c9bf822f69e9",
+    "tests/test_drtp_stable_v2_kl_guard.py": "be4d12cd5a55ce32ba163dc98258335da118537ae274b518a4a8c66cae1f866c",
+    "tests/test_tc_sam.py": "8818ca28be89ea1ce4b859d5e839dc9957577243f7e74c11f88333deff2f18d9",
+    "tests/test_drtp_utr_q2_formal.py": "d215283dc55bd699f76f8d73f0e29c6bf85da7b3638968570bd7e38dd59cbde8"
+  },
+  "next_gate": "HUMAN_REVIEW_THEN_D5_PILOT_CONTRACT_FREEZE"
+}
