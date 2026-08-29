@@ -20,7 +20,9 @@ def main() -> None:
     if not args.execute or args.workers != 3: raise SystemExit("S2 requires --execute and exactly 3 workers")
     tape = json.loads(TAPE.read_text(encoding="utf-8")); target = args.output_root / "evaluations" / "final_05m"
     if target.exists() and any(target.iterdir()): raise FileExistsError(target)
-    target.mkdir(parents=True, exist_ok=False); tasks, manifests = [], []
+    # A previous validation-only failure may have created this directory before
+    # any record was written.  Reuse an empty target; never overwrite data.
+    target.mkdir(parents=True, exist_ok=True); tasks, manifests = [], []
     roots = {"utr_sg": args.s1_root, "drtp_sg": args.s1_root, "conservative_drtp_sg": args.output_root}
     # S2 does not rerun the six frozen S1 baseline evaluations.  Their raw
     # fixed-tape records are copied verbatim into the combined S2 evidence
