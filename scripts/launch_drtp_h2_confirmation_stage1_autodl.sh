@@ -5,7 +5,7 @@ OUT="${OUTPUT_ROOT:-${ROOT}/results/development/drtp_h2_confirmation_stage1}"
 REPORT_DIR="${REPORT_DIR:-${ROOT}/docs/drtp_bline_h2_confirmation}"
 MAX_PARALLEL="${MAX_PARALLEL:-6}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
-[[ "$MAX_PARALLEL" == "6" ]] || { echo "H2 confirmation maximum safe concurrency is exactly 6" >&2; exit 2; }
+[[ "$MAX_PARALLEL" == "10" ]] || { echo "H2 confirmation concurrency is frozen at exactly 10" >&2; exit 2; }
 [[ ! -e "$OUT" ]] || { echo "refusing existing output root: $OUT" >&2; exit 2; }
 [[ ! -e "$REPORT_DIR/H2_05M_GATE_REPORT.md" ]] || { echo "refusing existing Stage-1 gate" >&2; exit 2; }
 [[ -f "$ROOT/configs/drtp_h2_confirmation_development_tape.json" ]] || { echo "missing frozen tape" >&2; exit 2; }

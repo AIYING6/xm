@@ -17,6 +17,13 @@ DRTP 自适应采样的相互作用，是否可在新 seed 上重复；不修改
 Stable-DRTP、EGTR、R-DRTP、trust region、confidence gate、warmup 或任何 PPO/
 reward/network 修改。所有十条轨迹必须保留。
 
+## 资源调度修订 A（作者授权）
+
+在任何可用训练结果出现前，作者于 2026-08-29 明确授权将云端 Stage-1 的并发数
+由 6 调整为 **10**，使全部十条轨迹同时执行。该修订仅改变资源调度：seed、方法、
+预算、里程碑、telemetry、tape、判据及停止规则均保持不变。此前刚启动但尚未产生
+科学结果的 6 路批次必须停止；不得混合其不完整产物与修订后的 Stage-1 输出。
+
 ## 预注册 early signature
 
 每个 DRTP seed 必须同时满足三层才计为 H2-positive：
