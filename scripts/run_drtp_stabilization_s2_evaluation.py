@@ -27,9 +27,15 @@ def main() -> None:
     # product; only the three new Conservative-DRTP checkpoints are rolled out.
     source_eval = args.s1_root / "evaluations" / "final_05m"
     source_manifest = json.loads((source_eval / "evaluation_manifest.json").read_text(encoding="utf-8"))
-    source_rows = list(csv.DictReader((source_eval / "raw_episode_metrics.csv").open(newline="", encoding="utf-8")))
-    source_summary = list(csv.DictReader((source_eval / "per_seed_condition_summary.csv").open(newline="", encoding="utf-8")))
-    if source_manifest.get("status") != "completed" or source_manifest.get("raw_rows") != 3000 or len(source_rows) != 3000:
+    source_rows_all = list(csv.DictReader((source_eval / "raw_episode_metrics.csv").open(newline="", encoding="utf-8")))
+    source_summary_all = list(csv.DictReader((source_eval / "per_seed_condition_summary.csv").open(newline="", encoding="utf-8")))
+    source_rows = [row for row in source_rows_all if row["method"] in {"utr_sg", "drtp_sg"}]
+    source_summary = [row for row in source_summary_all if row["method"] in {"utr_sg", "drtp_sg"}]
+    # The frozen S1 archive legitimately contains all three S1 arms (4,500
+    # records).  S2 reuses only the UTR/original-DRTP 3,000-record subset and
+    # deliberately excludes DRTP-TR from its primary S2 comparison.
+    if (source_manifest.get("status") != "completed" or source_manifest.get("raw_rows") != len(source_rows_all)
+            or len(source_rows) != 3000 or len(source_summary) != 30):
         raise RuntimeError("invalid frozen S1 baseline evaluation")
     for arm in ARMS:
         for seed in SEEDS:
