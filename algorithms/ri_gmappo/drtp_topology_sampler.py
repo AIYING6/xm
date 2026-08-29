@@ -127,6 +127,13 @@ class DRTPTopologySampler:
         self.last_target_l1 = 0.0
         self.last_q_step_l1 = 0.0
         self.last_trust_region_active = False
+        # Read-only S2 audit state.  These vectors never enter observations,
+        # rewards, PPO, or the selection RNG; they expose the exact frozen
+        # target -> projection -> optional anchor -> final-TR sequence.
+        self.last_adaptive_target = {group: UNIFORM_Q for group in FAILURE_GROUPS}
+        self.last_projected_target = {group: UNIFORM_Q for group in FAILURE_GROUPS}
+        self.last_anchored_target = {group: UNIFORM_Q for group in FAILURE_GROUPS}
+        self.last_pre_tr_l1 = 0.0
         self.adaptation_count = 0
 
     def state_dict(self) -> dict:
@@ -162,6 +169,10 @@ class DRTPTopologySampler:
             "last_target_l1": float(self.last_target_l1),
             "last_q_step_l1": float(self.last_q_step_l1),
             "last_trust_region_active": bool(self.last_trust_region_active),
+            "last_adaptive_target": {group: float(self.last_adaptive_target[group]) for group in FAILURE_GROUPS},
+            "last_projected_target": {group: float(self.last_projected_target[group]) for group in FAILURE_GROUPS},
+            "last_anchored_target": {group: float(self.last_anchored_target[group]) for group in FAILURE_GROUPS},
+            "last_pre_tr_l1": float(self.last_pre_tr_l1),
             "adaptation_count": int(self.adaptation_count),
         }
 
@@ -204,6 +215,10 @@ class DRTPTopologySampler:
         self.last_target_l1 = float(state.get("last_target_l1", 0.0))
         self.last_q_step_l1 = float(state.get("last_q_step_l1", 0.0))
         self.last_trust_region_active = bool(state.get("last_trust_region_active", False))
+        self.last_adaptive_target = {group: float(state.get("last_adaptive_target", {}).get(group, UNIFORM_Q)) for group in FAILURE_GROUPS}
+        self.last_projected_target = {group: float(state.get("last_projected_target", {}).get(group, UNIFORM_Q)) for group in FAILURE_GROUPS}
+        self.last_anchored_target = {group: float(state.get("last_anchored_target", {}).get(group, UNIFORM_Q)) for group in FAILURE_GROUPS}
+        self.last_pre_tr_l1 = float(state.get("last_pre_tr_l1", 0.0))
         self.adaptation_count = int(state["adaptation_count"])
 
     def _rng(self, update: int, env_index: int, episode_index: int) -> random.Random:
@@ -324,7 +339,11 @@ class DRTPTopologySampler:
                     ]
                     reason = "bounded_exponentiated_gradient"
                 projected = _bounded_simplex_projection(smoothed)
+                self.last_adaptive_target = dict(zip(FAILURE_GROUPS, smoothed))
+                self.last_projected_target = dict(zip(FAILURE_GROUPS, projected))
+                self.last_anchored_target = dict(zip(FAILURE_GROUPS, projected))
                 self.last_target_l1 = 0.0
+                self.last_pre_tr_l1 = 0.0
                 self.last_q_step_l1 = 0.0
                 self.last_trust_region_active = False
                 if self.mode in {"drtp_tr", "conservative_drtp"}:
@@ -338,8 +357,10 @@ class DRTPTopologySampler:
                             + CONSERVATIVE_UNIFORM_ANCHOR * UNIFORM_Q
                             for value in projected
                         ]
+                    self.last_anchored_target = dict(zip(FAILURE_GROUPS, projected))
                     current = [self.q[group] for group in FAILURE_GROUPS]
                     self.last_target_l1 = sum(abs(left - right) for left, right in zip(projected, current))
+                    self.last_pre_tr_l1 = self.last_target_l1
                     scale = 1.0 if self.last_target_l1 <= DRTP_TRUST_REGION_L1 else DRTP_TRUST_REGION_L1 / self.last_target_l1
                     projected = [left + scale * (right - left) for left, right in zip(current, projected)]
                     self.last_q_step_l1 = sum(abs(left - right) for left, right in zip(projected, current))
@@ -401,6 +422,10 @@ class DRTPTopologySampler:
         fields += [f"difficulty_{group}" for group in FAILURE_GROUPS]
         fields += [f"window_count_{group}" for group in ALL_GROUPS]
         fields += ["confidence", "alpha", "target_l1", "q_step_l1", "trust_region_active"]
+        fields += [f"adaptive_target_{group}" for group in FAILURE_GROUPS]
+        fields += [f"projected_target_{group}" for group in FAILURE_GROUPS]
+        fields += [f"anchored_target_{group}" for group in FAILURE_GROUPS]
+        fields += ["pre_tr_l1"]
         fields += [f"dispersion_{group}" for group in FAILURE_GROUPS]
         return fields
 
@@ -414,6 +439,10 @@ class DRTPTopologySampler:
         row["target_l1"] = self.last_target_l1
         row["q_step_l1"] = self.last_q_step_l1
         row["trust_region_active"] = self.last_trust_region_active
+        row.update({f"adaptive_target_{group}": self.last_adaptive_target[group] for group in FAILURE_GROUPS})
+        row.update({f"projected_target_{group}": self.last_projected_target[group] for group in FAILURE_GROUPS})
+        row.update({f"anchored_target_{group}": self.last_anchored_target[group] for group in FAILURE_GROUPS})
+        row["pre_tr_l1"] = self.last_pre_tr_l1
         row.update({f"dispersion_{group}": self.last_dispersion[group] for group in FAILURE_GROUPS})
         return row
 
