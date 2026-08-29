@@ -1,0 +1,4 @@
+candidate,mechanism,minimality,causal_independence,ppo_legality,upside_retention,downside_protection,hyperparameter_discipline,threshold_provenance,telemetry,reproducibility,compute,paper_interpretability,attribution,total,status,reason
+A,"Original DRTP + deterministic post-step KL rollback",5,5,5,4,4,5,4,5,5,3,5,5,55,SELECTED,"Uses the existing PPO clip coefficient to derive a conditional boundary; accepted rollout-policy updates remain on-policy and auditable."
+B,"Bounded actor/critic Adam parameter displacement",3,5,4,3,4,2,1,3,3,4,4,4,40,REJECTED,"Actual Adam displacement is NOT_AVAILABLE for all 58605 R1 updates, so no label-free threshold can be frozen without a new calibration run."
+C,"EMA/Polyak/slow policy",3,4,2,2,3,2,2,4,4,5,2,2,35,REJECTED,"Evaluation-only EMA is checkpoint averaging rather than training stabilization; rollout/optimization policy mismatch risks off-policy semantics, while permanent averaging threatens the upper tail."

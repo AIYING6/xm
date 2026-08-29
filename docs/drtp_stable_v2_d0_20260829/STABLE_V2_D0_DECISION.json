@@ -1,0 +1,42 @@
+{
+  "status": "D0_STABLE_V2_CANDIDATE_SELECTED",
+  "date": "2026-08-29",
+  "source_commit": "bec33fc2",
+  "zero_training": true,
+  "rollout_executed": false,
+  "checkpoint_evaluation_executed": false,
+  "implementation_authorized": false,
+  "training_authorized": false,
+  "mechanism_evidence_status": "MECHANISM_INCONCLUSIVE",
+  "selected_candidate": {
+    "name": "DRTP-KLR",
+    "base": "Original DRTP-SG-MAPPO",
+    "core_change": "deterministic post-step actor KL rollback",
+    "sampler_changes": false,
+    "new_independent_scalar_hyperparameters": 0,
+    "target_kl": 0.02,
+    "threshold_formula": "clip_coef ** 2 / 2",
+    "clip_coef": 0.2,
+    "rollback_interpolation": false
+  },
+  "rejected_candidates": [
+    {
+      "name": "bounded Adam parameter displacement",
+      "reason": "actual actor/critic displacement is NOT_AVAILABLE in all 58605 R1 update rows; no label-free threshold can be frozen"
+    },
+    {
+      "name": "EMA/Polyak/slow policy",
+      "reason": "evaluation-only averaging is not training stabilization; rollout/optimization mismatch or permanent damping creates legality and upper-tail risks"
+    }
+  ],
+  "label_free_log_audit": {
+    "r1_archive_sha256": "a54406e8d2d14c4bc9fa25ea43388595c19f41d476631e1c743512c6c30c0b10",
+    "update_rows": 58605,
+    "raw_grad_over_max_grad_norm_fraction": 0.946642777919973,
+    "pooled_logged_mean_kl_p99": 0.00429841052391566,
+    "pooled_logged_mean_kl_max": 0.016053710016422,
+    "actual_update_norm_rows": 0,
+    "used_success_failure_labels_for_threshold": false
+  },
+  "next_action": "STOP_AND_WAIT_FOR_SEPARATE_IMPLEMENTATION_AUDIT_AUTHORIZATION"
+}
