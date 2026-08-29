@@ -1,0 +1,35 @@
+{
+  "status": "D2_READY_FOR_PILOT_AUTHORIZATION",
+  "date": "2026-08-29",
+  "line": "B",
+  "mainline_a_modified": false,
+  "algorithm": "DRTP-KLR",
+  "algorithm_freeze_commit": "3c17bf62",
+  "arms": [
+    "utr_sg",
+    "drtp_sg",
+    "drtp_klr_sg"
+  ],
+  "seeds": [
+    3101,
+    3102,
+    3103
+  ],
+  "seed_provenance": "CLEAN",
+  "updates_per_trajectory": 1953,
+  "environment_steps_per_trajectory": 499968,
+  "trajectories": 9,
+  "maximum_parallel": 9,
+  "target_kl": 0.02,
+  "epsilon_J": 7.874919837916801,
+  "tape_namespace": "550000-550099",
+  "tape_hash": "25ff4eb5764cd2d590fba719a9c6c43b290ee3466a63075fd7e7184b049c4859",
+  "preflight_checks_passed": 20,
+  "tests_passed": 16,
+  "local_training_executed": false,
+  "environment_rollout_executed": false,
+  "checkpoint_evaluation_executed": false,
+  "pilot_training_authorized": false,
+  "automatic_continuation": false,
+  "next_action": "STOP_AND_WAIT_FOR_EXPLICIT_CLOUD_PILOT_AUTHORIZATION"
+}

@@ -1,0 +1,35 @@
+{
+  "protocol": "DRTP-STABLE-V2-PILOT-FREEZE-V1",
+  "status": "FROZEN_BEFORE_PILOT_RESULTS",
+  "algorithm": "DRTP-KLR",
+  "algorithm_freeze_commit": "3c17bf62",
+  "arms": [
+    "utr_sg",
+    "drtp_sg",
+    "drtp_klr_sg"
+  ],
+  "seeds": [
+    3101,
+    3102,
+    3103
+  ],
+  "updates_per_trajectory": 1953,
+  "environment_steps_per_trajectory": 499968,
+  "target_kl": 0.02,
+  "target_kl_formula": "clip_coef ** 2 / 2 with clip_coef=0.2",
+  "epsilon_J": 7.874919837916801,
+  "epsilon_J_source": "DRTP-STABILIZATION-S0-V1 pooled P90 absolute same-checkpoint cross-tape endpoint variation",
+  "epsilon_J_reuse_audit": "The new tape changes only deterministic episode IDs; conditions, 100 episodes per condition, evaluator and endpoint definitions match the S0 estimate. Reuse avoids a result-contingent evaluation-noise refit.",
+  "practical_downside_improvement_margin": 7.874919837916801,
+  "pooled_safety_margin": 0.05,
+  "seed_condition_safety_margin": 0.1,
+  "maximum_intervention_rate": 0.1,
+  "minimum_intervention_count": 1,
+  "tape_hash": "25ff4eb5764cd2d590fba719a9c6c43b290ee3466a63075fd7e7184b049c4859",
+  "early_stopping": false,
+  "checkpoint_promotion": false,
+  "seed_replacement": false,
+  "performance_rerun": false,
+  "automatic_continuation": false,
+  "training_started": false
+}

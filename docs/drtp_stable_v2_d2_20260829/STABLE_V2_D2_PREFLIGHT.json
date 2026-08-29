@@ -1,0 +1,90 @@
+{
+  "protocol": "DRTP-STABLE-V2-PILOT-PREFLIGHT-V1",
+  "status": "D2_READY_FOR_PILOT_AUTHORIZATION",
+  "checks": {
+    "d1_source_hash_unchanged": true,
+    "seed_provenance_clean": true,
+    "tape_hash_frozen": true,
+    "tape_hash_recomputed": true,
+    "tape_namespace_exact": true,
+    "conditions_exact": true,
+    "budget_exact": true,
+    "milestones_exact": true,
+    "target_kl_exact": true,
+    "epsilon_exact": true,
+    "no_training_or_continuation": true,
+    "trajectory_utr_sg_seed3101": true,
+    "trajectory_utr_sg_seed3102": true,
+    "trajectory_utr_sg_seed3103": true,
+    "trajectory_drtp_sg_seed3101": true,
+    "trajectory_drtp_sg_seed3102": true,
+    "trajectory_drtp_sg_seed3103": true,
+    "trajectory_drtp_klr_sg_seed3101": true,
+    "trajectory_drtp_klr_sg_seed3102": true,
+    "trajectory_drtp_klr_sg_seed3103": true
+  },
+  "trajectories": {
+    "utr_sg/seed3101": {
+      "sampler": "utr",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "utr_sg/seed3102": {
+      "sampler": "utr",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "utr_sg/seed3103": {
+      "sampler": "utr",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "drtp_sg/seed3101": {
+      "sampler": "drtp",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "drtp_sg/seed3102": {
+      "sampler": "drtp",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "drtp_sg/seed3103": {
+      "sampler": "drtp",
+      "guard": "none",
+      "target_kl": null,
+      "updates": 1953
+    },
+    "drtp_klr_sg/seed3101": {
+      "sampler": "drtp",
+      "guard": "post_step_actor_rollback",
+      "target_kl": 0.02,
+      "updates": 1953
+    },
+    "drtp_klr_sg/seed3102": {
+      "sampler": "drtp",
+      "guard": "post_step_actor_rollback",
+      "target_kl": 0.02,
+      "updates": 1953
+    },
+    "drtp_klr_sg/seed3103": {
+      "sampler": "drtp",
+      "guard": "post_step_actor_rollback",
+      "target_kl": 0.02,
+      "updates": 1953
+    }
+  },
+  "source_sha256": "93fd279fdbf3b24ac2386e9b86d0b7ba79ea81c14bedad7b4e6804dfd8c0ad17",
+  "tape_sha256": "c25966e9e6123fa2e57d9963bbf4a204c592c1dc458e6906c5a9e9c2b75b3e95",
+  "freeze_sha256": "ad618cb95543dd9c80775dcdb1c12db612e9c893ef9a6fef87150628102815e6",
+  "seed_audit_sha256": "275edd4342597cacfd2edbd1f2e9d6ba1c7eef7e6fe06e938de06782cd85ad90",
+  "local_training_started": false,
+  "environment_created": false,
+  "pilot_training_authorized": false,
+  "mainline_a_modified": false
+}

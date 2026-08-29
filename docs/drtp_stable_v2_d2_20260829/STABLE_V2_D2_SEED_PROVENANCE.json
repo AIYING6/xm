@@ -1,0 +1,19 @@
+{
+  "protocol": "DRTP-STABLE-V2-PILOT-SEED-PROVENANCE-V1",
+  "candidate_seeds": [
+    3101,
+    3102,
+    3103
+  ],
+  "status": "CLEAN",
+  "semantic_hits": {
+    "3101": [],
+    "3102": [],
+    "3103": []
+  },
+  "scanned_text_files": 3121,
+  "selection_rule": "next consecutive unused namespace after frozen 3001-3005 R1 cohort",
+  "scientific_results_seen_before_freeze": false,
+  "training_started": false,
+  "limitations": "Files over 5 MiB and binary archive payloads are not text-scanned; maintained configs, scripts, docs, manifests and paths are covered."
+}
