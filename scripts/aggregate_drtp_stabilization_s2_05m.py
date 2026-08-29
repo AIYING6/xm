@@ -33,7 +33,14 @@ def main():
     evaluation=a.output_root/"evaluations"/"final_05m"; manifest=json.loads((evaluation/"evaluation_manifest.json").read_text(encoding="utf-8")); raw,summary=read(evaluation/"raw_episode_metrics.csv"),read(evaluation/"per_seed_condition_summary.csv")
     expected=len(ARMS)*len(SEEDS)*len(CONDITIONS)*100
     if manifest.get("status")!="completed" or len(raw)!=expected or manifest.get("raw_rows")!=expected or manifest.get("tape_hash")!=tape["tape_hash"]: raise RuntimeError("S2 technical invalid evaluation")
-    report=a.output_root/"diagnostics"/"s2_05m_gate"; report.mkdir(parents=True,exist_ok=False)
+    report=a.output_root/"diagnostics"/"s2_05m_gate"
+    # The launcher deliberately writes the zero-training technical audit here
+    # before training.  It is the sole admissible pre-existing material; a
+    # gate result is never overwritten on a rerun.
+    protected={"S2_05M_GATE_REPORT.md","S2_05M_GATE_DECISION.json","S2_SEED_LEVEL_RESULTS.csv","S2_SAMPLER_TELEMETRY_SUMMARY.csv","S2_INTEGRITY_MANIFEST.json"}
+    if report.exists() and any(path.name in protected for path in report.iterdir()):
+        raise FileExistsError(f"refusing to overwrite existing S2 gate: {report}")
+    report.mkdir(parents=True,exist_ok=True)
     cells={arm:{seed:metrics(summary,arm,seed) for seed in SEEDS} for arm in ARMS}; rows=[]
     for seed in SEEDS:
         utr,original,s2=cells["utr_sg"][seed],cells["drtp_sg"][seed],cells["conservative_drtp_sg"][seed]
