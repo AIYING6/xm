@@ -6,6 +6,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; OUT="${OUTPUT_ROOT:-$RO
 export PYTHONUNBUFFERED=1 CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}" OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 mkdir -p "$OUT/launcher_logs" "$OUT/diagnostics/preflight"; cd "$ROOT"
 "$PYTHON_BIN" scripts/verify_drtp_klr_final_replication_p3_preflight.py --output "$OUT/diagnostics/preflight/P3_PREFLIGHT.json"
+export ROOT OUT PYTHON_BIN
 printf '%s\n' $(for a in utr_sg drtp_sg drtp_klr_sg; do for s in {3701..3710}; do echo "$a:$s"; done; done) | xargs -n1 -P "$MAX_PARALLEL" bash -c 'z="$1"; a="${z%%:*}"; s="${z##*:}"; "$PYTHON_BIN" "$ROOT/scripts/run_drtp_klr_final_replication_single.py" --arm "$a" --seed "$s" --output-root "$OUT" --execute >"$OUT/launcher_logs/${a}_seed${s}.out" 2>"$OUT/launcher_logs/${a}_seed${s}.err"' _ || { echo "training failed: evaluation not started" >&2; exit 3; }
 "$PYTHON_BIN" scripts/run_drtp_klr_final_replication_p3_evaluation.py --output-root "$OUT" --workers 9 --execute
 "$PYTHON_BIN" scripts/aggregate_drtp_klr_final_replication_p3.py --output-root "$OUT" --execute
