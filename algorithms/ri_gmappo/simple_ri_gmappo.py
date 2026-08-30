@@ -235,6 +235,12 @@ class RIGMAPPOConfig:
     runtime_state_resume: str | None = None
     runtime_state_checkpointing: bool = False
     runtime_state_save_interval: int | None = None
+    # B-line B1 diagnostic-only stochastic continuation.  The default is a
+    # strict no-op.  A diagnostic branch loads one frozen runtime checkpoint
+    # into a new output directory, preserves model/optimizer/sampler state,
+    # and replaces only the explicitly decomposed future RNG streams.
+    diagnostic_rng_branch_mode: str = "none"
+    diagnostic_rng_branch_seed: int | None = None
     # DRTP-SEED-S1 opt-in independent RNG decomposition.  The historical
     # path remains unchanged when this flag is false.
     rng_decomposition: bool = False
@@ -1443,7 +1449,18 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         raise ValueError("oracle_intent is unavailable for 3d_intercept because it has no intent supervision")
     if cfg.runtime_state_resume and (cfg.resume or cfg.init_checkpoint):
         raise ValueError("runtime_state_resume is mutually exclusive with legacy resume/init_checkpoint")
-    if cfg.runtime_state_resume and not cfg.append_log:
+    diagnostic_branch_mode = str(cfg.diagnostic_rng_branch_mode).lower()
+    if diagnostic_branch_mode not in {"none", "exact_replay", "rollout", "minibatch", "joint"}:
+        raise ValueError("unsupported diagnostic_rng_branch_mode")
+    diagnostic_branch = diagnostic_branch_mode != "none"
+    if diagnostic_branch and cfg.runtime_state_resume is None:
+        raise ValueError("diagnostic RNG branches require a frozen runtime checkpoint")
+    if diagnostic_branch and diagnostic_branch_mode != "exact_replay":
+        if not cfg.rng_decomposition or cfg.rng_seed_tuple is None:
+            raise ValueError("stochastic diagnostic branches require an explicit RNG seed tuple")
+        if cfg.diagnostic_rng_branch_seed is None or int(cfg.diagnostic_rng_branch_seed) < 0:
+            raise ValueError("stochastic diagnostic branches require a non-negative branch seed")
+    if cfg.runtime_state_resume and not cfg.append_log and not diagnostic_branch:
         raise ValueError("runtime_state_resume requires append_log=True to preserve one trajectory log")
     rng_streams = None
     if cfg.rng_decomposition:
@@ -1669,6 +1686,29 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if telemetry_writer is not None and runtime_payload.get("failure_telemetry_state") is not None:
             telemetry_writer.load_state_dict(runtime_payload["failure_telemetry_state"])
         _restore_runtime_rng_state(runtime_payload["rng_state"])
+        if diagnostic_branch_mode in {"rollout", "joint"}:
+            if rng_streams is None:
+                raise AssertionError("rollout diagnostic branch is missing explicit RNG streams")
+            for env_index, env in enumerate(envs):
+                env.seed(rng_streams.seed("env", env_index, 2))
+            if drtp_sampler is not None:
+                # q/EMA/window state was restored above.  Only the deterministic
+                # key used for future condition draws is replaced.
+                drtp_sampler.seed = rng_streams.seed("topology", 2)
+            set_seed(rng_streams.seed("action", 2))
+        if diagnostic_branch:
+            (out_dir / "diagnostic_rng_branch_manifest.json").write_text(
+                json.dumps({
+                    "mode": diagnostic_branch_mode,
+                    "branch_seed": cfg.diagnostic_rng_branch_seed,
+                    "runtime_checkpoint": str(cfg.runtime_state_resume),
+                    "model_optimizer_sampler_state_restored": True,
+                    "future_rng_replaced_only": diagnostic_branch_mode != "exact_replay",
+                    "rng_streams": None if rng_streams is None else rng_streams.manifest(),
+                    "evaluation_leakage": False,
+                }, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
     elif cfg.init_checkpoint:
         load_matching_state_dict(agent, cfg.init_checkpoint, device)
     if cfg.resume:

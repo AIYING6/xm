@@ -1,0 +1,98 @@
+{
+  "schema_version": "drtp-b1-update-sensitivity-v1",
+  "frozen_on": "2026-08-30",
+  "track": "B_only",
+  "mainline_a_modified": false,
+  "status": "PREPARED_NOT_AUTHORIZED",
+  "scientific_question": "Before endpoint collapse, are Original-DRTP checkpoints more sensitive than good Original-DRTP and matched UTR checkpoints to future rollout/update randomness?",
+  "independent_unit": "source training seed",
+  "technical_repetitions": ["RNG branch", "PPO update", "probe state", "evaluation episode"],
+  "source_checkpoint_label": "500k",
+  "source_cohorts": {
+    "formal_positive_2300": [2301, 2302, 2303, 2304, 2305],
+    "independent_reversal_2400": [2401, 2402, 2403, 2404, 2405],
+    "r1_mixed_3000": [3001, 3002, 3003, 3004, 3005],
+    "b5_mixed_3600": [3601, 3602, 3603, 3604, 3605]
+  },
+  "frozen_final_paired_J_robust_gain": {
+    "2301": 32.999967665106084,
+    "2302": 17.010779782642615,
+    "2303": 103.78257694281312,
+    "2304": 24.41568810468911,
+    "2305": 96.78821983288691,
+    "2401": -54.259844540204824,
+    "2402": 11.664127746255133,
+    "2403": -123.87199350051024,
+    "2404": -29.143445189605444,
+    "2405": 25.25548278972599,
+    "3001": -68.89361682115239,
+    "3002": -0.36990941601455773,
+    "3003": 18.88439329077606,
+    "3004": 30.824502188357883,
+    "3005": 35.3539625270723,
+    "3601": 78.9836123038223,
+    "3602": 6.291672712221043,
+    "3603": 42.425745111010045,
+    "3604": 39.685337960398755,
+    "3605": -53.44077247767243
+  },
+  "frozen_catastrophic_drtp_seeds": [2403, 3001],
+  "arms": ["utr_sg", "drtp_sg"],
+  "branch_families": {
+    "rollout": {
+      "branches_per_checkpoint": 4,
+      "varied_streams": ["environment", "action", "topology"],
+      "fixed_streams": ["minibatch"]
+    },
+    "minibatch_negative_control": {
+      "branches_per_checkpoint": 4,
+      "varied_streams": ["minibatch"],
+      "fixed_streams": ["environment", "action", "topology"],
+      "structural_note": "The frozen 4x64 rollout and minibatch_graphs=256 produce one full-rollout minibatch per PPO epoch, so permutation-only effects should be numerically negligible."
+    }
+  },
+  "branch_updates": 64,
+  "branch_environment_steps": 16384,
+  "diagnostic_horizons_updates": [1, 4, 16, 64],
+  "expected_source_checkpoints": 40,
+  "expected_branch_trajectories": 320,
+  "expected_training_environment_steps": 5242880,
+  "primary_sensitivity_metrics": [
+    "median pairwise cosine distance of cumulative actor parameter deltas",
+    "median pairwise policy-output JS divergence on the frozen probe bank",
+    "between-branch dispersion of frozen-tape J_pert_mean"
+  ],
+  "secondary_metrics": [
+    "policy KL",
+    "critic parameter drift",
+    "explained variance",
+    "advantage mean and standard deviation",
+    "short-horizon training reward",
+    "collision and timeout"
+  ],
+  "mechanism_pass_all_required": [
+    "at least two adverse or catastrophic DRTP source seeds in at least two cohorts show the same sensitivity signature",
+    "the signature is present by update horizon 16 and precedes branch-level endpoint degradation at horizon 64",
+    "each replicated adverse DRTP checkpoint exceeds its matched UTR checkpoint on at least two primary sensitivity metrics",
+    "the adverse DRTP checkpoint ranks in the top two of five within its cohort on the same metrics while its matched UTR does not",
+    "the held-out B5 cohort reproduces the discovery signature without redefining thresholds",
+    "the formal-positive 2300 control cohort and high-return seeds do not exhibit an equally strong complete signature",
+    "the conclusion is unchanged when each one branch is removed in turn"
+  ],
+  "discovery_cohorts": ["independent_reversal_2400", "r1_mixed_3000"],
+  "control_cohort": "formal_positive_2300",
+  "held_out_replication_cohort": "b5_mixed_3600",
+  "forbidden": [
+    "algorithm modification",
+    "Reliable-DRTP design",
+    "source checkpoint promotion",
+    "seed replacement",
+    "branch replacement",
+    "performance-driven rerun",
+    "threshold tuning after results",
+    "merging RNG branches as independent n",
+    "modifying mainline A"
+  ],
+  "automatic_training_authorized": false,
+  "algorithm_modification_authorized": false
+}
