@@ -1,0 +1,68 @@
+{
+  "schema_version": "drtp-b5-p0-credit-telemetry-v1",
+  "frozen_on": "2026-08-30",
+  "track": "B_only",
+  "mainline_a_modified": false,
+  "algorithm_modification": false,
+  "training_authorized": false,
+  "independent_unit": "training_seed",
+  "repetition_units": [
+    "ppo_update_x_failure_group",
+    "ppo_update_x_group_pair",
+    "evaluation_episode"
+  ],
+  "groups": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+  "collection_point": "immediately before the ordinary PPO update",
+  "collection_interval_updates": 20,
+  "interval_basis": "At the frozen 4x64 rollout, twenty updates equal 5120 environment interactions; the P0 CPU benchmark projected about 18% incremental cost at this interval while retaining resolution far below the 0.25M milestone.",
+  "gradient_objective": {
+    "actor": "group mean of clipped PPO policy loss minus frozen entropy coefficient",
+    "critic": "group mean of one-half squared return-to-value error",
+    "auxiliary_losses_excluded": true,
+    "reason": "Localize PPO credit pressure without conflating intent or chain auxiliary objectives."
+  },
+  "group_outputs": [
+    "sample counts",
+    "return target distribution",
+    "rollout value distribution",
+    "return-minus-value residual",
+    "one-step TD residual",
+    "explained variance",
+    "raw advantage distribution",
+    "globally normalized advantage distribution",
+    "policy entropy",
+    "actor gradient norm",
+    "critic gradient norm"
+  ],
+  "pair_outputs": [
+    "actor gradient dot product",
+    "actor gradient cosine",
+    "actor conflict indicator",
+    "critic gradient dot product",
+    "critic gradient cosine",
+    "critic conflict indicator"
+  ],
+  "information_boundary": {
+    "actor_input": false,
+    "critic_input": false,
+    "ppo_buffer_consumer": false,
+    "reward_consumer": false,
+    "sampler_consumer": false,
+    "checkpoint_selection_consumer": false,
+    "log_only": true
+  },
+  "missing_group_rule": "Emit an explicit NO_SAMPLES row with null statistics; never impute, pool, or silently drop the group.",
+  "statistical_boundary": "No update-level row is an independent replicate. Mechanism decisions are seed-level, paired to UTR, and require the frozen cross-seed replication gate.",
+  "technical_pass_requires": [
+    "telemetry on/off produces identical PPO update",
+    "model parameters, .grad buffers and RNG state are unchanged by telemetry",
+    "deterministic replay is exact",
+    "all seven group rows and all observed pair rows follow the frozen schema",
+    "missing groups are explicit and finite fields contain no NaN or Inf",
+    "append/resume does not duplicate CSV headers",
+    "default-off path passes existing PPO/DRTP regression tests",
+    "projected interval overhead is reported rather than hidden"
+  ],
+  "decision_if_pass": "B5_P0_TECHNICAL_PASS / CLOUD_COHORT_PENDING_AUTHORIZATION",
+  "decision_if_fail": "B5_P0_TECHNICAL_FAIL / TRAINING_NOT_AUTHORIZED"
+}

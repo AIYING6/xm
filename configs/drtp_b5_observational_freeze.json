@@ -1,0 +1,79 @@
+{
+  "schema_version": "drtp-b5-observational-v1",
+  "frozen_on": "2026-08-30",
+  "track": "B_only",
+  "mainline_a_modified": false,
+  "status": "PREPARED_NOT_AUTHORIZED",
+  "scientific_question": "Does failure-group-conditioned credit assignment exhibit a repeated, time-leading, DRTP-specific signature before lower-tail endpoint degradation?",
+  "arms": {
+    "utr_sg": "utr",
+    "drtp_sg": "drtp"
+  },
+  "seeds": [3601, 3602, 3603, 3604, 3605],
+  "independent_unit": "training_seed",
+  "technical_repetitions": ["PPO update", "failure group", "group pair", "evaluation episode"],
+  "num_envs": 4,
+  "rollout_steps": 64,
+  "updates": 3907,
+  "environment_steps": 1000192,
+  "milestone_updates": {
+    "976": "250k",
+    "1953": "500k",
+    "2930": "750k",
+    "3907": "1m"
+  },
+  "milestone_environment_steps": {
+    "250k": 249856,
+    "500k": 499968,
+    "750k": 750080,
+    "1m": 1000192
+  },
+  "group_credit_telemetry": {
+    "enabled": true,
+    "interval_updates": 20,
+    "groups": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "read_only": true,
+    "pre_ppo": true
+  },
+  "failure_aware_telemetry": {
+    "enabled": true,
+    "pre_steps": 20,
+    "post_steps": 60,
+    "nominal_pseudo_onset": 44
+  },
+  "evaluation": {
+    "tape": "configs/drtp_b5_observational_tape.json",
+    "checkpoint_labels": ["250k", "500k", "750k", "1m"],
+    "conditions": ["nominal", "F0_44_80", "T28_28_80", "D120_44_120", "C28_120"],
+    "episodes_per_condition": 100,
+    "expected_cells": 200,
+    "expected_raw_rows": 20000,
+    "checkpoint_promotion": false
+  },
+  "gates": {
+    "500k": "DESCRIPTIVE_ONLY_NO_STOP",
+    "1m": "MECHANISM_REVIEW",
+    "mechanism_go_all_required": [
+      "candidate signal precedes endpoint degradation",
+      "same-direction complete signature in at least two of five adverse DRTP seeds",
+      "paired UTR lacks an equally strong time-structured signature",
+      "at least two non-equivalent middle-layer indicators support credit assignment",
+      "optimization to behavior or task support to outcome chain is continuous",
+      "conclusion survives the preregistered neighboring thresholds"
+    ],
+    "neighboring_standardized_thresholds": [0.5, 0.75, 1.0],
+    "mechanism_no_go": "If the complete signature is absent by 1M, close B-line algorithm development; no new patch is authorized."
+  },
+  "forbidden": [
+    "early stopping",
+    "best checkpoint promotion",
+    "seed replacement",
+    "performance-driven rerun",
+    "algorithm modification",
+    "automatic continuation beyond 1M",
+    "merging with mainline A evidence"
+  ],
+  "training_authorized": false,
+  "evaluation_authorized": false,
+  "algorithm_modification_authorized": false
+}

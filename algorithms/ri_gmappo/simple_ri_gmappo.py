@@ -50,6 +50,11 @@ from algorithms.ri_gmappo.drtp_topology_sampler import EGTRTopologySampler
 from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 from algorithms.ri_gmappo.failure_aware_telemetry import FailureAwareTelemetryWriter
+from algorithms.ri_gmappo.group_credit_telemetry import (
+    CONFLICT_FIELDS as GROUP_CREDIT_CONFLICT_FIELDS,
+    GROUP_FIELDS as GROUP_CREDIT_FIELDS,
+    summarize_group_credit_assignment,
+)
 
 
 ROLE_SCOUT_ID = 0
@@ -214,6 +219,10 @@ class RIGMAPPOConfig:
     failure_telemetry_pre_steps: int = 20
     failure_telemetry_post_steps: int = 60
     failure_telemetry_pseudo_onset: int = 44
+    # B5 read-only credit-assignment telemetry.  It adds deterministic
+    # pre-update diagnostics only and is never consumed by PPO or the sampler.
+    group_credit_telemetry: bool = False
+    group_credit_telemetry_interval: int = 20
     # TC-SAM-UTR: standard Euclidean SAM applied to actor parameters only.
     # These fields are inert unless sam_enabled=True and are intentionally
     # fixed rather than adapted from returns, topology, or training seed.
@@ -1683,6 +1692,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     )
     pp_probe_log_path = out_dir / "pp_drtp_probe_log.csv"
     actor_gradient_log_path = out_dir / "actor_gradient_telemetry.csv"
+    group_credit_log_path = out_dir / "group_credit_telemetry.csv"
+    group_credit_conflict_log_path = out_dir / "group_credit_gradient_conflicts.csv"
     fieldnames = [
         "update",
         "loss",
@@ -1798,9 +1809,19 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if cfg.actor_gradient_logging
         else nullcontext()
     )
+    group_credit_log_context = (
+        group_credit_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
+        if cfg.group_credit_telemetry
+        else nullcontext()
+    )
+    group_credit_conflict_log_context = (
+        group_credit_conflict_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
+        if cfg.group_credit_telemetry
+        else nullcontext()
+    )
     with log_path.open(mode, newline="", encoding="utf-8") as f, (
         telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
-    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file, pp_probe_log_context as pp_probe_file, actor_gradient_log_context as actor_gradient_file:
+    ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file, pp_probe_log_context as pp_probe_file, actor_gradient_log_context as actor_gradient_file, group_credit_log_context as group_credit_file, group_credit_conflict_log_context as group_credit_conflict_file:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
@@ -1858,6 +1879,17 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             pp_probe_writer = csv.DictWriter(pp_probe_file, fieldnames=pp_probe_fields)
             if not cfg.append_log or not pp_probe_log_path.exists() or pp_probe_log_path.stat().st_size == 0:
                 pp_probe_writer.writeheader()
+        group_credit_writer = None
+        group_credit_conflict_writer = None
+        if group_credit_file is not None:
+            group_credit_writer = csv.DictWriter(group_credit_file, fieldnames=GROUP_CREDIT_FIELDS)
+            group_credit_conflict_writer = csv.DictWriter(
+                group_credit_conflict_file, fieldnames=GROUP_CREDIT_CONFLICT_FIELDS
+            )
+            if not cfg.append_log or group_credit_log_path.stat().st_size == 0:
+                group_credit_writer.writeheader()
+            if not cfg.append_log or group_credit_conflict_log_path.stat().st_size == 0:
+                group_credit_conflict_writer.writeheader()
         f.flush()
         best_eval_key = (
             tuple(float(value) for value in runtime_payload["best_eval_key"])
@@ -1896,6 +1928,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 drtp_update_row = drtp_sampler.maybe_update(update)
                 if drtp_update_row is not None:
                     drtp_rows.append(drtp_update_row)
+            credit_group_rows: list[dict] = []
+            credit_conflict_rows: list[dict] = []
+            if cfg.group_credit_telemetry:
+                if cfg.group_credit_telemetry_interval <= 0:
+                    raise ValueError("group_credit_telemetry_interval must be positive")
+                if update % cfg.group_credit_telemetry_interval == 0:
+                    credit_group_rows, credit_conflict_rows = summarize_group_credit_assignment(
+                        agent, batch, cfg, device, update=update
+                    )
             train_info = update_policy(agent, optimizer, batch, cfg, device, update, minibatch_rng=minibatch_rng)
             policy_guard_cumulative_triggers += int(train_info["policy_guard_triggered"])
             policy_guard_cumulative_attempts += int(train_info["policy_steps_attempted"])
@@ -1938,6 +1979,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     gradient_writer.writerow({"update": update, "mode": actor_gradient_mode, **gradient_row})
                 actor_gradient_file.flush()
             row.pop("actor_gradient_rows", None)
+            if group_credit_writer is not None:
+                group_credit_writer.writerows(credit_group_rows)
+                group_credit_conflict_writer.writerows(credit_conflict_rows)
+                group_credit_file.flush()
+                group_credit_conflict_file.flush()
             if curriculum_writer is not None:
                 for curriculum_row in curriculum_rows[curriculum_logged_count:]:
                     curriculum_writer.writerow(curriculum_row)
@@ -2061,16 +2107,20 @@ def collect_rollout(
     obs_buf, share_buf, node_buf, edge_buf, role_buf, adj_buf, intent_buf = [], [], [], [], [], [], []
     relation_adj_buf = []
     action_buf, logp_buf, reward_buf, done_buf, value_buf = [], [], [], [], []
-    condition_nominal_buf = []
+    condition_nominal_buf, condition_group_buf = [], []
 
     for _ in range(cfg.rollout_steps):
         if drtp_sampler is None:
             condition_nominal = np.ones(len(envs), dtype=bool)
+            condition_group = np.full(len(envs), NOMINAL_GROUP, dtype="<U3")
         else:
             if drtp_selections is None or any(selection is None for selection in drtp_selections):
                 raise AssertionError("topology condition selection missing for rollout sample")
             condition_nominal = np.asarray(
                 [selection.group == "N" for selection in drtp_selections], dtype=bool
+            )
+            condition_group = np.asarray(
+                [selection.group for selection in drtp_selections], dtype="<U3"
             )
         with torch.no_grad():
             actions, logp, entropy, values, _, _, _ = agent.get_action_and_value(
@@ -2214,6 +2264,7 @@ def collect_rollout(
         reward_buf.append(np.asarray(rewards, dtype=np.float32))
         done_buf.append(np.asarray(dones, dtype=np.float32))
         condition_nominal_buf.append(condition_nominal)
+        condition_group_buf.append(condition_group)
 
         obs = np.stack(next_obs)
         share_obs = np.stack(next_share)
@@ -2229,6 +2280,8 @@ def collect_rollout(
     rewards_np = np.asarray(reward_buf, dtype=np.float32)
     dones_np = np.asarray(done_buf, dtype=np.float32)
     values_np = np.asarray(value_buf, dtype=np.float32)
+    next_value_sequence = np.concatenate([values_np[1:], next_values[None, ...]], axis=0)
+    td_residuals = rewards_np + cfg.gamma * next_value_sequence * (1.0 - dones_np) - values_np
     advantages, returns = compute_gae(rewards_np, dones_np, values_np, next_values, cfg.gamma, cfg.gae_lambda)
     return {
         "obs": np.asarray(obs_buf, dtype=np.float32),
@@ -2247,9 +2300,11 @@ def collect_rollout(
         "dones": dones_np,
         "advantages": advantages,
         "returns": returns,
+        "td_residuals": td_residuals.astype(np.float32),
         # Training-only condition class.  It is excluded from obs, graph
         # tensors, actor/critic calls, and all evaluation interfaces.
         "condition_is_nominal": np.asarray(condition_nominal_buf, dtype=bool),
+        "condition_group": np.asarray(condition_group_buf, dtype="<U3"),
         "next_obs": obs,
         "next_share_obs": share_obs,
         "next_graph_obs": graph_obs,

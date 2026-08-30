@@ -1,0 +1,66 @@
+{
+  "protocol": "DRTP-B5-SEED-PROVENANCE-AUDIT-V1",
+  "candidate_seeds": [
+    3601,
+    3602,
+    3603,
+    3604,
+    3605
+  ],
+  "status": "CLEAN",
+  "tracked_source_hits_excluding_b5_preparation": [],
+  "archives": [
+    {
+      "archive": "drtp_b3_1m_results.tar.gz",
+      "sha256": "297bbe7753b6273882e8d010c8ac35d55766af417bda8074ed4017eadcf1e6ac",
+      "hits": []
+    },
+    {
+      "archive": "drtp_h2_confirmation_stage1_05m_results.tar.gz",
+      "sha256": "74667ad8504ca9c2d542efa5dccc5bd812543ec27de50042111674b88a6a1956",
+      "hits": []
+    },
+    {
+      "archive": "drtp_stabilization_s1_05m_results.tar.gz",
+      "sha256": "2e4198c3a7f53efefc218f3b02b74f62688bec597bdaf889537f6cfe600a07ac",
+      "hits": []
+    },
+    {
+      "archive": "drtp_stabilization_s2_05m_results.tar.gz",
+      "sha256": "1c91360e5ac7e37876487442dce39fc9246a90717f9e2e0ad35808ebeee8e1f3",
+      "hits": []
+    },
+    {
+      "archive": "drtp_stable_r1_1m_results.tar.gz",
+      "sha256": "a54406e8d2d14c4bc9fa25ea43388595c19f41d476631e1c743512c6c30c0b10",
+      "hits": []
+    },
+    {
+      "archive": "drtp_stable_v2_pilot_05m_results.tar.gz",
+      "sha256": "ac3e93c5c48e02fef605a23e8328b33f14b2ae4eb4372c44ffc2a80d48fdb7a0",
+      "hits": []
+    },
+    {
+      "archive": "drtp_stable_v2_d5_pilot_05m_results.tar.gz",
+      "sha256": "52a083cee2ce4dadff49ba9d8763741b45a3280f7b9b0f490a04f3842dc4a5b8",
+      "hits": []
+    },
+    {
+      "archive": "pp_drtp_p3_pilot_05m_results.tar.gz",
+      "sha256": "5fd150cc1494b039ecee282091646ac64850d470b4d469147ccbe8337877b38d",
+      "hits": []
+    },
+    {
+      "archive": "pp_drtp_p4_validation_05m_results.tar.gz",
+      "sha256": "46313649ef01fac1e14366c3512ac04a392b35839a1aec8bbda69bedbc90f618",
+      "hits": []
+    },
+    {
+      "archive": "pr_drtp_b4_zero_training_feasibility_results.tar.gz",
+      "sha256": "da3a8c0c213ceef408b1ea04515c8d7f72a8ed67469dc4ed9c55cbb019e7ccc6",
+      "hits": []
+    }
+  ],
+  "archive_count": 10,
+  "scientific_results_seen_for_candidates": false
+}

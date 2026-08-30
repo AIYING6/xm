@@ -1,0 +1,8 @@
+{
+  "decision": "B5_P0_TECHNICAL_PASS / CLOUD_COHORT_PENDING_AUTHORIZATION",
+  "training_started": false,
+  "algorithm_modification": false,
+  "mainline_a_modified": false,
+  "cloud_training_authorized": false,
+  "next_action": "prepare frozen cloud observational cohort package for separate human authorization"
+}
