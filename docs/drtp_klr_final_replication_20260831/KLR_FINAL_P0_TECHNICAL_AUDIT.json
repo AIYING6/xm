@@ -1,0 +1,30 @@
+{
+  "status": "KLR_FINAL_REPLICATION_READY_FOR_AUTHORIZATION",
+  "zero_training": true,
+  "environment_rollout_executed": false,
+  "checkpoint_evaluation_executed": false,
+  "algorithm_modification": false,
+  "checks": {
+    "legacy_arm_exact": true,
+    "frozen_arm_exact": true,
+    "actor_parameters_restored": true,
+    "actor_adam_slots_restored": true,
+    "critic_step_retained": true,
+    "remaining_epochs_stopped": true,
+    "full_rollout_kl_formula": true,
+    "nonfinite_full_restore": true,
+    "no_backtrack_selected": true,
+    "no_training_authorized": true,
+    "no_checkpoint_evaluation_authorized": true,
+    "synthetic_guard_replay": true
+  },
+  "pytest_stdout": ".....                                                                    [100%]\n5 passed in 4.96s",
+  "pytest_stderr": "",
+  "hashes": {
+    "freeze": "145d673d55d944d61745f1fbe4cb054423f10d89c2dd0fc1026fedd2325e5985",
+    "tape": "3af1874ee4a6d6bc8290099c508c698c8e6460671e15ba0e6e857c76eb24a676",
+    "source": "fdf6c7a0748099cedc210c97d97ab2a6ce86d8475e4cc6a690464e72290efa9c",
+    "test": "be4d12cd5a55ce32ba163dc98258335da118537ae274b518a4a8c66cae1f866c"
+  },
+  "next_action": "human authorization required before any 30-trajectory cloud run"
+}

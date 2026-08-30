@@ -1,0 +1,22 @@
+{
+  "protocol": "DRTP-KLR-FINAL-REPLICATION-DEVELOPMENT-TAPE-V1",
+  "status": "FROZEN_PRE_TRAINING",
+  "canonical": false,
+  "development_only": true,
+  "post_hoc": false,
+  "purpose": "dual-cohort KLR final replication development gate; not a Mainline-A paper tape",
+  "episode_ids": [620000,620001,620002,620003,620004,620005,620006,620007,620008,620009,620010,620011,620012,620013,620014,620015,620016,620017,620018,620019,620020,620021,620022,620023,620024,620025,620026,620027,620028,620029,620030,620031,620032,620033,620034,620035,620036,620037,620038,620039,620040,620041,620042,620043,620044,620045,620046,620047,620048,620049,620050,620051,620052,620053,620054,620055,620056,620057,620058,620059,620060,620061,620062,620063,620064,620065,620066,620067,620068,620069,620070,620071,620072,620073,620074,620075,620076,620077,620078,620079,620080,620081,620082,620083,620084,620085,620086,620087,620088,620089,620090,620091,620092,620093,620094,620095,620096,620097,620098,620099],
+  "conditions": [
+    {"name":"nominal","failed_blue_agent":-1,"start_step":44,"duration_steps":0},
+    {"name":"F0_44_80","failed_blue_agent":1,"start_step":44,"duration_steps":80},
+    {"name":"T28_28_80","failed_blue_agent":1,"start_step":28,"duration_steps":80},
+    {"name":"D120_44_120","failed_blue_agent":1,"start_step":44,"duration_steps":120},
+    {"name":"C28_120","failed_blue_agent":1,"start_step":28,"duration_steps":120}
+  ],
+  "episodes_per_condition":100,
+  "same_base_ids_across_conditions":true,
+  "tape_hash":"9eee7463ae55ea0a2a5a263810e432b47923704a5d517a464784db278378b455",
+  "failure_semantics":"relay_node_1_edge_removal_at_onset_for_duration",
+  "forbidden_episode_namespaces":["490000-490099","500000-500099","510000-510099","520000-520099","530000-530099","540000-540099","550000-550099"],
+  "training_seed_cohorts":{"A":[3701,3702,3703,3704,3705],"B":[3706,3707,3708,3709,3710]}
+}

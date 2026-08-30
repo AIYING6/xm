@@ -1,0 +1,61 @@
+{
+  "protocol": "DRTP-KLR-FINAL-REPLICATION-P0-V1",
+  "status": "PREPARED_NOT_AUTHORIZED",
+  "research_track": "B_only",
+  "mainline_a_modified": false,
+  "historical_context": {
+    "implementation_intro_commit": "3c17bf62",
+    "legacy_pilot_decision": "PILOT_NO_GO / FULL_ROLLBACK_KLR_CLOSED_UNDER_FROZEN_GATE",
+    "legacy_pilot_seeds": [3101, 3102, 3103],
+    "purpose": "one exact independent replication challenge; not KLR-v2 and not a parameter sweep"
+  },
+  "arms": {
+    "utr_sg": {"sampler": "utr", "policy_update_guard_mode": "none", "target_kl": null},
+    "drtp_sg": {"sampler": "drtp", "policy_update_guard_mode": "none", "target_kl": null},
+    "drtp_klr_sg": {"sampler": "drtp", "policy_update_guard_mode": "post_step_actor_rollback", "target_kl": 0.02}
+  },
+  "algorithm": {
+    "name": "Original DRTP plus Full-Rollback KLR",
+    "target_kl": 0.02,
+    "target_kl_formula": "clip_coef ** 2 / 2 with clip_coef=0.2",
+    "guard_semantics": "after each actor Adam step, compute full-rollout empirical KL mean((r-1)-log(r)); if KL > 0.02 restore actor parameters and actor optimizer slots, retain critic step, and stop remaining PPO epochs for the rollout",
+    "nonfinite_semantics": "restore full transaction and mark technical invalid",
+    "forbidden": ["sampler_trust_region", "uniform_anchor", "pp_drtp", "pr_drtp", "kl_backtracking", "confidence_gate", "ppo_tuning", "network_change", "reward_change"]
+  },
+  "cohorts": {
+    "A": [3701, 3702, 3703, 3704, 3705],
+    "B": [3706, 3707, 3708, 3709, 3710],
+    "independent_unit": "training_seed",
+    "must_be_reported_separately": true
+  },
+  "training": {
+    "updates": 1953,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "environment_steps": 499968,
+    "milestones": {"976": "250k", "1953": "500k"},
+    "early_stopping": false,
+    "checkpoint_promotion": false,
+    "seed_replacement": false,
+    "performance_rerun": false,
+    "automatic_continuation": false
+  },
+  "gate": {
+    "primary_endpoint": "J_pert_mean",
+    "epsilon_J": 7.874919837916801,
+    "epsilon_source": "DRTP-STABILIZATION-S0-V1 pooled P90 absolute same-checkpoint cross-tape endpoint variation",
+    "downside_improvement_margin": 7.874919837916801,
+    "pooled_safety_margin": 0.05,
+    "seed_condition_safety_margin": 0.1,
+    "maximum_intervention_rate": 0.1,
+    "minimum_intervention_count": 1,
+    "per_cohort_requirements": ["mean_retention", "worst_seed_improvement", "catastrophic_not_increased", "range_reduced", "sample_sd_reduced", "majority_not_worse", "upper_tail_retained", "safety", "integrity"],
+    "dual_cohort_rule": "both cohorts must pass independently; pooled n=10 is descriptive only"
+  },
+  "authorization": {
+    "p0_zero_training_only": true,
+    "training_authorized": false,
+    "checkpoint_evaluation_authorized": false,
+    "algorithm_modification_authorized": false
+  }
+}
