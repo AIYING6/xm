@@ -62,7 +62,7 @@
       "budget_m": 0.5,
       "intervention": "L1 trust region on q update",
       "paired_gains_original": [24.38357971102755, -18.019564155261037, -17.974643274202244],
-      "paired_gains_candidate": [36.25, 0.60, -21.38],
+      "paired_gains_candidate": [36.25294076072285, 0.6048581413377576, -21.382148652353784],
       "contribution": "Sampler step limiting preserved the upper tail but did not protect the worst seed."
     },
     {
@@ -103,8 +103,8 @@
       "seeds": "3101-3103",
       "budget_m": 0.5,
       "intervention": "post-step actor rollback on KL violation",
-      "paired_gains_original": [6.37, -24.16, 47.23],
-      "paired_gains_candidate": [37.81, 32.94, 28.45],
+      "paired_gains_original": [6.36737036960345, -24.155103747273095, 47.234081975868904],
+      "paired_gains_candidate": [37.81427015536115, 32.93793150402606, 28.44871141454787],
       "contribution": "Lower tail improved, but the high-yield seed lost fault-condition performance; the intervention preceded q divergence."
     },
     {
@@ -117,8 +117,8 @@
       "seeds": "3201-3203",
       "budget_m": 0.5,
       "intervention": "bounded KL backtracking",
-      "paired_gains_original": [-46.16, -7.87, -39.85],
-      "paired_gains_candidate": [-46.66, -31.34, -49.67],
+      "paired_gains_original": [-46.164629392583166, -7.868271326135144, -39.84648102236709],
+      "paired_gains_candidate": [-46.66166110427352, -31.341548810641978, -49.668821932706344],
       "contribution": "A gentler actor-update guard did not rescue any seed and worsened safety."
     },
     {
@@ -131,8 +131,8 @@
       "seeds": "3401-3403",
       "budget_m": 0.5,
       "intervention": "training-only paired probe for sampler evidence",
-      "paired_gains_original": [0.02, -10.74, -72.77],
-      "paired_gains_candidate": [10.81, -1.83, 22.14],
+      "paired_gains_original": [0.020259415334145103, -10.739540547361827, -72.77006698626326],
+      "paired_gains_candidate": [10.808312554507282, -1.8279032905318289, 22.136234959729492],
       "contribution": "Strong pilot rescue did not establish upper-tail retention because the cohort lacked a strong original upper tail."
     },
     {
@@ -145,8 +145,8 @@
       "seeds": "3501-3505",
       "budget_m": 0.5,
       "intervention": "independent paired-probe validation",
-      "paired_gains_original": [34.96, -11.42, 20.01, -8.15, 32.59],
-      "paired_gains_candidate": [11.09, -35.70, 30.30, 32.58, -10.82],
+      "paired_gains_original": [34.95712596395169, -11.417898203372019, 20.012513984650145, -8.149795064638603, 32.587955257205756],
+      "paired_gains_candidate": [11.09493990708026, -35.701275097525794, 30.304250352937085, 32.57698275028146, -10.8173431610805],
       "contribution": "Independent validation reversed the pilot: two catastrophic candidates, worse dispersion, and upper-tail loss."
     },
     {
