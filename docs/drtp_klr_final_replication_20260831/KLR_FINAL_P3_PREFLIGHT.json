@@ -1,0 +1,19 @@
+{
+  "status": "P3_PREFLIGHT_PASS",
+  "checks": {
+    "p0_audit_pass": true,
+    "seeds_clean": true,
+    "authorization_explicit": true,
+    "tape_hash": true,
+    "30_trajectories": true,
+    "budget": true,
+    "klr_exact": true
+  },
+  "hashes": {
+    "freeze": "ad8007c2b9bc64ba34eee3fe9f2de72fa23c1a43a32b74ee86465c1234b01048",
+    "tape": "3af1874ee4a6d6bc8290099c508c698c8e6460671e15ba0e6e857c76eb24a676",
+    "audit": "81218303efceb246f1c7d771abf848945900ecc712815f80335c9b230f323965",
+    "seeds": "87001a8462f6b94b70a1ae95201315d13f10fd9900803f1f5ac1457cc0c0d084"
+  },
+  "zero_training_preflight": true
+}

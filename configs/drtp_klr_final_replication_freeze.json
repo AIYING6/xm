@@ -53,9 +53,9 @@
     "dual_cohort_rule": "both cohorts must pass independently; pooled n=10 is descriptive only"
   },
   "authorization": {
-    "p0_zero_training_only": true,
-    "training_authorized": false,
-    "checkpoint_evaluation_authorized": false,
+    "p0_zero_training_only": false,
+    "training_authorized": true,
+    "checkpoint_evaluation_authorized": true,
     "algorithm_modification_authorized": false
   }
 }
