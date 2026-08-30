@@ -1,0 +1,11 @@
+﻿experiment_id,sampler_q_and_exposure,global_ppo_dynamics,failure_relative_behavior,milestone_endpoints,intervention_events,failure_group_value_residual,failure_group_advantage_distribution,failure_group_gradient_conflict
+B3_TELEMETRY,YES,YES,YES,NO,NO,NO,NO,NO
+H2_CONFIRMATION,YES,YES,YES,YES,NO,NO,NO,NO
+S1_TR,YES,YES,NO,YES,NO,NO,NO,NO
+S2_ANCHOR,YES,YES,NO,YES,NO,NO,NO,NO
+R1_CONSERVATIVE,YES,YES,NO,YES,NO,NO,NO,NO
+D3_KLR,YES,YES,NO,YES,YES,NO,NO,NO
+D5_KLB,YES,YES,NO,YES,YES,NO,NO,NO
+P3_PP,YES,YES,NO,YES,YES,NO,NO,NO
+P4_PP,YES,YES,NO,YES,YES,NO,NO,NO
+B4_SELECTOR,NO,NO,NO,YES,YES,NO,NO,NO

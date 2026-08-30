@@ -1,0 +1,228 @@
+{
+  "schema_version": "drtp-b5-atlas-v1",
+  "frozen_on": "2026-08-30",
+  "track": "B_only",
+  "mainline_a_modified": false,
+  "scientific_question": "Does failure-group-conditioned credit assignment exhibit a repeated, time-leading, DRTP-specific signature that explains lower-tail training failures across independent seeds?",
+  "decision": "B5_INSTRUMENTATION_ONLY_GO",
+  "algorithm_modification_authorized": false,
+  "training_authorized": false,
+  "independent_unit": "training_seed",
+  "technical_repetitions": [
+    "PPO updates",
+    "evaluation episodes",
+    "failure-group probe records"
+  ],
+  "source_documents": [
+    "docs/DRTP_B_LINE_B3_1M_MECHANISM_GATE_REPORT.md",
+    "docs/drtp_bline_h2/H2_ZERO_TRAINING_GATE_REPORT.md",
+    "docs/drtp_bline_h3/H3_PRIORITIZATION_REPORT.md",
+    "docs/drtp_bline_h3/remaining_hypothesis_space.md",
+    "docs/drtp_stable_r1_forensic_20260829/R1_STAGE2_INTERPRETATION.md",
+    "docs/drtp_stable_v2_d3_20260829/STABLE_V2_D3_FORENSIC_REPORT.md",
+    "docs/drtp_stable_v2_d6_20260830/D6_RESULT_FROM_D5_52a083ce/D6_FEEDBACK_FORENSIC_REPORT.md"
+  ],
+  "experiments": [
+    {
+      "id": "B3_TELEMETRY",
+      "archive": "drtp_b3_1m_results.tar.gz",
+      "sha256": "297bbe7753b6273882e8d010c8ac35d55766af417bda8074ed4017eadcf1e6ac",
+      "required_member": "drtp_b3/diagnostics/b3_1m_mechanism_gate/go_no_go.md",
+      "decision": "MECHANISM_HYPOTHESIS_NO_GO",
+      "arms": "UTR,Original DRTP",
+      "seeds": "2701-2703",
+      "budget_m": 1.0,
+      "intervention": "none; observational telemetry",
+      "paired_gains_original": [],
+      "paired_gains_candidate": [],
+      "contribution": "No 2/3 replicated sampler-to-exposure-to-behavior-to-outcome chain."
+    },
+    {
+      "id": "H2_CONFIRMATION",
+      "archive": "drtp_h2_confirmation_stage1_05m_results.tar.gz",
+      "sha256": "74667ad8504ca9c2d542efa5dccc5bd812543ec27de50042111674b88a6a1956",
+      "required_member": "docs/drtp_bline_h2_confirmation/H2_05M_GATE_REPORT.md",
+      "decision": "H2_NO_GO",
+      "arms": "UTR,Original DRTP",
+      "seeds": "2801-2805",
+      "budget_m": 0.5,
+      "intervention": "none; independent signature test",
+      "paired_gains_original": [],
+      "paired_gains_candidate": [],
+      "contribution": "Zero of five clean seeds reproduced the complete frozen early-failure signature."
+    },
+    {
+      "id": "S1_TR",
+      "archive": "drtp_stabilization_s1_05m_results.tar.gz",
+      "sha256": "2e4198c3a7f53efefc218f3b02b74f62688bec597bdaf889537f6cfe600a07ac",
+      "required_member": "drtp_stabilization_s1/diagnostics/s1_05m_gate/S1_05M_GATE_DECISION.json",
+      "decision": "S1_NO_GO",
+      "arms": "UTR,Original DRTP,DRTP-TR",
+      "seeds": "2901-2903",
+      "budget_m": 0.5,
+      "intervention": "L1 trust region on q update",
+      "paired_gains_original": [24.38357971102755, -18.019564155261037, -17.974643274202244],
+      "paired_gains_candidate": [36.25, 0.60, -21.38],
+      "contribution": "Sampler step limiting preserved the upper tail but did not protect the worst seed."
+    },
+    {
+      "id": "S2_ANCHOR",
+      "archive": "drtp_stabilization_s2_05m_results.tar.gz",
+      "sha256": "1c91360e5ac7e37876487442dce39fc9246a90717f9e2e0ad35808ebeee8e1f3",
+      "required_member": "drtp_stabilization_s2/diagnostics/s2_05m_gate/S2_05M_GATE_DECISION.json",
+      "decision": "S2_NO_GO / STABILIZATION_LINE_CLOSED",
+      "arms": "UTR,Original DRTP,Conservative DRTP",
+      "seeds": "2901-2903",
+      "budget_m": 0.5,
+      "intervention": "L1 trust region plus 20% uniform anchor",
+      "paired_gains_original": [24.38357971102755, -18.019564155261037, -17.974643274202244],
+      "paired_gains_candidate": [25.520223308573478, -8.834294083254647, -2.5529426436219325],
+      "contribution": "Removed the frozen catastrophic labels in this cohort but failed the preregistered reliability gate."
+    },
+    {
+      "id": "R1_CONSERVATIVE",
+      "archive": "drtp_stable_r1_1m_results.tar.gz",
+      "sha256": "a54406e8d2d14c4bc9fa25ea43388595c19f41d476631e1c743512c6c30c0b10",
+      "required_member": "drtp_stable_r1/diagnostics/stable_r1/gate/R1_GATE_DECISION.json",
+      "decision": "R1_NO_GO",
+      "arms": "UTR,Original DRTP,Conservative DRTP",
+      "seeds": "3001-3005",
+      "budget_m": 1.0,
+      "intervention": "frozen trust region plus uniform anchor",
+      "paired_gains_original": [-68.89361682115239, -0.36990941601455773, 18.88439329077606, 30.824502188357883, 35.3539625270723],
+      "paired_gains_candidate": [-78.3143700613, 19.711813981952147, -7.947413955028168, -26.698145692204122, 58.34410368851269],
+      "contribution": "Independent five-seed replication reversed the apparent S2 protection and increased dispersion."
+    },
+    {
+      "id": "D3_KLR",
+      "archive": "drtp_stable_v2_pilot_05m_results.tar.gz",
+      "sha256": "ac3e93c5c48e02fef605a23e8328b33f14b2ae4eb4372c44ffc2a80d48fdb7a0",
+      "required_member": "drtp_stable_v2_pilot/diagnostics/stable_v2_pilot_gate/PILOT_GATE_DECISION.json",
+      "decision": "PILOT_NO_GO",
+      "arms": "UTR,Original DRTP,DRTP-KLR",
+      "seeds": "3101-3103",
+      "budget_m": 0.5,
+      "intervention": "post-step actor rollback on KL violation",
+      "paired_gains_original": [6.37, -24.16, 47.23],
+      "paired_gains_candidate": [37.81, 32.94, 28.45],
+      "contribution": "Lower tail improved, but the high-yield seed lost fault-condition performance; the intervention preceded q divergence."
+    },
+    {
+      "id": "D5_KLB",
+      "archive": "drtp_stable_v2_d5_pilot_05m_results.tar.gz",
+      "sha256": "52a083cee2ce4dadff49ba9d8763741b45a3280f7b9b0f490a04f3842dc4a5b8",
+      "required_member": "drtp_stable_v2_d5_pilot/diagnostics/stable_v2_d5_pilot_gate/D5_PILOT_GATE_DECISION.json",
+      "decision": "D5_PILOT_NO_GO",
+      "arms": "UTR,Original DRTP,DRTP-KLB",
+      "seeds": "3201-3203",
+      "budget_m": 0.5,
+      "intervention": "bounded KL backtracking",
+      "paired_gains_original": [-46.16, -7.87, -39.85],
+      "paired_gains_candidate": [-46.66, -31.34, -49.67],
+      "contribution": "A gentler actor-update guard did not rescue any seed and worsened safety."
+    },
+    {
+      "id": "P3_PP",
+      "archive": "pp_drtp_p3_pilot_05m_results.tar.gz",
+      "sha256": "5fd150cc1494b039ecee282091646ac64850d470b4d469147ccbe8337877b38d",
+      "required_member": "pp_drtp_p3_pilot/diagnostics/pp_p3_gate/PP_P3_GATE_DECISION.json",
+      "decision": "PP_PILOT_NO_GO",
+      "arms": "UTR,Original DRTP,PP-DRTP",
+      "seeds": "3401-3403",
+      "budget_m": 0.5,
+      "intervention": "training-only paired probe for sampler evidence",
+      "paired_gains_original": [0.02, -10.74, -72.77],
+      "paired_gains_candidate": [10.81, -1.83, 22.14],
+      "contribution": "Strong pilot rescue did not establish upper-tail retention because the cohort lacked a strong original upper tail."
+    },
+    {
+      "id": "P4_PP",
+      "archive": "pp_drtp_p4_validation_05m_results.tar.gz",
+      "sha256": "46313649ef01fac1e14366c3512ac04a392b35839a1aec8bbda69bedbc90f618",
+      "required_member": "pp_drtp_p4_validation/diagnostics/pp_p4_gate/PP_P4_GATE_DECISION.json",
+      "decision": "P4_NO_GO",
+      "arms": "UTR,Original DRTP,PP-DRTP",
+      "seeds": "3501-3505",
+      "budget_m": 0.5,
+      "intervention": "independent paired-probe validation",
+      "paired_gains_original": [34.96, -11.42, 20.01, -8.15, 32.59],
+      "paired_gains_candidate": [11.09, -35.70, 30.30, 32.58, -10.82],
+      "contribution": "Independent validation reversed the pilot: two catastrophic candidates, worse dispersion, and upper-tail loss."
+    },
+    {
+      "id": "B4_SELECTOR",
+      "archive": "pr_drtp_b4_zero_training_feasibility_results.tar.gz",
+      "sha256": "da3a8c0c213ceef408b1ea04515c8d7f72a8ed67469dc4ed9c55cbb019e7ccc6",
+      "required_member": "pr_drtp_b4/diagnostics/pr_b4_feasibility/PR_DRTP_B4_FEASIBILITY_DECISION.json",
+      "decision": "PR_FEASIBILITY_NO_GO",
+      "arms": "UTR,Original DRTP,checkpoint population selector",
+      "seeds": "existing five-seed population",
+      "budget_m": 0.0,
+      "intervention": "zero-training maximin checkpoint selection",
+      "paired_gains_original": [],
+      "paired_gains_candidate": [],
+      "contribution": "The selector predicted absolute outcome but did not reliably preserve paired advantage over UTR."
+    }
+  ],
+  "telemetry_dimensions": [
+    "sampler_q_and_exposure",
+    "global_ppo_dynamics",
+    "failure_relative_behavior",
+    "milestone_endpoints",
+    "intervention_events",
+    "failure_group_value_residual",
+    "failure_group_advantage_distribution",
+    "failure_group_gradient_conflict"
+  ],
+  "candidate_hypotheses": [
+    {
+      "rank": 1,
+      "name": "failure_group_conditioned_credit_assignment",
+      "status": "UNOBSERVED_ACTIONABLE_HYPOTHESIS",
+      "support": "Fault-conditional upper-tail loss can occur without nominal collapse; global sampler and PPO guards have not generalized.",
+      "missing": "Per-group value residuals, advantages, and actor/critic gradient conflict before divergence."
+    },
+    {
+      "rank": 2,
+      "name": "generic_mappo_basin_sensitivity",
+      "status": "NULL_HYPOTHESIS",
+      "support": "Divergence timing and failure modes are heterogeneous, and no repeated DRTP-specific precursor has survived confirmation.",
+      "missing": "A same-seed UTR control with identical group-conditioned telemetry."
+    },
+    {
+      "rank": 3,
+      "name": "sampler_distribution_instability",
+      "status": "CLOSED_AS_SINGLE_SUFFICIENT_CAUSE",
+      "support": "TR, anchor, paired probe, and population selection each failed independent generalization.",
+      "missing": "None sufficient to justify another sampler-only patch."
+    },
+    {
+      "rank": 4,
+      "name": "global_actor_kl_instability",
+      "status": "CLOSED_AS_SINGLE_SUFFICIENT_CAUSE",
+      "support": "KLR rescued the lower tail but damaged fault-conditioned upper-tail performance; KLB failed all pilot seeds.",
+      "missing": "Global KL alone cannot localize group-conditioned credit conflict."
+    }
+  ],
+  "observational_cohort": {
+    "status": "PREP_ONLY_NOT_AUTHORIZED",
+    "arms": ["utr_sg", "drtp_sg"],
+    "provisional_seeds": [3601, 3602, 3603, 3604, 3605],
+    "seed_status": "provisionally clean by repository filename and source-text audit; archive-content audit required before freeze",
+    "ceiling_env_steps": 1000192,
+    "milestones_env_steps": [250112, 499968, 750080, 1000192],
+    "paired": true,
+    "algorithm_changes": false,
+    "stage_05m_decision": "descriptive checkpoint only; no performance stop",
+    "reason_for_1m_ceiling": "Existing R1 failures first appeared between 0.75M and 1M, so 0.5M cannot falsify the candidate mechanism.",
+    "mechanism_go": [
+      "signal precedes endpoint degradation",
+      "same-direction pattern in at least two of five adverse DRTP seeds",
+      "matched UTR lacks an equally strong pattern",
+      "at least two middle-layer indicators support the credit-assignment layer",
+      "optimization-to-behavior/task-support-to-outcome chain is continuous",
+      "conclusion is robust to preregistered neighboring thresholds"
+    ],
+    "mechanism_no_go": "If the complete signature is absent by 1M, close B-line algorithm development; do not invent another patch."
+  }
+}

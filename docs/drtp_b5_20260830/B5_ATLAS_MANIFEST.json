@@ -1,0 +1,137 @@
+{
+  "schema_version": "drtp-b5-atlas-v1",
+  "decision": "B5_INSTRUMENTATION_ONLY_GO",
+  "training_started": false,
+  "algorithm_modification_authorized": false,
+  "mainline_a_modified": false,
+  "archive_audit": [
+    {
+      "experiment_id": "B3_TELEMETRY",
+      "archive": "drtp_b3_1m_results.tar.gz",
+      "sha256": "297bbe7753b6273882e8d010c8ac35d55766af417bda8074ed4017eadcf1e6ac",
+      "required_member": "drtp_b3/diagnostics/b3_1m_mechanism_gate/go_no_go.md",
+      "decision": "MECHANISM_HYPOTHESIS_NO_GO",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "H2_CONFIRMATION",
+      "archive": "drtp_h2_confirmation_stage1_05m_results.tar.gz",
+      "sha256": "74667ad8504ca9c2d542efa5dccc5bd812543ec27de50042111674b88a6a1956",
+      "required_member": "docs/drtp_bline_h2_confirmation/H2_05M_GATE_REPORT.md",
+      "decision": "H2_NO_GO",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "S1_TR",
+      "archive": "drtp_stabilization_s1_05m_results.tar.gz",
+      "sha256": "2e4198c3a7f53efefc218f3b02b74f62688bec597bdaf889537f6cfe600a07ac",
+      "required_member": "drtp_stabilization_s1/diagnostics/s1_05m_gate/S1_05M_GATE_DECISION.json",
+      "decision": "S1_NO_GO",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "S2_ANCHOR",
+      "archive": "drtp_stabilization_s2_05m_results.tar.gz",
+      "sha256": "1c91360e5ac7e37876487442dce39fc9246a90717f9e2e0ad35808ebeee8e1f3",
+      "required_member": "drtp_stabilization_s2/diagnostics/s2_05m_gate/S2_05M_GATE_DECISION.json",
+      "decision": "S2_NO_GO / STABILIZATION_LINE_CLOSED",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "R1_CONSERVATIVE",
+      "archive": "drtp_stable_r1_1m_results.tar.gz",
+      "sha256": "a54406e8d2d14c4bc9fa25ea43388595c19f41d476631e1c743512c6c30c0b10",
+      "required_member": "drtp_stable_r1/diagnostics/stable_r1/gate/R1_GATE_DECISION.json",
+      "decision": "R1_NO_GO",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "D3_KLR",
+      "archive": "drtp_stable_v2_pilot_05m_results.tar.gz",
+      "sha256": "ac3e93c5c48e02fef605a23e8328b33f14b2ae4eb4372c44ffc2a80d48fdb7a0",
+      "required_member": "drtp_stable_v2_pilot/diagnostics/stable_v2_pilot_gate/PILOT_GATE_DECISION.json",
+      "decision": "PILOT_NO_GO",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "D5_KLB",
+      "archive": "drtp_stable_v2_d5_pilot_05m_results.tar.gz",
+      "sha256": "52a083cee2ce4dadff49ba9d8763741b45a3280f7b9b0f490a04f3842dc4a5b8",
+      "required_member": "drtp_stable_v2_d5_pilot/diagnostics/stable_v2_d5_pilot_gate/D5_PILOT_GATE_DECISION.json",
+      "decision": "D5_PILOT_NO_GO",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "P3_PP",
+      "archive": "pp_drtp_p3_pilot_05m_results.tar.gz",
+      "sha256": "5fd150cc1494b039ecee282091646ac64850d470b4d469147ccbe8337877b38d",
+      "required_member": "pp_drtp_p3_pilot/diagnostics/pp_p3_gate/PP_P3_GATE_DECISION.json",
+      "decision": "PP_PILOT_NO_GO",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "P4_PP",
+      "archive": "pp_drtp_p4_validation_05m_results.tar.gz",
+      "sha256": "46313649ef01fac1e14366c3512ac04a392b35839a1aec8bbda69bedbc90f618",
+      "required_member": "pp_drtp_p4_validation/diagnostics/pp_p4_gate/PP_P4_GATE_DECISION.json",
+      "decision": "P4_NO_GO",
+      "integrity": "PASS"
+    },
+    {
+      "experiment_id": "B4_SELECTOR",
+      "archive": "pr_drtp_b4_zero_training_feasibility_results.tar.gz",
+      "sha256": "da3a8c0c213ceef408b1ea04515c8d7f72a8ed67469dc4ed9c55cbb019e7ccc6",
+      "required_member": "pr_drtp_b4/diagnostics/pr_b4_feasibility/PR_DRTP_B4_FEASIBILITY_DECISION.json",
+      "decision": "PR_FEASIBILITY_NO_GO",
+      "integrity": "PASS"
+    }
+  ],
+  "source_document_audit": [
+    {
+      "path": "docs/DRTP_B_LINE_B3_1M_MECHANISM_GATE_REPORT.md",
+      "sha256": "1f40899a4e562bcd737dfee9d2d2b1c9ec8cc6d884fe552cb63b283967ce2fa1",
+      "integrity": "PASS"
+    },
+    {
+      "path": "docs/drtp_bline_h2/H2_ZERO_TRAINING_GATE_REPORT.md",
+      "sha256": "79df84f7e79e4063c851ac2f6e4b4d88519e92257b54d52c5e9badbb0ea0649d",
+      "integrity": "PASS"
+    },
+    {
+      "path": "docs/drtp_bline_h3/H3_PRIORITIZATION_REPORT.md",
+      "sha256": "fe9bdd2f024a8edb41e4e03b03226cc75d1ab43a90260331cbf508d12218c34b",
+      "integrity": "PASS"
+    },
+    {
+      "path": "docs/drtp_bline_h3/remaining_hypothesis_space.md",
+      "sha256": "9e636a5efc16d992966ad52b1d2f58d7b903f4dd5b78d8e684c8b1bb7591bdac",
+      "integrity": "PASS"
+    },
+    {
+      "path": "docs/drtp_stable_r1_forensic_20260829/R1_STAGE2_INTERPRETATION.md",
+      "sha256": "ed873d86444a6d3835efa79fd5629f8bcd68d8b9f7b23cc3cd578e80d0f5a372",
+      "integrity": "PASS"
+    },
+    {
+      "path": "docs/drtp_stable_v2_d3_20260829/STABLE_V2_D3_FORENSIC_REPORT.md",
+      "sha256": "fe73c56ab03ebfa202c6af298115792e9c74769e10ae51e81589426e688ffdaf",
+      "integrity": "PASS"
+    },
+    {
+      "path": "docs/drtp_stable_v2_d6_20260830/D6_RESULT_FROM_D5_52a083ce/D6_FEEDBACK_FORENSIC_REPORT.md",
+      "sha256": "d1e494e5258b03374ed37645619776ea5a6db5dcd1cdc42d27487ba4166730e9",
+      "integrity": "PASS"
+    }
+  ],
+  "artifacts": {
+    "run_registry.csv": "6f0fa7ab226f6feb17b3e5ac4a5d8bebe30c70311f56be9e1df888a928341906",
+    "intervention_evidence_matrix.csv": "b301c4522fea2fed659b4197269a71a36eedc20ab69e42d5a164858118001e8a",
+    "telemetry_availability_matrix.csv": "793c64d392c89af228e1a9dd130dcce8a27c16d12ed2d9f075d4eaeeca98f486",
+    "candidate_signal_ranking.csv": "345e5d2ea142474e3237c8f2b761b9055b8ea8b8cf4c6a5f85bb3e1f5747cce4",
+    "mechanism_chain_evidence.md": "f48717c4c1d4a71eb72b8ceb31097e1ddfe4a19456697289e62b4219d221e42c",
+    "missing_evidence.md": "c1bdd02b51424b2b54540026b97def78b24224de3954176fbb2351fc1dae7eae",
+    "B5_GO_NO_GO.md": "ccd78193b3465c7f9839da007846527206cba8e34cd9670f0c9f5d00ded60110",
+    "B5_OBSERVATIONAL_COHORT_CONTRACT.md": "81a64f2d5b4504f94579ceabd8243eb7b6bdba0c9dde3f8107a9a979b5c00d84",
+    "B5_EXECUTIVE_PLAN_ZH.md": "200575d2b7b40108f662e48be0fef7ebae098e5f7d304eb5b2734748f0bdaab6"
+  }
+}

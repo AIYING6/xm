@@ -1,0 +1,5 @@
+﻿rank,name,status,support,missing
+1,failure_group_conditioned_credit_assignment,UNOBSERVED_ACTIONABLE_HYPOTHESIS,Fault-conditional upper-tail loss can occur without nominal collapse; global sampler and PPO guards have not generalized.,"Per-group value residuals, advantages, and actor/critic gradient conflict before divergence."
+2,generic_mappo_basin_sensitivity,NULL_HYPOTHESIS,"Divergence timing and failure modes are heterogeneous, and no repeated DRTP-specific precursor has survived confirmation.",A same-seed UTR control with identical group-conditioned telemetry.
+3,sampler_distribution_instability,CLOSED_AS_SINGLE_SUFFICIENT_CAUSE,"TR, anchor, paired probe, and population selection each failed independent generalization.",None sufficient to justify another sampler-only patch.
+4,global_actor_kl_instability,CLOSED_AS_SINGLE_SUFFICIENT_CAUSE,KLR rescued the lower tail but damaged fault-conditioned upper-tail performance; KLB failed all pilot seeds.,Global KL alone cannot localize group-conditioned credit conflict.
