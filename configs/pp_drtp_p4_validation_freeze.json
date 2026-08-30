@@ -1,0 +1,16 @@
+{
+  "protocol": "PP-DRTP-P4-INDEPENDENT-VALIDATION-FREEZE-V1",
+  "arms": ["utr_sg", "drtp_sg", "pp_drtp_sg"],
+  "training_seeds": [3501, 3502, 3503, 3504, 3505],
+  "updates": 1953,
+  "environment_steps_per_trajectory": 499968,
+  "pp_probe_count": 4,
+  "epsilon_J": 7.874919837916801,
+  "minimum_original_upper_tail_seeds": 2,
+  "minimum_nonnegative_pp_gains": 4,
+  "pooled_safety_margin": 0.05,
+  "seed_condition_safety_margin": 0.10,
+  "checkpoint_selection": "common_final_500k_only",
+  "max_parallel": 15,
+  "automatic_continuation": false
+}

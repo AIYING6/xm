@@ -1,0 +1,29 @@
+{
+  "status": "P4_READY_FOR_CLOUD_EXECUTION",
+  "mainline": "B_only",
+  "mainline_a_modified": false,
+  "p3_decision_preserved": "PP_PILOT_NO_GO",
+  "candidate_changed_since_p3": false,
+  "training_seeds": [3501, 3502, 3503, 3504, 3505],
+  "seed_provenance": "clean_exact_path_and_seed_field_search",
+  "trajectories": 15,
+  "updates_per_trajectory": 1953,
+  "environment_steps_per_trajectory": 499968,
+  "automatic_continuation": false,
+  "hashes": {
+    "configs/pp_drtp_p4_validation_tape.json": "0aeee7937bace064100475d4ccd42080ce11d7978dc279beb5fe7f9fc4d18e5b",
+    "configs/pp_drtp_p4_validation_freeze.json": "854b7c617323353f9347dc9074e251b050f1f193ca8a9b6699cb79c2408d7867",
+    "scripts/run_pp_drtp_p4_single.py": "f2026029bc78d858f124a67e05ad42465ccec92d61afcc3976ad0b2412c7c7cd",
+    "scripts/run_pp_drtp_p4_evaluation.py": "a433a8c4f0bcef9320f9f45851f874267cae056a46cd504fcaa0f5b58d2feaf2",
+    "scripts/aggregate_pp_drtp_p4.py": "76f0a4149cf4f7b68f6715e96866d8126c4758916a87ed520432291d7170af1e",
+    "scripts/launch_pp_drtp_p4_autodl.sh": "0b2fec404748f06b41a17cc0e1114cb7ff5c00d0e03bed36b6934d69dc7d3ecb",
+    "docs/drtp_stable_v2_d10_20260830/PP_DRTP_P4_INDEPENDENT_VALIDATION_CONTRACT.md": "ca2b44916a014f31ed1e923de647e7d9a73d52e4d0ae74089040f4c069b2707c"
+  },
+  "verification": {
+    "python_compile": "PASS",
+    "pytest": "7 passed",
+    "bash_syntax": "PASS",
+    "tape_disjoint_from_p3": true,
+    "pp_is_only_training_method_change": true
+  }
+}
