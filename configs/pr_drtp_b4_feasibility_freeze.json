@@ -1,0 +1,68 @@
+{
+  "protocol": "PR-DRTP-B4-ZERO-TRAINING-FEASIBILITY-FREEZE-V1",
+  "status": "FROZEN_BEFORE_NEW_TAPE_EVALUATION",
+  "mainline": "B",
+  "mainline_a_modified": false,
+  "training_authorized": false,
+  "checkpoint_budget_updates": 1953,
+  "checkpoint_budget_environment_steps": 499968,
+  "checkpoint_label": "final_500k",
+  "epsilon_J": 7.874919837916801,
+  "selector_tape_sha256": "d0f23bec41e04f1680672236a7fcbc7cb4a8814c636e335bddcadbec3443c060",
+  "outcome_tape_sha256": "f22489d62468a11676e18e6d40f53ef9c9dd08a11d4c5e9343d65dc11b361c9f",
+  "cohort_inclusion_rule": "chronological eligible 0.5M cohorts; first three numerically sorted paired seeds per cohort",
+  "excluded_known_eligible_seeds": [3504, 3505],
+  "exclusion_reason": "P4 contains five seeds; fixed equal-three-per-cohort rule retains 3501-3503 without using outcomes",
+  "population_size": 3,
+  "independent_unit": "deterministically frozen three-member population",
+  "populations": [
+    {"population": "P1", "members": [2901, 3403, 3502], "baseline_seed": 2901},
+    {"population": "P2", "members": [2902, 3101, 3503], "baseline_seed": 3101},
+    {"population": "P3", "members": [2903, 3102, 3201], "baseline_seed": 3201},
+    {"population": "P4", "members": [3103, 3202, 3401], "baseline_seed": 3401},
+    {"population": "P5", "members": [3203, 3402, 3501], "baseline_seed": 3501}
+  ],
+  "selection_rule": {
+    "eligible": "constraint_violation mean equals zero in every selector condition",
+    "primary": "maximum minimum condition-level mean mission score across seven training-support conditions",
+    "tie_break_1": "maximum arithmetic mean across the seven condition-level means",
+    "tie_break_2": "lowest numeric training seed",
+    "outcome_data_used": false,
+    "parameter_sweep": false
+  },
+  "feasibility_gate": {
+    "advantage_retention": "selected population means for J_nominal, J_F0, J_pert_mean and J_pert_worst are each no more than epsilon_J below frozen baseline means",
+    "downside_protection": "worst selected paired J_pert_mean gain exceeds worst baseline gain by more than epsilon_J; selected catastrophic count is zero and no greater than baseline",
+    "seed_reliability": "range and sample SD of the five selected paired gains are both below those of the five frozen baseline gains",
+    "direction_consistency": "at least four of five selected paired gains are nonnegative",
+    "upper_tail": "at least two baseline gains exceed epsilon_J and each corresponding selected population output is no more than epsilon_J below that baseline J_pert_mean",
+    "safety": "pooled failure collision and timeout deltas versus the selected model's paired UTR are <=0.05; every selected population/condition delta is <=0.10; all constraint violations equal zero",
+    "integrity": "all 30 checkpoints match frozen hashes; selector and outcome tapes are disjoint; selector has no outcome access; all cells complete"
+  },
+  "decisions": ["PR_FEASIBILITY_GO", "PR_FEASIBILITY_NO_GO", "PR_FEASIBILITY_TECHNICAL_INVALID"],
+  "go_authorizes": "prospective contract design only; no claim of a stable algorithm and no automatic training",
+  "source_archives": [
+    {"name": "drtp_stabilization_s1_05m_results.tar.gz", "root": "drtp_stabilization_s1", "cohort": "s1_2900", "sha256": "2e4198c3a7f53efefc218f3b02b74f62688bec597bdaf889537f6cfe600a07ac", "seeds": [2901, 2902, 2903]},
+    {"name": "drtp_stable_v2_pilot_05m_results.tar.gz", "root": "drtp_stable_v2_pilot", "cohort": "v2_3100", "sha256": "ac3e93c5c48e02fef605a23e8328b33f14b2ae4eb4372c44ffc2a80d48fdb7a0", "seeds": [3101, 3102, 3103]},
+    {"name": "drtp_stable_v2_d5_pilot_05m_results.tar.gz", "root": "drtp_stable_v2_d5_pilot", "cohort": "d5_3200", "sha256": "52a083cee2ce4dadff49ba9d8763741b45a3280f7b9b0f490a04f3842dc4a5b8", "seeds": [3201, 3202, 3203]},
+    {"name": "pp_drtp_p3_pilot_05m_results.tar.gz", "root": "pp_drtp_p3_pilot", "cohort": "p3_3400", "sha256": "5fd150cc1494b039ecee282091646ac64850d470b4d469147ccbe8337877b38d", "seeds": [3401, 3402, 3403]},
+    {"name": "pp_drtp_p4_validation_05m_results.tar.gz", "root": "pp_drtp_p4_validation", "cohort": "p4_3500", "sha256": "46313649ef01fac1e14366c3512ac04a392b35839a1aec8bbda69bedbc90f618", "seeds": [3501, 3502, 3503]}
+  ],
+  "checkpoints": [
+    {"cohort": "s1_2900", "seed": 2901, "utr_sha256": "60c60b09550c6fa85c16b3d3605457987cc7a6b9b091ea040baa3dd16698a6d6", "drtp_sha256": "59f3d92c4440e15da53e356dc244c7c7c1f80345f96b40721c6c31ccb969d947"},
+    {"cohort": "s1_2900", "seed": 2902, "utr_sha256": "8c6bbda5992f0d85ab1abf64a54ae4d5ad50bec919b5eefd06da793ea7f7baba", "drtp_sha256": "4161b88342967d98d2663b6ea1dbd8bbdaff981744d07264dd6e6664a807abde"},
+    {"cohort": "s1_2900", "seed": 2903, "utr_sha256": "05fdf41c95bd9933c662641ecbf9853dee93679c4b233e3abd7b155adda85d15", "drtp_sha256": "6d9a094dd83171af7602a24cbe8a39daef19e9434a1b1cb6c98b6ed9ea4b1ef9"},
+    {"cohort": "v2_3100", "seed": 3101, "utr_sha256": "b1171cb07392eaf67c8709779c663aaec36f51114cd6537588df3fdb8cfd5bdb", "drtp_sha256": "37ee825b9bf80ab02d21974f9d2f94a8ee72123dc6a9cff4a5e51918b44c632f"},
+    {"cohort": "v2_3100", "seed": 3102, "utr_sha256": "f4e31b137a0f1d7e192d87ebe73c883ec9c94b7cb65003bdf722b010647d80a5", "drtp_sha256": "38f73890b4bf389425bc8c133365cac237fb0be0985144c7ebc892ee86702282"},
+    {"cohort": "v2_3100", "seed": 3103, "utr_sha256": "83c37cbfe04db3971828415886584747cef19fe1fde28f2d3363bc91504e9f55", "drtp_sha256": "11a6ecc0c9b910d5190aabccfffec2dde8fef75f3965390e4552356ada56f56a"},
+    {"cohort": "d5_3200", "seed": 3201, "utr_sha256": "c323795fe63783bbe59c17175847af7744dc4004a7ccaabba44669c1264ea453", "drtp_sha256": "5f0822fb00661a2f3d177c1c81c5c1532e23d5a496bb1d4d800a5ce3184088f5"},
+    {"cohort": "d5_3200", "seed": 3202, "utr_sha256": "5335ab38ea79ea4348adc35a0d247514e608e4e383b3f55b76b7679ff2cb8996", "drtp_sha256": "a8d55e6464a9ac92ebf46de0a3dea8ff01e708201726c0902fe404cccaabdbc9"},
+    {"cohort": "d5_3200", "seed": 3203, "utr_sha256": "3195b36269bcc5e0f3479cd4431bf8bcc73e2785e7e96e0af7ac92080129f43e", "drtp_sha256": "5a20894bff84af4e057761dac2ae12f2202f32efa9f73a0014971b59b34c7c94"},
+    {"cohort": "p3_3400", "seed": 3401, "utr_sha256": "c8284f8025ef9124d907e43a5a5f84ed20d4c897096d55c1af3c1a3b3320bb28", "drtp_sha256": "3d972001bf7cfa0795a6af9d5bef26392dc4a688e9d4c8ee2cd9cbeedeb59d63"},
+    {"cohort": "p3_3400", "seed": 3402, "utr_sha256": "892339720d982e80862202365fdb7b7e6598ec8e69982c5fd64082a58f1a5c73", "drtp_sha256": "1168893c2650468bc359531eb043e5a5fb3a478e9e9965a0e307694e6dc3e5cd"},
+    {"cohort": "p3_3400", "seed": 3403, "utr_sha256": "cd2ddd0c47db291ad16cad1aa70c5ba0f7716ceaee57aaae64b5d57914961356", "drtp_sha256": "9ae021915bf347dbb9856ae1dd4f3a56cec1ca21ec8133ddcf3d441f0d422cae"},
+    {"cohort": "p4_3500", "seed": 3501, "utr_sha256": "8efb35f15e5739629ff43de98a50dcfe0f142e8d1f6dffb93c869206fdf706e9", "drtp_sha256": "b38e17186b83e1b0a6237a623ebec81657ce62a20f209a214f29e60a4c0a073f"},
+    {"cohort": "p4_3500", "seed": 3502, "utr_sha256": "527710a30f7018c4e8f4fcf609e658609f4a66f94ad2be6beed36cfc14c70a0b", "drtp_sha256": "3cb9c8cf7fd2fcbbc14e080bf4dd6bc9c92501ada81497a0c8193992ab24efa9"},
+    {"cohort": "p4_3500", "seed": 3503, "utr_sha256": "402dddb93ceabb18a53d11856d232d21f3ae2f638c9d95933d098cf64134ca66", "drtp_sha256": "3fef9efe1927556daacdda23da2bd2ccd98eff96000f6b3ef86da7f62ebfb089"}
+  ]
+}
