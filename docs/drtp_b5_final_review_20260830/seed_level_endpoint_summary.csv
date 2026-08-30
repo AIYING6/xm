@@ -1,0 +1,2 @@
+n_training_seeds,wins,mean_gain,median_gain,sample_sd,minimum_gain,maximum_gain,adverse_seeds,independent_unit
+5,4,22.78911912195594,39.685337960398755,49.77967071649464,-53.44077247767243,78.9836123038223,3605,training_seed

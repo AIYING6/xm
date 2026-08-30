@@ -1,0 +1,15 @@
+{
+  "status": "B5_MECHANISM_NO_GO",
+  "hypothesis": "failure-group-conditioned credit-assignment mechanism",
+  "integrity": true,
+  "all_frozen_criteria_pass": false,
+  "mechanism_declared": false,
+  "algorithm_modification_authorized": false,
+  "automatic_continuation_authorized": false,
+  "final_paired_adverse_seeds": [
+    3605
+  ],
+  "independent_unit": "training_seed",
+  "mainline_a_modified": false,
+  "scientific_boundary": "This closes the frozen B5 credit-assignment mechanism hypothesis; it does not erase the observed DRTP upper-tail gains."
+}

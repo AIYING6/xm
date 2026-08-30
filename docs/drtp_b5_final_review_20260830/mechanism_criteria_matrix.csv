@@ -1,0 +1,7 @@
+criterion,pass,reason
+temporal_precedence,False,No direction-consistent candidate precedes the adverse 1M endpoint across milestones.
+replication_at_least_2_of_5_adverse_seeds,False,Only 1 final paired-adverse seed exists ([3605]); the frozen replication requirement cannot be met.
+paired_utr_specificity,False,Credit/conflict and training-behavior contrasts are mixed and are not uniquely stronger in a repeated DRTP failure subset.
+two_non_equivalent_middle_layer_indicators,False,No replicated adverse subset supports two aligned credit-assignment indicators.
+continuous_optimization_behavior_outcome_chain,False,Transient endpoint reversals and changing signal directions break a continuous time-leading chain.
+neighboring_threshold_robustness,False,There is no complete candidate signature to test at 0.50/0.75/1.00; this requirement is therefore not satisfied.
