@@ -1,8 +1,8 @@
 # SR-DRTP P0 contract
 
-**Status:** `P0_IMPLEMENTATION_AND_TECHNICAL_AUDIT_ONLY`  
-**Mainline A:** `FROZEN / UNCHANGED`  
-**Long training:** `NOT AUTHORIZED`  
+**Status:** `P0_IMPLEMENTATION_AND_TECHNICAL_AUDIT_ONLY`
+**Mainline A:** `FROZEN / UNCHANGED`
+**Long training:** `NOT AUTHORIZED`
 **Algorithm activation:** `NOT AUTHORIZED`
 
 ## Scientific question
