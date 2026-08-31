@@ -1,0 +1,55 @@
+{
+  "protocol": "RELIABILITY-ENSEMBLE-P1-PREFLIGHT-V1",
+  "verdict": "RELIABILITY_ENSEMBLE_P1_PREFLIGHT_PASS",
+  "zero_training": true,
+  "checkpoints_loaded": false,
+  "rollouts_started": false,
+  "evaluation_started": false,
+  "distillation_started": false,
+  "mainline_a_modified": false,
+  "tensor_checks": {
+    "one_member_probability_equivalence": true,
+    "one_member_deterministic_action_equivalence": true,
+    "pooled_simplex": true,
+    "pooled_nonnegative": true,
+    "member_order_invariance": true,
+    "pooled_action_shape": true,
+    "member_shape_rejection": true
+  },
+  "candidate_seed_audit": {
+    "seeds": [
+      4601,
+      4602,
+      4603,
+      4604,
+      4605,
+      4606,
+      4607,
+      4608,
+      4609,
+      4610,
+      4611,
+      4612,
+      4613,
+      4614,
+      4615,
+      4616,
+      4617,
+      4618,
+      4619
+    ],
+    "files_scanned": 1100,
+    "seed_identifier_hits": {},
+    "scope": "algorithms, configs, docs, envs, paper, scripts; cloud archives and result bundles still require a launch-time provenance audit"
+  },
+  "implementation_boundary": {
+    "aggregation": "uniform categorical probability average followed by pooled deterministic argmax",
+    "training_side_tape_access": "not implemented; any future training entry point must reject all evaluation tape identifiers",
+    "distillation": "not implemented and not authorized",
+    "historical_interfaces_changed": false
+  },
+  "source_hashes": {
+    "algorithms/ri_gmappo/reliability_ensemble.py": "3f86ef68baf4c14c5cd7976bfe0628ec5bb01d04086f4a025d18137ae1a5238d",
+    "scripts/preflight_reliable_drtp_ensemble_p1.py": "3425ae074825a084a13137175996c39ba0a5a5e973d9f34369db519c1d25925c"
+  }
+}
