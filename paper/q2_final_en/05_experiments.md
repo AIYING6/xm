@@ -1,0 +1,61 @@
+# 5. Experimental protocol and results
+
+## 5.1 Evidence hierarchy and formal protocol
+
+The primary causal comparison was between DRTP and Uniform Topology Randomization Single-Graph MAPPO (UTR). The two arms used the same 116,728-parameter actor--critic backbone, PPO hyperparameters, environment, reward, seven training groups, 50% nominal-condition anchor, training budget, and execution-time information boundary. They differed only in whether the six failure/topology groups were sampled uniformly or with bounded adaptive weights. This comparison therefore estimates the empirical effect of adaptive reweighting relative to uniform reweighting in the frozen task. It does not test whether online adaptation is necessary relative to every fixed non-uniform distribution, or whether DRTP ranks above every external algorithm.
+
+The prospective formal cohort comprised paired training seeds 2301--2305. Each UTR and DRTP trajectory was trained from scratch to a single final checkpoint at 10,000,128 environment steps; no early stopping, checkpoint promotion, seed replacement, or performance-triggered continuation was used. The paired evaluation tape contained 100 fixed base episode identifiers (490000--490099), reused across nominal, canonical F0, four onset, four duration, and two compound conditions. Each method--seed--condition cell contained 100 episodes, yielding 12,000 raw records. The evaluation tape was frozen before the formal outcomes were inspected.
+
+Training seed, rather than episode, was the independent statistical unit ($n=5$ in the formal cohort). We report absolute mission scores, paired DRTP minus UTR differences, their mean, median, sample standard deviation (SD), interquartile range (IQR), median absolute deviation (MAD), direction count, and worst paired difference. `J_pert,mean` is the mean mission score over ten frozen perturbation conditions, and `J_pert,worst` is the minimum over those conditions. Because the ten onset--duration members were in the training sampler support, these are cross-perturbation endpoints, not strict OOD metrics. Collision, timeout, constraint violation, pre-onset termination, and risk-set trigger validity were reported alongside mission scores.
+
+The formal cohort, historical development and held-out results, and the subsequent independent cohort are separate evidence strata. They are never pooled into an apparent $n=10$ confirmation experiment. A no-graph MAPPO result is reported only as an external performance reference: it shares the task, seeds, budget, and evaluation tape but has a different 35,771-parameter, no-message architecture and is not a causal drop-in baseline.
+
+## 5.2 Relay failure reconfigured legal paths rather than imposing universal blackout
+
+The frozen mechanism audit showed that relay-node failure removed the two relay-associated communication edges during the specified failure window, while a legal direct Scout-to-Attacker edge could remain available. The information path used by the Attacker could therefore change from Scout--Relay--Attacker to Scout--Attacker. Paired diagnostic episodes also had lower task scores during failure than under the corresponding nominal condition. These observations establish the task as one of legal topology/path and task-support reconfiguration; they do not establish complete information loss or information restoration by DRTP.
+
+## 5.3 Formal five-seed results favored DRTP on the primary task endpoints
+
+At the common 10M final checkpoint, DRTP exceeded UTR on all four aggregate mission-score endpoints (Table 1). The mean timeout rate under failure conditions was lower for DRTP, whereas its collision rate was slightly higher; constraint violations were zero for both methods. Thus, the task-score result was accompanied by a timeout--collision trade-off rather than uniform safety dominance.
+
+| Method | Parameters | $J_{nominal}$ | $J_{F0}$ | $J_{pert,mean}$ | $J_{pert,worst}$ | Collision | Timeout | Constraint violation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| UTR-SG-MAPPO | 116,728 | 174.30 | 144.64 | 144.70 | 124.44 | 0.005 | 0.874 | 0.000 |
+| DRTP-SG-MAPPO | 116,728 | 207.78 | 196.77 | 199.70 | 187.45 | 0.008 | 0.694 | 0.000 |
+
+The paired seed analysis showed positive DRTP effects for all five formal seeds on F0, `J_pert,mean`, and `J_pert,worst` (Table 2). Mean paired gains were +52.13, +55.00, and +63.01, respectively; medians were +35.04, +33.00, and +38.40. The corresponding worst paired differences remained positive (+5.79, +17.01, and +11.71). In the nominal condition, four of five seeds favored DRTP. Seed 2302 had a nominal difference of -26.90 (ratio 0.760), yet remained positive on all three primary robustness endpoints. The formal overall nominal-retention rule was met (mean ratio 1.192 and median paired difference +26.66), but this cohort-level criterion was not a per-seed non-degradation guarantee. No formal DRTP seed met the frozen catastrophic-seed rule.
+
+| Endpoint | Mean paired difference | Median | SD | IQR | MAD | Positive seeds | Worst paired difference |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| $J_{nominal}$ | +33.48 | +26.66 | 47.58 | 51.76 | 34.63 | 4/5 | -26.90 |
+| $J_{F0}$ | +52.13 | +35.04 | 44.99 | 70.60 | 29.25 | 5/5 | +5.79 |
+| $J_{pert,mean}$ | +55.00 | +33.00 | 41.80 | 72.37 | 15.99 | 5/5 | +17.01 |
+| $J_{pert,worst}$ | +63.01 | +38.40 | 50.74 | 87.61 | 26.69 | 5/5 | +11.71 |
+
+The formal degradation decomposition was consistent with the paired results. For UTR, the aggregate decreases from nominal performance were 29.66 on F0, 29.60 for `J_pert,mean`, and 49.86 for `J_pert,worst`; the corresponding DRTP decreases were 11.01, 8.08, and 20.33. These aggregate decompositions describe the cohort-level mission-score pattern and do not replace paired seed-level inference.
+
+## 5.4 Gains extended across the frozen perturbation family, with bounded exceptions
+
+The formal result was not confined to canonical F0. Mean paired differences were positive for each of the ten frozen onset, duration, and compound conditions. All four onset conditions and both compound conditions favored DRTP in 5/5 seeds. The short-duration D40 and D60 conditions favored DRTP in 4/5 seeds, with worst paired differences of -1.26 and -21.30, respectively. The other eight conditions had positive worst paired differences. This pattern supports a result across the frozen perturbation family, while retaining the condition-specific exceptions rather than treating duration effects as unconditional.
+
+## 5.5 Safety and evaluator validity were reported separately
+
+Risk-set analysis covered 5,500 planned failure episodes per method. For UTR, 5,492 episodes (99.855%) were alive at their scheduled onset and all triggered correctly. For DRTP, 5,464 episodes (99.345%) were alive at onset and all triggered correctly. Episodes absent from the risk set had terminated through pre-onset collisions and remained in unconditional task-score and safety denominators. DRTP's mean timeout rate decreased from 0.874 to 0.694, whereas its collision rate increased from 0.005 to 0.008. The collision increment was concentrated in seed 2304 (0.040 for DRTP versus 0.000 for UTR); its timeout rate also increased slightly (0.719 versus 0.701). Hence the results support a restricted statement of lower average timeout with a local collision cost, not that DRTP is uniformly safer.
+
+Mission-score patterns were aligned with terminal outcome summaries: for example, F0 completion increased from 0.116 for UTR to 0.278 for DRTP and the corresponding timeout rate decreased from 0.880 to 0.714. Collision remained low in absolute terms but was generally slightly higher for DRTP across failure condition families.
+
+## 5.6 Sampler telemetry confirmed changed training exposure but not a causal policy mechanism
+
+The adaptive sampler departed from uniform weighting in every formal DRTP run. At its final update, the average weights for compound perturbations, long durations, and early-onset failures were 0.273, 0.237, and 0.203, respectively, above the uniform six-group weight of one sixth. The corresponding realized training episode counts were 26,804, 21,619, and 19,226; F0, late-onset, and short-duration groups had lower counts, while the fixed nominal anchor contributed 96,822 episodes. In the final failure evaluation, DRTP showed a higher task-support proportion (0.630 versus 0.508), a higher legal-information proportion (0.892 versus 0.802), lower cache age (16.62 versus 18.96), and fewer path switches (6.56 versus 8.06) than UTR.
+
+These telemetry observations verify that DRTP changed realized exposure and are consistent with different path/task-support utilization. They do not identify a causal policy mechanism, and are therefore not used as an additional performance test.
+
+## 5.7 External reference and independent reliability evidence delimited the result
+
+MAPPO-NoGraph was evaluated as an external performance reference. DRTP's mean paired differences relative to it were +1.20 on $J_{nominal}$, +3.08 on F0, +9.63 on `J_pert,mean`, and +7.68 on `J_pert,worst`; all four endpoints were positive in 4/5 seeds. MAPPO-NoGraph nevertheless had lower collision and timeout rates (0.002 and 0.601 versus 0.008 and 0.694 for DRTP). Because its message inputs and parameter count differ, this result locates performance in the frozen task but does not isolate graph structure, capacity, or adaptive weighting effects.
+
+The independent 2401--2405 three-method cohort used UTR, a fixed non-uniform SNR comparator, and DRTP under the same 10M endpoint rule but with a separate evaluation tape. In this cohort, UTR exceeded DRTP on every aggregate task endpoint. The mean paired DRTP-minus-UTR differences were -38.35 on $J_{nominal}$, -33.27 on F0, -34.07 on `J_pert,mean`, and -32.36 on `J_pert,worst`; only 1/5 or 2/5 seeds were positive, and one DRTP seed met the catastrophic rule. DRTP also had higher failure-condition collision and timeout rates than UTR (0.052 and 0.678 versus 0.009 and 0.646). SNR did not outperform UTR in this independent cohort, so the comparison did not establish either a fixed non-uniform or an online adaptive distribution as necessary.
+
+Cross-tape evaluation separated the cohort effect from a simple evaluation-tape explanation. The formal cohort remained positive on both tape490 and tape500: the DRTP-minus-UTR means were +52.13/+55.00/+63.01 on tape490 and +60.25/+61.07/+68.31 on tape500 for F0, `J_pert,mean`, and `J_pert,worst`. The independent cohort remained negative on both tapes, with the corresponding means -33.58/-35.37/-37.10 and -33.11/-34.07/-32.36. This diagnosis localizes the reversal to the training-cohort/seed level but does not identify a specific random source or policy-basin mechanism.
+
+Finally, a post hoc, zero-training additional evaluation used six training-excluded onset--duration tuples and a separate deterministic tape. The formal cohort retained positive median directions across all six conditions (mean paired differences from +35.36 to +70.85), whereas the independent cohort retained negative median directions (from -25.20 to -49.46). This result is additional unseen-member evidence rather than a preregistered confirmatory OOD test.
