@@ -1,0 +1,31 @@
+{
+  "protocol": "SR-DRTP-P1-SHADOW-UTILITY-V1",
+  "status": "PREPARATION_ONLY",
+  "authorization": {
+    "p1_contract_preparation_authorized": true,
+    "p1_execution_authorized": false,
+    "sr_drtp_algorithm_training_authorized": false,
+    "mainline_a_modified": false,
+    "automatic_continuation": false
+  },
+  "cohorts": {"A": [4401, 4402, 4403, 4404, 4405], "B": [4406, 4407, 4408, 4409, 4410]},
+  "official_trajectory": {"method": "original_drtp_only", "updates": 1953, "environment_steps": 499968, "evaluation_enabled": false},
+  "shadow_events": {"source_updates": [256, 512, 768, 1024, 1280, 1536, 1792], "horizon_updates": 16, "outcome": "mean_training_reward_over_horizon", "independent_unit": "training_seed"},
+  "branches": {
+    "A": "Original DRTP exact continuation",
+    "B": "temporary sampler anchor: q <- 0.80*q + 0.20*uniform at source and later adaptation boundaries within horizon",
+    "C": "one-shot next-PPO-update actor rollback with critic retained; not a KL-threshold rule",
+    "D": "forbidden"
+  },
+  "signals": {
+    "primary": "two consecutive scheduled PP-vs-online top-risk-group disagreements",
+    "secondary": ["q_step_l1", "q_rank_signature", "q_floor_or_cap", "approx_kl", "entropy", "value_loss", "grad_norm"],
+    "pp_probe": {"base_ids_per_event": 4, "groups": 7, "training_only": true, "formal_or_heldout_tape": false}
+  },
+  "go_no_go": {
+    "pass": ["temporal_precedence", "conditional_discrimination", "false_positive_control", "cross_cohort_repeatability"],
+    "inconclusive": "one pre-frozen supplemental observation budget may be proposed but not started automatically",
+    "no_go": ["high_false_positive_rate", "no_time_leading_relation", "cross_cohort_direction_failure", "post_hoc_threshold_required"]
+  },
+  "prohibitions": ["selector_training", "classifier_or_hyperparameter_search", "formal_evaluation_tape", "seed_replacement", "performance_rerun", "long_training", "SR-DRTP algorithm activation"]
+}

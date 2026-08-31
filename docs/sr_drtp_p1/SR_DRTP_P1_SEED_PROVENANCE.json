@@ -1,0 +1,68 @@
+{
+  "execution_authorized": false,
+  "protocol": "SR-DRTP-P1-SHADOW-UTILITY-V1",
+  "scan_limit": "explicit seed fields, CLI arguments, and seed-prefixed names in uncompressed source/document text",
+  "seeds": [
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4401
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4402
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4403
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4404
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4405
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4406
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4407
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4408
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4409
+    },
+    {
+      "clean": true,
+      "explicit_prior_use_hits": 0,
+      "paths": "",
+      "seed": 4410
+    }
+  ],
+  "status": "P1_SEEDS_CLEAN"
+}
