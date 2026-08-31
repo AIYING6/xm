@@ -273,7 +273,8 @@ def write_report(
             "",
         ]
     )
-    REPORT.write_text("\n".join(lines), encoding="utf-8")
+    with REPORT.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write("\n".join(lines))
 
 
 if __name__ == "__main__":
