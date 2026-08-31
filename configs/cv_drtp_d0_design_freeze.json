@@ -1,0 +1,35 @@
+{
+  "protocol": "CV-DRTP-D0-V1",
+  "status": "DESIGN_FROZEN_TRAINING_NOT_AUTHORIZED",
+  "candidate_name": "CV-DRTP",
+  "candidate_expansion": "Counterfactual Variance-Controlled DRTP",
+  "scientific_question": "Can a centralized counterfactual critic reduce multi-agent actor-gradient variance while preserving Original DRTP topology-adaptive sampling?",
+  "unchanged": [
+    "Original DRTP sampler and all of its frozen constants",
+    "actor architecture and actor information boundary",
+    "environment, failure semantics, reward, PPO clipping, optimizer and training schedule",
+    "Mainline-A source and evidence chain"
+  ],
+  "only_candidate_change": "Replace the scalar centralized V critic used to construct actor advantages with a centralized action-value critic and a per-agent counterfactual baseline over that agent's discrete actions.",
+  "counterfactual_baseline": "b_i(s,a_-i)=sum_a pi_i(a|o_i) Q_i(s,a,a_-i)",
+  "actor_advantage": "A_i_cf=stopgrad(Q_i(s,a_i,a_-i)-b_i(s,a_-i))",
+  "critic_target": "The existing per-agent bootstrapped return target; no reward, sampler, or evaluation information enters the critic input.",
+  "forbidden": [
+    "sampler modification",
+    "KL trigger or rollback",
+    "probe rollout",
+    "new auxiliary reward or loss",
+    "PPO hyperparameter sweep",
+    "network change outside the critic required by this candidate",
+    "training before technical acceptance"
+  ],
+  "future_training_design": "UTR / Original DRTP / CV-DRTP x two independently frozen cohorts of five clean seeds, with separate cohort reporting at 0.5M before any continuation.",
+  "future_success_constraints": {
+    "both_cohort_mean_paired_robust_gain_vs_utr_strictly_positive": true,
+    "both_cohort_at_least_four_of_five_nonnegative_paired_gains": true,
+    "no_new_catastrophic_seed": true,
+    "both_cohort_range_and_sample_sd_below_original_drtp": true,
+    "mean_j_pert_mean_loss_vs_original_at_most_epsilon_j": 7.874919837916801,
+    "safety_not_worse": true
+  }
+}
