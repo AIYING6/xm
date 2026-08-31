@@ -197,6 +197,10 @@ def copy_figures() -> None:
 
 
 def source_to_tex(text: str) -> str:
+    def tex_cell(value: str) -> str:
+        value = re.sub(r"`([^`]+)`", r"\\texttt{\1}", value)
+        return value.replace("%", r"\%").replace("&", r"\&")
+
     output: list[str] = []
     in_table = False
     for raw in text.splitlines():
@@ -214,7 +218,7 @@ def source_to_tex(text: str) -> str:
             if all(re.fullmatch(r":?-{3,}:?", cell.replace(" ", "")) for cell in cells):
                 output.append("\\midrule")
             else:
-                escaped = " & ".join(cells).replace("%", r"\\%").replace("&", r"\\&")
+                escaped = " & ".join(tex_cell(cell) for cell in cells)
                 output.append(escaped + " \\\\")
             continue
         if in_table:
@@ -223,7 +227,7 @@ def source_to_tex(text: str) -> str:
         if line.startswith("#"):
             continue
         if line:
-            output.append(line.replace("`", "\\texttt{"))
+            output.append(tex_cell(line))
         else:
             output.append("")
     if in_table:
