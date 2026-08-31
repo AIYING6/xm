@@ -1,9 +1,9 @@
 {
   "protocol": "SR-DRTP-P1-SHADOW-UTILITY-V1",
-  "status": "P1_EXECUTION_READY_FOR_AUTHORIZATION",
+  "status": "P1_EXECUTION_AUTHORIZED",
   "authorization": {
     "p1_contract_preparation_authorized": true,
-    "p1_execution_authorized": false,
+    "p1_execution_authorized": true,
     "sr_drtp_algorithm_training_authorized": false,
     "mainline_a_modified": false,
     "automatic_continuation": false
@@ -26,6 +26,13 @@
     "pass": ["temporal_precedence", "conditional_discrimination", "false_positive_control", "cross_cohort_repeatability"],
     "inconclusive": "one pre-frozen supplemental observation budget may be proposed but not started automatically",
     "no_go": ["high_false_positive_rate", "no_time_leading_relation", "cross_cohort_direction_failure", "post_hoc_threshold_required"]
+  },
+  "analysis_constants": {
+    "practical_utility_margin": 7.874919837916801,
+    "max_low_risk_harm_rate": 0.20,
+    "minimum_high_risk_events_per_cohort": 4,
+    "minimum_high_risk_seeds_per_cohort": 2,
+    "pass_rule": "one branch, without B+C combination, must satisfy all frozen conditions separately in both cohorts"
   },
   "prohibitions": ["selector_training", "classifier_or_hyperparameter_search", "formal_evaluation_tape", "seed_replacement", "performance_rerun", "long_training", "SR-DRTP algorithm activation"]
 }

@@ -56,6 +56,7 @@ from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 from algorithms.ri_gmappo.failure_aware_telemetry import FailureAwareTelemetryWriter
 from algorithms.ri_gmappo.sr_drtp_telemetry import SRDRTPTelemetryWriter
+from algorithms.ri_gmappo.sr_drtp_p1_signal import SRDRTPP1SignalWriter
 from algorithms.ri_gmappo.group_credit_telemetry import (
     CONFLICT_FIELDS as GROUP_CREDIT_CONFLICT_FIELDS,
     GROUP_FIELDS as GROUP_CREDIT_FIELDS,
@@ -250,6 +251,9 @@ class RIGMAPPOConfig:
     # separate from every historical sampler / PPO guard configuration.
     sr_drtp_shadow_branch: str = "none"
     sr_drtp_shadow_uniform_anchor: float = 0.20
+    sr_drtp_p1_pp_signal: bool = False
+    sr_drtp_p1_pp_probe_count: int = 4
+    sr_drtp_p1_pp_probe_updates: tuple[int, ...] = ()
     # TC-SAM-UTR: standard Euclidean SAM applied to actor parameters only.
     # These fields are inert unless sam_enabled=True and are intentionally
     # fixed rather than adapted from returns, topology, or training seed.
@@ -1338,6 +1342,7 @@ def save_runtime_training_checkpoint(
     env_rngs: list[random.Random] | None = None,
     failure_telemetry_state: dict | None = None,
     sr_drtp_telemetry_state: dict | None = None,
+    sr_drtp_p1_signal_state: dict | None = None,
 ) -> None:
     """Persist every state that can alter the following rollout/update.
 
@@ -1377,6 +1382,7 @@ def save_runtime_training_checkpoint(
         },
         "failure_telemetry_state": copy.deepcopy(failure_telemetry_state),
         "sr_drtp_telemetry_state": copy.deepcopy(sr_drtp_telemetry_state),
+        "sr_drtp_p1_signal_state": copy.deepcopy(sr_drtp_p1_signal_state),
     }
     torch.save(payload, path)
 
@@ -1790,6 +1796,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             raise ValueError("P1 intervention utility audit freezes alarm KL at 0.02")
     if cfg.sr_drtp_telemetry and int(cfg.sr_drtp_telemetry_interval) <= 0:
         raise ValueError("SR-DRTP telemetry interval must be positive")
+    if cfg.sr_drtp_p1_pp_signal:
+        scheduled = tuple(int(value) for value in cfg.sr_drtp_p1_pp_probe_updates)
+        if not scheduled or any(value <= WARMUP_UPDATES or value % ADAPT_INTERVAL != 0 for value in scheduled):
+            raise ValueError("SR-DRTP P1 PP probes require post-warm-up adaptation boundaries")
+        if int(cfg.sr_drtp_p1_pp_probe_count) != 4:
+            raise ValueError("SR-DRTP P1 freezes PP probes at 4 base IDs")
+        if cfg.evaluation_enabled or cfg.drtp_sampler_mode != "drtp":
+            raise ValueError("SR-DRTP P1 PP signal requires training-only Original DRTP")
     sr_shadow_branch = str(cfg.sr_drtp_shadow_branch).lower()
     if sr_shadow_branch not in {"none", "sampler_uniform_anchor", "actor_rollback_next_update"}:
         raise ValueError("unsupported SR-DRTP shadow branch")
@@ -1801,6 +1815,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             or policy_guard_mode != "none"
             or cfg.target_kl is not None
             or cfg.intervention_utility_audit_enabled
+            or cfg.sr_drtp_p1_pp_signal
         ):
             raise ValueError("SR-DRTP shadow branches require an unguarded Original-DRTP runtime continuation")
         if cfg.diagnostic_rng_branch_mode != "exact_replay":
@@ -2214,12 +2229,22 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         SRDRTPTelemetryWriter(out_dir, append=cfg.append_log)
         if cfg.sr_drtp_telemetry else None
     )
+    sr_drtp_p1_signal_writer = (
+        SRDRTPP1SignalWriter(out_dir, append=cfg.append_log)
+        if cfg.sr_drtp_p1_pp_signal else None
+    )
     if (
         sr_drtp_telemetry_writer is not None
         and runtime_payload is not None
         and runtime_payload.get("sr_drtp_telemetry_state") is not None
     ):
         sr_drtp_telemetry_writer.load_state_dict(runtime_payload["sr_drtp_telemetry_state"])
+    if (
+        sr_drtp_p1_signal_writer is not None
+        and runtime_payload is not None
+        and runtime_payload.get("sr_drtp_p1_signal_state") is not None
+    ):
+        sr_drtp_p1_signal_writer.load_state_dict(runtime_payload["sr_drtp_p1_signal_state"])
     with log_path.open(mode, newline="", encoding="utf-8") as f, (
         telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
     ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file, pp_probe_log_context as pp_probe_file, actor_gradient_log_context as actor_gradient_file, group_credit_log_context as group_credit_file, group_credit_conflict_log_context as group_credit_conflict_file:
@@ -2333,6 +2358,19 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                         apply_sr_drtp_shadow_uniform_anchor(
                             drtp_sampler, cfg.sr_drtp_shadow_uniform_anchor
                         )
+            if (
+                sr_drtp_p1_signal_writer is not None
+                and update in {int(value) for value in cfg.sr_drtp_p1_pp_probe_updates}
+            ):
+                if drtp_sampler is None:
+                    raise AssertionError("SR-DRTP P1 PP signal is missing Original DRTP sampler state")
+                probe_records = run_pp_drtp_probe_rollouts(
+                    agent, cfg, device, update=update,
+                    probe_seed=cfg.seed, probe_count=cfg.sr_drtp_p1_pp_probe_count,
+                )
+                sr_drtp_p1_signal_writer.record(
+                    update=update, sampler_state=drtp_sampler.state_dict(), records=probe_records
+                )
             credit_group_rows: list[dict] = []
             credit_conflict_rows: list[dict] = []
             if cfg.group_credit_telemetry:
@@ -2485,6 +2523,9 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                          sr_drtp_telemetry_state=(
                              None if sr_drtp_telemetry_writer is None else sr_drtp_telemetry_writer.state_dict()
                          ),
+                         sr_drtp_p1_signal_state=(
+                             None if sr_drtp_p1_signal_writer is None else sr_drtp_p1_signal_writer.state_dict()
+                         ),
                         )
             milestone_label = (cfg.milestone_updates or {}).get(update)
             if milestone_label is not None:
@@ -2507,6 +2548,9 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                          sr_drtp_telemetry_state=(
                              None if sr_drtp_telemetry_writer is None else sr_drtp_telemetry_writer.state_dict()
                          ),
+                         sr_drtp_p1_signal_state=(
+                             None if sr_drtp_p1_signal_writer is None else sr_drtp_p1_signal_writer.state_dict()
+                         ),
                     )
     if telemetry_writer is not None:
         telemetry_writer.close()
@@ -2514,6 +2558,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         intervention_utility_writer.close()
     if sr_drtp_telemetry_writer is not None:
         sr_drtp_telemetry_writer.close()
+    if sr_drtp_p1_signal_writer is not None:
+        sr_drtp_p1_signal_writer.close()
     return log_path
 
 
