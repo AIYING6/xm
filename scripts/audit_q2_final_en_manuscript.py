@@ -26,6 +26,7 @@ SECTION_FILES = {
     "discussion": "06_discussion.md",
     "conclusion": "07_conclusion.md",
     "references": "08_references.md",
+    "supplementary information": "11_supplementary_information.md",
 }
 
 
@@ -86,7 +87,11 @@ def main() -> None:
         raise SystemExit(1)
 
     manuscript = "\n".join(texts.values())
-    primary = "\n".join(texts[name] for name in SECTION_FILES if name != "editorial canon")
+    primary = "\n".join(
+        texts[name]
+        for name in SECTION_FILES
+        if name not in {"editorial canon", "references", "supplementary information"}
+    )
 
     add_marker_check(
         checks,
@@ -142,6 +147,27 @@ def main() -> None:
         "B-line location: Supplementary Table S5",
         texts["discussion"],
         "Supplementary Table S5",
+        hard_errors,
+    )
+    add_marker_check(
+        checks,
+        "supplementary formal-cohort table",
+        texts["supplementary information"],
+        "Table S1. Formal paired seed effects",
+        hard_errors,
+    )
+    add_marker_check(
+        checks,
+        "supplementary independent-cohort boundary",
+        texts["supplementary information"],
+        "must never be pooled into an apparent",
+        hard_errors,
+    )
+    add_marker_check(
+        checks,
+        "supplementary B-line boundary",
+        texts["supplementary information"],
+        "Exploratory stabilization stress tests and negative-result boundary",
         hard_errors,
     )
 
@@ -211,7 +237,11 @@ def write_report(
     warnings: list[str],
     texts: dict[str, str],
 ) -> None:
-    total_words = sum(words(text) for name, text in texts.items() if name != "references")
+    total_words = sum(
+        words(text)
+        for name, text in texts.items()
+        if name not in {"references", "editorial canon", "supplementary information"}
+    )
     lines = [
         "# DRTP English Manuscript Internal Audit",
         "",
@@ -220,7 +250,7 @@ def write_report(
         "## Summary",
         "",
         f"- Status: `{'PASS' if not hard_errors else 'FAIL'}`",
-        f"- Main-text words excluding references and editorial canon: `{total_words - words(texts.get('editorial canon', ''))}`",
+        f"- Main-text words excluding references, editorial canon, and Supplementary Information: `{total_words}`",
         f"- Hard errors: `{len(hard_errors)}`",
         f"- Warnings: `{len(warnings)}`",
         "",

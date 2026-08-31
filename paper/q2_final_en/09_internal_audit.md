@@ -5,7 +5,7 @@ This audit applies only to `paper/q2_final_en/`; it does not audit the legacy EA
 ## Summary
 
 - Status: `PASS`
-- Main-text words excluding references and editorial canon: `5862`
+- Main-text words excluding references, editorial canon, and Supplementary Information: `5862`
 - Hard errors: `0`
 - Warnings: `0`
 
@@ -22,6 +22,7 @@ This audit applies only to `paper/q2_final_en/`; it does not audit the legacy EA
 | file: discussion | `PASS` | 06_discussion.md |
 | file: conclusion | `PASS` | 07_conclusion.md |
 | file: references | `PASS` | 08_references.md |
+| file: supplementary information | `PASS` | 11_supplementary_information.md |
 | canonical title | `PASS` | found `Bounded Adaptive Topology-Perturbation Reweighting for Relay-Failure UAV Coordination` |
 | formal five-seed evidence | `PASS` | found `seeds 2301--2305` |
 | independent cohort disclosure | `PASS` | found `independent three-method cohort` |
@@ -30,6 +31,9 @@ This audit applies only to `paper/q2_final_en/`; it does not audit the legacy EA
 | post hoc unseen-member boundary | `PASS` | found `post hoc` |
 | formal safety trade-off | `PASS` | found `timeout--collision trade-off` |
 | B-line location: Supplementary Table S5 | `PASS` | found `Supplementary Table S5` |
+| supplementary formal-cohort table | `PASS` | found `Table S1. Formal paired seed effects` |
+| supplementary independent-cohort boundary | `PASS` | found `must never be pooled into an apparent` |
+| supplementary B-line boundary | `PASS` | found `Exploratory stabilization stress tests and negative-result boundary` |
 | numeric anchor +52.13 | `PASS` | found `+52.13` |
 | numeric anchor +55.00 | `PASS` | found `+55.00` |
 | numeric anchor +63.01 | `PASS` | found `+63.01` |
