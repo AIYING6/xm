@@ -29,7 +29,10 @@ def official(seed: int, output_root: Path) -> None:
     out = output_root / "runs" / "drtp_sg" / f"seed{seed}"
     if out.exists(): raise FileExistsError(f"refusing overwrite: {out}")
     out.mkdir(parents=True)
-    base = strict.training_config("drtp_sg", seed, out)
+    # Reuse only the frozen Original-DRTP configuration template.  The strict
+    # 10M factory intentionally rejects unseen seeds, so the P1 provenance-
+    # audited seed is substituted only after obtaining an authorized template.
+    base = strict.training_config("drtp_sg", 1901, out)
     cfg = replace(base, seed=seed, updates=f["official_trajectory"]["updates"], out_dir=str(out),
         drtp_sampler_mode="drtp", drtp_sampler_seed=seed, drtp_sampler_total_updates=f["official_trajectory"]["updates"],
         evaluation_enabled=False, policy_update_guard_mode="none", target_kl=None,
