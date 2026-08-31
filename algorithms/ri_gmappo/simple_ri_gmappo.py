@@ -52,6 +52,7 @@ from algorithms.ri_gmappo.drtp_topology_sampler import EGTRTopologySampler
 from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 from algorithms.ri_gmappo.failure_aware_telemetry import FailureAwareTelemetryWriter
+from algorithms.ri_gmappo.sr_drtp_telemetry import SRDRTPTelemetryWriter
 from algorithms.ri_gmappo.group_credit_telemetry import (
     CONFLICT_FIELDS as GROUP_CREDIT_CONFLICT_FIELDS,
     GROUP_FIELDS as GROUP_CREDIT_FIELDS,
@@ -236,6 +237,11 @@ class RIGMAPPOConfig:
     # pre-update diagnostics only and is never consumed by PPO or the sampler.
     group_credit_telemetry: bool = False
     group_credit_telemetry_interval: int = 20
+    # SR-DRTP P0 read-only training-state telemetry.  It is intentionally
+    # default-off and emits observations only; it cannot enter the actor,
+    # critic, sampler, PPO loss, reset policy, or evaluation tape.
+    sr_drtp_telemetry: bool = False
+    sr_drtp_telemetry_interval: int = 32
     # TC-SAM-UTR: standard Euclidean SAM applied to actor parameters only.
     # These fields are inert unless sam_enabled=True and are intentionally
     # fixed rather than adapted from returns, topology, or training seed.
@@ -1323,6 +1329,7 @@ def save_runtime_training_checkpoint(
     minibatch_rng: np.random.Generator | None = None,
     env_rngs: list[random.Random] | None = None,
     failure_telemetry_state: dict | None = None,
+    sr_drtp_telemetry_state: dict | None = None,
 ) -> None:
     """Persist every state that can alter the following rollout/update.
 
@@ -1361,6 +1368,7 @@ def save_runtime_training_checkpoint(
             "env_rngs": None if env_rngs is None else [rng.getstate() for rng in env_rngs],
         },
         "failure_telemetry_state": copy.deepcopy(failure_telemetry_state),
+        "sr_drtp_telemetry_state": copy.deepcopy(sr_drtp_telemetry_state),
     }
     torch.save(payload, path)
 
@@ -1742,6 +1750,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             raise ValueError("P1 intervention utility audit requires one complete rollout minibatch per PPO epoch")
         if cfg.intervention_utility_alarm_kl != 0.02:
             raise ValueError("P1 intervention utility audit freezes alarm KL at 0.02")
+    if cfg.sr_drtp_telemetry and int(cfg.sr_drtp_telemetry_interval) <= 0:
+        raise ValueError("SR-DRTP telemetry interval must be positive")
     if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none", cfg.fixed_stratified_topology_sampler)) > 1:
         raise ValueError("curriculum, fixed mixture, DRTP sampler, and fixed stratified sampler are mutually exclusive")
     if actor_gradient_mode != "standard":
@@ -2118,6 +2128,20 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         InterventionUtilityAuditWriter(out_dir, cfg, device, intervention_utility_runtime_snapshot)
         if cfg.intervention_utility_audit_enabled else None
     )
+    # P0 is a write-only sink.  It is intentionally constructed after all
+    # training state has been restored and is never supplied to PPO/sampler
+    # code.  Its state is persisted only to keep a resumed diagnostic log
+    # auditable; it cannot affect the restored trajectory.
+    sr_drtp_telemetry_writer = (
+        SRDRTPTelemetryWriter(out_dir, append=cfg.append_log)
+        if cfg.sr_drtp_telemetry else None
+    )
+    if (
+        sr_drtp_telemetry_writer is not None
+        and runtime_payload is not None
+        and runtime_payload.get("sr_drtp_telemetry_state") is not None
+    ):
+        sr_drtp_telemetry_writer.load_state_dict(runtime_payload["sr_drtp_telemetry_state"])
     with log_path.open(mode, newline="", encoding="utf-8") as f, (
         telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
     ) as telemetry_file, curriculum_log_context as curriculum_file, mixture_log_context as mixture_file, drtp_log_context as drtp_file, pp_probe_log_context as pp_probe_file, actor_gradient_log_context as actor_gradient_file, group_credit_log_context as group_credit_file, group_credit_conflict_log_context as group_credit_conflict_file:
@@ -2266,6 +2290,17 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     else 0.0
                 ),
             })
+            if (
+                sr_drtp_telemetry_writer is not None
+                and update % int(cfg.sr_drtp_telemetry_interval) == 0
+            ):
+                sr_drtp_telemetry_writer.record(
+                    update=update,
+                    sampler_mode=drtp_mode,
+                    sampler_state=None if drtp_sampler is None else drtp_sampler.state_dict(),
+                    train_info=train_info,
+                    train_avg_reward=float(batch["rewards"].mean()),
+                )
             if role_gate_writer is not None:
                 for telemetry_row in summarize_role_gate_telemetry(agent, batch, device):
                     role_gate_writer.writerow({"update": update, **telemetry_row})
@@ -2365,6 +2400,9 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                          rng_streams=rng_streams, action_generator=action_generator,
                          minibatch_rng=minibatch_rng, env_rngs=env_rngs,
                          failure_telemetry_state=None if telemetry_writer is None else telemetry_writer.state_dict(),
+                         sr_drtp_telemetry_state=(
+                             None if sr_drtp_telemetry_writer is None else sr_drtp_telemetry_writer.state_dict()
+                         ),
                         )
             milestone_label = (cfg.milestone_updates or {}).get(update)
             if milestone_label is not None:
@@ -2384,11 +2422,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                          rng_streams=rng_streams, action_generator=action_generator,
                          minibatch_rng=minibatch_rng, env_rngs=env_rngs,
                          failure_telemetry_state=None if telemetry_writer is None else telemetry_writer.state_dict(),
+                         sr_drtp_telemetry_state=(
+                             None if sr_drtp_telemetry_writer is None else sr_drtp_telemetry_writer.state_dict()
+                         ),
                     )
     if telemetry_writer is not None:
         telemetry_writer.close()
     if intervention_utility_writer is not None:
         intervention_utility_writer.close()
+    if sr_drtp_telemetry_writer is not None:
+        sr_drtp_telemetry_writer.close()
     return log_path
 
 
