@@ -1,0 +1,15 @@
+{
+  "protocol": "CV-DRTP-PILOT-P2-V1",
+  "status": "AUTHORIZED_FROZEN",
+  "research_track": "B_only",
+  "mainline_a_modified": false,
+  "arms": {
+    "utr_sg": {"sampler": "utr", "counterfactual_critic_enabled": false},
+    "drtp_sg": {"sampler": "drtp", "counterfactual_critic_enabled": false},
+    "cv_drtp_sg": {"sampler": "drtp", "counterfactual_critic_enabled": true}
+  },
+  "cohorts": {"A": [4301,4302,4303,4304,4305], "B": [4306,4307,4308,4309,4310], "must_be_reported_separately": true},
+  "training": {"updates": 1953, "environment_steps": 499968, "milestones": {"976": "250k", "1953": "500k"}, "early_stopping": false, "checkpoint_promotion": false, "seed_replacement": false, "performance_rerun": false, "automatic_continuation": false},
+  "gate": {"epsilon_J": 7.874919837916801, "minimum_nonnegative_gains": 4, "require_positive_mean_gain_vs_utr": true, "require_no_new_catastrophic": true, "require_lower_range_and_sd": true, "safety_margin": 0.1, "dual_cohort_rule": "both cohorts pass independently; pooled n=10 is descriptive only"},
+  "authorization": {"training_authorized": true, "evaluation_authorized": true, "automatic_continuation": false, "cv_drtp_v2_authorized": false}
+}
