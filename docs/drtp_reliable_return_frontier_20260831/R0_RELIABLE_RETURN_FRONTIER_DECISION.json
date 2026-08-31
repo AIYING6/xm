@@ -1,0 +1,9 @@
+{
+  "status": "R0_ZERO_TRAINING_COMPLETE",
+  "historical_candidates_screened": 7,
+  "per_cohort_screen_passes": [],
+  "candidate_promoted": false,
+  "training_authorized": false,
+  "mainline_a_modified": false,
+  "epsilon_J": 7.874919837916801
+}

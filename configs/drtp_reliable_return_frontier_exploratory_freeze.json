@@ -1,0 +1,23 @@
+{
+  "protocol": "DRTP-RELIABLE-RETURN-FRONTIER-R0-V1",
+  "status": "EXPLORATORY_ZERO_TRAINING_ONLY",
+  "purpose": "Re-express already-completed stabilization pilots under a reliability-first objective without changing any historical gate decision.",
+  "primary_endpoint": "paired robust gain G = J_pert_mean(candidate) - J_pert_mean(UTR)",
+  "measurement_margin_epsilon_j": 7.874919837916801,
+  "requirements_per_comparable_cohort": {
+    "candidate_mean_gain_strictly_positive": true,
+    "candidate_worst_gain_nonnegative": true,
+    "candidate_mean_loss_vs_original_at_most_epsilon_j": true,
+    "candidate_upper_tail_loss_vs_original_at_most_epsilon_j": true,
+    "candidate_range_not_larger_than_original": true
+  },
+  "promotion_rule": "No archived result may be promoted to a method claim. Only a candidate satisfying every requirement in two prospectively independent, protocol-comparable cohorts may be eligible for a separately authorized fresh-seed confirmation.",
+  "prohibitions": [
+    "no training",
+    "no evaluation rerun",
+    "no seed pooling across cohorts",
+    "no historical decision rewrite",
+    "no parameter selection",
+    "no Mainline-A modification"
+  ]
+}
