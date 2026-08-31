@@ -1,6 +1,6 @@
 {
   "protocol": "SR-DRTP-P1-SHADOW-UTILITY-V1",
-  "status": "PREPARATION_ONLY",
+  "status": "P1_EXECUTION_READY_FOR_AUTHORIZATION",
   "authorization": {
     "p1_contract_preparation_authorized": true,
     "p1_execution_authorized": false,

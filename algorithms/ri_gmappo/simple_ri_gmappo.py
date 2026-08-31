@@ -42,6 +42,9 @@ from algorithms.ri_gmappo.drtp_topology_sampler import (
     FAILURE_GROUPS,
     GROUP_MEMBERS,
     NOMINAL_GROUP,
+    Q_MAX,
+    Q_MIN,
+    UNIFORM_Q,
     WARMUP_UPDATES,
     DRTPSelection,
     DRTPTopologySampler,
@@ -242,6 +245,11 @@ class RIGMAPPOConfig:
     # critic, sampler, PPO loss, reset policy, or evaluation tape.
     sr_drtp_telemetry: bool = False
     sr_drtp_telemetry_interval: int = 32
+    # SR-DRTP P1 is allowed to use these controls only inside an explicitly
+    # isolated shadow continuation.  They are default-off and deliberately
+    # separate from every historical sampler / PPO guard configuration.
+    sr_drtp_shadow_branch: str = "none"
+    sr_drtp_shadow_uniform_anchor: float = 0.20
     # TC-SAM-UTR: standard Euclidean SAM applied to actor parameters only.
     # These fields are inert unless sam_enabled=True and are intentionally
     # fixed rather than adapted from returns, topology, or training seed.
@@ -1674,6 +1682,36 @@ def _intervention_utility_probe_seed(master_seed: int, event_id: int) -> int:
     return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big") % 2_000_000_000
 
 
+def apply_sr_drtp_shadow_uniform_anchor(
+    sampler: DRTPTopologySampler,
+    anchor: float,
+) -> dict[str, Any]:
+    """Apply the P1 B-branch sampler-only intervention in place.
+
+    This helper intentionally receives only a topology sampler.  It has no
+    reference to the agent, optimizer, rollout batch, RNG stream, reward, or
+    evaluation tape.  The convex combination preserves the existing bounded
+    simplex because both ``q`` and the uniform vector are feasible.
+    """
+    amount = float(anchor)
+    if not math.isfinite(amount) or not 0.0 <= amount <= 1.0:
+        raise ValueError("SR-DRTP shadow uniform anchor must lie in [0, 1]")
+    before = {group: float(sampler.q[group]) for group in FAILURE_GROUPS}
+    after = {
+        group: (1.0 - amount) * before[group] + amount * UNIFORM_Q
+        for group in FAILURE_GROUPS
+    }
+    if not math.isclose(sum(after.values()), 1.0, rel_tol=0.0, abs_tol=1e-10):
+        raise AssertionError("SR-DRTP shadow anchor lost q mass")
+    if any(value < Q_MIN - 1e-12 or value > Q_MAX + 1e-12 for value in after.values()):
+        raise AssertionError("SR-DRTP shadow anchor violated q bounds")
+    sampler.q = after
+    sampler.last_anchored_target = dict(after)
+    sampler.last_q_step_l1 = sum(abs(after[group] - before[group]) for group in FAILURE_GROUPS)
+    sampler.last_trust_region_active = False
+    return {"before": before, "after": after, "anchor": amount}
+
+
 def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     if cfg.env_name == "3d_intercept" and cfg.oracle_intent:
         raise ValueError("oracle_intent is unavailable for 3d_intercept because it has no intent supervision")
@@ -1752,6 +1790,23 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             raise ValueError("P1 intervention utility audit freezes alarm KL at 0.02")
     if cfg.sr_drtp_telemetry and int(cfg.sr_drtp_telemetry_interval) <= 0:
         raise ValueError("SR-DRTP telemetry interval must be positive")
+    sr_shadow_branch = str(cfg.sr_drtp_shadow_branch).lower()
+    if sr_shadow_branch not in {"none", "sampler_uniform_anchor", "actor_rollback_next_update"}:
+        raise ValueError("unsupported SR-DRTP shadow branch")
+    if sr_shadow_branch != "none":
+        if (
+            cfg.runtime_state_resume is None
+            or cfg.evaluation_enabled
+            or drtp_mode != "drtp"
+            or policy_guard_mode != "none"
+            or cfg.target_kl is not None
+            or cfg.intervention_utility_audit_enabled
+        ):
+            raise ValueError("SR-DRTP shadow branches require an unguarded Original-DRTP runtime continuation")
+        if cfg.diagnostic_rng_branch_mode != "exact_replay":
+            raise ValueError("SR-DRTP shadow branches require exact-replay RNG")
+        if not math.isfinite(float(cfg.sr_drtp_shadow_uniform_anchor)) or not 0.0 <= float(cfg.sr_drtp_shadow_uniform_anchor) <= 1.0:
+            raise ValueError("SR-DRTP shadow uniform anchor must lie in [0, 1]")
     if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none", cfg.fixed_stratified_topology_sampler)) > 1:
         raise ValueError("curriculum, fixed mixture, DRTP sampler, and fixed stratified sampler are mutually exclusive")
     if actor_gradient_mode != "standard":
@@ -1925,6 +1980,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             if runtime_payload["drtp_sampler_state"] is None:
                 raise ValueError("runtime checkpoint is missing DRTP/UTR sampler state")
             drtp_sampler.load_state_dict(runtime_payload["drtp_sampler_state"])
+        if sr_shadow_branch == "sampler_uniform_anchor":
+            if drtp_sampler is None:
+                raise AssertionError("SR-DRTP sampler branch is missing its DRTP sampler")
+            sampler_anchor_record = apply_sr_drtp_shadow_uniform_anchor(
+                drtp_sampler, cfg.sr_drtp_shadow_uniform_anchor
+            )
+        else:
+            sampler_anchor_record = None
         if telemetry_writer is not None and runtime_payload.get("failure_telemetry_state") is not None:
             telemetry_writer.load_state_dict(runtime_payload["failure_telemetry_state"])
         _restore_runtime_rng_state(runtime_payload["rng_state"])
@@ -1948,6 +2011,20 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     "future_rng_replaced_only": diagnostic_branch_mode != "exact_replay",
                     "rng_streams": None if rng_streams is None else rng_streams.manifest(),
                     "evaluation_leakage": False,
+                }, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        if sr_shadow_branch != "none":
+            (out_dir / "sr_drtp_shadow_branch_manifest.json").write_text(
+                json.dumps({
+                    "protocol": "SR-DRTP-P1-BRANCH-ISOLATION-V1",
+                    "branch": sr_shadow_branch,
+                    "runtime_checkpoint": str(cfg.runtime_state_resume),
+                    "formal_or_heldout_evaluation_tape_used": False,
+                    "official_trajectory_modified": False,
+                    "model_sha256_after_restore": _serialized_sha256(agent.state_dict()),
+                    "optimizer_sha256_after_restore": _serialized_sha256(optimizer.state_dict()),
+                    "sampler_anchor": sampler_anchor_record,
                 }, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
             )
@@ -2054,6 +2131,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "actor_optimizer_state_retained_after_projection",
         "critic_step_retained_after_actor_rollback",
         "critic_step_retained_after_policy_guard",
+        "sr_drtp_shadow_actor_rollback_applied",
         "intervention_utility_alarm_count",
         "policy_guard_cumulative_triggers",
         "policy_guard_cumulative_attempts",
@@ -2251,6 +2329,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 drtp_update_row = drtp_sampler.maybe_update(update)
                 if drtp_update_row is not None:
                     drtp_rows.append(drtp_update_row)
+                    if sr_shadow_branch == "sampler_uniform_anchor":
+                        apply_sr_drtp_shadow_uniform_anchor(
+                            drtp_sampler, cfg.sr_drtp_shadow_uniform_anchor
+                        )
             credit_group_rows: list[dict] = []
             credit_conflict_rows: list[dict] = []
             if cfg.group_credit_telemetry:
@@ -3184,6 +3266,9 @@ def update_policy(
     rollback_guard_enabled = policy_guard_mode == "post_step_actor_rollback"
     backtrack_guard_enabled = policy_guard_mode == "post_step_actor_backtrack"
     policy_guard_enabled = rollback_guard_enabled or backtrack_guard_enabled
+    sr_shadow_actor_rollback_enabled = (
+        str(cfg.sr_drtp_shadow_branch).lower() == "actor_rollback_next_update"
+    )
     intervention_utility_enabled = bool(cfg.intervention_utility_audit_enabled)
     intervention_utility_threshold = cfg.intervention_utility_alarm_kl
     if intervention_utility_enabled:
@@ -3218,6 +3303,7 @@ def update_policy(
     actor_optimizer_state_retained_after_projection = False
     critic_step_retained_after_actor_rollback = False
     critic_step_retained_after_policy_guard = False
+    sr_shadow_actor_rollback_applied = False
     final_accepted_policy_kl = 0.0
     intervention_utility_events: list[dict[str, Any]] = []
 
@@ -3343,7 +3429,7 @@ def update_policy(
             )
             grad_norm = nn.utils.clip_grad_norm_(agent.parameters(), cfg.max_grad_norm)
             intervention_pre_state: dict[str, Any] | None = None
-            if policy_guard_enabled:
+            if policy_guard_enabled or sr_shadow_actor_rollback_enabled:
                 actor_state_before = copy.deepcopy(agent.actor.state_dict())
                 actor_parameters_before = [parameter.detach().clone() for parameter in actor_parameters]
                 actor_optimizer_state_before = _snapshot_optimizer_parameter_states(optimizer, actor_parameters)
@@ -3367,7 +3453,20 @@ def update_policy(
                 }
             optimizer.step()
 
-            if policy_guard_enabled:
+            if sr_shadow_actor_rollback_enabled and not sr_shadow_actor_rollback_applied:
+                # P1 branch C is a one-shot intervention, not a KL rule: it
+                # restores only actor parameters and their Adam slots after
+                # the next optimizer step, retaining the critic update.
+                attempted_update_l2 = _parameter_displacement_l2(actor_parameters, actor_parameters_before)
+                agent.actor.load_state_dict(actor_state_before, strict=True)
+                _restore_optimizer_parameter_states(optimizer, actor_optimizer_state_before)
+                sr_shadow_actor_rollback_applied = True
+                actor_rollback_l2 = attempted_update_l2
+                actor_optimizer_state_restored = True
+                critic_step_retained_after_actor_rollback = True
+                actor_attempted_update_norms.append(attempted_update_l2)
+                actor_accepted_update_norms.append(0.0)
+            elif policy_guard_enabled:
                 policy_steps_attempted += 1
                 attempted_update_l2 = _parameter_displacement_l2(actor_parameters, actor_parameters_before)
                 actor_attempted_update_norms.append(attempted_update_l2)
@@ -3575,6 +3674,7 @@ def update_policy(
         "actor_optimizer_state_retained_after_projection": float(actor_optimizer_state_retained_after_projection),
         "critic_step_retained_after_actor_rollback": float(critic_step_retained_after_actor_rollback),
         "critic_step_retained_after_policy_guard": float(critic_step_retained_after_policy_guard),
+        "sr_drtp_shadow_actor_rollback_applied": float(sr_shadow_actor_rollback_applied),
         "intervention_utility_alarm_count": int(len(intervention_utility_events)),
         # Ephemeral objects consumed by the trainer; never written to
         # train_log.csv and never fed to PPO or the sampler.
