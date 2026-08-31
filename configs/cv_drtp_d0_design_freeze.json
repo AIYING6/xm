@@ -10,7 +10,7 @@
     "environment, failure semantics, reward, PPO clipping, optimizer and training schedule",
     "Mainline-A source and evidence chain"
   ],
-  "only_candidate_change": "Replace the scalar centralized V critic used to construct actor advantages with a centralized action-value critic and a per-agent counterfactual baseline over that agent's discrete actions.",
+  "only_candidate_change": "Retain the scalar centralized V critic solely for the unchanged bootstrapped-return/GAE target, and augment it with a centralized action-value critic that supplies a per-agent counterfactual baseline over that agent's discrete actions.",
   "counterfactual_baseline": "b_i(s,a_-i)=sum_a pi_i(a|o_i) Q_i(s,a,a_-i)",
   "actor_advantage": "A_i_cf=stopgrad(Q_i(s,a_i,a_-i)-b_i(s,a_-i))",
   "critic_target": "The existing per-agent bootstrapped return target; no reward, sampler, or evaluation information enters the critic input.",

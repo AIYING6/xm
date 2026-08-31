@@ -129,6 +129,9 @@ class RIGMAPPOConfig:
     intervention_utility_alarm_kl: float | None = None
     intervention_utility_probe_count: int = 4
     intervention_utility_probe_seed: int | None = None
+    # CV-DRTP is a default-off critic-side counterfactual control variate.
+    # When false, the historical actor/critic/optimizer path is unchanged.
+    counterfactual_critic_enabled: bool = False
     critic_warmup_updates: int = 0
     ppo_epochs: int = 4
     minibatch_graphs: int = 256
@@ -846,6 +849,7 @@ class RIGMAPPOAgent(nn.Module):
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
         role_gate_mode: str = "relation_conditioned",
+        counterfactual_critic_enabled: bool = False,
     ):
         super().__init__()
         self.num_agents = num_agents
@@ -868,11 +872,65 @@ class RIGMAPPOAgent(nn.Module):
             role_gate_mode=role_gate_mode,
         )
         self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
+        self.action_dim = int(action_dim)
+        self.counterfactual_critic_enabled = bool(counterfactual_critic_enabled)
+        if self.counterfactual_critic_enabled:
+            # Training-time centralized Q only: global legal state, role and
+            # the sampled joint discrete action.  It is never an actor input.
+            self.counterfactual_critic = MLP(
+                share_obs_dim + num_roles + num_agents * action_dim, 1, hidden_dim
+            )
 
     def critic_value(self, share_obs: torch.Tensor, role: torch.Tensor) -> torch.Tensor:
         agent_role = role[:, : self.num_agents].long().clamp(min=0, max=self.num_roles - 1)
         role_one_hot = F.one_hot(agent_role, num_classes=self.num_roles).to(dtype=share_obs.dtype, device=share_obs.device)
         return self.critic(torch.cat([share_obs, role_one_hot], dim=-1)).squeeze(-1)
+
+    def counterfactual_q(
+        self, share_obs: torch.Tensor, role: torch.Tensor, joint_actions: torch.Tensor
+    ) -> torch.Tensor:
+        if not self.counterfactual_critic_enabled:
+            raise RuntimeError("counterfactual critic is disabled")
+        agent_role = role[:, : self.num_agents].long().clamp(min=0, max=self.num_roles - 1)
+        role_one_hot = F.one_hot(agent_role, num_classes=self.num_roles).to(
+            dtype=share_obs.dtype, device=share_obs.device
+        )
+        actions = joint_actions.long().clamp(min=0, max=self.action_dim - 1)
+        action_one_hot = F.one_hot(actions, num_classes=self.action_dim).to(dtype=share_obs.dtype)
+        joint_one_hot = action_one_hot.reshape(actions.shape[0], -1).unsqueeze(1).expand(-1, self.num_agents, -1)
+        return self.counterfactual_critic(torch.cat([share_obs, role_one_hot, joint_one_hot], dim=-1)).squeeze(-1)
+
+    def counterfactual_advantage(
+        self,
+        share_obs: torch.Tensor,
+        role: torch.Tensor,
+        joint_actions: torch.Tensor,
+        policy_probs: torch.Tensor,
+        return_q_spread: bool = False,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+        """Finite-action COMA-style baseline; detached before actor loss."""
+        q_taken = self.counterfactual_q(share_obs, role, joint_actions)
+        # [graphs, focal-agent, counterfactual action, joint-agent]
+        alternatives = joint_actions[:, None, None, :].expand(
+            -1, self.num_agents, self.action_dim, -1
+        ).clone()
+        action_index = torch.arange(self.action_dim, device=joint_actions.device)
+        for agent_index in range(self.num_agents):
+            alternatives[:, agent_index, :, agent_index] = action_index
+        flat_actions = alternatives.reshape(-1, self.num_agents)
+        flat_share = share_obs[:, None, :, :].expand(
+            -1, self.num_agents * self.action_dim, -1, -1
+        ).reshape(-1, self.num_agents, share_obs.shape[-1])
+        flat_role = role[:, None, :].expand(-1, self.num_agents * self.action_dim, -1).reshape(-1, role.shape[-1])
+        # The centralized Q branch produces one value for every agent.  For
+        # focal agent i, use Q_i while enumerating only a_i.
+        q_all = self.counterfactual_q(flat_share, flat_role, flat_actions).reshape(
+            joint_actions.shape[0], self.num_agents, self.action_dim, self.num_agents
+        ).diagonal(dim1=1, dim2=3).permute(0, 2, 1)
+        advantage = q_taken - (policy_probs * q_all).sum(dim=-1)
+        if return_q_spread:
+            return advantage, q_all.std(dim=-1, unbiased=False)
+        return advantage
 
     def get_action_and_value(
         self,
@@ -1831,6 +1889,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         role_gate_prior_strength=cfg.role_gate_prior_strength,
         multi_relation_global_residual_weight=cfg.multi_relation_global_residual_weight,
         role_gate_mode=cfg.role_gate_mode,
+        counterfactual_critic_enabled=cfg.counterfactual_critic_enabled,
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     optimizer = make_optimizer(agent, cfg)
@@ -1912,6 +1971,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "loss",
         "policy_loss",
         "value_loss",
+        "counterfactual_q_loss",
+        "counterfactual_advantage_std",
+        "counterfactual_q_spread",
+        "counterfactual_critic_wall_seconds",
         "entropy",
         "intent_loss",
         "intent_acc",
@@ -2768,6 +2831,9 @@ def _update_policy_conditioned_actor(
     advantages = torch.as_tensor(batch["advantages"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+    counterfactual_critic_enabled = bool(cfg.counterfactual_critic_enabled)
+    if counterfactual_critic_enabled and not getattr(agent, "counterfactual_critic_enabled", False):
+        raise ValueError("CV-DRTP requires an enabled counterfactual critic branch")
     chain_aux_coef = effective_chain_aux_coef(cfg, update)
     if update <= cfg.critic_warmup_updates:
         raise RuntimeError("conditioned actor update does not permit critic-only warmup updates")
@@ -2777,6 +2843,7 @@ def _update_policy_conditioned_actor(
     if sam_enabled and mode != "utr":
         raise RuntimeError("TC-SAM is defined only for the frozen UTR actor update")
     losses, policy_losses, value_losses, entropies, intent_losses, intent_accs = [], [], [], [], [], []
+    counterfactual_q_losses, counterfactual_advantage_stds = [], []
     chain_aux_losses, chain_aux_accs, approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], [], [], []
     gradient_rows: list[dict[str, float | bool | int]] = []
     epochs_ran = 0
@@ -3058,10 +3125,15 @@ def update_policy(
     advantages = torch.as_tensor(batch["advantages"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+    counterfactual_critic_enabled = bool(cfg.counterfactual_critic_enabled)
+    if counterfactual_critic_enabled and not getattr(agent, "counterfactual_critic_enabled", False):
+        raise ValueError("CV-DRTP requires an enabled counterfactual critic branch")
     chain_aux_coef = effective_chain_aux_coef(cfg, update)
     critic_warmup_active = update <= cfg.critic_warmup_updates
 
     losses, policy_losses, value_losses, entropies, intent_losses, intent_accs = [], [], [], [], [], []
+    counterfactual_q_losses, counterfactual_advantage_stds, counterfactual_q_spreads = [], [], []
+    counterfactual_critic_wall_seconds: list[float] = []
     chain_aux_losses, chain_aux_accs = [], []
     approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], []
     gate_grad_norms, gate_means, gate_stds, gate_mins, gate_maxs, gate_displacements = [], [], [], [], [], []
@@ -3143,6 +3215,30 @@ def update_policy(
             )
             log_ratio = new_logp - old_logp[mb]
             ratio = log_ratio.exp()
+            if counterfactual_critic_enabled:
+                # The policy-weighted Q baseline is a critic-side control
+                # variate.  It is detached before entering PPO's actor loss.
+                counterfactual_start = time.perf_counter()
+                with torch.no_grad():
+                    cf_logits, _, _, _ = agent.actor(
+                        obs[mb], node_feat[mb], edge_feat[mb], role[mb], adj[mb], agent.num_agents,
+                        relation_adj=relation_adj[mb], intent_label=intent_label[mb],
+                        detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
+                        return_chain_aux=True,
+                    )
+                    cf_advantages, cf_q_spread = agent.counterfactual_advantage(
+                        share_obs[mb], role[mb], actions[mb], torch.softmax(cf_logits, dim=-1),
+                        return_q_spread=True,
+                    )
+                    cf_advantages = (cf_advantages - cf_advantages.mean()) / (cf_advantages.std() + 1e-8)
+                q_taken = agent.counterfactual_q(share_obs[mb], role[mb], actions[mb])
+                counterfactual_q_loss = 0.5 * (returns[mb] - q_taken).pow(2).mean()
+                counterfactual_wall_seconds = time.perf_counter() - counterfactual_start
+            else:
+                cf_advantages = advantages[mb]
+                counterfactual_q_loss = torch.zeros((), device=device)
+                cf_q_spread = torch.zeros_like(cf_advantages)
+                counterfactual_wall_seconds = 0.0
             with torch.no_grad():
                 approx_kl = ((ratio - 1.0) - log_ratio).mean()
                 clip_fraction = ((ratio - 1.0).abs() > cfg.clip_coef).float().mean()
@@ -3150,8 +3246,8 @@ def update_policy(
                 value_error_var = torch.var(returns_mb - values)
                 returns_var = torch.var(returns_mb)
                 explained_variance = 1.0 - value_error_var / (returns_var + 1e-8)
-            pg_loss1 = -advantages[mb] * ratio
-            pg_loss2 = -advantages[mb] * torch.clamp(ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef)
+            pg_loss1 = -cf_advantages * ratio
+            pg_loss2 = -cf_advantages * torch.clamp(ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef)
             policy_loss = torch.max(pg_loss1, pg_loss2).mean()
             value_loss = 0.5 * (returns[mb] - values).pow(2).mean()
             entropy_loss = entropy.mean()
@@ -3182,11 +3278,11 @@ def update_policy(
                 chain_aux_loss = torch.zeros((), device=device)
                 chain_aux_acc = torch.zeros((), device=device)
             if critic_warmup_active:
-                loss = cfg.value_coef * value_loss
+                loss = cfg.value_coef * (value_loss + counterfactual_q_loss)
             else:
                 loss = (
                     policy_loss
-                    + cfg.value_coef * value_loss
+                    + cfg.value_coef * (value_loss + counterfactual_q_loss)
                     - cfg.entropy_coef * entropy_loss
                     + effective_intent_coef(cfg) * intent_loss
                     + chain_aux_coef * chain_aux_loss
@@ -3371,6 +3467,10 @@ def update_policy(
             losses.append(float(loss.detach().cpu()))
             policy_losses.append(float(policy_loss.detach().cpu()))
             value_losses.append(float(value_loss.detach().cpu()))
+            counterfactual_q_losses.append(float(counterfactual_q_loss.detach().cpu()))
+            counterfactual_advantage_stds.append(float(cf_advantages.detach().std(unbiased=False).cpu()))
+            counterfactual_q_spreads.append(float(cf_q_spread.detach().mean().cpu()))
+            counterfactual_critic_wall_seconds.append(float(counterfactual_wall_seconds))
             entropies.append(float(entropy_loss.detach().cpu()))
             intent_losses.append(float(intent_loss.detach().cpu()))
             intent_accs.append(float(intent_acc.detach().cpu()))
@@ -3390,6 +3490,12 @@ def update_policy(
         "loss": float(np.mean(losses)),
         "policy_loss": float(np.mean(policy_losses)),
         "value_loss": float(np.mean(value_losses)),
+        "counterfactual_q_loss": float(np.mean(counterfactual_q_losses)) if counterfactual_q_losses else 0.0,
+        "counterfactual_advantage_std": float(np.mean(counterfactual_advantage_stds)) if counterfactual_advantage_stds else 0.0,
+        "counterfactual_q_spread": float(np.mean(counterfactual_q_spreads)) if counterfactual_q_spreads else 0.0,
+        "counterfactual_critic_wall_seconds": (
+            float(np.mean(counterfactual_critic_wall_seconds)) if counterfactual_critic_wall_seconds else 0.0
+        ),
         "entropy": float(np.mean(entropies)),
         "intent_loss": float(np.mean(intent_losses)),
         "intent_acc": float(np.mean(intent_accs)),

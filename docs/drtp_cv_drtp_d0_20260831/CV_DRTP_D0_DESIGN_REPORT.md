@@ -29,8 +29,10 @@ audits.
 ## Exact implementation boundary
 
 The existing `RIGMAPPOAgent` uses a centralized scalar `V(share_obs, role)`.
-CV-DRTP may replace that branch with `Q(share_obs, role, joint_action)` and
-evaluate the finite action alternatives for the acting agent. It must preserve:
+CV-DRTP retains this branch solely for the unchanged bootstrapped-return/GAE
+target, and augments it with `Q(share_obs, role, joint_action)` for the
+actor-side counterfactual control variate. It evaluates the finite action
+alternatives for the acting agent. It must preserve:
 
 - Original DRTP selection semantics and every sampler constant;
 - actor parameters, actor inputs, actor logits and PPO clipping rule;
