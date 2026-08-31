@@ -8,6 +8,9 @@ MAX_PARALLEL="${MAX_PARALLEL:-9}"; PYTHON_BIN="${PYTHON_BIN:-python}"
 [[ $(df -Pk "$ROOT" | awk 'NR==2{print $4}') -ge 20971520 ]] || { echo "need 20GiB free" >&2; exit 2; }
 export PYTHONUNBUFFERED=1 CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}" OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 mkdir -p "$OUT/launcher_logs" "$OUT/diagnostics/preflight"; cd "$ROOT"
+"$PYTHON_BIN" -m pytest -q \
+  tests/test_drtp_selective_klr_intervention_utility_p1.py \
+  tests/test_drtp_stable_v2_kl_guard.py
 "$PYTHON_BIN" scripts/verify_drtp_selective_klr_intervention_utility_p1_preflight.py --output "$OUT/diagnostics/preflight/P1_PREFLIGHT.json"
 printf '%s\n' {3801..3810} | xargs -n1 -P "$MAX_PARALLEL" bash -c 's="$1"; "$PYTHON_BIN" "$ROOT/scripts/run_drtp_selective_klr_intervention_utility_p1_single.py" --seed "$s" --output-root "$OUT" --execute >"$OUT/launcher_logs/drtp_sg_seed${s}.out" 2>"$OUT/launcher_logs/drtp_sg_seed${s}.err"' _ || { echo "P1 training failed; aggregate not started" >&2; exit 3; }
 "$PYTHON_BIN" scripts/aggregate_drtp_selective_klr_intervention_utility_p1.py --output-root "$OUT" --execute
