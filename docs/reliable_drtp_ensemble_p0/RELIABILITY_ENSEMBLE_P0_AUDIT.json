@@ -1,0 +1,88 @@
+{
+  "protocol": "RELIABILITY-ENSEMBLE-P0-V1",
+  "verdict": "RELIABILITY_ENSEMBLE_P0_DESIGN_FEASIBLE",
+  "zero_training": true,
+  "rollouts_started": false,
+  "checkpoints_loaded": false,
+  "evaluation_started": false,
+  "new_algorithm_authorized": false,
+  "mainline_a_modified": false,
+  "source_hashes": {
+    "algorithms/ri_gmappo/simple_ri_gmappo.py": "312b0696acd93e011d2eac2ef1fe7fe3a77f8d24b7ea71d2a9a9e78b53f19acb",
+    "scripts/run_phase_rsg1_development_smoke.py": "e697ddcc683c765c89c0e502a33872c24bad025f4d4c9a886a45f04668eb3f46",
+    "scripts/run_drtp_sg_development_evaluation.py": "001c6aef6f4b4a7c8599147bb1b16af1270491fb899f8ea1624810772044eafe"
+  },
+  "interface_checks": [
+    {
+      "label": "discrete categorical policy distribution",
+      "needle": "Categorical(logits=logits)",
+      "pass": true
+    },
+    {
+      "label": "explicit probability sampling path",
+      "needle": "torch.multinomial(probs",
+      "pass": true
+    },
+    {
+      "label": "deterministic policy-action interface",
+      "needle": "deterministic: bool = False",
+      "pass": true
+    },
+    {
+      "label": "existing evaluator uses deterministic actions",
+      "needle": "deterministic=True",
+      "pass": true
+    },
+    {
+      "label": "evaluation tape is explicit data, not training input",
+      "needle": "tape = json.loads",
+      "pass": true
+    },
+    {
+      "label": "evaluation manifest records held-out status",
+      "needle": "held_out_tape_used",
+      "pass": true
+    },
+    {
+      "label": "training/evaluation mode is an explicit configuration boundary",
+      "needle": "evaluation_enabled: bool = True",
+      "pass": true
+    }
+  ],
+  "execution_design": {
+    "policy_aggregation": "For each agent and state, uniformly average fixed member Categorical probabilities, then take argmax for deterministic evaluation or draw exactly one action from the pooled distribution with a deployment-only generator.",
+    "logit_warning": "Do not average raw logits unless that alternative is pre-registered; probability averaging is the frozen candidate because it remains a valid simplex by construction.",
+    "runtime_requirements": [
+      "All members receive exactly the same observation, graph, role, adjacency and intent tensors.",
+      "A member must be a fixed final checkpoint; no checkpoint may be selected using formal, independent or held-out evaluation outcomes.",
+      "The ensemble size K, member-seed lists, uniform weights, aggregation rule and deterministic/stochastic execution convention must be frozen before any training.",
+      "For stochastic deployment, use one new deployment-only Torch generator after pooling; never let member-specific sampling influence the pooled action."
+    ]
+  },
+  "distillation_design": {
+    "feasible": true,
+    "teacher_target": "stop-gradient pooled teacher probabilities from fixed ensemble members",
+    "student_loss": "A separately initialized student may add KL(teacher_probs || student_probs) only on training rollout batches or a separately frozen training-only distillation tape.",
+    "prohibited_inputs": [
+      "formal evaluation tape",
+      "independent cohort evaluation tape",
+      "held-out/unseen tape",
+      "evaluation return",
+      "final seed-quality label",
+      "future trajectory information"
+    ],
+    "no_leakage_rule": "Teacher checkpoints and any distillation examples must be determined exclusively from pre-frozen training seeds and training-only rollouts. Evaluation code may consume the final frozen student/ensemble only after training ends."
+  },
+  "fair_comparison_contract": [
+    "Compare E-DRTP against E-UTR with the same K, architecture, member budgets, training-seed allocation, fixed-checkpoint convention, aggregation rule and evaluation tape.",
+    "Retain single Original DRTP and UTR only as contextual references; do not attribute an ensemble-versus-single difference solely to DRTP.",
+    "Treat each ensemble bundle, not each member and not each episode, as one trained policy unit for seed-level inference.",
+    "Cohorts must remain separate. Do not pool a favorable cohort with an unfavorable cohort to claim reliability."
+  ],
+  "cost_contract": [
+    "Execution-only ensemble cost is K actor forward passes per environment decision; the critic is not required for action selection.",
+    "Persisted deployment weights scale with K if full agents are kept; a deployment package may omit critics only if this is applied identically to all ensemble arms and documented.",
+    "Distillation adds teacher forwards during student training and must report training environment interactions separately from teacher-forward compute; it must not claim equal compute to a single policy."
+  ],
+  "next_authorization_boundary": "No ensemble training, distillation training, evaluation, member selection or parameter sweep is authorized by P0. A separate P1 contract must freeze K, candidate member construction, training-only data source, comparator E-UTR, two cohorts, compute budget and gate before execution."
+}
