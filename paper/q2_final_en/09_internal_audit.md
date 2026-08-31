@@ -5,7 +5,7 @@ This audit applies only to `paper/q2_final_en/`; it does not audit the legacy EA
 ## Summary
 
 - Status: `PASS`
-- Main-text words excluding references, editorial canon, and Supplementary Information: `5859`
+- Main-text words excluding references, editorial canon, and Supplementary Information: `5826`
 - Hard errors: `0`
 - Warnings: `0`
 
@@ -50,7 +50,7 @@ This audit applies only to `paper/q2_final_en/`; it does not audit the legacy EA
 | universal robustness claim | `PASS` | no unqualified occurrence |
 | strict-OOD success claim | `PASS` | no unqualified occurrence |
 | general-DRO guarantee claim | `PASS` | no unqualified occurrence |
-| abstract length | `PASS` | 226 |
+| abstract length | `PASS` | 225 |
 
 ## Hard errors
 

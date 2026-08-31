@@ -2,7 +2,7 @@
 
 ## Canonical title
 
-**Bounded Adaptive Topology-Perturbation Reweighting for Relay-Failure UAV Coordination: Formal Gains and Training-Cohort Sensitivity**
+**Bounded Adaptive Topology-Perturbation Reweighting for Relay-Failure UAV Coordination**
 
 ## One-sentence argument
 
