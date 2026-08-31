@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import Any, Callable, List
 
 import copy
 import csv
 import hashlib
+import io
 import json
 import math
 import random
+import time
 from contextlib import nullcontext
 
 import numpy as np
@@ -119,6 +121,14 @@ class RIGMAPPOConfig:
     # historical PPO path.  Guard modes make target_kl a hard post-step
     # empirical-KL boundary rather than only an epoch-stop hint.
     policy_update_guard_mode: str = "none"
+    # P1 Selective-KLR research instrumentation.  This is an observational,
+    # default-off alarm: it never rolls back or otherwise changes the official
+    # PPO trajectory.  A caller may attach an isolated callback which receives
+    # a copied pre-update state only after a post-step empirical-KL alarm.
+    intervention_utility_audit_enabled: bool = False
+    intervention_utility_alarm_kl: float | None = None
+    intervention_utility_probe_count: int = 4
+    intervention_utility_probe_seed: int | None = None
     critic_warmup_updates: int = 0
     ppo_epochs: int = 4
     minibatch_graphs: int = 256
@@ -1379,6 +1389,7 @@ def run_pp_drtp_probe_rollouts(
     update: int,
     probe_seed: int,
     probe_count: int,
+    allow_any_update: bool = False,
 ) -> list[dict]:
     """Run isolated, deterministic, same-base-id probe episodes.
 
@@ -1386,7 +1397,7 @@ def run_pp_drtp_probe_rollouts(
     a rollout buffer, optimizer transaction, training environment, or training
     RNG stream.  New environments are seeded before every reset.
     """
-    if update % ADAPT_INTERVAL != 0 or update <= WARMUP_UPDATES:
+    if not allow_any_update and (update % ADAPT_INTERVAL != 0 or update <= WARMUP_UPDATES):
         raise ValueError("PP-DRTP probe requested outside a post-warm-up adaptation boundary")
     if int(probe_count) <= 0:
         raise ValueError("PP-DRTP probe_count must be positive")
@@ -1438,10 +1449,163 @@ def run_pp_drtp_probe_rollouts(
                         "initial_state_hash": initial_hash,
                         "episode_return": episode_return,
                         "steps": int(info.get("step", 0)),
+                        "success": float(info.get("success", 0.0)),
+                        "collision": float(info.get("collision", 0.0)),
+                        "timeout": float(info.get("timeout", 0.0)),
                     })
     finally:
         agent.train(was_training)
     return records
+
+
+def _serialized_sha256(value: Any) -> str:
+    """Hash a PyTorch-serializable state without exposing it in a CSV."""
+    buffer = io.BytesIO()
+    torch.save(value, buffer)
+    return hashlib.sha256(buffer.getvalue()).hexdigest()
+
+
+class InterventionUtilityAuditWriter:
+    """Persist and score trigger-local accept-versus-rollback shadow probes.
+
+    The class is deliberately observational.  The official actor remains on
+    the accepted Original-DRTP update; the rollback actor is temporarily
+    loaded only into the same in-memory agent for a deterministic probe and is
+    restored before the function returns.  ``record_event`` asserts this
+    restoration, while the caller separately asserts model/optimizer equality.
+    """
+
+    def __init__(
+        self,
+        output_dir: Path,
+        cfg: RIGMAPPOConfig,
+        device: torch.device,
+        runtime_snapshot: Callable[[], dict[str, Any]],
+    ) -> None:
+        self.output_dir = output_dir
+        self.cfg = cfg
+        self.device = device
+        self.runtime_snapshot = runtime_snapshot
+        self.probe_seed = int(cfg.seed) if cfg.intervention_utility_probe_seed is None else int(cfg.intervention_utility_probe_seed)
+        self.probe_count = int(cfg.intervention_utility_probe_count)
+        if self.probe_count <= 0:
+            raise ValueError("intervention utility probe_count must be positive")
+        self.snapshot_dir = output_dir / "intervention_utility" / "trigger_snapshots"
+        self.snapshot_dir.mkdir(parents=True, exist_ok=False)
+        self.log_path = output_dir / "intervention_utility" / "trigger_probe_events.csv"
+        self.log_path.parent.mkdir(parents=True, exist_ok=True)
+        self.event_count = 0
+        self.extra_env_steps = 0
+        self.extra_episodes = 0
+        self.started_at = time.time()
+        self._file = self.log_path.open("w", newline="", encoding="utf-8")
+        self._fields = [
+            "event_id", "update", "ppo_epoch", "alarm_kl", "alarm_threshold", "branch",
+            "base_id", "group", "condition", "failed_blue_agent", "failure_start_step",
+            "failure_duration_steps", "initial_state_hash", "episode_return", "steps", "success",
+            "collision", "timeout", "pre_state_sha256", "post_state_sha256", "snapshot_file",
+        ]
+        self._writer = csv.DictWriter(self._file, fieldnames=self._fields)
+        self._writer.writeheader()
+        (output_dir / "intervention_utility" / "manifest.json").write_text(
+            json.dumps({
+                "protocol": "DRTP-SELECTIVE-KLR-INTERVENTION-UTILITY-P1-V1",
+                "status": "RUNNING",
+                "official_trajectory": "Original DRTP; accepted actor update always retained",
+                "selector_training": False,
+                "automatic_continuation": False,
+                "formal_evaluation_tape_used": False,
+                "training_only_paired_probe": True,
+                "alarm_threshold": cfg.intervention_utility_alarm_kl,
+                "probe_base_ids": self.probe_count,
+            }, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+    def record_event(self, agent: RIGMAPPOAgent, event: dict[str, Any]) -> None:
+        self.event_count += 1
+        event_id = self.event_count
+        official_post_state = copy.deepcopy(agent.actor.state_dict())
+        official_post_hash = _serialized_sha256(official_post_state)
+        pre_state = event["pre_state"]
+        snapshot = {
+            "format": "drtp_intervention_utility_trigger_v1",
+            "event_id": event_id,
+            "update": event["update"],
+            "ppo_epoch": event["ppo_epoch"],
+            "minibatch_start": event["minibatch_start"],
+            "minibatch_indices": event["minibatch_indices"],
+            "alarm_kl": event["alarm_kl"],
+            "alarm_threshold": event["alarm_threshold"],
+            "pre_model_state": pre_state["model_state"],
+            "pre_optimizer_state": pre_state["optimizer_state"],
+            "pre_runtime_rng_state": pre_state["runtime_rng_state"],
+            "pre_minibatch_rng_state": pre_state["minibatch_rng_state"],
+            "post_model_state": event["post_model_state"],
+            "post_optimizer_state": event["post_optimizer_state"],
+            "post_runtime_rng_state": event["post_runtime_rng_state"],
+            "training_runtime_context": self.runtime_snapshot(),
+        }
+        snapshot_path = self.snapshot_dir / f"trigger_{event_id:04d}_u{int(event['update']):04d}_e{int(event['ppo_epoch'])}.pt"
+        torch.save(snapshot, snapshot_path)
+        pre_hash = _serialized_sha256(pre_state["model_state"])
+
+        # Both branches receive the identical deterministic training-only probe
+        # IDs.  The 'rollback' branch matches the historical KLR semantic:
+        # only the actor is restored; the post-step critic is retained.
+        probe_rng_before = _capture_runtime_rng_state()
+        try:
+            accept = run_pp_drtp_probe_rollouts(
+                agent, self.cfg, self.device, update=int(event["update"]),
+                probe_seed=_intervention_utility_probe_seed(self.probe_seed, event_id), probe_count=self.probe_count,
+                allow_any_update=True,
+            )
+            agent.actor.load_state_dict(pre_state["actor_state"], strict=True)
+            rollback = run_pp_drtp_probe_rollouts(
+                agent, self.cfg, self.device, update=int(event["update"]),
+                probe_seed=_intervention_utility_probe_seed(self.probe_seed, event_id), probe_count=self.probe_count,
+                allow_any_update=True,
+            )
+        finally:
+            agent.actor.load_state_dict(official_post_state, strict=True)
+            _restore_runtime_rng_state(probe_rng_before)
+        if not _nested_tensors_equal(agent.actor.state_dict(), official_post_state):
+            raise RuntimeError("intervention utility probe failed to restore accepted actor")
+        if len(accept) != len(rollback):
+            raise RuntimeError("intervention utility paired probes differ in record count")
+        for left, right in zip(accept, rollback):
+            identity = ("base_id", "group", "condition", "failure_start_step", "failure_duration_steps", "initial_state_hash")
+            if any(left[key] != right[key] for key in identity):
+                raise RuntimeError("intervention utility paired-reset integrity failure")
+        for branch, records in (("accept", accept), ("rollback", rollback)):
+            for record in records:
+                self._writer.writerow({
+                    "event_id": event_id, "update": event["update"], "ppo_epoch": event["ppo_epoch"],
+                    "alarm_kl": event["alarm_kl"], "alarm_threshold": event["alarm_threshold"],
+                    "branch": branch, **record, "pre_state_sha256": pre_hash,
+                    "post_state_sha256": official_post_hash, "snapshot_file": snapshot_path.name,
+                })
+                self.extra_env_steps += int(record["steps"])
+                self.extra_episodes += 1
+        self._file.flush()
+
+    def close(self) -> None:
+        if self._file.closed:
+            return
+        self._file.close()
+        manifest = self.output_dir / "intervention_utility" / "manifest.json"
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        payload.update({
+            "status": "COMPLETED", "trigger_events": self.event_count,
+            "extra_probe_episodes": self.extra_episodes, "extra_probe_env_steps": self.extra_env_steps,
+            "wall_clock_seconds": time.time() - self.started_at,
+        })
+        manifest.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _intervention_utility_probe_seed(master_seed: int, event_id: int) -> int:
+    payload = f"selective-klr-p1/{int(master_seed)}/{int(event_id)}".encode("utf-8")
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big") % 2_000_000_000
 
 
 def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
@@ -1511,6 +1675,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             raise ValueError("post-step actor guards require a finite positive target_kl")
         if cfg.rollout_steps * cfg.num_envs != cfg.minibatch_graphs:
             raise ValueError("post-step actor guards require one complete rollout minibatch per PPO epoch")
+    if cfg.intervention_utility_audit_enabled:
+        if policy_guard_mode != "none" or cfg.target_kl is not None:
+            raise ValueError("P1 intervention utility audit must run the unguarded Original-DRTP PPO path")
+        if cfg.actor_gradient_mode != "standard" or cfg.sam_enabled:
+            raise ValueError("P1 intervention utility audit supports only standard non-SAM PPO")
+        if cfg.rollout_steps * cfg.num_envs != cfg.minibatch_graphs:
+            raise ValueError("P1 intervention utility audit requires one complete rollout minibatch per PPO epoch")
+        if cfg.intervention_utility_alarm_kl != 0.02:
+            raise ValueError("P1 intervention utility audit freezes alarm KL at 0.02")
     if sum((curriculum.enabled, cfg.fixed_f0_probability is not None, drtp_mode != "none", cfg.fixed_stratified_topology_sampler)) > 1:
         raise ValueError("curriculum, fixed mixture, DRTP sampler, and fixed stratified sampler are mutually exclusive")
     if actor_gradient_mode != "standard":
@@ -1808,6 +1981,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "actor_optimizer_state_retained_after_projection",
         "critic_step_retained_after_actor_rollback",
         "critic_step_retained_after_policy_guard",
+        "intervention_utility_alarm_count",
         "policy_guard_cumulative_triggers",
         "policy_guard_cumulative_attempts",
         "policy_guard_cumulative_intervention_rate",
@@ -1858,6 +2032,28 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         group_credit_conflict_log_path.open("a" if cfg.append_log else "w", newline="", encoding="utf-8")
         if cfg.group_credit_telemetry
         else nullcontext()
+    )
+    intervention_utility_current_batch: dict[str, Any] | None = None
+
+    def intervention_utility_runtime_snapshot() -> dict[str, Any]:
+        if intervention_utility_current_batch is None:
+            raise RuntimeError("P1 trigger fired without a current rollout batch")
+        return {
+            "environment_states": [env.runtime_state_dict() for env in envs],
+            "obs": copy.deepcopy(obs), "share_obs": copy.deepcopy(share_obs), "graph_obs": copy.deepcopy(graph_obs),
+            "episode_counts": [int(value) for value in episode_counts],
+            "drtp_episode_returns": [float(value) for value in drtp_episode_returns],
+            "drtp_selections": [_selection_to_state(value) for value in drtp_selections],
+            "drtp_sampler_state": None if drtp_sampler is None else drtp_sampler.state_dict(),
+            "rollout_batch": copy.deepcopy(intervention_utility_current_batch),
+            "rng_streams": None if rng_streams is None else rng_streams.manifest(),
+            "action_generator_state": None if action_generator is None else action_generator.get_state(),
+            "env_rng_states": None if env_rngs is None else [rng.getstate() for rng in env_rngs],
+        }
+
+    intervention_utility_writer = (
+        InterventionUtilityAuditWriter(out_dir, cfg, device, intervention_utility_runtime_snapshot)
+        if cfg.intervention_utility_audit_enabled else None
     )
     with log_path.open(mode, newline="", encoding="utf-8") as f, (
         telemetry_path.open(mode, newline="", encoding="utf-8") if cfg.role_gate_telemetry else nullcontext()
@@ -1977,7 +2173,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     credit_group_rows, credit_conflict_rows = summarize_group_credit_assignment(
                         agent, batch, cfg, device, update=update
                     )
-            train_info = update_policy(agent, optimizer, batch, cfg, device, update, minibatch_rng=minibatch_rng)
+            intervention_utility_current_batch = batch
+            train_info = update_policy(
+                agent, optimizer, batch, cfg, device, update, minibatch_rng=minibatch_rng,
+                intervention_utility_callback=(
+                    None if intervention_utility_writer is None
+                    else lambda event: intervention_utility_writer.record_event(agent, event)
+                ),
+            )
+            train_info.pop("intervention_utility_events", None)
             policy_guard_cumulative_triggers += int(train_info["policy_guard_triggered"])
             policy_guard_cumulative_attempts += int(train_info["policy_steps_attempted"])
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
@@ -2120,6 +2324,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                     )
     if telemetry_writer is not None:
         telemetry_writer.close()
+    if intervention_utility_writer is not None:
+        intervention_utility_writer.close()
     return log_path
 
 
@@ -2808,6 +3014,21 @@ def _nested_tensors_are_finite(value) -> bool:
     return True
 
 
+def _nested_tensors_equal(left, right) -> bool:
+    """Strict recursive equality used to prove a diagnostic callback is inert."""
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, torch.Tensor):
+        return bool(torch.equal(left, right))
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(_nested_tensors_equal(left[key], right[key]) for key in left)
+    if isinstance(left, (list, tuple)):
+        return len(left) == len(right) and all(_nested_tensors_equal(a, b) for a, b in zip(left, right))
+    if isinstance(left, np.ndarray):
+        return bool(np.array_equal(left, right))
+    return left == right
+
+
 def update_policy(
     agent: RIGMAPPOAgent,
     optimizer: optim.Optimizer,
@@ -2816,6 +3037,7 @@ def update_policy(
     device,
     update: int,
     minibatch_rng: np.random.Generator | None = None,
+    intervention_utility_callback: Callable[[dict[str, Any]], None] | None = None,
 ):
     if str(cfg.actor_gradient_mode).lower() != "standard":
         return _update_policy_conditioned_actor(agent, optimizer, batch, cfg, device, update, minibatch_rng=minibatch_rng)
@@ -2847,6 +3069,21 @@ def update_policy(
     rollback_guard_enabled = policy_guard_mode == "post_step_actor_rollback"
     backtrack_guard_enabled = policy_guard_mode == "post_step_actor_backtrack"
     policy_guard_enabled = rollback_guard_enabled or backtrack_guard_enabled
+    intervention_utility_enabled = bool(cfg.intervention_utility_audit_enabled)
+    intervention_utility_threshold = cfg.intervention_utility_alarm_kl
+    if intervention_utility_enabled:
+        if intervention_utility_callback is None:
+            raise ValueError("intervention utility audit requires a callback")
+        if policy_guard_enabled or cfg.target_kl is not None:
+            raise ValueError("intervention utility audit requires an unguarded Original-DRTP PPO path")
+        if (
+            intervention_utility_threshold is None
+            or not math.isfinite(float(intervention_utility_threshold))
+            or float(intervention_utility_threshold) <= 0.0
+        ):
+            raise ValueError("intervention utility audit requires a finite positive alarm KL")
+        if num_graphs != cfg.minibatch_graphs:
+            raise RuntimeError("intervention utility audit requires one complete rollout minibatch per PPO epoch")
     if policy_guard_enabled and num_graphs != cfg.minibatch_graphs:
         raise RuntimeError("post-step actor guards require one complete rollout minibatch per PPO epoch")
     actor_parameters = [parameter for parameter in agent.actor.parameters() if parameter.requires_grad]
@@ -2867,6 +3104,7 @@ def update_policy(
     critic_step_retained_after_actor_rollback = False
     critic_step_retained_after_policy_guard = False
     final_accepted_policy_kl = 0.0
+    intervention_utility_events: list[dict[str, Any]] = []
 
     def current_policy_kl() -> float:
         with torch.no_grad():
@@ -2965,12 +3203,29 @@ def update_policy(
                 float(torch.sqrt(sum(gradient.square().sum() for gradient in gate_grads)).cpu()) if gate_grads else 0.0
             )
             grad_norm = nn.utils.clip_grad_norm_(agent.parameters(), cfg.max_grad_norm)
+            intervention_pre_state: dict[str, Any] | None = None
             if policy_guard_enabled:
                 actor_state_before = copy.deepcopy(agent.actor.state_dict())
                 actor_parameters_before = [parameter.detach().clone() for parameter in actor_parameters]
                 actor_optimizer_state_before = _snapshot_optimizer_parameter_states(optimizer, actor_parameters)
                 transaction_model_state_before = copy.deepcopy(agent.state_dict())
                 transaction_optimizer_state_before = copy.deepcopy(optimizer.state_dict())
+            elif intervention_utility_enabled:
+                # The alarm is observable only after Adam has stepped.  Keep a
+                # complete pre-step copy transiently for every candidate step,
+                # then persist it only when the frozen alarm fires.
+                intervention_pre_state = {
+                    "model_state": copy.deepcopy(agent.state_dict()),
+                    "optimizer_state": copy.deepcopy(optimizer.state_dict()),
+                    "runtime_rng_state": _capture_runtime_rng_state(),
+                    "minibatch_rng_state": (
+                        None if minibatch_rng is None else copy.deepcopy(minibatch_rng.bit_generator.state)
+                    ),
+                    "actor_state": copy.deepcopy(agent.actor.state_dict()),
+                    "ppo_epoch": int(epochs_ran),
+                    "minibatch_start": int(start),
+                    "minibatch_indices": np.asarray(mb, dtype=np.int64).copy(),
+                }
             optimizer.step()
 
             if policy_guard_enabled:
@@ -3057,6 +3312,43 @@ def update_policy(
                     policy_steps_accepted += 1
                     actor_accepted_update_norms.append(attempted_update_l2)
                     final_accepted_policy_kl = post_step_kl_value
+            elif intervention_utility_enabled:
+                post_step_kl_value = current_policy_kl()
+                policy_post_step_kls.append(post_step_kl_value)
+                if not math.isfinite(post_step_kl_value):
+                    raise FloatingPointError("non-finite intervention-utility post-step policy KL")
+                if post_step_kl_value > float(intervention_utility_threshold):
+                    if intervention_pre_state is None:
+                        raise AssertionError("missing intervention-utility pre-step state")
+                    post_model_state = copy.deepcopy(agent.state_dict())
+                    post_optimizer_state = copy.deepcopy(optimizer.state_dict())
+                    event = {
+                        "update": int(update),
+                        "ppo_epoch": int(epochs_ran),
+                        "minibatch_start": int(start),
+                        "minibatch_indices": intervention_pre_state["minibatch_indices"],
+                        "alarm_kl": float(post_step_kl_value),
+                        "alarm_threshold": float(intervention_utility_threshold),
+                        "pre_state": intervention_pre_state,
+                        "post_model_state": post_model_state,
+                        "post_optimizer_state": post_optimizer_state,
+                        "post_actor_state": copy.deepcopy(agent.actor.state_dict()),
+                        "post_runtime_rng_state": _capture_runtime_rng_state(),
+                    }
+                    callback_rng_before = _capture_runtime_rng_state()
+                    intervention_utility_callback(event)
+                    # The callback must be observational: exact byte equality
+                    # after it returns is a hard invariant of P1.
+                    if not _nested_tensors_equal(agent.state_dict(), post_model_state):
+                        raise RuntimeError("intervention utility callback mutated official model state")
+                    if not _nested_tensors_equal(optimizer.state_dict(), post_optimizer_state):
+                        raise RuntimeError("intervention utility callback mutated official optimizer state")
+                    if not _nested_tensors_equal(_capture_runtime_rng_state(), callback_rng_before):
+                        raise RuntimeError("intervention utility callback mutated official RNG state")
+                    intervention_utility_events.append({
+                        "update": int(update), "ppo_epoch": int(epochs_ran),
+                        "alarm_kl": float(post_step_kl_value),
+                    })
 
             gates = [
                 torch.sigmoid(parameter.detach())
@@ -3134,4 +3426,8 @@ def update_policy(
         "actor_optimizer_state_retained_after_projection": float(actor_optimizer_state_retained_after_projection),
         "critic_step_retained_after_actor_rollback": float(critic_step_retained_after_actor_rollback),
         "critic_step_retained_after_policy_guard": float(critic_step_retained_after_policy_guard),
+        "intervention_utility_alarm_count": int(len(intervention_utility_events)),
+        # Ephemeral objects consumed by the trainer; never written to
+        # train_log.csv and never fed to PPO or the sampler.
+        "intervention_utility_events": intervention_utility_events,
     }

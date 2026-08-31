@@ -1,0 +1,67 @@
+{
+  "protocol": "DRTP-SELECTIVE-KLR-INTERVENTION-UTILITY-P1-V1",
+  "status": "AUTHORIZED",
+  "research_track": "B_only",
+  "mainline_a_modified": false,
+  "official_trajectory": {
+    "name": "Original DRTP",
+    "sampler": "drtp",
+    "policy_update_guard_mode": "none",
+    "target_kl": null,
+    "selector_training": false,
+    "official_branch_selection": "accept_always"
+  },
+  "alarm": {
+    "post_step_empirical_kl_threshold": 0.02,
+    "threshold_source": "frozen Full-Rollback KLR contract; alarm only, not an action",
+    "all_alarms_enrolled": true
+  },
+  "shadow_probe": {
+    "type": "training_only_deterministic_paired_reset",
+    "base_ids_per_event": 4,
+    "groups": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "official_ppo_buffer": false,
+    "formal_or_heldout_evaluation_tape": false,
+    "accept_semantics": "post-update actor with retained post-update critic",
+    "rollback_semantics": "pre-update actor with retained post-update critic",
+    "branch_rng": "same deterministic probe IDs for accept and rollback"
+  },
+  "cohorts": {
+    "A": [3801, 3802, 3803, 3804, 3805],
+    "B": [3806, 3807, 3808, 3809, 3810],
+    "independent_unit": "training_seed",
+    "report_separately": true
+  },
+  "training": {
+    "updates": 1953,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "official_environment_steps_per_seed": 499968,
+    "milestones": {"976": "250k", "1953": "500k"},
+    "early_stopping": false,
+    "checkpoint_promotion": false,
+    "seed_replacement": false,
+    "performance_rerun": false,
+    "automatic_continuation": false
+  },
+  "analysis": {
+    "primary_shadow_endpoint": "failure_groups_mean_episode_return",
+    "practical_utility_margin": 7.874919837916801,
+    "margin_source": "frozen S0 same-checkpoint cross-tape endpoint variation",
+    "automatic_mechanism_declaration": false,
+    "automatic_algorithm_modification": false,
+    "required_human_review": [
+      "temporal ordering",
+      "two-or-more-seed replication",
+      "beneficial and harmful rollback separation",
+      "paired-reset integrity",
+      "official-trajectory inertness"
+    ]
+  },
+  "authorization": {
+    "p1_shadow_audit_authorized": true,
+    "selective_klr_training_authorized": false,
+    "mainline_a_unchanged": true,
+    "automatic_continuation_authorized": false
+  }
+}
