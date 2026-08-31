@@ -1,0 +1,26 @@
+{
+  "status": "RELIABILITY_ENSEMBLE_P1_CLOUD_PREFLIGHT_PASS",
+  "checks": {
+    "explicit_authorization": true,
+    "two_arms_only": true,
+    "six_k3_bundles": true,
+    "exact_36_member_trajectories": true,
+    "unique_clean_candidate_seeds": true,
+    "fixed_budget": true,
+    "uniform_probability_pool": true,
+    "no_distillation": true,
+    "no_auto_continuation": true,
+    "development_tape_only": true,
+    "training_does_not_read_tape": true,
+    "no_member_selection_by_evaluation": true
+  },
+  "hashes": {
+    "freeze": "219ed8e17cb4a6ed74944d7e9af197d854c92257ecec2c99ca5a4bf22364db2d",
+    "tape": "cf3440cdc45ce2f35915c19b480df6aca1851ceecd1d7a665fdbf53978079864",
+    "pooling": "3f86ef68baf4c14c5cd7976bfe0628ec5bb01d04086f4a025d18137ae1a5238d",
+    "runner": "9968a8df19a030b073b0898e4159351bc513ea2ffaeda4d75ddf99ef30d1c352"
+  },
+  "zero_training_preflight": true,
+  "evaluation_started": false,
+  "distillation_started": false
+}

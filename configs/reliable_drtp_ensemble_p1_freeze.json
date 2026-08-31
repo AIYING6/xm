@@ -1,0 +1,63 @@
+{
+  "protocol": "RELIABLE-DRTP-ENSEMBLE-P1-V1",
+  "status": "AUTHORIZED_FROZEN",
+  "research_track": "B_only",
+  "mainline_a_modified": false,
+  "arms": {
+    "e_utr": {"sampler": "utr", "ensemble_size": 3},
+    "e_drtp": {"sampler": "drtp", "ensemble_size": 3}
+  },
+  "cohorts": {
+    "A": {
+      "A1": [4601, 4602, 4603],
+      "A2": [4604, 4605, 4606],
+      "A3": [4607, 4608, 4609]
+    },
+    "B": {
+      "B1": [4611, 4612, 4613],
+      "B2": [4614, 4615, 4616],
+      "B3": [4617, 4618, 4619]
+    },
+    "must_be_reported_separately": true
+  },
+  "training": {
+    "updates": 1953,
+    "environment_steps_per_member": 499968,
+    "milestones": {"976": "250k", "1953": "500k"},
+    "early_stopping": false,
+    "checkpoint_promotion": false,
+    "seed_replacement": false,
+    "performance_rerun": false,
+    "automatic_continuation": false
+  },
+  "pooling": {
+    "rule": "uniform_action_probability_mean",
+    "weights": [0.3333333333333333, 0.3333333333333333, 0.3333333333333333],
+    "evaluation_action_rule": "deterministic_argmax_of_pooled_probabilities",
+    "member_checkpoint": "fixed_500k_only",
+    "member_selection_uses_evaluation": false
+  },
+  "distillation": {
+    "implemented": false,
+    "authorized": false
+  },
+  "leakage_boundary": {
+    "formal_tape_available_to_training": false,
+    "independent_tape_available_to_training": false,
+    "heldout_tape_available_to_training": false,
+    "development_tape_available_to_training": false,
+    "evaluation_result_used_for_member_selection": false
+  },
+  "gate": {
+    "epsilon_J": 7.874919837916801,
+    "safety_margin": 0.1,
+    "dual_cohort_rule": "both cohorts must pass; pooled result is descriptive only",
+    "possible_decisions": ["RELIABILITY_ENSEMBLE_P1_DIRECTIONAL_GO", "RELIABILITY_ENSEMBLE_P1_NO_GO"]
+  },
+  "authorization": {
+    "member_training_authorized": true,
+    "development_evaluation_authorized": true,
+    "distillation_authorized": false,
+    "automatic_continuation": false
+  }
+}
