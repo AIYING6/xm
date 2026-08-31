@@ -1,0 +1,6 @@
+route,replication,temporal_precedence,paired_utr_specificity,continuous_chain,minimal_intervention_mapping,summary
+R1 forensic,False,False,False,False,False,Conservative failures have no common timing and no repeated PPO/critic precursor absent from controls.
+B1 update sensitivity,False,False,False,False,False,Short-horizon actor and policy divergence patterns differ across adverse seeds and do not yield a DRTP-specific precursor.
+B5 failure-credit telemetry,False,False,False,False,False,The frozen mechanism matrix rejects every criterion for a failure-group-conditioned credit mechanism.
+Selective-KLR P1 shadow audit,False,False,False,False,False,"Across 88 alarms, 3 are practically beneficial, 1 harmful, and 84 near-zero; no seed-level selector signal is established."
+CV-DRTP dual-cohort pilot,False,False,False,False,False,Both fresh five-seed cohorts systematically lose reward and create new catastrophic seeds; counterfactual critic is not a viable intervention.

@@ -1,0 +1,24 @@
+{
+  "protocol": "DRTP-BLINE-MECHANISM-DISCOVERY-R0-V1",
+  "status": "MECHANISM_DISCOVERY_NO_GO",
+  "all_required_conditions_supported": false,
+  "criterion_support": {
+    "replication": false,
+    "temporal_precedence": false,
+    "paired_utr_specificity": false,
+    "continuous_chain": false,
+    "minimal_intervention_mapping": false
+  },
+  "evidence_routes_screened": 5,
+  "training_authorized": false,
+  "algorithm_modification_authorized": false,
+  "automatic_continuation_authorized": false,
+  "mainline_a_modified": false,
+  "source_hashes": {
+    "docs/drtp_stable_r1_forensic_20260829/R1_STAGE2_INTERPRETATION.md": "ed873d86444a6d3835efa79fd5629f8bcd68d8b9f7b23cc3cd578e80d0f5a372",
+    "docs/drtp_b1_update_sensitivity_20260830/B1_LITE_HUMAN_REVIEW.md": "42d1d21a12409fe65c592d9f0c6c7f89e09ec22dd22ee5cfe47205057a821235",
+    "docs/drtp_b5_final_review_20260830/mechanism_criteria_matrix.csv": "8ac9b72e679b3821f508cd2a51b70adb913b26041367152d8a6ffdcb53beb07c",
+    "user-verified cloud result, 2026-08-31": "USER_VERIFIED_CLOUD_GATE_OR_NONFILE_SOURCE",
+    "user-verified cloud gate CV_DRTP_PILOT_NO_GO_PERMANENTLY_CLOSED, 2026-08-31": "USER_VERIFIED_CLOUD_GATE_OR_NONFILE_SOURCE"
+  }
+}

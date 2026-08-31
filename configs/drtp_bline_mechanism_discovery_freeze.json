@@ -1,0 +1,73 @@
+{
+  "protocol": "DRTP-BLINE-MECHANISM-DISCOVERY-R0-V1",
+  "status": "ZERO_TRAINING_EVIDENCE_SYNTHESIS",
+  "purpose": "Determine whether completed, cohort-separated evidence supports exactly one new minimum intervention contract for Reliable-DRTP.",
+  "independent_unit": "training_seed",
+  "required_conditions": {
+    "replication": "At least two adverse DRTP seeds show the same directional signal.",
+    "temporal_precedence": "The signal is present before task-performance degradation.",
+    "paired_utr_specificity": "The signal is absent or materially weaker in matched UTR and high-return DRTP controls.",
+    "continuous_chain": "The evidence connects update/training state to a non-equivalent policy/value/behavior layer and then to task outcome.",
+    "minimal_intervention_mapping": "One intervention can target the signal without simultaneously changing sampler, PPO, reward, network, or environment."
+  },
+  "evidence_records": [
+    {
+      "route": "R1 forensic",
+      "source": "docs/drtp_stable_r1_forensic_20260829/R1_STAGE2_INTERPRETATION.md",
+      "replication": false,
+      "temporal_precedence": false,
+      "paired_utr_specificity": false,
+      "continuous_chain": false,
+      "minimal_intervention_mapping": false,
+      "summary": "Conservative failures have no common timing and no repeated PPO/critic precursor absent from controls."
+    },
+    {
+      "route": "B1 update sensitivity",
+      "source": "docs/drtp_b1_update_sensitivity_20260830/B1_LITE_HUMAN_REVIEW.md",
+      "replication": false,
+      "temporal_precedence": false,
+      "paired_utr_specificity": false,
+      "continuous_chain": false,
+      "minimal_intervention_mapping": false,
+      "summary": "Short-horizon actor and policy divergence patterns differ across adverse seeds and do not yield a DRTP-specific precursor."
+    },
+    {
+      "route": "B5 failure-credit telemetry",
+      "source": "docs/drtp_b5_final_review_20260830/mechanism_criteria_matrix.csv",
+      "replication": false,
+      "temporal_precedence": false,
+      "paired_utr_specificity": false,
+      "continuous_chain": false,
+      "minimal_intervention_mapping": false,
+      "summary": "The frozen mechanism matrix rejects every criterion for a failure-group-conditioned credit mechanism."
+    },
+    {
+      "route": "Selective-KLR P1 shadow audit",
+      "source": "user-verified cloud result, 2026-08-31",
+      "replication": false,
+      "temporal_precedence": false,
+      "paired_utr_specificity": false,
+      "continuous_chain": false,
+      "minimal_intervention_mapping": false,
+      "summary": "Across 88 alarms, 3 are practically beneficial, 1 harmful, and 84 near-zero; no seed-level selector signal is established."
+    },
+    {
+      "route": "CV-DRTP dual-cohort pilot",
+      "source": "user-verified cloud gate CV_DRTP_PILOT_NO_GO_PERMANENTLY_CLOSED, 2026-08-31",
+      "replication": false,
+      "temporal_precedence": false,
+      "paired_utr_specificity": false,
+      "continuous_chain": false,
+      "minimal_intervention_mapping": false,
+      "summary": "Both fresh five-seed cohorts systematically lose reward and create new catastrophic seeds; counterfactual critic is not a viable intervention."
+    }
+  ],
+  "decision_rule": "Authorize a new algorithm contract only when every required condition is supported by at least one coherent, replicated evidence chain. Otherwise return MECHANISM_DISCOVERY_NO_GO and authorize no new B-line training.",
+  "prohibitions": [
+    "no training",
+    "no evaluation rerun",
+    "no parameter sweep",
+    "no candidate selection from historical pilots",
+    "no Mainline-A modification"
+  ]
+}
