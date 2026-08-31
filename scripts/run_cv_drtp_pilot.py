@@ -68,7 +68,10 @@ def aggregate(a):
       z=[]
       for seed in seeds:
        u,o,c=(metrics(rows,arm,seed) for arm in ARMS); z.append({"seed":seed,"gain_original":o["J_pert_mean"]-u["J_pert_mean"],"gain_cv":c["J_pert_mean"]-u["J_pert_mean"],"cv_minus_original":c["J_pert_mean"]-o["J_pert_mean"],"original_catastrophic":catastrophic(o,u),"cv_catastrophic":catastrophic(c,u),"utr":u,"original":o,"cv":c})
-      og=[x["gain_original"] for x in z];cg=[x["gain_cv"] for x in z]; eps=f["gate"]["epsilon_J"]; mean=lambda x:sum(x)/len(x); sd=lambda x:statistics.stdev(x)
+      og=[x["gain_original"] for x in z];cg=[x["gain_cv"] for x in z]; eps=f["gate"]["epsilon_J"]
+      def mean(values):
+       values=list(values); return sum(values)/len(values)
+      def sd(values): return statistics.stdev(values)
       criteria={"positive_mean_gain_vs_utr":mean(cg)>0,"at_least_four_nonnegative":sum(x>=0 for x in cg)>=4,"no_new_catastrophic":sum(x["cv_catastrophic"] for x in z)<=sum(x["original_catastrophic"] for x in z),"range_reduced":max(cg)-min(cg)<max(og)-min(og),"sample_sd_reduced":sd(cg)<sd(og),"mean_retained_vs_original":mean(x["cv_minus_original"] for x in z)>=-eps,"upper_tail_retained":all(x["cv_minus_original"]>=-eps for x in z if x["gain_original"]>eps),"safety":all(x["cv"]["collision"]-x["utr"]["collision"]<=.1 and x["cv"]["timeout"]-x["utr"]["timeout"]<=.1 and x["cv"]["constraint"]<=x["utr"]["constraint"] for x in z)}
       return {"decision":"COHORT_PASS" if all(criteria.values()) else "COHORT_FAIL","criteria":criteria,"original_dispersion":{"range":max(og)-min(og),"sample_sd":sd(og)},"cv_dispersion":{"range":max(cg)-min(cg),"sample_sd":sd(cg)},"seed_results":z}
     A,B=one(f["cohorts"]["A"]),one(f["cohorts"]["B"]); decision="CV_DRTP_PILOT_EARLY_GO" if A["decision"]==B["decision"]=="COHORT_PASS" else "CV_DRTP_PILOT_NO_GO_PERMANENTLY_CLOSED";out.mkdir(parents=True);payload={"decision":decision,"cohort_A":A,"cohort_B":B,"pooled_n10_descriptive_only":True,"automatic_continuation_started":False,"mainline_a_modified":False};(out/"CV_DRTP_PILOT_GATE_DECISION.json").write_text(json.dumps(payload,indent=2)+"\n");(out/"CV_DRTP_PILOT_GATE_REPORT.md").write_text(f"# CV-DRTP two-cohort 0.5M gate\n\n**Decision:** `{decision}`. Cohort A: `{A['decision']}`; Cohort B: `{B['decision']}`.\n\nNo continuation, tuning, rerun, or CV-DRTP-v2 was started.\n")
