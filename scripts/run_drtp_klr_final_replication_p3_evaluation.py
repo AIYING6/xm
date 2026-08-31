@@ -17,7 +17,7 @@ def main():
   for seed in SEEDS:
    run=a.output_root/"runs"/arm/f"seed{seed}";m=json.loads((run/"run_manifest.json").read_text())
    if m.get("status")!="completed" or m.get("updates")!=1953 or m.get("environment_steps")!=499968 or m.get("tape_hash")!=tape["tape_hash"]:raise RuntimeError(f"invalid source run: {run}")
-   for c in tape["conditions"]:tasks.append((arm,seed,str(run/"actor_critic_latest.pt"),"500k",tape["episode_ids"],[c],tape["tape_hash"]))
+   for c in tape["conditions"]:tasks.append((arm,seed,str(run/"actor_critic_milestone_500k.pt"),"500k",tape["episode_ids"],[c],tape["tape_hash"]))
    manifests.append(m)
  total=len(tasks)*100;done=0;rows=[];print(f"KLR final P3 evaluation: workers=9, cells={len(tasks)}, episodes={total}",flush=True)
  with ProcessPoolExecutor(max_workers=9,mp_context=mp.get_context("spawn")) as ex:

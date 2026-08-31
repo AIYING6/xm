@@ -28,7 +28,7 @@ def main():
  m={"protocol":"DRTP-KLR-FINAL-REPLICATION-P3-V1","status":"running","delivery_commit":head(),"arm":a.arm,"seed":a.seed,"cohort":cohort,"updates":UPDATES,"environment_steps":499968,"milestones":MILESTONES,"sampler":cfg.drtp_sampler_mode,"policy_update_guard_mode":cfg.policy_update_guard_mode,"target_kl":cfg.target_kl,"tape_sha256":sha(TAPE),"tape_hash":tape["tape_hash"],"freeze_sha256":sha(FREEZE),"early_stopping":False,"checkpoint_promotion":False,"seed_replacement":False,"performance_rerun":False,"automatic_continuation":False,"started_at":time.time()}
  (out/"run_manifest.json").write_text(json.dumps(m,indent=2)+"\n")
  try:
-  train_ri_gmappo(cfg); required=[out/"actor_critic_latest.pt",out/"actor_critic_milestone_976.pt",out/"actor_critic_runtime_state_latest.pt",out/"train_log.csv",out/"drtp_topology_sampler_log.csv"]
+  train_ri_gmappo(cfg); required=[out/"actor_critic_milestone_250k.pt",out/"actor_critic_milestone_500k.pt",out/"actor_critic_runtime_state_milestone_500k.pt",out/"train_log.csv",out/"drtp_topology_sampler_log.csv"]
   if not all(x.exists() for x in required): raise RuntimeError("missing required frozen trajectory artifact")
   m["status"]="completed";m["completed_at"]=time.time()
  except BaseException as e:
