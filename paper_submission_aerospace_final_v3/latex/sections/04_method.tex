@@ -1,0 +1,125 @@
+\section{4. Method}
+
+\subsection{4.1 Shared single-graph policy backbone and execution-time information boundary}
+
+We consider a frozen three-UAV team comprising a Scout (agent 0), a Relay (agent 1), and an Attacker (agent 2), together with one target. The environment uses lightweight three-degree-of-freedom kinematics with a 1-s control interval, a 260-step horizon, a 50-km horizontal operating radius, and an altitude range of 1--9 km. Each UAV selects one of 27 discrete commands formed by the Cartesian product of turning, climbing, and acceleration/deceleration choices. Role-specific speed, acceleration, turn-rate, climb-rate, sensing, communication, and attack-geometry limits are fixed by the environment contract.
+
+At time \(t\), the legal communication--task graph is
+
+\[
+G_t=(V,E_t,X_t,Z_t),
+\]
+
+where \(V\) contains the three UAVs and the target, \(E_t\) contains currently legal relations, and \(X_t\) and \(Z_t\) are node and edge features. The adjacency convention is receiver-row: \(A_t[i,j]=1\) means that receiver \(i\) may legally use the relation sent by \(j\). Sensing edges arise only from the frozen sensing model. Communication edges must satisfy the physical communication range, node state, and communication implementation. Task-support edges represent legally delivered information and active task support; they are not an additional channel for hidden simulator state.
+
+The decentralized actor receives its local observation and the legal graph representation only. Its local feature vector contains self motion state, legally available relative target information, detection state, local attack-window state, energy, role, incoming connectivity, message freshness, and target-cache confidence. In particular, an agent that neither detects the target nor receives a fresh legal cache cannot recover the true target state through the graph encoder. The actor never receives a failure label, a shortest path, future link states, or simulator ground truth. A centralized critic is used during training under centralized training with decentralized execution (CTDE) [14], but it adds no execution-time information to the actor.
+
+UTR and DRTP share one Single-Graph MAPPO actor--critic [1]. Node features are linearly encoded, processed by two shared graph-attention layers [2], fused with the local observation representation, and mapped to logits for the 27 actions:
+
+\[
+a_{i,t}\sim\pi_\theta(a_{i,t}\mid o_{i,t},G_{i,t}).
+\]
+
+The critic estimates \(V_\phi(s_t)\) during training. Both arms use clipped PPO [10] with generalized advantage estimation: learning rate \(3\times10^{-4}\), discount factor 0.99, GAE coefficient 0.95, clipping coefficient 0.2, entropy coefficient 0.01, value-loss coefficient 0.5, maximum gradient norm 0.5, and four PPO epochs per batch. Each actor--critic has 116,728 trainable parameters. Thus, the primary comparison changes the training distribution rather than network capacity, the PPO objective, reward, environment, or actor information.
+
+\subsection{4.2 Frozen relay-failure groups and uniform topology randomization}
+
+A relay-node failure disables the Relay's sensing, transmission, and reception capabilities and removes its associated communication edges from onset \(t_f\) for duration \(d_f\). The canonical failure condition is \(F0=(t_f=44,d_f=80)\). The event may remove the Scout--Relay--Attacker path while leaving a physical Scout--Attacker direct path legal. It therefore creates a change in legal path composition, task-support source, and coordination geometry rather than an assumed universal information blackout.
+
+Training conditions are partitioned into one nominal group and six frozen failure/topology groups,
+
+\[
+\mathcal G=\{N,F0,TE,TL,DS,DL,CP\},
+\]
+
+with failure subset \(\mathcal F=\{F0,TE,TL,DS,DL,CP\}\). The two members of each non-singleton group are fixed as
+
+\[
+\begin{aligned}
+TE&=\{(28,80),(36,80)\}, & TL&=\{(52,80),(60,80)\},\\
+DS&=\{(44,40),(44,60)\}, & DL&=\{(44,100),(44,120)\},\\
+CP&=\{(28,120),(60,120)\}. &&
+\end{aligned}
+\]
+
+Here each tuple denotes onset and duration in environment steps. The nominal condition contains no injected relay failure. All failure groups have the same within-group member distribution in both arms.
+
+Uniform Topology Randomization Single-Graph MAPPO (UTR-SG-MAPPO; UTR) fixes the nominal sampling mass at
+
+\[
+p_N=0.50.
+\]
+
+It assigns a conditional uniform distribution over the six failure groups,
+
+\[
+q_k^{\mathrm{UTR}}=\frac{1}{6},\qquad
+p_k^{\mathrm{UTR}}=(1-p_N)q_k^{\mathrm{UTR}}=\frac{1}{12},
+\qquad k\in\mathcal F.
+\]
+
+UTR consequently has the same nominal anchor, failure-support universe, and within-group scenario members as DRTP. It is the parameter- and exposure-matched primary control for estimating the effect of bounded adaptive reweighting relative to uniform reweighting.
+
+\subsection{4.3 Bounded adaptive topology-perturbation reweighting}
+
+DRTP-SG-MAPPO (DRTP) is a training-time sampler controller. It preserves the total failure exposure \(1-p_N=0.50\) and reallocates that exposure only among the six predefined groups. Its feasible conditional weights lie in the bounded simplex
+
+\[
+\mathcal Q=\left\{q\in\Delta^6:0.05\leq q_k\leq0.35\right\}.
+\]
+
+The controller does not alter the PPO loss, policy parameterization, critic parameterization, or execution-time inputs. It is therefore not formulated as a general min--max or distributionally robust optimization procedure, and this study makes no such guarantee.
+
+At adaptation boundary \(u\), let \(\widehat J_{k,u}\) be the mean completed-episode return collected for group \(k\) since the previous boundary. For an observed group, DRTP updates its exponential moving average (EMA) as
+
+\[
+\bar J_{k,u}=(1-\kappa)\bar J_{k,u-1}+\kappa\widehat J_{k,u};
+\]
+
+the EMA is held unchanged when that group was not observed in the window. The nominal group uses the same rule. A normalized, clipped performance gap relative to nominal competence is then
+
+\[
+d_{k,u}=\operatorname{clip}\!\left(
+\frac{\bar J_{N,u}-\bar J_{k,u}}
+{\max(|\bar J_{N,u}|,\epsilon)},0,d_{\max}
+\right),
+\]
+
+followed by centering across failure groups,
+
+\[
+\tilde d_{k,u}=d_{k,u}-\frac{1}{6}\sum_{j\in\mathcal F}d_{j,u}.
+\]
+
+The multiplicative candidate distribution is
+
+\[
+\tilde q_{k,u+1}=
+\frac{q_{k,u}\exp(\eta\tilde d_{k,u})}
+{\sum_{j\in\mathcal F}q_{j,u}\exp(\eta\tilde d_{j,u})}.
+\]
+
+DRTP smooths this candidate and projects it onto \(\mathcal Q\):
+
+\[
+q_{u+1}=\Pi_{\mathcal Q}\left[(1-\beta)q_u+\beta\tilde q_{u+1}\right].
+\]
+
+\(\Pi_{\mathcal Q}\) is an Euclidean projection onto the bounded simplex, not independent clipping followed by arbitrary renormalization. For a vector \(x\), the implementation finds \(\lambda\) such that
+
+\[
+q_k=\min\{0.35,\max\{0.05,x_k-\lambda\}\},
+\qquad \sum_{k\in\mathcal F}q_k=1.
+\]
+
+The implementation uses a deterministic bounded-simplex projection and verifies the total mass and component bounds within numerical tolerance. The projection is confined to the six-dimensional sampling state; implementation tolerances and reproducibility checks are provided in the Supplementary Information.
+
+The frozen controller initializes \(q_k=1/6\), uses 128 uniformly sampled warm-up updates, and adapts every 32 updates thereafter. Its constants are \(\kappa=0.20\), \(\eta=1.00\), \(\beta=0.50\), \(d_{\max}=2.00\), and \(\epsilon=10^{-8}\). The fixed 50% nominal mass is a competence anchor that prevents the sampler from transferring all training exposure to failure conditions. The nominal EMA is a separate reference used to quantify each failure group's performance gap. Neither is an auxiliary loss or an actor/critic input.
+
+\subsection{4.4 Training and deployment boundary}
+
+At each training reset, the sampler first selects the nominal condition with probability 0.5. Otherwise it selects a failure group according to \(q\), then samples uniformly from that group's two frozen onset--duration members where applicable. UTR keeps \(q\) fixed, whereas DRTP updates \(q\) only at the frozen adaptation boundaries described above.
+
+Failure group labels, onset and duration values, EMA states, performance gaps, and sampler weights exist only in the training controller and its logs. They do not enter the actor or critic as new observations. The sampler is not instantiated during evaluation or deployment. DRTP consequently introduces neither trainable parameters nor an inference-time module; its additional work is restricted to per-group return accumulation, EMA updates, and a six-dimensional bounded-simplex projection. In the absence of matched hardware measurements, we report equal parameter count and no inference-time addition, rather than claiming a wall-clock or memory advantage.
+
+The formal UTR--DRTP comparison trained both arms from scratch with four parallel environments and 64-step rollout fragments for 39,063 updates (10,000,128 environment steps) and retained only the common final 10M checkpoint for the primary endpoint. Milestone checkpoints were preserved for learning-curve visualization and interruption recovery only; they were not eligible for performance-based promotion, early stopping, seed exclusion, or reruns.

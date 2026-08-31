@@ -1,0 +1,39 @@
+% Aerospace free-format initial-submission manuscript.
+% Aerospace accepts free-format initial submissions.  Before upload, replace all
+% AUTHOR_INPUT_NEEDED fields with author-confirmed information and, if desired,
+% transfer this source to the current official MDPI template.
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,booktabs,graphicx,hyperref}
+\title{Bounded Adaptive Topology-Perturbation Reweighting for Relay-Failure UAV Coordination}
+\author{AUTHOR\_INPUT\_NEEDED: authors, affiliations, corresponding author}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+Relay-node failures in heterogeneous unmanned aerial vehicle (UAV) teams can reconfigure legal communication paths and task-support relations without necessarily causing complete information loss. We study this controlled coordination problem with bounded adaptive topology-perturbation reweighting Single-Graph multi-agent proximal policy optimization (DRTP-SG-MAPPO; DRTP). DRTP preserves the policy backbone, PPO objective, reward, execution-time information boundary, and a 50% nominal-condition anchor, and adaptively reweights six predefined failure/topology groups. Its primary comparator, Uniform Topology Randomization Single-Graph MAPPO (UTR-SG-MAPPO; UTR), has the same 116,728-parameter backbone, perturbation support, training budget, and paired evaluation protocol.
+
+In a prospective formal cohort of five paired training seeds trained for 10M environment steps, DRTP exceeded UTR on canonical relay failure, the mean across ten frozen perturbation conditions, and the minimum over those conditions. Mean paired differences were +52.13, +55.00, and +63.01 mission-score units, respectively, and all five seeds were positive on each robustness endpoint. DRTP reduced mean timeout from 0.874 to 0.694, while collision increased from 0.005 to 0.008. In a separately completed independent three-method cohort, the DRTP--UTR direction differed and one DRTP seed met the frozen catastrophic-seed rule. Cross-tape and post hoc training-excluded-condition evaluations retained the cohort-specific directions.
+
+DRTP therefore provides formal-cohort evidence that bounded adaptive reweighting can improve relay-failure task performance relative to matched uniform weighting. The independent outcome defines the present boundary of this evidence: the benefit has not yet replicated across separate training cohorts.
+\end{abstract}
+\noindent\textbf{Keywords:} multi-agent reinforcement learning; unmanned aerial vehicles; relay-node failure; graph coordination; adaptive training distribution; robustness
+\input{sections/03_introduction_related_work.tex}
+\input{sections/02_problem_formulation.tex}
+\input{sections/04_method.tex}
+\input{sections/05_experiments.tex}
+\input{figures.tex}
+\input{sections/06_discussion.tex}
+\input{sections/07_conclusion.tex}
+\section*{Author Contributions}
+AUTHOR\_INPUT\_NEEDED.
+\section*{Funding}
+AUTHOR\_INPUT\_NEEDED.
+\section*{Data Availability Statement}
+An anonymous reproducibility package is technically staged. AUTHOR\_INPUT\_NEEDED: external reviewer-access URL, licence, checkpoint access policy, and access date.
+\section*{Conflicts of Interest}
+AUTHOR\_INPUT\_NEEDED.
+\input{references.tex}
+\end{document}
