@@ -5,7 +5,7 @@ This audit applies only to `paper/q2_final_en/`; it does not audit the legacy EA
 ## Summary
 
 - Status: `PASS`
-- Main-text words excluding references, editorial canon, and Supplementary Information: `5862`
+- Main-text words excluding references, editorial canon, and Supplementary Information: `5859`
 - Hard errors: `0`
 - Warnings: `0`
 
@@ -41,7 +41,7 @@ This audit applies only to `paper/q2_final_en/`; it does not audit the legacy EA
 | numeric anchor 0.694 | `PASS` | found `0.694` |
 | numeric anchor 0.005 | `PASS` | found `0.005` |
 | numeric anchor 0.008 | `PASS` | found `0.008` |
-| citation mapping | `PASS` | 16 cited ids mapped to reference entries |
+| citation mapping | `PASS` | 30 cited ids mapped to reference entries |
 | B-line placement: abstract | `PASS` | no B-line term |
 | B-line placement: problem formulation | `PASS` | no B-line term |
 | B-line placement: introduction and related work | `PASS` | no B-line term |
@@ -50,7 +50,7 @@ This audit applies only to `paper/q2_final_en/`; it does not audit the legacy EA
 | universal robustness claim | `PASS` | no unqualified occurrence |
 | strict-OOD success claim | `PASS` | no unqualified occurrence |
 | general-DRO guarantee claim | `PASS` | no unqualified occurrence |
-| abstract length | `PASS` | 280 |
+| abstract length | `PASS` | 226 |
 
 ## Hard errors
 

@@ -18,7 +18,7 @@
 
 ### 1.2 现有研究缺口
 
-图结构 MARL 已经表明显式表示智能体关系有助于协同决策，通信感知型无人机 MARL 也研究了连通性、通信资源、轨迹和中继选择等问题[2--3,6--9]。鲁棒 MARL 与分布鲁棒强化学习进一步从对手变化、模型不确定性或环境分布变化角度研究策略性能[4--5]。在多无人机通信网络中，节点失效可触发拓扑重组或改变可用转发路径[15--16]。这些工作构成本文的直接知识基础，但尚不能替代本文的受控比较：本任务同时要求固定异构角色、合法去中心化信息边界、明确的中继节点故障语义，以及故障时机、持续时间和复合拓扑扰动。
+图结构与通信学习方法已表明，显式表示智能体关系、可学习消息以及注意力式信息选择有助于协同决策[2--3,17--21]；相应图 MARL 也已用于多无人机协同搜索、跟踪和集群控制[6--7]。鲁棒 MARL 与分布鲁棒强化学习进一步从对手变化、模型不确定性或环境分布变化角度研究策略性能[4--5]。组鲁棒学习、主动域随机化、课程、关卡回放和无监督环境设计则说明训练暴露可被系统地重新分配[11--13,22--26]。在多无人机通信网络中，节点失效可触发拓扑重组或改变可用转发路径[15--16,27--30]。这些工作构成本文的问题定位，但尚不能替代本文的受控比较：本任务同时要求固定异构角色、合法去中心化信息边界、明确的中继节点故障语义，以及故障时机、持续时间和复合拓扑扰动。
 
 另一个缺口来自训练分布。若所有故障组始终以相同概率采样，训练可能在容易条件上重复消耗预算，而对当前策略更困难的拓扑扰动投入不足。相反，如果采样权重完全由历史回报自由驱动，又可能形成对训练种子敏感的反馈。因而需要检验一个受约束的问题：在保持正常工况暴露比例、策略网络和 PPO 不变的前提下，有界自适应故障组加权能否改善平均与最差拓扑鲁棒性，并且这种收益在不同训练种子上是否可靠。
 
@@ -34,24 +34,23 @@
 
 本文贡献概括如下。
 
-1. 构建一个面向中继节点故障诱发拓扑与路径重构的异构无人机鲁棒协同问题。问题定义保留合法直连路径和严格的策略网络信息边界，避免将拓扑重构错误表述为完全信息中断或信息恢复。
-2. 提出 DRTP-SG-MAPPO。该方法不改变网络、PPO、奖励或执行期输入，仅在固定正常工况锚点下对六类预定义拓扑扰动实施有界自适应加权，从而将方法差异集中于训练分布。
-3. 建立参数与暴露范围完全匹配的 UTR–DRTP 主消融，并通过五个训练前冻结配对训练种子、统一 10M 最终检查点、共同 12 条件配对评估样本带、跨扰动最差条件、安全指标与风险集触发有效性评价自适应加权。
-4. 将训练可靠性纳入主结论。所有训练种子均被保留，历史不利种子和正式实验中的潜在灾难性种子不被作为“异常值”删除，平均性能与最差训练结果并列报告。
+1. 构建受控三无人机中继故障协同任务，将故障定义为合法通信、信息路径和任务支持关系的重构，而非完全信息中断；策略网络不接收故障标签或全局拓扑真值。
+2. 提出 DRTP-SG-MAPPO。在保持网络、PPO、奖励、执行期输入和 50% 正常工况锚点不变的前提下，该方法仅对六类预定义拓扑扰动实施有界自适应重加权。
+3. 建立可靠性知情的证据设计：以参数和暴露范围匹配的 UTR--DRTP 五种子正式比较为主证据，并完整报告独立 cohort、跨评价带诊断、最差配对结果与安全权衡，而不将不同训练 cohort 合并为表观的 \((n=10)\) 确认。
 
 ## 2 相关工作
 
 ### 2.1 图结构多智能体强化学习
 
-图神经网络为多智能体系统提供了与智能体数量和关系结构相适配的表示方式。图注意力与拓扑感知策略梯度方法通常根据邻接关系聚合邻居信息，使策略能够利用交互结构，而不必将所有智能体状态拼接为固定长度向量[2--3]。图结构方法也已用于多无人机协同搜索、跟踪和集群控制[6--7]。这些研究说明“使用图”本身已不能构成充分创新。本文不提出新的图编码器，而是固定同一个单图策略网络与价值网络，将研究焦点转向拓扑扰动训练分布。
+可学习通信、目标消息路由和注意力式通信为多智能体协同提供了多种关系表示与信息选择机制[17--21]。图注意力与拓扑感知策略梯度方法则可根据邻接关系聚合合法邻居信息[2--3]，并已用于多无人机协同搜索、跟踪和集群控制[6--7]。这些研究说明“使用图”本身不能构成本文的创新。本文固定同一个单图策略网络与价值网络，将研究焦点限定为拓扑扰动在训练期的分布方式。
 
 ### 2.2 鲁棒与分布变化下的多智能体学习
 
-鲁棒 MARL 研究涵盖对手策略变化、环境动力学不确定性以及最坏情况优化等路线[4]。组分布鲁棒优化、主动域随机化与强化学习课程则分别研究最差组目标、环境参数采样和任务序列选择[5,11--13]。DRTP 与这些思想存在明确知识继承关系，但贡献边界更窄：本文不建立一般 DRMDP 理论，也不声称求得严格最坏情况策略，而是在冻结的六类拓扑扰动组上实现可复现的有界经验重加权。
+鲁棒 MARL 研究涵盖对手策略变化、环境动力学不确定性以及最坏情况优化等路线[4]，分布鲁棒 Q 学习则形式化了指定环境分布下的歧义集合[5]。组鲁棒优化、主动域随机化、课程、关卡回放、无监督环境设计和稳健 on-policy 采样分别研究最差组目标、环境参数采样、任务序列或采样数据分布[11--13,22--26]。DRTP 与这些思想存在明确知识继承关系，但贡献边界更窄：本文不建立一般 DRMDP 理论，不声称求得严格最坏情况策略，也不提供分布鲁棒保证；它只在冻结的六类拓扑扰动组上实现可复现的有界经验重加权。
 
 ### 2.3 通信受限与故障条件下的多无人机协同
 
-现有无人机通信与 MARL 工作常围绕抗干扰中继选择、通信功率、隐蔽通信或轨迹规划构建目标[8--9]。本文研究的输出不是通信吞吐量或网络连通度本身，而是中继节点故障引起路径与任务支持组成变化后，异构团队的任务得分和安全表现。因此，相关方法具有研究定位价值，但在动作空间、学习器、奖励和策略网络信息边界上并非可直接迁移的公平基线。
+现有无人机通信与 MARL 工作已围绕抗干扰通信、多跳中继、节点失效后的网络恢复，以及协同资源分配构建不同目标[8--9,27--30]。本文研究的输出不是通信吞吐量或网络连通度本身，而是中继节点故障引起路径与任务支持组成变化后，异构团队的任务得分和安全表现。因此，相关方法具有研究定位价值，但在动作空间、学习器、奖励和策略网络信息边界上并非可直接迁移的公平基线。
 
 ### 2.4 本文定位与对照边界
 
@@ -244,7 +243,7 @@ q_k=\min\{0.35,\max\{0.05,x_k-\lambda\}\},
 \qquad \sum_{k\in\mathcal F}q_k=1.
 \]
 
-具体地，\(\lambda\) 在区间 \([\min_k(x_k-0.35),\max_k(x_k-0.05)]\) 内以 100 次二分求解；若浮点残差仍大于 \(10^{-12}\)，则按固定组顺序在未触及上下界的分量上作最小补偿，随后断言总质量在 \(10^{-10}\) 内为 1 且所有组仍在边界内。该程序只作用于训练期的六维采样权重，不涉及策略或价值网络参数、PPO 损失或执行期输入。
+实现以确定性有界单纯形投影求解 \(\lambda\)，并在数值容差内检查总质量和逐组边界。该程序只作用于训练期的六维采样权重，不涉及策略或价值网络参数、PPO 损失或执行期输入。完整数值实现、容差与可复现性检查见补充材料。
 
 冻结超参数为：初始 (q_k=1/6)，前 128 updates 均匀 warm-up，之后每 32 updates 适配一次，\(\kappa=0.20\)、\(\eta=1.00\)、\(\beta=0.50\)、\(d_{\max}=2.00\)、\(\epsilon=10^{-8}\)。该更新受组鲁棒重加权和自适应域随机化的经验动机启发[11--12]，但本文仅检验它相对均匀采样的经验效果。
 
@@ -260,7 +259,7 @@ DRTP 不增加 trainable parameter，也不改变 inference graph。其附加计
 
 ## 5 实验协议
 
-### 5.1 正式方法与公平性合同
+### 5.1 正式比较与证据层级
 
 正式实验仅比较 UTR-SG-MAPPO 和 DRTP-SG-MAPPO。每个方法使用训练种子 2301–2305，共十条从零开始、严格连续的训练轨迹。每条轨迹训练 39,063 次更新，采用 4 个并行环境和 64 步轨迹片段，对应 10,000,128 个环境步。所有方法使用相同的网络、PPO、S2 冻结环境、奖励、七个拓扑组、50% 正常工况锚点、运行时状态持久化和检查点规则。该 UTR–DRTP 比较是本文的参数匹配主消融，识别的是均匀训练分布与有界自适应训练分布之间的差异，而不是对所有外部算法的排行榜比较。
 
@@ -272,10 +271,12 @@ DRTP 不增加 trainable parameter，也不改变 inference graph。其附加计
 
 | 层级 | 证据对象 | 保持不变的因素 | 能回答的问题 | 不能回答的问题 |
 |---|---|---|---|---|
-| 主因果消融 | UTR-SG-MAPPO vs DRTP-SG-MAPPO | SG actor/critic、116,728 参数、PPO、环境、奖励、七组、50% 正常工况锚点、预算与样本带 | 有界自适应加权相对均匀加权的增量效果 | 自适应是否优于任意静态非均匀权重；是否优于所有外部算法 |
+| 正式主 cohort（主因果消融） | UTR-SG-MAPPO vs DRTP-SG-MAPPO，2301--2305 | SG actor/critic、116,728 参数、PPO、环境、奖励、七组、50% 正常工况锚点、预算与共同评价带 | 有界自适应加权相对均匀加权的合同内增量效果 | 跨 cohort 稳定优越性；自适应是否优于任意静态非均匀权重；是否优于所有外部算法 |
 | 外部性能参考 | MAPPO-NoGraph vs UTR/DRTP | 环境、奖励、种子、10M 预算与评价 tape；网络消息输入和参数量不同（35,771 vs 116,728） | 无图 MAPPO 参考在冻结任务中的绝对性能与安全位置 | 图结构、容量或自适应加权的单独因果效果；外部算法排行榜 |
 | 机制一致性诊断 | DRTP 权重、实际暴露、路径/任务支持遥测 | 同一正式训练与最终评价记录 | 自适应器是否实际改变训练暴露，结果是否与路径利用差异相一致 | 权重变化对特定策略行为的因果机制 |
-| 可靠性背景 | 历史开发、留出验证与多样本带审计 | 各自历史合同内部 | 为什么训练种子风险必须进入解释边界 | 与正式五种子合并后的总体显著性或新主结论 |
+| 独立可靠性 cohort | UTR、固定非均匀 SNR 与 DRTP，2401--2405 | 独立三方法合同、独立评价带与共同 10M 终点 | 正式正向方向能否在独立训练 cohort 复现 | 与正式 cohort 合并为 \((n=10)\) 的确认结论 |
+| 跨评价带诊断 | 两个 cohort 在 tape490 与 tape500 上零训练重评 | 固定 checkpoint 与配对条件 | 评价带更换是否足以解释方向反转 | 特定随机源或策略机制的因果解释 |
+| 历史背景 | 历史开发与留出验证 | 各自历史方案与预算 | 为什么训练种子风险必须进入解释边界 | 主比较的额外统计重复或新主结论 |
 | 文献定位 | 图 MARL、鲁棒 MARL 和通信受限 UAV 工作 | 不适用 | 研究问题与既有路线的关系 | 与当前动作、信息和训练合同下的直接性能排序 |
 
 ### 5.2 正式配对评估样本带
@@ -288,14 +289,14 @@ DRTP 不增加 trainable parameter，也不改变 inference graph。其附加计
 
 | 阶段 | 训练种子与预算 | 方法/配置边界 | 本文中的证据用途 |
 |---|---|---|---|
-| 历史开发 | 1901/1902，3M | 历史开发合同；不与正式 cohort 合并 | 可学习性与早期可靠性背景；历史 `NO-GO` 永久保留 |
-| 历史留出验证 | 2001/2002/2003，10M | 历史 held-out 合同；不与正式 cohort 合并 | 历史确认尝试与失败证据；`FAIL` 永久保留 |
+| 历史开发 | 1901/1902，3M | 历史开发设置；不与正式 cohort 合并 | 可学习性与早期可靠性背景 |
+| 历史留出验证 | 2001/2002/2003，10M | 历史留出设置；不与正式 cohort 合并 | 早期独立验证与不利种子证据 |
 | 正式主 cohort | 2301--2305，10M | 正式五种子冻结合同；共同评价带；最终检查点 | UTR--DRTP 主因果消融与正式门槛证据 |
 | 独立重复 cohort | 2401--2405，10M | 独立三方法合同；独立评价带；最终检查点 | 可靠性/重复性证据；不改写或合并正式主 cohort |
 
-因此，本文对阶段变化的处理是“按各阶段冻结合同分层解释”，而不是把历史或独立阶段的结果回填为正式主实验的配置或统计重复。正式主 cohort 与独立 cohort 的方向差异以及两套评价带上的保持方向，均按各自原始合同完整披露。
+正式主 cohort 与独立 cohort 的方向差异在表1中与主比较并列呈现。它们按各自冻结方案分层解释，而不是作为同质重复合并。跨评价带诊断中，每个 cohort 内的方向仍保持一致，说明评价带更换不足以单独解释这一反转。
 
-历史开发阶段 3M（训练种子 1901/1902）与留出验证 10M（训练种子 2001/2002/2003）保留为来源追踪和可靠性背景。另一个独立三方法 cohort 使用训练种子 2401--2405、独立评价 tape 和共同 10M 终点；其完整结果在第6.9节及补充材料S4披露。三类 strata 的训练种子、训练目的和评价合同不同，均不能与正式训练种子 2301–2305 合并成一个同质 (n=10) 实验。历史开发阶段 `NO-GO`、留出验证 `FAIL`、训练种子 1902 的弱表现、训练种子 2002 的灾难性反转以及独立 cohort 的方向反转均永久保留。
+历史开发阶段 3M（训练种子 1901/1902）与留出验证 10M（训练种子 2001/2002/2003）仅作为来源追踪和可靠性背景。独立三方法 cohort 使用训练种子 2401--2405、独立评价带和共同 10M 终点；完整结果见第6.9节及补充材料 S4。各 strata 的训练种子、训练目的和评价协议不同，均不能与正式训练种子 2301--2305 合并成同质 \((n=10)\) 实验。历史中的不利种子和独立 cohort 的方向反转均被保留。
 
 ### 5.4 指标与统计单位
 
@@ -561,7 +562,7 @@ DRTP 继承了组鲁棒重加权与自适应采样的基本思想，也建立在
 
 ### 7.5 局限性
 
-本文至少存在八项边界。第一，实验限于冻结的“侦察机–中继机–攻击机”三无人机轻量 3DOF 仿真，尚无 4/5 无人机规模扩展、硬件在环（HIL）或实飞证据。第二，尽管已提供无图 MAPPO 性能参考，主因果结论仍仅来自参数匹配的内部 UTR 主消融；无图 MAPPO 的消息输入和参数量不同，且其碰撞、超时优于 DRTP，因此不构成外部算法排行榜或图结构单独效应的证明。第三，正式主 cohort 未同步设置固定非均匀权重对照；独立 cohort 中的 SNR 结果也未证明静态或自适应方案的机制必要性。第四，十个主合同跨扰动条件的具体成员曾参与训练；尽管后续一次性评价补充了六个未见成员，它仍是 post hoc 附加证据，不能替代原始 confirmatory OOD 合同或证明一般未见泛化。第五，每个 cohort 的训练种子数量为五，统计结论以描述性配对效应、全体种子方向和最差配对结果为主，不支持广泛总体推断。第六，历史与独立重复 evidence 均显示真实训练种子/训练 cohort 敏感性，其根因尚未建立。第七，独立 2401--2405 cohort 的任务端点、碰撞和超时均不利于 DRTP；它不与正式主 cohort 合并，却限制任何跨 cohort 的优越性主张。第八，DRTP 是有界经验重加权，不提供一般分布鲁棒或最坏情况优化保证。
+本文的边界可归为四类。第一，**任务范围**：实验限于冻结的“侦察机--中继机--攻击机”三无人机轻量 3DOF 仿真，尚无更大团队、硬件在环或实飞证据。第二，**比较与机制识别**：主因果结论仅来自参数匹配的 UTR 主消融；MAPPO-NoGraph 的消息输入和参数量不同，SNR 也未证明静态或自适应分布的机制必要性，因此不存在图结构、在线自适应或外部算法排名的单独因果结论。第三，**泛化与统计范围**：十个主合同条件属于训练支持集；六个训练排除成员的附加评价是 post hoc 证据，而非确认性 OOD 试验。每个 cohort 仅含五个训练种子，本文据此报告描述性配对效应与下尾结果，不作广泛总体推断。第四，**训练可靠性与理论保证**：历史和独立 cohort 均显示训练 cohort/seed 敏感性，且独立 2401--2405 cohort 的任务端点和安全指标不利于 DRTP；其根因尚未建立。DRTP 只是有界经验重加权，不提供一般分布鲁棒或最坏情况优化保证。
 
 ## 8 结论
 
@@ -604,6 +605,34 @@ DRTP 继承了组鲁棒重加权与自适应采样的基本思想，也建立在
 [15] Luo J, Wang Z, Xia M, et al. Path Planning for UAV Communication Networks: Related Technologies, Solutions, and Opportunities. *ACM Computing Surveys*, 2023, 55(9): 1--37. DOI: 10.1145/3560261.
 
 [16] Xiao H, Yang Y, Yu D, et al. 3D Self-Triggered-Organized Communication Topology Based UAV Swarm Consensus System With Distributed Extended State Observer. *IEEE Transactions on Network Science and Engineering*, 2025, 12(5): 3985--4000. DOI: 10.1109/TNSE.2025.3567462.
+
+[17] Foerster J N, Assael I A, de Freitas N, Whiteson S. Learning to Communicate with Deep Multi-Agent Reinforcement Learning. *Advances in Neural Information Processing Systems*, 2016, 29: 2137--2145.
+
+[18] Sukhbaatar S, Szlam A, Fergus R. Learning Multiagent Communication with Backpropagation. *Advances in Neural Information Processing Systems*, 2016, 29.
+
+[19] Jiang J, Lu Z. Learning Attentional Communication for Multi-Agent Cooperation. *Advances in Neural Information Processing Systems*, 2018, 31.
+
+[20] Das A, Gervet T, Romoff J, et al. TarMAC: Targeted Multi-Agent Communication. *Proceedings of the 36th International Conference on Machine Learning*, 2019, 97: 1538--1546.
+
+[21] Iqbal S, Sha F. Actor-Attention-Critic for Multi-Agent Reinforcement Learning. *Proceedings of the 36th International Conference on Machine Learning*, 2019, 97: 2961--2970.
+
+[22] Jiang M, Grefenstette E, Rocktäschel T. Prioritized Level Replay. *Proceedings of the 38th International Conference on Machine Learning*, 2021, 139: 4940--4950.
+
+[23] Dennis M, Jaques N, Vinitsky E, et al. Emergent Complexity and Zero-Shot Transfer via Unsupervised Environment Design. *Advances in Neural Information Processing Systems*, 2020, 33.
+
+[24] Jiang M, Dennis M, Parker-Holder J, et al. Grounding Aleatoric Uncertainty for Unsupervised Environment Design. *Advances in Neural Information Processing Systems*, 2022, 35. DOI: 10.52202/068431-2382.
+
+[25] Huang P, Xu M, Zhu J, et al. Curriculum Reinforcement Learning using Optimal Transport via Gradual Domain Adaptation. *Advances in Neural Information Processing Systems*, 2022, 35. DOI: 10.52202/068431-0774.
+
+[26] Zhong R, Zhang D, Schäfer L, et al. Robust On-Policy Sampling for Data-Efficient Policy Evaluation in Reinforcement Learning. *Advances in Neural Information Processing Systems*, 2022, 35. DOI: 10.52202/068431-2709.
+
+[27] Yin Z, Lin Y, Zhang Y, et al. Collaborative Multiagent Reinforcement Learning Aided Resource Allocation for UAV Anti-Jamming Communication. *IEEE Internet of Things Journal*, 2022, 9(23): 23995--24008. DOI: 10.1109/JIOT.2022.3188833.
+
+[28] Li Z, Lu Y, Li X, et al. UAV Networks Against Multiple Maneuvering Smart Jamming With Knowledge-Based Reinforcement Learning. *IEEE Internet of Things Journal*, 2021, 8(15): 12289--12310. DOI: 10.1109/JIOT.2021.3062659.
+
+[29] Zhang J, Wang T, Wang J, et al. Multi-UAV Collaborative Surveillance Network Recovery via Deep Reinforcement Learning. *IEEE Internet of Things Journal*, 2024, 11(21): 34528--34540. DOI: 10.1109/JIOT.2024.3446878.
+
+[30] Mondal A, Mishra D, Alexandropoulos G C, et al. Multi-Agent Reinforcement Learning for Offloading Cellular Communications with Cooperating UAVs. *IEEE Transactions on Aerospace and Electronic Systems*, 2025, 61(4): 9344--9358. DOI: 10.1109/TAES.2025.3554150.
 
 ## 附录A 训练过程诊断
 

@@ -147,8 +147,8 @@ def main() -> None:
     external_contract = (PAPER / "21_external_reference_integration_contract.md").read_text(encoding="utf-8")
     for token in ("EXTERNAL_REFERENCE_COMPLETE", "UTR–DRTP", "不得以训练日志、截图或部分 seed 替代"):
         require(token in external_contract, f"external-reference integration boundary missing: {token}")
-    require("100 次二分" in manuscript and "有界单纯形投影" in manuscript,
-            "bounded-simplex implementation detail is missing")
+    require("确定性有界单纯形投影" in manuscript and "数值容差" in manuscript,
+            "bounded-simplex projection boundary is missing")
     require("### 6.3 无图 MAPPO 性能参考（Non-Graph MAPPO Performance Reference）" in manuscript and
             "**表2b｜无图 MAPPO 性能参考结果。**" in manuscript,
             "completed external reference is not integrated in the Results section")

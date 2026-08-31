@@ -112,7 +112,7 @@ q_k=\min\{0.35,\max\{0.05,x_k-\lambda\}\},
 \qquad \sum_{k\in\mathcal F}q_k=1.
 \]
 
-It solves for \(\lambda\) by 100 bisection iterations over the corresponding feasible interval. If a floating-point residual exceeds \(10^{-12}\), a deterministic minimum correction is made among components not at their bounds; the implementation then asserts unit total mass to \(10^{-10}\) and preservation of all bounds. This projection is confined to the six-dimensional sampling state.
+The implementation uses a deterministic bounded-simplex projection and verifies the total mass and component bounds within numerical tolerance. The projection is confined to the six-dimensional sampling state; implementation tolerances and reproducibility checks are provided in the Supplementary Information.
 
 The frozen controller initializes \(q_k=1/6\), uses 128 uniformly sampled warm-up updates, and adapts every 32 updates thereafter. Its constants are \(\kappa=0.20\), \(\eta=1.00\), \(\beta=0.50\), \(d_{\max}=2.00\), and \(\epsilon=10^{-8}\). The fixed 50% nominal mass is a competence anchor that prevents the sampler from transferring all training exposure to failure conditions. The nominal EMA is a separate reference used to quantify each failure group's performance gap. Neither is an auxiliary loss or an actor/critic input.
 

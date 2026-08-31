@@ -10,6 +10,15 @@ Training seed, rather than episode, was the independent statistical unit ($n=5$ 
 
 The formal cohort, historical development and held-out results, and the subsequent independent cohort are separate evidence strata. They are never pooled into an apparent $n=10$ confirmation experiment. A no-graph MAPPO result is reported only as an external performance reference: it shares the task, seeds, budget, and evaluation tape but has a different 35,771-parameter, no-message architecture and is not a causal drop-in baseline.
 
+Table 1 makes the reliability boundary visible before the detailed results. The formal cohort is the prospective primary comparison. The independently completed cohort is a separate replication stratum, not an additional five seeds that can be combined with the formal cohort. Their opposite directions therefore delimit, rather than strengthen, the formal-cohort conclusion.
+
+| Evidence stratum | Arms and training seeds | Prespecified role | DRTP--UTR direction on robustness endpoints | Use in this paper |
+| --- | --- | --- | --- | --- |
+| Formal primary cohort | UTR and DRTP, 2301--2305 | Parameter- and exposure-matched primary comparison | Positive on F0, `J_pert,mean`, and `J_pert,worst` | Main within-contract result |
+| Independent reliability cohort | UTR, fixed non-uniform SNR, and DRTP, 2401--2405 | Independently completed reliability stratum | Negative on the same three endpoints | Boundary on cross-cohort reliability |
+| Paired cross-tape diagnosis | Both cohorts on tape490 and tape500 | Zero-training diagnosis | Direction retained within each cohort | Excludes a tape swap as a sufficient explanation |
+| MAPPO-NoGraph | External reference, formal seeds | Performance context | Not a matched causal contrast | Does not identify graph or sampler effects |
+
 ## 5.2 Relay failure reconfigured legal paths rather than imposing universal blackout
 
 The frozen mechanism audit showed that relay-node failure removed the two relay-associated communication edges during the specified failure window, while a legal direct Scout-to-Attacker edge could remain available. The information path used by the Attacker could therefore change from Scout--Relay--Attacker to Scout--Attacker. Paired diagnostic episodes also had lower task scores during failure than under the corresponding nominal condition. These observations establish the task as one of legal topology/path and task-support reconfiguration; they do not establish complete information loss or information restoration by DRTP.

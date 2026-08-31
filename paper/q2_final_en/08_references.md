@@ -16,3 +16,17 @@
 14. Lowe R, Wu Y, Tamar A, et al. Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments. *Advances in Neural Information Processing Systems*. 2017;30. arXiv:1706.02275.
 15. Luo J, Wang Z, Xia M, et al. Path Planning for UAV Communication Networks: Related Technologies, Solutions, and Opportunities. *ACM Computing Surveys*. 2023;55(9):1--37. doi:10.1145/3560261.
 16. Xiao H, Yang Y, Yu D, et al. 3D Self-Triggered-Organized Communication Topology Based UAV Swarm Consensus System With Distributed Extended State Observer. *IEEE Transactions on Network Science and Engineering*. 2025;12(5):3985--4000. doi:10.1109/TNSE.2025.3567462.
+17. Foerster JN, Assael IA, de Freitas N, Whiteson S. Learning to Communicate with Deep Multi-Agent Reinforcement Learning. *Advances in Neural Information Processing Systems*. 2016;29:2137--2145.
+18. Sukhbaatar S, Szlam A, Fergus R. Learning Multiagent Communication with Backpropagation. *Advances in Neural Information Processing Systems*. 2016;29.
+19. Jiang J, Lu Z. Learning Attentional Communication for Multi-Agent Cooperation. *Advances in Neural Information Processing Systems*. 2018;31.
+20. Das A, Gervet T, Romoff J, et al. TarMAC: Targeted Multi-Agent Communication. *Proceedings of the 36th International Conference on Machine Learning*. 2019;97:1538--1546.
+21. Iqbal S, Sha F. Actor-Attention-Critic for Multi-Agent Reinforcement Learning. *Proceedings of the 36th International Conference on Machine Learning*. 2019;97:2961--2970.
+22. Jiang M, Grefenstette E, Rocktäschel T. Prioritized Level Replay. *Proceedings of the 38th International Conference on Machine Learning*. 2021;139:4940--4950.
+23. Dennis M, Jaques N, Vinitsky E, et al. Emergent Complexity and Zero-Shot Transfer via Unsupervised Environment Design. *Advances in Neural Information Processing Systems*. 2020;33.
+24. Jiang M, Dennis M, Parker-Holder J, et al. Grounding Aleatoric Uncertainty for Unsupervised Environment Design. *Advances in Neural Information Processing Systems*. 2022;35. doi:10.52202/068431-2382.
+25. Huang P, Xu M, Zhu J, et al. Curriculum Reinforcement Learning using Optimal Transport via Gradual Domain Adaptation. *Advances in Neural Information Processing Systems*. 2022;35. doi:10.52202/068431-0774.
+26. Zhong R, Zhang D, Schäfer L, et al. Robust On-Policy Sampling for Data-Efficient Policy Evaluation in Reinforcement Learning. *Advances in Neural Information Processing Systems*. 2022;35. doi:10.52202/068431-2709.
+27. Yin Z, Lin Y, Zhang Y, et al. Collaborative Multiagent Reinforcement Learning Aided Resource Allocation for UAV Anti-Jamming Communication. *IEEE Internet of Things Journal*. 2022;9(23):23995--24008. doi:10.1109/JIOT.2022.3188833.
+28. Li Z, Lu Y, Li X, et al. UAV Networks Against Multiple Maneuvering Smart Jamming With Knowledge-Based Reinforcement Learning. *IEEE Internet of Things Journal*. 2021;8(15):12289--12310. doi:10.1109/JIOT.2021.3062659.
+29. Zhang J, Wang T, Wang J, et al. Multi-UAV Collaborative Surveillance Network Recovery via Deep Reinforcement Learning. *IEEE Internet of Things Journal*. 2024;11(21):34528--34540. doi:10.1109/JIOT.2024.3446878.
+30. Mondal A, Mishra D, Alexandropoulos GC, et al. Multi-Agent Reinforcement Learning for Offloading Cellular Communications with Cooperating UAVs. *IEEE Transactions on Aerospace and Electronic Systems*. 2025;61(4):9344--9358. doi:10.1109/TAES.2025.3554150.
