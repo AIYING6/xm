@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper" / "q2_final_zh"
 PDF = PAPER / "output" / "DRTP_SG_MAPPO_中文论文终稿_投稿前审稿版.pdf"
-PACKAGE = ROOT / "output" / "drtp_relay_failure_anonymous_reproducibility_v1"
+DEFAULT_PACKAGE = ROOT / "output" / "drtp_relay_failure_anonymous_reproducibility_v8"
 
 AUTHOR_REQUIRED_TEXT_FIELDS = (
     "target_journal",
@@ -51,24 +51,32 @@ def run(command: list[str]) -> None:
         raise RuntimeError(f"nested verification failed: {message}")
 
 
-def local_checks() -> None:
+def local_checks(package: Path) -> None:
     run([sys.executable, str(ROOT / "scripts" / "check_q2_final_zh_manuscript.py")])
     require(PDF.is_file() and PDF.stat().st_size > 1_000_000,
             f"submission PDF missing or unexpectedly small: {PDF}")
-    require(PACKAGE.is_dir(), f"anonymous reproducibility staging package missing: {PACKAGE}")
+    require(package.is_dir(), f"anonymous reproducibility staging package missing: {package}")
     run([
         sys.executable,
         str(ROOT / "scripts" / "check_drtp_anonymous_reproducibility_package.py"),
         "--package-root",
-        str(PACKAGE),
+        str(package),
     ])
     manifest = json.loads((PAPER / "25_final_evidence_manifest.json").read_text(encoding="utf-8"))
     require(manifest["status"] == "submission_closeout_prepared_author_hosting_required",
             "unexpected evidence-manifest release state")
     require(manifest["new_training_authorized"] is False,
             "release gate must never authorize new training")
-    require(len(manifest["evidence_strata"]) == 3,
-            "all three evidence strata must remain present")
+    strata = {item.get("name") for item in manifest["evidence_strata"]}
+    required_strata = {
+        "formal_paired_primary_cohort",
+        "non_graph_mappo_performance_reference",
+        "independent_three_arm_reliability_replication",
+    }
+    require(required_strata <= strata,
+            "all three required training evidence strata must remain present")
+    require("cross_tape_reliability_diagnostic" in strata,
+            "cross-tape reliability diagnostic must remain present")
 
 
 def author_gaps(path: Path | None) -> list[str]:
@@ -86,10 +94,16 @@ def author_gaps(path: Path | None) -> list[str]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--release-metadata", type=Path)
+    parser.add_argument(
+        "--package-root",
+        type=Path,
+        default=DEFAULT_PACKAGE,
+        help="locally staged anonymous reproducibility package to verify",
+    )
     parser.add_argument("--require-author-completion", action="store_true")
     args = parser.parse_args()
 
-    local_checks()
+    local_checks(args.package_root.resolve())
     gaps = author_gaps(args.release_metadata)
     if gaps:
         print("TECHNICAL_READY_AUTHOR_ACTION_REQUIRED")
