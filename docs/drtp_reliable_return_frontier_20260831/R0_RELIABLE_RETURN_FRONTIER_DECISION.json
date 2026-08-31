@@ -1,6 +1,6 @@
 {
   "status": "R0_ZERO_TRAINING_COMPLETE",
-  "historical_candidates_screened": 7,
+  "historical_candidates_screened": 9,
   "per_cohort_screen_passes": [],
   "candidate_promoted": false,
   "training_authorized": false,

@@ -102,7 +102,7 @@ def main() -> None:
         "",
         "## Interpretation",
         "",
-        "No archived candidate passes the complete screen or is eligible for promotion. D3_KLR is the nearest historical row: it has positive mean and worst paired gains and a smaller range, but its observed upper-tail loss is `9.420`, exceeding the frozen `epsilon_J = 7.875`; it is also only one three-seed pilot cohort and remains historically `PILOT_NO_GO`. PP-DRTP's independent P4 cohort fails the downside and range requirements. Conservative-DRTP reverses in R1. Every other comparable candidate fails at least one reliability-first condition.",
+        "No archived candidate passes the complete screen or is eligible for promotion. D3_KLR is the nearest early pilot row: it has positive mean and worst paired gains and a smaller range, but its observed upper-tail loss is `9.420`, exceeding the frozen `epsilon_J = 7.875`. More decisively, the completed KLR final replication fails in both independent cohorts: each cohort contains a newly catastrophic KLR seed and KLR enlarges gain range and sample SD. PP-DRTP's independent P4 cohort fails the downside and range requirements. Conservative-DRTP reverses in R1. Every other comparable candidate fails at least one reliability-first condition.",
         "",
         "Thus the revised objective is scientifically viable, but none of the archived local-patch candidates supplies sufficient evidence that it achieves that objective. A future candidate must be designed from a new, independently supported mechanism and must be tested prospectively in two separate fresh-seed cohorts. This R0 audit does not authorize that candidate or any cloud run.",
         "",
