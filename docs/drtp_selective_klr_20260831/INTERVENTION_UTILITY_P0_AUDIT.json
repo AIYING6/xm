@@ -1,0 +1,66 @@
+{
+  "protocol": "DRTP-SELECTIVE-KLR-INTERVENTION-UTILITY-P0-V1",
+  "archive": "drtp_klr_final_replication_p3_05m_results.tar.gz",
+  "archive_sha256": "cfac50c825548aa60acc071bdaf3a96808c6c019d13e9bb193e89bd31aafd7e5",
+  "read_only": true,
+  "training_started": false,
+  "evaluation_started": false,
+  "algorithm_modification_authorized": false,
+  "source_sha256": "fdf6c7a0748099cedc210c97d97ab2a6ce86d8475e4cc6a690464e72290efa9c",
+  "trigger_population": {
+    "rule": "all archived post-step KL > 0.02 guard events",
+    "seeds": [
+      "3701",
+      "3702",
+      "3703",
+      "3704",
+      "3705",
+      "3706",
+      "3707",
+      "3708",
+      "3709",
+      "3710"
+    ],
+    "trigger_count_by_seed": {
+      "3701": 7,
+      "3702": 5,
+      "3703": 1,
+      "3704": 8,
+      "3705": 7,
+      "3706": 3,
+      "3707": 6,
+      "3708": 9,
+      "3709": 4,
+      "3710": 10
+    },
+    "attempt_count_by_seed": {
+      "3701": 7811,
+      "3702": 7810,
+      "3703": 7812,
+      "3704": 7809,
+      "3705": 7812,
+      "3706": 7812,
+      "3707": 7809,
+      "3708": 7812,
+      "3709": 7812,
+      "3710": 7807
+    },
+    "total_triggers": 60,
+    "total_attempts": 78106
+  },
+  "archive_state_granularity": {
+    "runtime_state_files": 30,
+    "milestone_runtime_only": true,
+    "exact_trigger_snapshot_files": []
+  },
+  "prospective_infrastructure_markers": {
+    "actor_transaction": true,
+    "actor_optimizer_transaction": true,
+    "full_model_optimizer_transaction": true,
+    "environment_runtime_capture": true,
+    "python_numpy_torch_rng_capture": true
+  },
+  "decision": "HISTORICAL_EXACT_COUNTERFACTUAL_NOT_FEASIBLE",
+  "reason": "The archive contains only milestone/latest runtime states and no pre-trigger snapshot linked to each KLR event. A later checkpoint cannot recreate an exact accept-versus-rollback counterfactual.",
+  "next_authorized_scope": "none; a prospective trigger-snapshot instrumentation contract requires separate human authorization"
+}
