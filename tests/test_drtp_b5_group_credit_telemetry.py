@@ -107,6 +107,14 @@ def test_group_schema_counts_and_pairwise_conflicts() -> None:
     assert all(-1.0000001 <= row["actor_gradient_cosine"] <= 1.0000001 for row in conflicts)
     assert all(-1.0000001 <= row["critic_gradient_cosine"] <= 1.0000001 for row in conflicts)
     assert all(row["independent_unit"] == "training_seed" for row in rows + conflicts)
+    for row in rows:
+        assert np.isfinite(row["clipped_surrogate_mean"])
+        assert np.isfinite(row["entropy_bonus_mean"])
+        assert np.isfinite(row["actor_loss_mean"])
+        assert np.isclose(
+            row["actor_loss_mean"],
+            -row["clipped_surrogate_mean"] - row["entropy_bonus_mean"],
+        )
 
 
 def test_no_sample_group_is_explicit_not_nan() -> None:
@@ -117,6 +125,7 @@ def test_no_sample_group_is_explicit_not_nan() -> None:
     absent = [row for row in rows if row["group"] != "N"]
     assert all(row["status"] == "NO_SAMPLES" and row["graph_count"] == 0 for row in absent)
     assert all(row["value_residual_mean"] is None for row in absent)
+    assert all(row["clipped_surrogate_mean"] is None for row in absent)
     assert conflicts == []
 
 

@@ -26,6 +26,10 @@ GROUP_FIELDS = [
     "raw_advantage_mean", "raw_advantage_std", "raw_advantage_q10", "raw_advantage_q50", "raw_advantage_q90",
     "normalized_advantage_mean", "normalized_advantage_std", "normalized_advantage_q10",
     "normalized_advantage_q50", "normalized_advantage_q90",
+    # These scalar actor terms are emitted for observational diagnostics only.
+    # They are calculated from the same pre-update PPO expressions used below;
+    # no new backward pass, action draw, or optimizer operation is introduced.
+    "clipped_surrogate_mean", "entropy_bonus_mean", "actor_loss_mean",
     "policy_entropy_mean", "actor_gradient_norm", "critic_gradient_norm",
     "gradient_objective", "independent_unit", "repetition_unit",
 ]
@@ -146,8 +150,10 @@ def summarize_group_credit_assignment(
         -normalized_advantages * ratio,
         -normalized_advantages * torch.clamp(ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef),
     ).mean(dim=1)
+    clipped_surrogate_per_graph = -policy_per_graph
     entropy_per_graph = entropy.mean(dim=1)
-    actor_per_graph = policy_per_graph - float(cfg.entropy_coef) * entropy_per_graph
+    entropy_bonus_per_graph = float(cfg.entropy_coef) * entropy_per_graph
+    actor_per_graph = policy_per_graph - entropy_bonus_per_graph
     critic_per_graph = 0.5 * (returns - current_values).square().mean(dim=1)
 
     actor_parameters = [parameter for parameter in agent.actor.parameters() if parameter.requires_grad]
@@ -198,6 +204,9 @@ def summarize_group_credit_assignment(
             "explained_variance": explained_variance,
             **raw_stats,
             **normalized_stats,
+            "clipped_surrogate_mean": float(clipped_surrogate_per_graph[indices].mean().detach().cpu()),
+            "entropy_bonus_mean": float(entropy_bonus_per_graph[indices].mean().detach().cpu()),
+            "actor_loss_mean": float(actor_loss.detach().cpu()),
             "policy_entropy_mean": float(entropy_per_graph[indices].mean().detach().cpu()),
             "actor_gradient_norm": _norm(actor_group_gradients),
             "critic_gradient_norm": _norm(critic_group_gradients),

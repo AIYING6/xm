@@ -1,0 +1,24 @@
+{
+  "algorithm_modification": false,
+  "checks": {
+    "collection_precedes_ppo_update": true,
+    "no_tape_argument": true,
+    "runtime_checkpoint_support": true,
+    "telemetry_default_off": true,
+    "telemetry_module_has_no_mutating_calls": true,
+    "three_new_scalar_fields": true,
+    "uses_existing_preupdate_expressions": true
+  },
+  "evaluation_started": false,
+  "mainline_a_modified": false,
+  "next_step_authorized": false,
+  "protocol": "C2-M1-TELEMETRY-PREFLIGHT-V1",
+  "pytest": {
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "....                                                                     [100%]\n4 passed in 4.11s\n"
+  },
+  "required_future_preflight": "benchmark telemetry-on wall-clock and disk growth before any fresh-seed diagnostic run",
+  "training_started": false,
+  "verdict": "C2_M1_TELEMETRY_READY"
+}
