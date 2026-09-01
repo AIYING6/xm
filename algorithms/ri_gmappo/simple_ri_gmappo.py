@@ -148,6 +148,10 @@ class RIGMAPPOConfig:
     group_weighted_actor_min: float = 0.75
     group_weighted_actor_max: float = 1.25
     group_weighted_actor_telemetry: bool = False
+    # Full C2 uses the immediately preceding training rollout as the only
+    # score source.  The dynamic score state is persisted in strict runtime
+    # checkpoints; it is never an actor/critic input.
+    group_weighted_actor_auto_lagged: bool = False
     ppo_epochs: int = 4
     minibatch_graphs: int = 256
     eval_interval: int = 10
@@ -1353,6 +1357,7 @@ def save_runtime_training_checkpoint(
     failure_telemetry_state: dict | None = None,
     sr_drtp_telemetry_state: dict | None = None,
     sr_drtp_p1_signal_state: dict | None = None,
+    group_weighted_actor_state: dict | None = None,
 ) -> None:
     """Persist every state that can alter the following rollout/update.
 
@@ -1393,6 +1398,7 @@ def save_runtime_training_checkpoint(
         "failure_telemetry_state": copy.deepcopy(failure_telemetry_state),
         "sr_drtp_telemetry_state": copy.deepcopy(sr_drtp_telemetry_state),
         "sr_drtp_p1_signal_state": copy.deepcopy(sr_drtp_p1_signal_state),
+        "group_weighted_actor_state": copy.deepcopy(group_weighted_actor_state),
     }
     torch.save(payload, path)
 
@@ -1803,11 +1809,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if cfg.rollout_steps * cfg.num_envs != cfg.minibatch_graphs:
             raise ValueError("group-weighted actor audit requires one complete rollout minibatch per PPO epoch")
     if cfg.group_weighted_actor_enabled:
-        if cfg.group_weighted_actor_scores is None:
+        if cfg.group_weighted_actor_scores is None and not cfg.group_weighted_actor_auto_lagged:
             raise ValueError("group-weighted actor requires lagged training-only group scores")
-        if set(cfg.group_weighted_actor_scores) != set(FAILURE_GROUPS):
+        if cfg.group_weighted_actor_scores is not None and set(cfg.group_weighted_actor_scores) != set(FAILURE_GROUPS):
             raise ValueError("group-weighted actor scores must cover exactly the frozen failure groups")
-        if not all(math.isfinite(float(cfg.group_weighted_actor_scores[group])) for group in FAILURE_GROUPS):
+        if cfg.group_weighted_actor_scores is not None and not all(math.isfinite(float(cfg.group_weighted_actor_scores[group])) for group in FAILURE_GROUPS):
             raise ValueError("group-weighted actor scores must be finite")
         if not math.isfinite(float(cfg.group_weighted_actor_strength)) or float(cfg.group_weighted_actor_strength) <= 0.0:
             raise ValueError("group-weighted actor strength must be finite and positive")
@@ -1817,6 +1823,15 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             or not 0.0 < float(cfg.group_weighted_actor_min) <= 1.0 <= float(cfg.group_weighted_actor_max)
         ):
             raise ValueError("group-weighted actor bounds must contain one and be strictly positive")
+    if cfg.group_weighted_actor_auto_lagged and not cfg.group_weighted_actor_enabled:
+        raise ValueError("auto-lagged group weighting requires group_weighted_actor_enabled")
+    if cfg.group_weighted_actor_auto_lagged and not cfg.runtime_state_checkpointing:
+        raise ValueError("auto-lagged group weighting requires runtime-state checkpointing")
+    if cfg.group_weighted_actor_auto_lagged and runtime_payload is None:
+        # The first update has no predecessor by definition.  Unit weights are
+        # the neutral, fully deterministic bootstrap; every later update uses
+        # scores produced by the immediately preceding training rollout.
+        cfg.group_weighted_actor_scores = {group: 0.0 for group in FAILURE_GROUPS}
     if cfg.intervention_utility_audit_enabled:
         if policy_guard_mode != "none" or cfg.target_kl is not None:
             raise ValueError("P1 intervention utility audit must run the unguarded Original-DRTP PPO path")
@@ -2037,6 +2052,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             sampler_anchor_record = None
         if telemetry_writer is not None and runtime_payload.get("failure_telemetry_state") is not None:
             telemetry_writer.load_state_dict(runtime_payload["failure_telemetry_state"])
+        if cfg.group_weighted_actor_auto_lagged:
+            saved_weight_state = runtime_payload.get("group_weighted_actor_state")
+            if saved_weight_state is None:
+                raise ValueError("runtime checkpoint is missing auto-lagged group-weight state")
+            saved_scores = saved_weight_state.get("scores")
+            if not isinstance(saved_scores, dict) or set(saved_scores) != set(FAILURE_GROUPS):
+                raise ValueError("runtime checkpoint contains invalid auto-lagged group-weight scores")
+            cfg.group_weighted_actor_scores = {
+                group: float(saved_scores[group]) for group in FAILURE_GROUPS
+            }
         _restore_runtime_rng_state(runtime_payload["rng_state"])
         if diagnostic_branch_mode in {"rollout", "joint"}:
             if rng_streams is None:
@@ -2191,6 +2216,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "group_weighted_actor_batch_sha256",
         "post_update_actor_kl",
         *[f"group_td_abs_{group}" for group in FAILURE_GROUPS],
+        *[f"group_weight_lagged_score_{group}" for group in FAILURE_GROUPS],
         *[f"group_weight_{group}" for group in FAILURE_GROUPS],
         *[f"post_surrogate_{group}" for group in (NOMINAL_GROUP, *FAILURE_GROUPS)],
     ]
@@ -2431,6 +2457,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 ),
             )
             train_info.pop("intervention_utility_events", None)
+            if cfg.group_weighted_actor_auto_lagged:
+                cfg.group_weighted_actor_scores = {
+                    group: float(train_info[f"group_td_abs_{group}"])
+                    for group in FAILURE_GROUPS
+                }
             policy_guard_cumulative_triggers += int(train_info["policy_guard_triggered"])
             policy_guard_cumulative_attempts += int(train_info["policy_steps_attempted"])
             row = {"update": update, **train_info, "train_avg_reward": float(batch["rewards"].mean())}
@@ -2568,6 +2599,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                          sr_drtp_p1_signal_state=(
                              None if sr_drtp_p1_signal_writer is None else sr_drtp_p1_signal_writer.state_dict()
                          ),
+                         group_weighted_actor_state=(
+                             None if not cfg.group_weighted_actor_auto_lagged
+                             else {"scores": dict(cfg.group_weighted_actor_scores or {})}
+                         ),
                         )
             milestone_label = (cfg.milestone_updates or {}).get(update)
             if milestone_label is not None:
@@ -2592,6 +2627,10 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                          ),
                          sr_drtp_p1_signal_state=(
                              None if sr_drtp_p1_signal_writer is None else sr_drtp_p1_signal_writer.state_dict()
+                         ),
+                         group_weighted_actor_state=(
+                             None if not cfg.group_weighted_actor_auto_lagged
+                             else {"scores": dict(cfg.group_weighted_actor_scores or {})}
                          ),
                     )
     if telemetry_writer is not None:
@@ -3402,6 +3441,10 @@ def update_policy(
     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
     group_weighting_enabled = bool(cfg.group_weighted_actor_enabled)
     group_weighting_observed = group_weighting_enabled or bool(cfg.group_weighted_actor_telemetry)
+    lagged_group_scores = {
+        group: float((cfg.group_weighted_actor_scores or {}).get(group, 0.0))
+        for group in FAILURE_GROUPS
+    }
     if group_weighting_observed:
         condition_groups = np.asarray(batch["condition_group"]).reshape(num_graphs)
         group_td_scores = _group_td_abs_scores(batch, num_graphs)
@@ -3892,6 +3935,7 @@ def update_policy(
         "group_weighted_actor_batch_sha256": batch_sha256,
         "post_update_actor_kl": post_kl,
         **{f"group_td_abs_{group}": group_td_scores[group] for group in FAILURE_GROUPS},
+        **{f"group_weight_lagged_score_{group}": lagged_group_scores[group] for group in FAILURE_GROUPS},
         **{f"group_weight_{group}": final_weight_map[group] for group in FAILURE_GROUPS},
         **{f"post_surrogate_{group}": post_surrogate_by_group[group] for group in (NOMINAL_GROUP, *FAILURE_GROUPS)},
         # Ephemeral objects consumed by the trainer; never written to

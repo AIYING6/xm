@@ -1,0 +1,22 @@
+{
+  "protocol": "DRTP-C2-GROUP-WEIGHTED-ACTOR-PPO-DEVELOPMENT-TAPE-V1",
+  "status": "FROZEN_PRE_TRAINING",
+  "development_only": true,
+  "canonical": false,
+  "episode_start": 670000,
+  "episode_count": 100,
+  "same_base_ids_across_conditions": true,
+  "conditions": [
+    {"name": "nominal", "failed_blue_agent": -1, "start_step": 44, "duration_steps": 0},
+    {"name": "F0_44_80", "failed_blue_agent": 1, "start_step": 44, "duration_steps": 80},
+    {"name": "T28_28_80", "failed_blue_agent": 1, "start_step": 28, "duration_steps": 80},
+    {"name": "D120_44_120", "failed_blue_agent": 1, "start_step": 44, "duration_steps": 120},
+    {"name": "C28_120", "failed_blue_agent": 1, "start_step": 28, "duration_steps": 120}
+  ],
+  "failure_semantics": "relay_node_1_edge_removal_at_onset_for_duration",
+  "forbidden_episode_namespaces": [
+    "490000-490099", "500000-500099", "510000-510099", "520000-520099",
+    "530000-530099", "540000-540099", "550000-550099", "560000-560099",
+    "620000-620099", "640000-640099", "650000-650099", "660000-660099"
+  ]
+}

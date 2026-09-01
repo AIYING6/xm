@@ -1,0 +1,64 @@
+{
+  "protocol": "DRTP-C2-GROUP-WEIGHTED-ACTOR-PPO-PILOT-V1",
+  "stage": "two-cohort 0.5M fresh-seed pilot",
+  "authorization": {
+    "training_authorized": false,
+    "evaluation_authorized": false,
+    "automatic_continuation": false,
+    "weight_sweep": false,
+    "seed_replacement": false,
+    "checkpoint_promotion": false,
+    "mainline_a_modification": false
+  },
+  "cohorts": {
+    "A": [4801, 4802, 4803, 4804, 4805],
+    "B": [4806, 4807, 4808, 4809, 4810]
+  },
+  "arms": {
+    "utr_sg": "fixed stratified collection + ordinary PPO",
+    "drtp_sg": "Original DRTP reference only",
+    "group_weighted_utr_sg": "fixed stratified collection + auto-lagged group-weighted actor PPO"
+  },
+  "budget": {
+    "updates": 1953,
+    "environment_steps_per_trajectory": 499968,
+    "trajectories": 30,
+    "milestones": {"976": "250k", "1953": "500k"}
+  },
+  "candidate": {
+    "sampler": "fixed_stratified_topology_sampler",
+    "actor_gradient_mode": "standard",
+    "lagged_score": "preceding training rollout per-group mean absolute TD residual",
+    "nominal_weight": 1.0,
+    "failure_weight_strength": 0.25,
+    "failure_weight_min": 0.75,
+    "failure_weight_max": 1.25,
+    "failure_weight_normalization": "frequency-weighted mean one across failure graphs",
+    "critic": "ordinary PPO",
+    "bootstrap": "first update uses unit failure weights; each later update uses only immediately preceding rollout scores",
+    "runtime_persistence": "lagged scores must be stored in and restored from strict runtime checkpoints"
+  },
+  "evaluation": {
+    "development_only": true,
+    "tape": "configs/drtp_c2_group_weighted_ppo_pilot_tape.json",
+    "episodes_per_condition": 100,
+    "checkpoint": "500k fixed milestone",
+    "forbidden": ["formal tape", "independent tape", "held-out tape", "best checkpoint"]
+  },
+  "gate": {
+    "independent_unit": "training seed",
+    "epsilon_J": 7.874919837916801,
+    "safety_delta_limit": 0.1,
+    "per_cohort_required": [
+      "positive mean robust gain versus UTR",
+      "at least three of five nonnegative robust gains versus UTR",
+      "no additional catastrophic seed relative to Original DRTP",
+      "gain range and sample SD no larger than Original DRTP",
+      "mean robust endpoint retained within epsilon_J of Original DRTP",
+      "upper-tail Original-DRTP seeds retained within epsilon_J",
+      "no safety metric exceeds frozen limit relative to paired UTR",
+      "fixed sampler and auto-lagged weight integrity"
+    ],
+    "decision_rule": "C2_EARLY_GO only if Cohort A and Cohort B both pass separately. Any cohort failure is C2_NO_GO; pooled n=10 is descriptive only."
+  }
+}
