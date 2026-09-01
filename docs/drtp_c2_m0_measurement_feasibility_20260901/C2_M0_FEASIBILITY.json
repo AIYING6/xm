@@ -1,0 +1,57 @@
+{
+  "actionability": {
+    "repeated_actor_group_conflict": "one actor-only conflict-projection candidate, not authorized by M0",
+    "repeated_group_surrogate_dominance": "one bounded group-contribution normalization candidate, not authorized by M0",
+    "role_behavior_divergence": "descriptive localization only; no generic intervention is authorized"
+  },
+  "automatic_continuation_authorized": false,
+  "checks": {
+    "fixed_runtime_milestones": true,
+    "formal_tape_not_read_by_training_interface": true,
+    "group_actor_and_critic_gradients": true,
+    "group_advantage_and_clipped_objective_available_to_measure": true,
+    "group_gradient_conflict": true,
+    "role_behavior_windows": true,
+    "telemetry_is_default_off": true,
+    "telemetry_not_used_as_control": true
+  },
+  "cost_interpretation": "The source-only audit proves no extra environment interaction or second action draw. It cannot establish wall-clock overhead; a future technical preflight must measure it before any diagnostic trajectory.",
+  "expected_per_trajectory": {
+    "diagnostic_autograd_calls": 854,
+    "diagnostic_update_fraction": 0.03123399897593446,
+    "group_credit_rows": 427,
+    "pair_conflict_rows": 1281
+  },
+  "frozen_measurement_contract": {
+    "evaluation_enabled": false,
+    "group_credit_interval_updates": 32,
+    "group_credit_observation_updates": 61,
+    "groups": [
+      "N",
+      "F0",
+      "TE",
+      "TL",
+      "DS",
+      "DL",
+      "CP"
+    ],
+    "milestones": {
+      "488": "125k",
+      "976": "250k",
+      "1464": "375k",
+      "1953": "500k"
+    },
+    "new_environment_interactions": 0,
+    "telemetry_control_input": false,
+    "training_authorized": false,
+    "updates": 1953
+  },
+  "mainline_a_modified": false,
+  "protocol": "C2-M0-MEASUREMENT-FEASIBILITY-V1",
+  "source_sha256": {
+    "algorithms/ri_gmappo/failure_aware_telemetry.py": "960fe73cb9604085322c68a6b2a9a833a836a10a8e6b598e00611dc225c7adc8",
+    "algorithms/ri_gmappo/group_credit_telemetry.py": "ee941618f21d10c793ea369f2efb08bc043a9b41542efa1a8257653fb6a5e7fc",
+    "algorithms/ri_gmappo/simple_ri_gmappo.py": "73ef2d9b54060061a6db1b7770cc541cfc7cc9d48321732d9c7d5e25cf1e7187"
+  },
+  "verdict": "C2_M0_FEASIBLE"
+}
