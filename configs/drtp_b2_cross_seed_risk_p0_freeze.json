@@ -1,0 +1,30 @@
+{
+  "protocol": "DRTP-B2-CROSS-SEED-LOWER-TAIL-RISK-P0-V1",
+  "stage": "zero-training feasibility audit",
+  "authorization": {
+    "new_algorithm_implementation": false,
+    "training": false,
+    "evaluation": false,
+    "automatic_p1": false,
+    "mainline_a_modification": false
+  },
+  "target": {
+    "name": "cross-seed lower-tail risk optimization",
+    "outer_random_variable": "Z_s(phi), where s is a complete training-seed draw and phi parameterizes an update rule",
+    "prohibited_substitution": "episode-return CVaR is not evidence for, or an implementation of, cross-seed training-risk optimization"
+  },
+  "three_core_gates": {
+    "mathematical_definition": "A training-only, pre-outcome observable estimator of a lower-tail objective must be specified and identified as targeting Z_s(phi), rather than an episode-return proxy.",
+    "training_only_interface": "The current training interface must support independent complete seed replicas and the outer estimator without reading any evaluation tape, final seed label, or future trajectory information.",
+    "affordable_cost": "A minimally credible lower-tail outer estimate must fit a pre-authorized cost budget; its lower bound must include all independent full-training replicas required for one outer update."
+  },
+  "cost_lower_bound": {
+    "training_steps_per_replica": 499968,
+    "minimum_independent_seed_replicas": 8,
+    "minimum_controller_coordinates": 4,
+    "finite_difference_sides": 2,
+    "formula": "replicas = finite_difference_sides * minimum_controller_coordinates * minimum_independent_seed_replicas",
+    "note": "This is only one outer-gradient estimate, excludes base comparisons, validation, repeats, and all subsequent outer updates."
+  },
+  "decision_rule": "B2_P0_FEASIBLE only when all three core gates pass; otherwise B2_P0_NO_GO."
+}

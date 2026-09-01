@@ -1,0 +1,36 @@
+{
+  "protocol": "DRTP-B2-CROSS-SEED-LOWER-TAIL-RISK-P0-V1",
+  "stage": "zero-training feasibility audit",
+  "verdict": "B2_P0_NO_GO",
+  "automatic_p1_authorized": false,
+  "new_algorithm_implemented": false,
+  "training_started": false,
+  "evaluation_started": false,
+  "gates": {
+    "mathematical_definition": {
+      "pass": false,
+      "reason": "The outer lower-tail random variable over complete training seeds can be written, but no identified training-only observable estimator is available. Existing B5 and SR-P1 evidence does not establish a precursor that predicts seed-level lower-tail outcome. Episode-return CVaR is a different random variable and is explicitly inadmissible as a substitute."
+    },
+    "training_only_interface": {
+      "pass": false,
+      "reason": "The current entry point trains one complete seed with ordinary Adam steps. It has no cross-seed outer estimator or training-only outer endpoint. Adding these would be a new, untested algorithm/interface, which is outside this zero-training audit."
+    },
+    "affordable_cost": {
+      "pass": false,
+      "reason": "Even the declared lower bound for one finite-difference outer estimate is 64 complete replicas x 499,968 steps = 31,997,952 environment steps. It excludes validation, baseline comparisons, repeat estimates, and all further outer updates; no such budget has been authorized."
+    }
+  },
+  "static_interface_evidence": {
+    "single_seed_training_entrypoint": true,
+    "ordinary_adam_step": true,
+    "existing_meta_gradient_interface": false,
+    "existing_cross_seed_outer_estimator": false,
+    "existing_training_only_outer_endpoint": false
+  },
+  "cost_lower_bound": {
+    "replicas": 64,
+    "environment_steps": 31997952,
+    "formula": "2 finite-difference sides x 4 controller coordinates x 8 independent seed replicas"
+  },
+  "boundary": "This is a NO-GO for the presently proposed B2 route, not proof that cross-seed reliability research is impossible."
+}
