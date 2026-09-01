@@ -1,0 +1,39 @@
+{
+  "protocol": "DRTP-C0-STABLE-COLLECTION-ADAPTIVE-OPTIMIZATION-V1",
+  "stage": "zero-training design audit",
+  "verdict": "C0_FEASIBLE",
+  "algorithm_implemented": false,
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_c1_authorized": false,
+  "gates": {
+    "ppo_objective_validity": {
+      "pass": true,
+      "reason": "Per-graph clipped PPO terms already exist before actor aggregation. Positive bounded group weights can define an explicit alternative surrogate, without claiming to optimize the original UTR objective."
+    },
+    "training_only_isolation": {
+      "pass": true,
+      "reason": "condition_group is rollout metadata outside model inputs; the fixed-stratified sampler is uniform over failure groups and contains no adaptive q."
+    },
+    "cost_and_matched_collection": {
+      "pass": true,
+      "reason": "Reweighting already-computed per-graph actor terms is O(batch size), uses no extra environment interactions, probes, or policy forwards, and preserves fixed exposure."
+    }
+  },
+  "future_contract_constraints": {
+    "sampler": "fixed_stratified_topology_sampler only",
+    "nominal_weight": 1.0,
+    "conditional_failure_weight_mean": 1.0,
+    "positive_bounded_weights": true,
+    "actor_only": true,
+    "critic_ordinary_ppo": true,
+    "difficulty": "lagged group-aggregated training-only statistic",
+    "forbidden_inputs": [
+      "evaluation tape",
+      "future trajectory information",
+      "final seed labels",
+      "raw episode length",
+      "adaptive reset selection"
+    ]
+  }
+}

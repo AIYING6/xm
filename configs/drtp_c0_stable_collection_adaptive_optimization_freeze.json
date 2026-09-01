@@ -1,0 +1,37 @@
+{
+  "protocol": "DRTP-C0-STABLE-COLLECTION-ADAPTIVE-OPTIMIZATION-V1",
+  "stage": "zero-training design audit",
+  "authorization": {
+    "algorithm_implementation": false,
+    "training": false,
+    "evaluation": false,
+    "automatic_c1": false,
+    "mainline_a_modification": false
+  },
+  "collection_contract": {
+    "sampler": "fixed_stratified_topology_sampler",
+    "failure_group_probability": "uniform conditional on failure",
+    "nominal_exposure": "unchanged from the frozen UTR/fixed-stratified protocol",
+    "adaptive_sampling": false
+  },
+  "candidate_actor_objective": {
+    "formula": "L_actor = mean_i[w(g_i) * ell_PPO_i] for failure samples, with w(N)=1",
+    "weight_domain": "strictly positive bounded weights",
+    "conditional_normalization": "mean_{g in FAILURE_GROUPS} w(g) = 1 under the fixed uniform failure mixture",
+    "critic": "ordinary PPO critic loss; no group weighting in the first candidate",
+    "difficulty_source": "training-only, group-aggregated, lagged statistic; no evaluation data, future trajectory data, or final seed labels",
+    "prohibited": [
+      "changing reset probabilities",
+      "weighting nominal samples in the first candidate",
+      "using raw episode length as a group score",
+      "using formal, independent, or held-out evaluation tape",
+      "using a final training-seed outcome as an online weight"
+    ]
+  },
+  "core_gates": {
+    "ppo_objective_validity": "The proposal must be explicitly described as an alternative bounded, reweighted PPO surrogate, not an unbiased optimizer of the original UTR objective or a monotonic-improvement guarantee.",
+    "training_only_isolation": "Group identity and difficulty state must be available from training rollout metadata while remaining absent from actor/critic inputs, reset selection, and all evaluation interfaces.",
+    "cost_and_matched_collection": "The candidate must reuse the standard rollout and forward/backward pass, add no probe episodes, and preserve the fixed group-exposure manifest."
+  },
+  "decision_rule": "C0_FEASIBLE only if all core gates pass; otherwise C0_NO_GO. C0 never authorizes implementation, C1, or training."
+}
