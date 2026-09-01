@@ -2,8 +2,8 @@
   "protocol": "DRTP-C2-GROUP-WEIGHTED-ACTOR-PPO-PILOT-V1",
   "stage": "two-cohort 0.5M fresh-seed pilot",
   "authorization": {
-    "training_authorized": false,
-    "evaluation_authorized": false,
+    "training_authorized": true,
+    "evaluation_authorized": true,
     "automatic_continuation": false,
     "weight_sweep": false,
     "seed_replacement": false,
