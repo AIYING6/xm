@@ -1,0 +1,50 @@
+{
+  "protocol": "DRTP-C1-SAME-ROLLOUT-GROUP-WEIGHTED-PPO-V1",
+  "stage": "checkpoint-level mechanism audit",
+  "authorization": {
+    "implementation": true,
+    "long_training": false,
+    "formal_evaluation": false,
+    "heldout_evaluation": false,
+    "weight_sweep": false,
+    "automatic_c2": false,
+    "mainline_a_modification": false
+  },
+  "source": {
+    "arm": "utr_sg",
+    "training_seeds": [2201, 2202, 2203, 2204, 2205],
+    "source_update": 3907,
+    "common_prelude_updates": 1,
+    "branch_updates": 1,
+    "sampler": "fixed_stratified_topology_sampler",
+    "standard_actor_gradient_mode": "standard"
+  },
+  "candidate": {
+    "difficulty": "lagged per-group mean absolute TD residual from the common prelude rollout",
+    "actor_only": true,
+    "nominal_weight": 1.0,
+    "failure_weight_strength": 0.25,
+    "failure_weight_min": 0.75,
+    "failure_weight_max": 1.25,
+    "failure_weight_normalization": "frequency-weighted mean one across failure graphs in the branch rollout",
+    "critic": "ordinary PPO",
+    "reward": "unchanged",
+    "evaluation": "disabled"
+  },
+  "gate": {
+    "independent_unit": "source training seed",
+    "minimum_high_group_surrogate_wins": 4,
+    "minimum_nominal_nonharm_seeds": 4,
+    "nominal_surrogate_floor": -0.002,
+    "absolute_nominal_surrogate_floor": -0.005,
+    "maximum_post_update_kl": 0.02,
+    "required": [
+      "five_exact_batch_pairs",
+      "nonuniform_weight_actuation_in_all_five_pairs",
+      "high_group_surrogate_wins",
+      "nominal_nonharm",
+      "finite_and_bounded_ppo_dynamics"
+    ]
+  },
+  "decision_rule": "C1_PASS only when every required gate passes; otherwise C1_NO_GO. Neither result authorizes C2 automatically."
+}

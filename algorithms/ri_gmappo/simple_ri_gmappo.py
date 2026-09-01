@@ -138,6 +138,16 @@ class RIGMAPPOConfig:
     # When false, the historical actor/critic/optimizer path is unchanged.
     counterfactual_critic_enabled: bool = False
     critic_warmup_updates: int = 0
+    # C-line stable-collection / adaptive-optimization candidate.  These
+    # switches are default-off so every historical path remains byte-for-byte
+    # unchanged.  C1 supplies scores from the immediately preceding training
+    # rollout; no score may come from an evaluation tape or final seed label.
+    group_weighted_actor_enabled: bool = False
+    group_weighted_actor_scores: dict[str, float] | None = None
+    group_weighted_actor_strength: float = 0.25
+    group_weighted_actor_min: float = 0.75
+    group_weighted_actor_max: float = 1.25
+    group_weighted_actor_telemetry: bool = False
     ppo_epochs: int = 4
     minibatch_graphs: int = 256
     eval_interval: int = 10
@@ -1785,6 +1795,28 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             raise ValueError("post-step actor guards require a finite positive target_kl")
         if cfg.rollout_steps * cfg.num_envs != cfg.minibatch_graphs:
             raise ValueError("post-step actor guards require one complete rollout minibatch per PPO epoch")
+    if cfg.group_weighted_actor_enabled or cfg.group_weighted_actor_telemetry:
+        if actor_gradient_mode != "standard" or not cfg.fixed_stratified_topology_sampler:
+            raise ValueError("group-weighted actor audit requires standard PPO with fixed-stratified collection")
+        if drtp_mode != "none":
+            raise ValueError("group-weighted actor audit forbids an adaptive topology sampler")
+        if cfg.rollout_steps * cfg.num_envs != cfg.minibatch_graphs:
+            raise ValueError("group-weighted actor audit requires one complete rollout minibatch per PPO epoch")
+    if cfg.group_weighted_actor_enabled:
+        if cfg.group_weighted_actor_scores is None:
+            raise ValueError("group-weighted actor requires lagged training-only group scores")
+        if set(cfg.group_weighted_actor_scores) != set(FAILURE_GROUPS):
+            raise ValueError("group-weighted actor scores must cover exactly the frozen failure groups")
+        if not all(math.isfinite(float(cfg.group_weighted_actor_scores[group])) for group in FAILURE_GROUPS):
+            raise ValueError("group-weighted actor scores must be finite")
+        if not math.isfinite(float(cfg.group_weighted_actor_strength)) or float(cfg.group_weighted_actor_strength) <= 0.0:
+            raise ValueError("group-weighted actor strength must be finite and positive")
+        if (
+            not math.isfinite(float(cfg.group_weighted_actor_min))
+            or not math.isfinite(float(cfg.group_weighted_actor_max))
+            or not 0.0 < float(cfg.group_weighted_actor_min) <= 1.0 <= float(cfg.group_weighted_actor_max)
+        ):
+            raise ValueError("group-weighted actor bounds must contain one and be strictly positive")
     if cfg.intervention_utility_audit_enabled:
         if policy_guard_mode != "none" or cfg.target_kl is not None:
             raise ValueError("P1 intervention utility audit must run the unguarded Original-DRTP PPO path")
@@ -2151,6 +2183,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "policy_guard_cumulative_triggers",
         "policy_guard_cumulative_attempts",
         "policy_guard_cumulative_intervention_rate",
+        "group_weighted_actor_enabled",
+        "group_weight_active_count",
+        "group_weight_min",
+        "group_weight_max",
+        "group_weight_mean",
+        "group_weighted_actor_batch_sha256",
+        "post_update_actor_kl",
+        *[f"group_td_abs_{group}" for group in FAILURE_GROUPS],
+        *[f"group_weight_{group}" for group in FAILURE_GROUPS],
+        *[f"post_surrogate_{group}" for group in (NOMINAL_GROUP, *FAILURE_GROUPS)],
     ]
     write_header = not (cfg.append_log and log_path.exists())
     mode = "a" if cfg.append_log else "w"
@@ -3267,6 +3309,68 @@ def _nested_tensors_equal(left, right) -> bool:
     return left == right
 
 
+def _group_td_abs_scores(batch: dict, num_graphs: int) -> dict[str, float]:
+    """Return per-group mean absolute TD residual from one training rollout.
+
+    The mean is per graph, never a raw total, so a longer episode cannot
+    become "harder" merely by contributing more rows.  Missing groups retain
+    the explicit neutral score zero; C1 only applies weights to groups that
+    occur in its following fixed-stratified rollout.
+    """
+    groups = np.asarray(batch["condition_group"]).reshape(num_graphs)
+    residual = np.asarray(batch["td_residuals"], dtype=np.float64).reshape(num_graphs, -1)
+    magnitude = np.abs(residual).mean(axis=1)
+    scores: dict[str, float] = {}
+    for group in FAILURE_GROUPS:
+        values = magnitude[groups == group]
+        scores[group] = float(values.mean()) if values.size else 0.0
+    return scores
+
+
+def _group_weight_map(
+    groups: np.ndarray,
+    lagged_scores: dict[str, float],
+    strength: float,
+    lower: float,
+    upper: float,
+) -> dict[str, float]:
+    """Construct bounded, frequency-normalized weights for present failures.
+
+    This uses only lagged, training-side scores.  Nominal is intentionally
+    outside the map and always receives unit weight.  Frequency normalization
+    makes the mean failure-sample multiplier exactly one in the current fixed
+    rollout, preserving the overall failure-gradient scale.
+    """
+    active = [group for group in FAILURE_GROUPS if int(np.sum(groups == group)) > 0]
+    if not active:
+        return {group: 1.0 for group in FAILURE_GROUPS}
+    values = np.asarray([float(lagged_scores[group]) for group in active], dtype=np.float64)
+    center = float(values.mean())
+    spread = float(values.std())
+    if spread <= 1e-12:
+        raw = np.ones(len(active), dtype=np.float64)
+    else:
+        raw = np.exp(float(strength) * (values - center) / spread)
+    raw = np.clip(raw, float(lower), float(upper))
+    counts = np.asarray([np.sum(groups == group) for group in active], dtype=np.float64)
+    raw /= float(np.sum(raw * counts) / np.sum(counts))
+    weights = {group: 1.0 for group in FAILURE_GROUPS}
+    weights.update({group: float(value) for group, value in zip(active, raw)})
+    return weights
+
+
+def _batch_sha256(batch: dict) -> str:
+    """Hash C1's training batch without exposing it to any evaluation path."""
+    digest = hashlib.sha256()
+    for key in ("actions", "logp", "advantages", "returns", "td_residuals", "condition_group"):
+        value = np.ascontiguousarray(np.asarray(batch[key]))
+        digest.update(key.encode("utf-8"))
+        digest.update(str(value.dtype).encode("utf-8"))
+        digest.update(np.asarray(value.shape, dtype=np.int64).tobytes())
+        digest.update(value.tobytes())
+    return digest.hexdigest()
+
+
 def update_policy(
     agent: RIGMAPPOAgent,
     optimizer: optim.Optimizer,
@@ -3296,6 +3400,16 @@ def update_policy(
     advantages = torch.as_tensor(batch["advantages"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+    group_weighting_enabled = bool(cfg.group_weighted_actor_enabled)
+    group_weighting_observed = group_weighting_enabled or bool(cfg.group_weighted_actor_telemetry)
+    if group_weighting_observed:
+        condition_groups = np.asarray(batch["condition_group"]).reshape(num_graphs)
+        group_td_scores = _group_td_abs_scores(batch, num_graphs)
+        batch_sha256 = _batch_sha256(batch)
+    else:
+        condition_groups = None
+        group_td_scores = {group: 0.0 for group in FAILURE_GROUPS}
+        batch_sha256 = ""
     counterfactual_critic_enabled = bool(cfg.counterfactual_critic_enabled)
     if counterfactual_critic_enabled and not getattr(agent, "counterfactual_critic_enabled", False):
         raise ValueError("CV-DRTP requires an enabled counterfactual critic branch")
@@ -3352,6 +3466,7 @@ def update_policy(
     sr_shadow_actor_rollback_applied = False
     final_accepted_policy_kl = 0.0
     intervention_utility_events: list[dict[str, Any]] = []
+    observed_weight_maps: list[dict[str, float]] = []
 
     def current_policy_kl() -> float:
         with torch.no_grad():
@@ -3423,7 +3538,26 @@ def update_policy(
                 explained_variance = 1.0 - value_error_var / (returns_var + 1e-8)
             pg_loss1 = -cf_advantages * ratio
             pg_loss2 = -cf_advantages * torch.clamp(ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef)
-            policy_loss = torch.max(pg_loss1, pg_loss2).mean()
+            policy_per_graph = torch.max(pg_loss1, pg_loss2).mean(dim=1)
+            if group_weighting_enabled:
+                if condition_groups is None:
+                    raise AssertionError("group weighting lost condition metadata")
+                mb_groups = condition_groups[np.asarray(mb, dtype=np.int64)]
+                weight_map = _group_weight_map(
+                    mb_groups,
+                    cfg.group_weighted_actor_scores or {},
+                    cfg.group_weighted_actor_strength,
+                    cfg.group_weighted_actor_min,
+                    cfg.group_weighted_actor_max,
+                )
+                graph_weights = np.asarray(
+                    [1.0 if group == NOMINAL_GROUP else weight_map[str(group)] for group in mb_groups],
+                    dtype=np.float32,
+                )
+                policy_loss = (policy_per_graph * torch.as_tensor(graph_weights, device=device)).mean()
+                observed_weight_maps.append(weight_map)
+            else:
+                policy_loss = policy_per_graph.mean()
             value_loss = 0.5 * (returns[mb] - values).pow(2).mean()
             entropy_loss = entropy.mean()
             if batch["has_intent_label"]:
@@ -3674,6 +3808,34 @@ def update_policy(
             stop_ppo = True
         if stop_ppo:
             break
+    # C1-only diagnostic on the same already-collected batch.  It is not an
+    # environment evaluation and never feeds back into PPO, sampling, or a
+    # future weight.  The signed likelihood-ratio advantage is a local
+    # surrogate direction check, not a performance endpoint.
+    if group_weighting_observed:
+        if condition_groups is None:
+            raise AssertionError("group-weighted telemetry lost condition metadata")
+        with torch.no_grad():
+            _, post_logp, _, _, _, _, _ = agent.get_action_and_value(
+                obs, node_feat, edge_feat, role, adj, share_obs,
+                relation_adj=relation_adj, action=actions, intent_label=intent_label,
+                detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
+            )
+            post_log_ratio = post_logp - old_logp
+            post_ratio = post_log_ratio.exp()
+            post_surrogate = (post_ratio * advantages).mean(dim=1).detach().cpu().numpy()
+            post_kl = float(((post_ratio - 1.0) - post_log_ratio).mean().detach().cpu())
+        post_surrogate_by_group = {
+            group: (
+                float(post_surrogate[condition_groups == group].mean())
+                if np.any(condition_groups == group) else 0.0
+            )
+            for group in (NOMINAL_GROUP, *FAILURE_GROUPS)
+        }
+    else:
+        post_kl = 0.0
+        post_surrogate_by_group = {group: 0.0 for group in (NOMINAL_GROUP, *FAILURE_GROUPS)}
+    final_weight_map = observed_weight_maps[-1] if observed_weight_maps else {group: 1.0 for group in FAILURE_GROUPS}
     return {
         "loss": float(np.mean(losses)),
         "policy_loss": float(np.mean(policy_losses)),
@@ -3722,6 +3884,16 @@ def update_policy(
         "critic_step_retained_after_policy_guard": float(critic_step_retained_after_policy_guard),
         "sr_drtp_shadow_actor_rollback_applied": float(sr_shadow_actor_rollback_applied),
         "intervention_utility_alarm_count": int(len(intervention_utility_events)),
+        "group_weighted_actor_enabled": float(group_weighting_enabled),
+        "group_weight_active_count": int(sum(abs(final_weight_map[group] - 1.0) > 1e-12 for group in FAILURE_GROUPS)),
+        "group_weight_min": float(min(final_weight_map.values())),
+        "group_weight_max": float(max(final_weight_map.values())),
+        "group_weight_mean": float(np.mean(list(final_weight_map.values()))),
+        "group_weighted_actor_batch_sha256": batch_sha256,
+        "post_update_actor_kl": post_kl,
+        **{f"group_td_abs_{group}": group_td_scores[group] for group in FAILURE_GROUPS},
+        **{f"group_weight_{group}": final_weight_map[group] for group in FAILURE_GROUPS},
+        **{f"post_surrogate_{group}": post_surrogate_by_group[group] for group in (NOMINAL_GROUP, *FAILURE_GROUPS)},
         # Ephemeral objects consumed by the trainer; never written to
         # train_log.csv and never fed to PPO or the sampler.
         "intervention_utility_events": intervention_utility_events,
