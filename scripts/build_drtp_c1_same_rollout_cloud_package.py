@@ -70,7 +70,10 @@ def main() -> None:
             destination.mkdir(parents=True, exist_ok=False)
             for name in required:
                 shutil.copy2(args.source_root / f"seed{seed}" / name, destination / name)
-        shutil.make_archive(str(args.assets_output.with_suffix("")), "gztar", staging)
+        if args.assets_output.suffixes[-2:] != [".tar", ".gz"]:
+            raise ValueError("assets output must end in .tar.gz")
+        asset_base = args.assets_output.with_suffix("").with_suffix("")
+        shutil.make_archive(str(asset_base), "gztar", staging)
     finally:
         shutil.rmtree(staging, ignore_errors=True)
     for path in (args.output, args.assets_output):
