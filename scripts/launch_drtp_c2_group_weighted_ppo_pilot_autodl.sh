@@ -6,7 +6,7 @@ OUT="${OUTPUT_ROOT:-$ROOT/results/development/drtp_c2_group_weighted_ppo_pilot}"
 MAX_PARALLEL="${MAX_PARALLEL:-15}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
 
-[[ "$MAX_PARALLEL" =~ ^[1-9][0-9]*$ && "$MAX_PARALLEL" -le 20 ]] || { echo "MAX_PARALLEL must be 1..20" >&2; exit 2; }
+[[ "$MAX_PARALLEL" =~ ^[1-9][0-9]*$ && "$MAX_PARALLEL" -le 30 ]] || { echo "MAX_PARALLEL must be 1..30" >&2; exit 2; }
 [[ ! -e "$OUT" ]] || { echo "refusing existing output root: $OUT" >&2; exit 2; }
 
 export PYTHONUNBUFFERED=1 CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
