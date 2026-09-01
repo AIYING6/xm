@@ -1,7 +1,7 @@
 {
   "protocol": "C2-M3-TELEMETRY-FIRST-DIAGNOSTIC-V1",
   "status": "M3_READY_FOR_AUTHORIZATION",
-  "authorization": {"training_authorized": false, "evaluation_authorized": false, "algorithm_modification_authorized": false, "automatic_continuation": false, "mainline_a_modification": false},
+  "authorization": {"training_authorized": true, "evaluation_authorized": false, "algorithm_modification_authorized": false, "automatic_continuation": false, "mainline_a_modification": false},
   "cohorts": {"A": [5101, 5102, 5103, 5104, 5105], "B": [5106, 5107, 5108, 5109, 5110]},
   "arms": {"utr_sg": "fixed-stratified collection plus ordinary PPO", "group_weighted_utr_sg": "the frozen C2 group-weighted actor candidate"},
   "budget": {"updates": 1953, "environment_steps_per_trajectory": 499968, "trajectories": 20, "milestones": {"488": "125k", "976": "250k", "1464": "375k", "1953": "500k"}},
