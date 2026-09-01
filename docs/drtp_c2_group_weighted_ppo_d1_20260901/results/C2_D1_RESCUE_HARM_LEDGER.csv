@@ -1,0 +1,11 @@
+seed,cohort,label,train_log,updates,runtime_state_250k,runtime_state_500k,per_group_gradient_tensor,per_group_advantage_samples,role_policy_distribution,training_behavior_telemetry
+4801,A,neutral_mixed,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4801\train_log.csv,1953,True,True,False,False,False,False
+4802,A,rescue,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4802\train_log.csv,1953,True,True,False,False,False,False
+4803,A,neutral_mixed,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4803\train_log.csv,1953,True,True,False,False,False,False
+4804,A,harm,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4804\train_log.csv,1953,True,True,False,False,False,False
+4805,A,harm,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4805\train_log.csv,1953,True,True,False,False,False,False
+4806,B,harm,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4806\train_log.csv,1953,True,True,False,False,False,False
+4807,B,rescue,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4807\train_log.csv,1953,True,True,False,False,False,False
+4808,B,harm,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4808\train_log.csv,1953,True,True,False,False,False,False
+4809,B,rescue,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4809\train_log.csv,1953,True,True,False,False,False,False
+4810,B,harm,D:\Code\Codex\ri_gmappo_uav\tmp\c2_d1_20260901\drtp_c2_group_weighted_ppo_pilot\runs\group_weighted_utr_sg\seed4810\train_log.csv,1953,True,True,False,False,False,False
