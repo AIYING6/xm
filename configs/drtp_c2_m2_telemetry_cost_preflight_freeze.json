@@ -1,0 +1,12 @@
+{
+  "protocol": "C2-M2-TELEMETRY-COST-PREFLIGHT-V1",
+  "authorization": {"technical_training_authorized": true, "scientific_training_authorized": false, "evaluation_authorized": false, "automatic_continuation": false, "mainline_a_modification": false},
+  "seed": 4991,
+  "updates": 128,
+  "environment_steps_per_run": 32768,
+  "group_credit_interval_updates": 32,
+  "milestones": {"64": "16k", "128": "32k"},
+  "arms": ["telemetry_off", "telemetry_on"],
+  "required_equivalence": ["final_model_sha256", "train_log_sha256"],
+  "forbidden": ["evaluation", "evaluation_tape", "best_checkpoint", "algorithm_change", "parameter_tuning", "fresh_seed_scientific_claim"]
+}
