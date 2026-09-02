@@ -1,0 +1,19 @@
+{
+  "protocol": "HISTORICAL-CANDIDATE-LONG-HORIZON-VALUE-AUDIT-V1",
+  "mode": "read_only",
+  "training_started": false,
+  "evaluation_started": false,
+  "a_line_modified": false,
+  "candidate_verdicts": {
+    "S2 Conservative-DRTP": "LONG_HORIZON_RETEST_NOT_JUSTIFIED",
+    "KLR": "LONG_HORIZON_RETEST_WEAKLY_JUSTIFIED",
+    "PP-DRTP": "LONG_HORIZON_RETEST_NOT_JUSTIFIED"
+  },
+  "ranking": [
+    "KLR",
+    "S2 Conservative-DRTP",
+    "PP-DRTP"
+  ],
+  "rank1_long_horizon_frozen_contract_warranted": false,
+  "automatic_continuation_authorized": false
+}
