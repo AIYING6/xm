@@ -1,0 +1,16 @@
+id,mask_type,order,representative,member_masks,paths,reachable_pairs,per_pair,relay_disjoint,terminal_coverage,scout_coverage,any_legal_route,tier_candidate
+E01,edge,0,nominal,1,8,4,2/2/2/2,2,2,2,True,R
+E02,edge,1,R1->T1,4,6,4,1/2/1/2,2,2,2,True,R
+E03,edge,1,S1->R1,4,6,4,1/1/2/2,1,2,2,True,R
+E04,edge,2,R1->T1; R1->T2,2,4,4,1/1/1/1,1,2,2,True,C
+E05,edge,2,R1->T1; R2->T1,2,4,2,0/2/0/2,2,1,2,True,C
+E06,edge,2,R1->T1; R2->T2,2,4,4,1/1/1/1,1,2,2,True,C
+E07,edge,2,R1->T1; S1->R1,8,5,4,1/1/1/2,1,2,2,True,C
+E08,edge,2,R1->T1; S1->R2,8,4,3,0/1/1/2,1,2,2,True,C
+E09,edge,2,S1->R1; S1->R2,2,4,2,0/0/2/2,0,2,1,True,C
+E10,edge,2,S1->R1; S2->R1,2,4,4,1/1/1/1,1,2,2,True,C
+E11,edge,2,S1->R1; S2->R2,2,4,4,1/1/1/1,1,2,2,True,C
+N01,node_or_cut,4,relay_node_R1,2,4,4,1/1/1/1,1,2,2,True,C
+N02,node_or_cut,8,both_relays,1,0,0,0/0/0/0,0,0,0,False,I
+N03,node_or_cut,4,all_upstream_cut,1,0,0,0/0/0/0,0,0,0,False,I
+N04,node_or_cut,4,all_downstream_cut,1,0,0,0/0/0/0,0,0,0,False,I

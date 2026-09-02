@@ -1,0 +1,341 @@
+{
+  "protocol": "P0.5-NEW-ENVIRONMENT-SEMANTIC-CONTRACT-V1",
+  "authorization": "P0_5_NEW_ENVIRONMENT_SEMANTIC_CONTRACT_FREEZE",
+  "namespace": "redundant_topology_uav",
+  "main_scale": {
+    "uavs": 6,
+    "roles": {
+      "scout": 2,
+      "relay": 2,
+      "terminal": 2
+    },
+    "objectives": 2
+  },
+  "scale_family": {
+    "small": {
+      "uavs": 4,
+      "roles": {
+        "scout": 1,
+        "relay": 2,
+        "terminal": 1
+      },
+      "objectives": 1
+    },
+    "main": {
+      "uavs": 6,
+      "roles": {
+        "scout": 2,
+        "relay": 2,
+        "terminal": 2
+      },
+      "objectives": 2
+    },
+    "large": {
+      "uavs": 8,
+      "roles": {
+        "scout": 2,
+        "relay": 3,
+        "terminal": 3
+      },
+      "objectives": 3
+    }
+  },
+  "mission_objectives": {
+    "rule": "K equals terminal count",
+    "capacity": "one objective per Scout/Terminal per interval"
+  },
+  "legal_paths": {
+    "main_count": 8,
+    "direct_bypass": false,
+    "freshness": "age <= tau_max"
+  },
+  "message_contract": {
+    "provenance": true,
+    "failure_mask_before_packet": true
+  },
+  "failure_families": [
+    "upstream_edge",
+    "downstream_edge",
+    "relay_node",
+    "balanced_upstream_compound",
+    "cross_layer_compound",
+    "same_relay_mixed"
+  ],
+  "equivalence_classes": [
+    {
+      "id": "E01",
+      "mask_type": "edge",
+      "order": 0,
+      "representative": "nominal",
+      "member_masks": 1,
+      "paths": 8,
+      "reachable_pairs": 4,
+      "per_pair": "2/2/2/2",
+      "relay_disjoint": 2,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "R"
+    },
+    {
+      "id": "E02",
+      "mask_type": "edge",
+      "order": 1,
+      "representative": "R1->T1",
+      "member_masks": 4,
+      "paths": 6,
+      "reachable_pairs": 4,
+      "per_pair": "1/2/1/2",
+      "relay_disjoint": 2,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "R"
+    },
+    {
+      "id": "E03",
+      "mask_type": "edge",
+      "order": 1,
+      "representative": "S1->R1",
+      "member_masks": 4,
+      "paths": 6,
+      "reachable_pairs": 4,
+      "per_pair": "1/1/2/2",
+      "relay_disjoint": 1,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "R"
+    },
+    {
+      "id": "E04",
+      "mask_type": "edge",
+      "order": 2,
+      "representative": "R1->T1; R1->T2",
+      "member_masks": 2,
+      "paths": 4,
+      "reachable_pairs": 4,
+      "per_pair": "1/1/1/1",
+      "relay_disjoint": 1,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "E05",
+      "mask_type": "edge",
+      "order": 2,
+      "representative": "R1->T1; R2->T1",
+      "member_masks": 2,
+      "paths": 4,
+      "reachable_pairs": 2,
+      "per_pair": "0/2/0/2",
+      "relay_disjoint": 2,
+      "terminal_coverage": 1,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "E06",
+      "mask_type": "edge",
+      "order": 2,
+      "representative": "R1->T1; R2->T2",
+      "member_masks": 2,
+      "paths": 4,
+      "reachable_pairs": 4,
+      "per_pair": "1/1/1/1",
+      "relay_disjoint": 1,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "E07",
+      "mask_type": "edge",
+      "order": 2,
+      "representative": "R1->T1; S1->R1",
+      "member_masks": 8,
+      "paths": 5,
+      "reachable_pairs": 4,
+      "per_pair": "1/1/1/2",
+      "relay_disjoint": 1,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "E08",
+      "mask_type": "edge",
+      "order": 2,
+      "representative": "R1->T1; S1->R2",
+      "member_masks": 8,
+      "paths": 4,
+      "reachable_pairs": 3,
+      "per_pair": "0/1/1/2",
+      "relay_disjoint": 1,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "E09",
+      "mask_type": "edge",
+      "order": 2,
+      "representative": "S1->R1; S1->R2",
+      "member_masks": 2,
+      "paths": 4,
+      "reachable_pairs": 2,
+      "per_pair": "0/0/2/2",
+      "relay_disjoint": 0,
+      "terminal_coverage": 2,
+      "scout_coverage": 1,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "E10",
+      "mask_type": "edge",
+      "order": 2,
+      "representative": "S1->R1; S2->R1",
+      "member_masks": 2,
+      "paths": 4,
+      "reachable_pairs": 4,
+      "per_pair": "1/1/1/1",
+      "relay_disjoint": 1,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "E11",
+      "mask_type": "edge",
+      "order": 2,
+      "representative": "S1->R1; S2->R2",
+      "member_masks": 2,
+      "paths": 4,
+      "reachable_pairs": 4,
+      "per_pair": "1/1/1/1",
+      "relay_disjoint": 1,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "N01",
+      "mask_type": "node_or_cut",
+      "order": 4,
+      "representative": "relay_node_R1",
+      "member_masks": 2,
+      "paths": 4,
+      "reachable_pairs": 4,
+      "per_pair": "1/1/1/1",
+      "relay_disjoint": 1,
+      "terminal_coverage": 2,
+      "scout_coverage": 2,
+      "any_legal_route": true,
+      "tier_candidate": "C"
+    },
+    {
+      "id": "N02",
+      "mask_type": "node_or_cut",
+      "order": 8,
+      "representative": "both_relays",
+      "member_masks": 1,
+      "paths": 0,
+      "reachable_pairs": 0,
+      "per_pair": "0/0/0/0",
+      "relay_disjoint": 0,
+      "terminal_coverage": 0,
+      "scout_coverage": 0,
+      "any_legal_route": false,
+      "tier_candidate": "I"
+    },
+    {
+      "id": "N03",
+      "mask_type": "node_or_cut",
+      "order": 4,
+      "representative": "all_upstream_cut",
+      "member_masks": 1,
+      "paths": 0,
+      "reachable_pairs": 0,
+      "per_pair": "0/0/0/0",
+      "relay_disjoint": 0,
+      "terminal_coverage": 0,
+      "scout_coverage": 0,
+      "any_legal_route": false,
+      "tier_candidate": "I"
+    },
+    {
+      "id": "N04",
+      "mask_type": "node_or_cut",
+      "order": 4,
+      "representative": "all_downstream_cut",
+      "member_masks": 1,
+      "paths": 0,
+      "reachable_pairs": 0,
+      "per_pair": "0/0/0/0",
+      "relay_disjoint": 0,
+      "terminal_coverage": 0,
+      "scout_coverage": 0,
+      "any_legal_route": false,
+      "tier_candidate": "I"
+    }
+  ],
+  "recoverability_tiers": {
+    "R": "structural+physical feasible",
+    "C": "feasible with tight margin",
+    "I": "no legal or physical success"
+  },
+  "reward_formula": "wp*progress + ws*completion - wc*pair_collision - wb*boundary",
+  "safety_metrics": [
+    "C_pair",
+    "C_any",
+    "timeout"
+  ],
+  "recovery_metrics": [
+    "L_route",
+    "L_message",
+    "L_task"
+  ],
+  "ood_partitions": [
+    "TRAIN",
+    "DEV",
+    "HELD_OUT",
+    "STRUCTURAL_OOD"
+  ],
+  "comparators": [
+    "Plain SG-MAPPO",
+    "UTR",
+    "Original DRTP-style",
+    "PLR-style",
+    "EPOpt-style"
+  ],
+  "telemetry": {
+    "tiers": [
+      "summary",
+      "event_window",
+      "prehashed_full_trajectory"
+    ]
+  },
+  "storage": {
+    "durable_requirement": "0.5-1 TB provisional",
+    "measurement_required": "serialization-byte audit"
+  },
+  "hard_gate_results": {
+    "six_uav_task_justified": true,
+    "all_paths_semantic": true,
+    "unified_generator": true,
+    "legacy_unchanged": true,
+    "training_started": false
+  },
+  "verdict": "SEMANTIC_CONTRACT_READY",
+  "next_step_authorized": false,
+  "config_sha256": "49af4d06988c595fd581e43dddafbaaa7a77b8f3f862c4c1326c8a66c4ed07cb"
+}

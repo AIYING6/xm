@@ -1,0 +1,9 @@
+path_id,route,scout_token,relay_forward,terminal_receive,freshness_gate,actor_usable,mission_effect
+P111,S1->R1->T1,yes,yes,yes,age <= tau_max,yes: valid provenance feature,yes: enables one objective action
+P112,S1->R1->T2,yes,yes,yes,age <= tau_max,yes: valid provenance feature,yes: enables one objective action
+P121,S1->R2->T1,yes,yes,yes,age <= tau_max,yes: valid provenance feature,yes: enables one objective action
+P122,S1->R2->T2,yes,yes,yes,age <= tau_max,yes: valid provenance feature,yes: enables one objective action
+P211,S2->R1->T1,yes,yes,yes,age <= tau_max,yes: valid provenance feature,yes: enables one objective action
+P212,S2->R1->T2,yes,yes,yes,age <= tau_max,yes: valid provenance feature,yes: enables one objective action
+P221,S2->R2->T1,yes,yes,yes,age <= tau_max,yes: valid provenance feature,yes: enables one objective action
+P222,S2->R2->T2,yes,yes,yes,age <= tau_max,yes: valid provenance feature,yes: enables one objective action
