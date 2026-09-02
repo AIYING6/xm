@@ -1,0 +1,22 @@
+{
+  "protocol": "MASTER-DESIGN-P0-ZERO-TRAINING-V1",
+  "authorization": "MASTER_DESIGN_P0_ZERO_TRAINING",
+  "recommended_design": {
+    "name": "B",
+    "roles": "2 scout + 2 relay + 2 terminal",
+    "uavs": 6,
+    "potential_paths": 8
+  },
+  "checks": {
+    "scientific_question_justified": true,
+    "redundant_path_family_defined": true,
+    "current_legacy_environment_scalable": false,
+    "future_semantic_contract_frozen": false,
+    "comparator_plan_available": true,
+    "ood_plan_available": true,
+    "full_compute_requires_staged_cloud_and_storage": true
+  },
+  "verdict": "MASTER_DESIGN_REQUIRES_REDESIGN",
+  "next_step_authorized": false,
+  "source_sha256": "d93f33a8a98bfd8c8428c54db3fb96e498fc20e830e4d5fd54a0495345f1bff0"
+}

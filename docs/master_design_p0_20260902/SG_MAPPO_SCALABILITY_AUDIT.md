@@ -1,0 +1,5 @@
+# SG-MAPPO scalability audit
+
+The graph-attention actor can process a fixed node count per vectorized batch and already uses role embeddings; it can support an in-scale configuration-driven N after environment generalization. The CTDE critic dimensions must be rebuilt from N and role inventory, and counterfactual action features scale with `N × action_dim`. A mixed-scale vectorized batch is unsupported without padding/masking; train/evaluate each scale separately first.
+
+Required future changes are isolated to the new namespace: variable-N generator, role schema, configuration-derived shared observation dimensions, generalized failure sampling (the current legacy sampler assumes three agents), route-provenance features, and scale-aware metric normalization. No large algorithmic rewrite, new GNN family, or task-specific action hack is justified at P0. Parameter sharing is recommended within role type; role permutation augmentation/equivariant tests are mandatory when copies are symmetric.
