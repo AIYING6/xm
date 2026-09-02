@@ -1,0 +1,14 @@
+{
+  "protocol": "C2-M3-1M-POSTHOC-MILESTONE-EVALUATION-V1",
+  "status": "M3_1M_POSTHOC_EVALUATION_AUTHORIZED",
+  "authorization": {"checkpoint_evaluation_authorized": true, "training_authorized": false, "checkpoint_promotion": false, "automatic_continuation": false, "algorithm_modification_authorized": false, "mainline_a_modification": false},
+  "source_training_protocol": "C2-M3-TELEMETRY-FIRST-DIAGNOSTIC-V1",
+  "source_extension_protocol": "C2-M3-TELEMETRY-FIRST-1M-DIAGNOSTIC-EXTENSION-V1",
+  "cohorts": {"A": [5101, 5102, 5103, 5104, 5105], "B": [5106, 5107, 5108, 5109, 5110]},
+  "arms": ["utr_sg", "group_weighted_utr_sg"],
+  "prior_evaluation_directory": "m3_fixed_milestones",
+  "new_evaluation_directory": "m3_1m_fixed_milestones",
+  "new_milestones": {"2441": "625k", "2930": "750k", "3418": "875k", "3907": "1m"},
+  "analysis": {"training_seed_is_independent_unit": true, "cohorts_must_be_separate": true, "same_development_tape_as_500k": true, "checkpoint_selection_or_promotion": false, "threshold_tuning": false, "formal_or_heldout_tape_input": false},
+  "hard_stop": {"no_training": true, "no_algorithm_change": true, "no_automatic_extension": true, "result_status": "M3_1M_LONGITUDINAL_EVIDENCE_READY_FOR_REVIEW"}
+}
