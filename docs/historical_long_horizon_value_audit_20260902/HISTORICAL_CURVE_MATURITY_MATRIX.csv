@@ -1,0 +1,4 @@
+method,historical_budgets_million,checkpoints_million,runtime_resumable,curve_maturity_evidence,long_horizon_verdict
+S2 Conservative-DRTP,0.5;1.0,0.25;0.5,True,"Training-only reward rose modestly during the final quarter; no intermediate frozen task evaluation exists to establish a late relative recovery.",LONG_HORIZON_RETEST_NOT_JUSTIFIED
+KLR,0.5,0.25;0.5,True,"Training-only reward rose modestly during the final quarter; but there are no intermediate matched task evaluations showing candidate catch-up or rank reversal.",LONG_HORIZON_RETEST_WEAKLY_JUSTIFIED
+PP-DRTP,0.5,0.25;0.5,True,"Training-only reward rose modestly in both studies; but no frozen intermediate task evaluation shows that PP gains were accumulating rather than remaining cohort-specific.",LONG_HORIZON_RETEST_NOT_JUSTIFIED
