@@ -10,7 +10,6 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = (
     "algorithms/__init__.py",
     "algorithms/redundant_topology_sg_mappo.py",
-    "envs/__init__.py",
     "envs/redundant_topology_uav_env.py",
     "scripts/run_redundant_topology_uav_p2.py",
     "scripts/launch_redundant_topology_uav_p2_autodl.sh",
@@ -21,6 +20,9 @@ FILES = (
 def main() -> None:
     name = ROOT / "REDUNDANT_TOPOLOGY_UAV_P2_CLOUD_EXECUTION.zip"
     with zipfile.ZipFile(name, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        # The repository-level envs initializer imports legacy 2D/3D modules.
+        # P2 must remain independent of the A-line package surface.
+        archive.writestr("envs/__init__.py", '"""P2 isolated environment package."""\n')
         for relative in FILES:
             path = ROOT / relative
             if not path.exists():
