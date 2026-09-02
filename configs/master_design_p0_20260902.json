@@ -1,0 +1,15 @@
+{
+  "protocol": "MASTER-DESIGN-P0-ZERO-TRAINING-V1",
+  "date": "2026-09-02",
+  "authorization": "MASTER_DESIGN_P0_ZERO_TRAINING",
+  "prohibited": ["training", "rollout", "policy_evaluation", "new_seed", "environment_implementation", "a_line_change", "automatic_p1"],
+  "scientific_question": "How should heterogeneous multi-UAV policies be trained to remain effective under structurally distinct and partially recoverable communication-topology failures?",
+  "candidates": {
+    "A": {"roles": {"scout": 1, "relay": 2, "terminal": 1}, "scale": 4},
+    "B": {"roles": {"scout": 2, "relay": 2, "terminal": 2}, "scale": 6},
+    "C": {"roles": {"scout": 2, "relay": 3, "terminal": 3}, "scale": 8}
+  },
+  "recommended_candidate": "B",
+  "final_verdict": "MASTER_DESIGN_REQUIRES_REDESIGN",
+  "next_step_authorized": false
+}
