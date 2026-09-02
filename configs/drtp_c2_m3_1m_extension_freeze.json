@@ -1,0 +1,40 @@
+{
+  "protocol": "C2-M3-TELEMETRY-FIRST-1M-DIAGNOSTIC-EXTENSION-V1",
+  "status": "M3_1M_EXTENSION_AUTHORIZED",
+  "source_protocol": "C2-M3-TELEMETRY-FIRST-DIAGNOSTIC-V1",
+  "authorization": {
+    "extension_training_authorized": true,
+    "evaluation_authorized": false,
+    "algorithm_modification_authorized": false,
+    "automatic_continuation": false,
+    "mainline_a_modification": false
+  },
+  "cohorts": {"A": [5101, 5102, 5103, 5104, 5105], "B": [5106, 5107, 5108, 5109, 5110]},
+  "arms": {"utr_sg": "fixed-stratified collection plus ordinary PPO", "group_weighted_utr_sg": "the frozen C2 group-weighted actor candidate"},
+  "resume": {
+    "required_runtime_checkpoint": "actor_critic_runtime_state_milestone_500k.pt",
+    "required_prior_update": 1953,
+    "target_update": 3907,
+    "local_updates": 1954,
+    "append_existing_training_log": true,
+    "reinitialization": false,
+    "checkpoint_promotion": false
+  },
+  "budget": {
+    "per_update_environment_steps": 256,
+    "additional_environment_steps_per_trajectory": 500224,
+    "additional_environment_steps_all_trajectories": 10004480,
+    "target_environment_steps_per_trajectory": 1000192,
+    "trajectories": 20,
+    "new_milestones": {"2441": "625k", "2930": "750k", "3418": "875k", "3907": "1m"}
+  },
+  "telemetry": {"group_credit_interval_updates": 32, "failure_aware_telemetry": true, "group_credit_telemetry": true, "online_control": false, "formal_or_heldout_tape_input": false},
+  "fixed_method": {"drtp_sampler_mode": "none", "fixed_stratified_topology_sampler": true, "group_weighted_actor_strength": 0.25, "group_weighted_actor_min": 0.75, "group_weighted_actor_max": 1.25},
+  "hard_stop": {
+    "at_target_update": true,
+    "no_3m_or_10m_extension": true,
+    "no_new_algorithm": true,
+    "no_weight_or_parameter_tuning": true,
+    "posthoc_analysis_requires_separate_authorization": true
+  }
+}
