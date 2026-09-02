@@ -1,0 +1,31 @@
+{
+  "protocol": "C2-M3-POSTHOC-MILESTONE-EVALUATION-V1",
+  "status": "M3_E0_EVALUATION_AUTHORIZED",
+  "authorization": {
+    "checkpoint_evaluation_authorized": true,
+    "training_authorized": false,
+    "checkpoint_promotion": false,
+    "automatic_continuation": false,
+    "algorithm_modification_authorized": false,
+    "mainline_a_modification": false
+  },
+  "source_protocol": "C2-M3-TELEMETRY-FIRST-DIAGNOSTIC-V1",
+  "cohorts": {"A": [5101, 5102, 5103, 5104, 5105], "B": [5106, 5107, 5108, 5109, 5110]},
+  "arms": ["utr_sg", "group_weighted_utr_sg"],
+  "milestones": {"488": "125k", "976": "250k", "1464": "375k", "1953": "500k"},
+  "analysis": {
+    "training_seed_is_independent_unit": true,
+    "cohorts_must_be_separate": true,
+    "checkpoint_selection_or_promotion": false,
+    "final_checkpoint_used_only_for_fixed_temporal_ordering": true,
+    "threshold_tuning": false,
+    "formal_or_heldout_tape_input": false
+  },
+  "mechanism_gate": {
+    "final_delta_margin": 7.874919837916801,
+    "minimum_rescue_and_harm_seeds_per_cohort": 2,
+    "required": ["fixed checkpoint temporal precedence", "same direction in both cohorts", "telemetry signal precedes divergence", "one signal maps to one minimal intervention"],
+    "pass": "M3_ACTIONABLE_MECHANISM_CANDIDATE",
+    "otherwise": "M3_NO_ACTIONABLE_MECHANISM"
+  }
+}
