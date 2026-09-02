@@ -1,0 +1,25 @@
+# P1 final checklist
+
+- [x] generator_4_6_8
+- [x] no_scale_specific_scientific_hack
+- [x] eight_legal_paths
+- [x] no_scout_terminal_bypass
+- [x] freshness_and_cache_expiry
+- [x] failure_before_packet_cache
+- [x] recoverable_witnesses
+- [x] tier_i_structural_proof
+- [x] nominal_scripted_feasibility
+- [x] deadline_feasible
+- [x] reward_scale_invariant
+- [x] collision_pair_normalized
+- [x] role_permutation
+- [x] rng_exact_replay
+- [x] save_reload
+- [x] sg_mappo_shape_interface
+- [x] comparator_fairness_api
+- [x] ood_partition_registry
+- [x] actor_information_leakage
+- [x] telemetry_serialization
+- [x] storage_quantified
+- [x] runtime_capacity_quantified
+- [x] legacy_regression

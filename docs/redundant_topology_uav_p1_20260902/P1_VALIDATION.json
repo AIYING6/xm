@@ -1,0 +1,53 @@
+{
+  "protocol": "P1-ENVIRONMENT-IMPLEMENTATION-AND-DETERMINISTIC-ACCEPTANCE-V1",
+  "authorization": "P1_ENVIRONMENT_IMPLEMENTATION_AND_DETERMINISTIC_ACCEPTANCE",
+  "checks": {
+    "generator_4_6_8": true,
+    "no_scale_specific_scientific_hack": true,
+    "eight_legal_paths": true,
+    "no_scout_terminal_bypass": true,
+    "freshness_and_cache_expiry": true,
+    "failure_before_packet_cache": true,
+    "recoverable_witnesses": true,
+    "tier_i_structural_proof": true,
+    "nominal_scripted_feasibility": true,
+    "deadline_feasible": true,
+    "reward_scale_invariant": true,
+    "collision_pair_normalized": true,
+    "role_permutation": true,
+    "rng_exact_replay": true,
+    "save_reload": true,
+    "sg_mappo_shape_interface": true,
+    "comparator_fairness_api": true,
+    "ood_partition_registry": true,
+    "actor_information_leakage": true,
+    "telemetry_serialization": true,
+    "storage_quantified": true,
+    "runtime_capacity_quantified": true,
+    "legacy_regression": true
+  },
+  "verdict": "P1_ENVIRONMENT_VALIDATED",
+  "training_started": false,
+  "evaluation_started": false,
+  "next_step_authorized": false,
+  "storage_projection_gb": {
+    "p50_gb": 0.204045932,
+    "conservative_gb": 0.408091864,
+    "worst_reasonable_gb": 0.714160762
+  },
+  "runtime": {
+    "small": {
+      "reset_step_per_second": 768.7531566926498,
+      "peak_python_bytes": 13001
+    },
+    "main": {
+      "reset_step_per_second": 484.7106116078497,
+      "peak_python_bytes": 10349
+    },
+    "large": {
+      "reset_step_per_second": 444.6763349183573,
+      "peak_python_bytes": 10318
+    }
+  },
+  "ood_registry_sha256": "789bd3f7f0d6053b6255ef1aaf2e5628d5b70689266c9f9f099f9d8f25bf57d2"
+}
