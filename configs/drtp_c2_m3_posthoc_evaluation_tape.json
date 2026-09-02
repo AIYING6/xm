@@ -1,0 +1,20 @@
+{
+  "protocol": "C2-M3-POSTHOC-MILESTONE-DEVELOPMENT-TAPE-V1",
+  "status": "FROZEN_BEFORE_M3_EVALUATION",
+  "development_only": true,
+  "canonical": false,
+  "episode_start": 690000,
+  "episode_count": 50,
+  "same_base_ids_across_conditions": true,
+  "conditions": [
+    {"name": "nominal", "failed_blue_agent": -1, "start_step": 44, "duration_steps": 0},
+    {"name": "F0_44_80", "failed_blue_agent": 1, "start_step": 44, "duration_steps": 80},
+    {"name": "T28_28_80", "failed_blue_agent": 1, "start_step": 28, "duration_steps": 80},
+    {"name": "D120_44_120", "failed_blue_agent": 1, "start_step": 44, "duration_steps": 120},
+    {"name": "C28_120", "failed_blue_agent": 1, "start_step": 28, "duration_steps": 120}
+  ],
+  "failure_semantics": "relay_node_1_edge_removal_at_onset_for_duration",
+  "forbidden_episode_namespaces": [
+    "420000-420099", "430000-430099", "440000-440099", "670000-670099"
+  ]
+}
