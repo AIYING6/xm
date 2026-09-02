@@ -1,0 +1,184 @@
+{
+  "protocol": "HISTORICAL-DRTP-METHOD-REAUDIT-V1",
+  "mode": "read_only",
+  "training_started": false,
+  "evaluation_started": false,
+  "a_line_modified": false,
+  "records": [
+    {
+      "method": "Original DRTP",
+      "cohort": "formal_2301_2305",
+      "performance_verdict": "PERFORMANCE_SUCCESS",
+      "reliability_verdict": "RELIABILITY_MIXED",
+      "historical_status": "FORMAL_CONFIRMATION_PASS_SEED_SENSITIVE"
+    },
+    {
+      "method": "Original DRTP",
+      "cohort": "independent_2401_2405",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "COHORT_DIRECTION_PERSISTS_ACROSS_TAPES"
+    },
+    {
+      "method": "S1 TR",
+      "cohort": "development_2901_2903",
+      "performance_verdict": "PERFORMANCE_SUCCESS",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "S1_NO_GO"
+    },
+    {
+      "method": "S2 Conservative",
+      "cohort": "development_2901_2903",
+      "performance_verdict": "PERFORMANCE_SUCCESS",
+      "reliability_verdict": "RELIABILITY_MIXED",
+      "historical_status": "S2_NO_GO / STABILIZATION_LINE_CLOSED"
+    },
+    {
+      "method": "Conservative-DRTP R1",
+      "cohort": "replication_3001_3005",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "R1_NO_GO"
+    },
+    {
+      "method": "KLR",
+      "cohort": "pilot_3101_3103",
+      "performance_verdict": "PERFORMANCE_SUCCESS",
+      "reliability_verdict": "RELIABILITY_MIXED",
+      "historical_status": "PILOT_NO_GO"
+    },
+    {
+      "method": "KLR",
+      "cohort": "final_A_3701_3705",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "KLR_FINAL_REPLICATION_NO_GO_PERMANENTLY_CLOSED"
+    },
+    {
+      "method": "KLR",
+      "cohort": "final_B_3706_3710",
+      "performance_verdict": "PERFORMANCE_SUCCESS",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "KLR_FINAL_REPLICATION_NO_GO_PERMANENTLY_CLOSED"
+    },
+    {
+      "method": "KLB",
+      "cohort": "pilot_3201_3203",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "D5_PILOT_NO_GO"
+    },
+    {
+      "method": "PP-DRTP",
+      "cohort": "P3_3401_3403",
+      "performance_verdict": "PERFORMANCE_SUCCESS",
+      "reliability_verdict": "RELIABILITY_MIXED",
+      "historical_status": "PP_PILOT_NO_GO"
+    },
+    {
+      "method": "PP-DRTP",
+      "cohort": "P4_3501_3505",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "P4_NO_GO"
+    },
+    {
+      "method": "CV-DRTP",
+      "cohort": "A_4301_4305",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "CV_DRTP_PILOT_NO_GO_PERMANENTLY_CLOSED"
+    },
+    {
+      "method": "CV-DRTP",
+      "cohort": "B_4306_4310",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "CV_DRTP_PILOT_NO_GO_PERMANENTLY_CLOSED"
+    },
+    {
+      "method": "Reliable-DRTP ensemble",
+      "cohort": "A_bundles",
+      "performance_verdict": "PERFORMANCE_SUCCESS",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "RELIABILITY_ENSEMBLE_P1_NO_GO"
+    },
+    {
+      "method": "Reliable-DRTP ensemble",
+      "cohort": "B_bundles",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "RELIABILITY_ENSEMBLE_P1_NO_GO"
+    },
+    {
+      "method": "Group-weighted PPO",
+      "cohort": "C2_A_4801_4805",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "C2_NO_GO"
+    },
+    {
+      "method": "Group-weighted PPO",
+      "cohort": "C2_B_4806_4810",
+      "performance_verdict": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability_verdict": "RELIABILITY_NOT_IMPROVED",
+      "historical_status": "C2_NO_GO; 1M diagnostic did not yield an actionable mechanism"
+    }
+  ],
+  "method_rollups": {
+    "Original DRTP": {
+      "performance": "PERFORMANCE_MIXED",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    },
+    "S1 TR": {
+      "performance": "PERFORMANCE_SUCCESS",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    },
+    "S2 Conservative": {
+      "performance": "PERFORMANCE_SUCCESS",
+      "reliability": "RELIABILITY_MIXED"
+    },
+    "Conservative-DRTP R1": {
+      "performance": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    },
+    "KLR": {
+      "performance": "PERFORMANCE_MIXED",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    },
+    "KLB": {
+      "performance": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    },
+    "PP-DRTP": {
+      "performance": "PERFORMANCE_MIXED",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    },
+    "CV-DRTP": {
+      "performance": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    },
+    "Reliable-DRTP ensemble": {
+      "performance": "PERFORMANCE_MIXED",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    },
+    "Group-weighted PPO": {
+      "performance": "NO_CLEAR_PERFORMANCE_VALUE",
+      "reliability": "RELIABILITY_NOT_IMPROVED"
+    }
+  },
+  "non_empirical_methods": [
+    {
+      "method": "PR-DRTP / population selector",
+      "historical_status": "B4_ZERO_TRAINING_FEASIBILITY_ONLY",
+      "reason": "The archived artifact is a zero-training feasibility audit, not a matched performance experiment."
+    },
+    {
+      "method": "Selective-KLR / SR-DRTP gate",
+      "historical_status": "P1_GATE_NO_GO",
+      "reason": "This was an observational matched-shadow utility audit; no final policy arm was trained or evaluated as a performance candidate."
+    }
+  ],
+  "stability_solved_methods": [],
+  "automatic_continuation_authorized": false
+}
