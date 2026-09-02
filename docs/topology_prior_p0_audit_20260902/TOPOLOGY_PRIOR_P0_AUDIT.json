@@ -1,0 +1,135 @@
+{
+  "verdict": {
+    "protocol": "TOPOLOGY-PRIOR-P0-ZERO-TRAINING-SCIENTIFIC-AUDIT-V1",
+    "verdict": "P0_PRIOR_UNDERDETERMINED",
+    "core_checks": {
+      "policy_independent_schedule_score_computable": true,
+      "deterministic_replay_of_schedule_score": true,
+      "no_evaluation_or_policy_feedback_used": true,
+      "static_topology_distinguishes_failure_groups": false,
+      "policy_independent_recoverability_computable": false,
+      "valid_topology_informed_fixed_prior_determined": false,
+      "micro_adaptation_geometry_feasible_conditionally": true,
+      "four_arm_design_identifiable_conditionally": true,
+      "novelty_claim_ready": false
+    },
+    "p0_emitted": false,
+    "p1_authorized": false,
+    "training_authorized": false,
+    "formal_evaluation_used": false,
+    "historical_performance_used": false,
+    "structural_audit_hash": "5e8e380afb515d57c88abb4f128d240b990431cbbaf66ef1c435e63b7481c87b"
+  },
+  "structural": {
+    "max_steps": 260,
+    "all_failure_groups_delete": "relay_agent_index_1",
+    "static_role_graph_deletion_is_group_discriminative": false,
+    "per_member": [
+      {
+        "group": "F0",
+        "condition": "f0",
+        "onset": 44,
+        "duration": 80,
+        "scheduled_relay_unavailable_fraction": 0.3076923076923077,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "TE",
+        "condition": "te_28_80",
+        "onset": 28,
+        "duration": 80,
+        "scheduled_relay_unavailable_fraction": 0.3076923076923077,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "TE",
+        "condition": "te_36_80",
+        "onset": 36,
+        "duration": 80,
+        "scheduled_relay_unavailable_fraction": 0.3076923076923077,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "TL",
+        "condition": "tl_52_80",
+        "onset": 52,
+        "duration": 80,
+        "scheduled_relay_unavailable_fraction": 0.3076923076923077,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "TL",
+        "condition": "tl_60_80",
+        "onset": 60,
+        "duration": 80,
+        "scheduled_relay_unavailable_fraction": 0.3076923076923077,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "DS",
+        "condition": "ds_44_40",
+        "onset": 44,
+        "duration": 40,
+        "scheduled_relay_unavailable_fraction": 0.15384615384615385,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "DS",
+        "condition": "ds_44_60",
+        "onset": 44,
+        "duration": 60,
+        "scheduled_relay_unavailable_fraction": 0.23076923076923078,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "DL",
+        "condition": "dl_44_100",
+        "onset": 44,
+        "duration": 100,
+        "scheduled_relay_unavailable_fraction": 0.38461538461538464,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "DL",
+        "condition": "dl_44_120",
+        "onset": 44,
+        "duration": 120,
+        "scheduled_relay_unavailable_fraction": 0.46153846153846156,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "CP",
+        "condition": "cp_28_120",
+        "onset": 28,
+        "duration": 120,
+        "scheduled_relay_unavailable_fraction": 0.46153846153846156,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      },
+      {
+        "group": "CP",
+        "condition": "cp_60_120",
+        "onset": 60,
+        "duration": 120,
+        "scheduled_relay_unavailable_fraction": 0.46153846153846156,
+        "static_role_graph_deletion": "identical_relay_node_deletion"
+      }
+    ],
+    "group_schedule_score": {
+      "F0": 0.3076923076923077,
+      "TE": 0.3076923076923077,
+      "TL": 0.3076923076923077,
+      "DS": 0.19230769230769232,
+      "DL": 0.4230769230769231,
+      "CP": 0.46153846153846156
+    },
+    "diagnostic_duration_normalized_q_not_accepted_as_p0": {
+      "F0": 0.15384615384615385,
+      "TE": 0.15384615384615385,
+      "TL": 0.15384615384615385,
+      "DS": 0.09615384615384616,
+      "DL": 0.21153846153846154,
+      "CP": 0.23076923076923078
+    },
+    "diagnostic_hash": "aed4593590aa6398b9ab01796b78ec560f46275e131008c8d2cbc46d8fa01950"
+  }
+}
