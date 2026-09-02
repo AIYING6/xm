@@ -1,0 +1,14 @@
+{
+  "protocol": "M3-COLLAPSE-RECOVERY-TEMPORAL-ANALYSIS-V1",
+  "status": "ANALYSIS_AUTHORIZED_ZERO_TRAINING",
+  "fixed_transition_windows": [
+    {"seed": 5106, "cohort": "B", "kind": "collapse", "from": "250k", "to": "375k"},
+    {"seed": 5108, "cohort": "B", "kind": "collapse", "from": "375k", "to": "500k"},
+    {"seed": 5110, "cohort": "B", "kind": "collapse", "from": "375k", "to": "500k"},
+    {"seed": 5102, "cohort": "A", "kind": "recovery", "from": "375k", "to": "500k"},
+    {"seed": 5103, "cohort": "A", "kind": "recovery", "from": "375k", "to": "500k"},
+    {"seed": 5105, "cohort": "A", "kind": "recovery", "from": "375k", "to": "500k"}
+  ],
+  "precursor_window": "first half of each fixed update interval",
+  "forbidden": ["new training", "new rollout", "threshold sweep", "feature selection", "classifier", "algorithm modification", "automatic extension"]
+}
