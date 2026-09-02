@@ -1,0 +1,4 @@
+scale,N,S/R/T,objectives,legal_routes,legal_edges,support_graph,reward,collision,failure_tiers,dimensions
+small,4,1/2/1,1,2,4,SxR + RxT,team-normalized,pair-normalized,R/C/I from same rules,config-derived
+main,6,2/2/2,2,8,4,SxR + RxT,team-normalized,pair-normalized,R/C/I from same rules,config-derived
+large,8,2/3/3,3,18,6,SxR + RxT,team-normalized,pair-normalized,R/C/I from same rules,config-derived

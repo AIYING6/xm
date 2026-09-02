@@ -1,0 +1,14 @@
+{
+  "protocol": "P0.5-NEW-ENVIRONMENT-SEMANTIC-CONTRACT-V1",
+  "authorization": "P0_5_NEW_ENVIRONMENT_SEMANTIC_CONTRACT_FREEZE",
+  "namespace": "redundant_topology_uav",
+  "main_scale": {"uavs": 6, "roles": {"scout": 2, "relay": 2, "terminal": 2}, "objectives": 2},
+  "scale_family": {
+    "small": {"uavs": 4, "roles": {"scout": 1, "relay": 2, "terminal": 1}, "objectives": 1},
+    "main": {"uavs": 6, "roles": {"scout": 2, "relay": 2, "terminal": 2}, "objectives": 2},
+    "large": {"uavs": 8, "roles": {"scout": 2, "relay": 3, "terminal": 3}, "objectives": 3}
+  },
+  "message_freshness": {"symbol": "tau_max", "value_status": "physical-parameter-to-freeze-before-P1"},
+  "final_verdict": "SEMANTIC_CONTRACT_READY",
+  "next_step_authorized": false
+}

@@ -1,0 +1,5 @@
+# Failure-family enumeration
+
+Primary labels are structural; onset and duration are separate factors. Candidate main-scale families are: F1 upstream single edge; F2 downstream single edge; F3 relay-node loss; F4 balanced diagonal upstream compound; F5 cross-layer compound; F6 same-relay mixed compound. The static quotient enumerates every zero-, one- and two-edge mask under independent Scout/Relay/Terminal permutations and adds canonical relay-node and cut-set masks in `FAILURE_GRAPH_EQUIVALENCE_CLASSES.csv`.
+
+Node loss is represented as its deterministic incident-edge mask and is classified separately only when the role-resource loss changes physical feasibility. Both-relay loss, all upstream cut and all downstream cut are Tier-I candidates. Every two-edge quotient class is conservatively a **Tier-C candidate** until the scripted controller establishes capacity and deadline margin; it is not promoted merely because a graph route survives. The final R/C/I label additionally requires future scripted physical feasibility; P0.5 does not claim it has run that test.
