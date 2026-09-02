@@ -1,0 +1,20 @@
+{
+  "protocol": "TOPOLOGY-PRIOR-P0-ZERO-TRAINING-SCIENTIFIC-AUDIT-V1",
+  "max_steps": 260,
+  "nominal_mass": 0.5,
+  "failure_groups": {
+    "F0": [["f0", 44, 80]],
+    "TE": [["te_28_80", 28, 80], ["te_36_80", 36, 80]],
+    "TL": [["tl_52_80", 52, 80], ["tl_60_80", 60, 80]],
+    "DS": [["ds_44_40", 44, 40], ["ds_44_60", 44, 60]],
+    "DL": [["dl_44_100", 44, 100], ["dl_44_120", 44, 120]],
+    "CP": [["cp_28_120", 28, 120], ["cp_60_120", 60, 120]]
+  },
+  "simplex_bounds": {"floor": 0.05, "cap": 0.35},
+  "conditional_micro_l1_radius": 0.1,
+  "source_semantics": {
+    "group_spec": "algorithms/ri_gmappo/drtp_topology_sampler.py",
+    "static_sampler_interface": "algorithms/ri_gmappo/snr_topology_sampler.py",
+    "dynamic_topology": "envs/uav_intercept_3d_env.py"
+  }
+}
