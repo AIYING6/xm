@@ -44,6 +44,7 @@ class RedundantTopologyConfig:
     seed_env: int = 20260902
     seed_comm: int = 20260903
     seed_topology: int = 20260904
+    assignment_observation: bool = False
 
     def __post_init__(self) -> None:
         if min(self.scouts, self.relays, self.terminals) < 1:
@@ -99,7 +100,9 @@ class RedundantTopologyUAVEnv:
         self.relay_ids = np.flatnonzero(self.roles == ROLE_RELAY)
         self.terminal_ids = np.flatnonzero(self.roles == ROLE_TERMINAL)
         self.action_dim = self.k + 1
-        self.obs_dim = 8 + 3 * self.k
+        # The legacy/default interface remains byte-for-byte shape-compatible.
+        # P2.8 appends K terminal-only preference values only when explicitly enabled.
+        self.obs_dim = 8 + 3 * self.k + (self.k if config.assignment_observation else 0)
         self.share_obs_dim = self.n * 2 + self.k * 3 + self.n * self.n
         self._init_rngs()
         self.reset()
@@ -137,6 +140,12 @@ class RedundantTopologyUAVEnv:
         self.failed_nodes: set[int] = set()
         self.caches: list[dict[int, dict[str, Any]]] = [dict() for _ in range(self.n)]
         self.last_active = np.zeros((self.n, self.n), dtype=np.int8)
+        # Stable lane-derived preference: a role-local symmetry-breaking cue.
+        # It is deliberately computed from frozen initial geometry, not from
+        # faults, future state, reward, training seed, or an evaluation tape.
+        terminal_order = self.terminal_ids[np.argsort(self.positions[self.terminal_ids, 1])]
+        objective_order = np.argsort(self.objective_positions[:, 1])
+        self.terminal_assignment = {int(terminal): int(objective) for terminal, objective in zip(terminal_order, objective_order)}
         self.event_log: list[dict[str, Any]] = []
         self.recovery_times: dict[str, int | None] = {"failure": None, "route": None, "message": None, "task": None}
         return self.actor_observation(), self.critic_observation(), self.graph_observation()
@@ -289,6 +298,7 @@ class RedundantTopologyUAVEnv:
 
     def actor_observation(self) -> np.ndarray:
         obs = np.zeros((self.n, self.obs_dim), dtype=np.float32)
+        base_dim = 8 + 3 * self.k
         for agent in range(self.n):
             obs[agent, :2] = self.positions[agent] / self.config.boundary
             obs[agent, 2 + self.roles[agent]] = 1.0
@@ -299,7 +309,9 @@ class RedundantTopologyUAVEnv:
                     base = 5 + self.k + 2 * objective
                     if token is not None:
                         obs[agent, base:base + 2] = token["estimated_target_state"] / self.config.boundary
-                obs[agent, -1] = float(sum(self._fresh_token(agent, k) is not None for k in range(self.k))) / self.k
+                obs[agent, base_dim - 1] = float(sum(self._fresh_token(agent, k) is not None for k in range(self.k))) / self.k
+                if self.config.assignment_observation:
+                    obs[agent, base_dim + self.terminal_assignment[agent]] = 1.0
         return obs
 
     def critic_observation(self) -> np.ndarray:
