@@ -1,0 +1,22 @@
+{
+  "protocol": "TOPOLOGY-DISTINCT-FAILURE-BENCHMARK-P0-V1",
+  "nodes": ["Scout", "Relay", "Attacker"],
+  "physical_directed_channels": [
+    ["Scout", "Relay"], ["Scout", "Attacker"],
+    ["Relay", "Scout"], ["Relay", "Attacker"],
+    ["Attacker", "Scout"], ["Attacker", "Relay"]
+  ],
+  "nominal_legal_target_information_path": ["Scout", "Relay", "Attacker"],
+  "conditional_recovery": {
+    "trigger": "full_relay_node_failure",
+    "legal_direct_path": ["Scout", "Attacker"],
+    "source_semantics": "envs/uav_intercept_3d_env.py::_attacker_cache_path_is_legal"
+  },
+  "source_semantics": {
+    "graph_observation": "envs/uav_intercept_3d_env.py::_get_graph_obs",
+    "communication_update": "envs/uav_intercept_3d_env.py::_update_sensing_and_comm",
+    "static_support": "envs/uav_intercept_3d_env.py::_support_edge",
+    "failure_interface": "envs/uav_intercept_3d_env.py::_is_comm_failed",
+    "graph_attention": "algorithms/ri_gmappo/simple_ri_gmappo.py::GraphAttentionLayer"
+  }
+}

@@ -1,0 +1,519 @@
+{
+  "verdict": {
+    "protocol": "TOPOLOGY-DISTINCT-FAILURE-BENCHMARK-P0-V1",
+    "verdict": "TOPOLOGY_CLASSES_INSUFFICIENT",
+    "checks": {
+      "physical_directed_channels_enumerated": true,
+      "fault_masks_policy_independent_in_principle": true,
+      "actor_information_boundary_preservable": true,
+      "at_least_three_non_equivalent_recoverable_failure_classes": false,
+      "existing_failure_interface_can_be_extended_locally": true,
+      "requires_actor_reward_or_old_benchmark_rewrite": false,
+      "training_started": false,
+      "rollout_started": false,
+      "evaluation_started": false
+    },
+    "nominal_task_graph_hash": "f0451f5a5b9bfadaf4cce00ae9624196edd331fec1949e8fd5bfd8fcaaaf4238",
+    "candidate_masks_hash": "34d935d745d39f892de41fa6a78c00c1df596571ad7a8edb0184c7ffb8c98c20",
+    "retained_ordinary_failure_classes": [],
+    "terminal_stress_references": [
+      "TD-RA",
+      "TD-SR",
+      "TD-RX",
+      "TD-RT",
+      "TD-CUT"
+    ],
+    "p1_authorized": false
+  },
+  "nominal_task_graph": {
+    "edges": [
+      "Relay->Attacker",
+      "Scout->Relay"
+    ],
+    "in_degree": {
+      "Scout": 0,
+      "Relay": 1,
+      "Attacker": 1
+    },
+    "out_degree": {
+      "Scout": 1,
+      "Relay": 1,
+      "Attacker": 0
+    },
+    "reachability": {
+      "Scout->Relay": true,
+      "Scout->Attacker": true,
+      "Relay->Scout": false,
+      "Relay->Attacker": true,
+      "Attacker->Scout": false,
+      "Attacker->Relay": false
+    },
+    "scout_to_attacker_reachable": true,
+    "scout_to_attacker_shortest_path": 2,
+    "primary_path_count": 1
+  },
+  "candidates": {
+    "TD-AR": {
+      "name": "TD-AR",
+      "kind": "single_directed_edge",
+      "removed_physical_channels": [
+        "Attacker->Relay"
+      ],
+      "fault_mask_zeroes": [
+        "Attacker->Relay"
+      ],
+      "task_graph": {
+        "edges": [
+          "Relay->Attacker",
+          "Scout->Relay"
+        ],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 1,
+          "Attacker": 1
+        },
+        "out_degree": {
+          "Scout": 1,
+          "Relay": 1,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": true,
+          "Scout->Attacker": true,
+          "Relay->Scout": false,
+          "Relay->Attacker": true,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": true,
+        "scout_to_attacker_shortest_path": 2,
+        "primary_path_count": 1
+      },
+      "note": "enumerated from the physical blue-team communication layer",
+      "mask_hash": "584342571251cde0f4f5615af4f6a4dac47b8853bde01c6c86326e5d2bf90314",
+      "signature_hash": "f0451f5a5b9bfadaf4cce00ae9624196edd331fec1949e8fd5bfd8fcaaaf4238"
+    },
+    "TD-AS": {
+      "name": "TD-AS",
+      "kind": "single_directed_edge",
+      "removed_physical_channels": [
+        "Attacker->Scout"
+      ],
+      "fault_mask_zeroes": [
+        "Attacker->Scout"
+      ],
+      "task_graph": {
+        "edges": [
+          "Relay->Attacker",
+          "Scout->Relay"
+        ],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 1,
+          "Attacker": 1
+        },
+        "out_degree": {
+          "Scout": 1,
+          "Relay": 1,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": true,
+          "Scout->Attacker": true,
+          "Relay->Scout": false,
+          "Relay->Attacker": true,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": true,
+        "scout_to_attacker_shortest_path": 2,
+        "primary_path_count": 1
+      },
+      "note": "enumerated from the physical blue-team communication layer",
+      "mask_hash": "0f17ab5bd78382cf1daeca28965b56c33e59925781bd3ebfdafa7074c7d17a5a",
+      "signature_hash": "f0451f5a5b9bfadaf4cce00ae9624196edd331fec1949e8fd5bfd8fcaaaf4238"
+    },
+    "TD-RA": {
+      "name": "TD-RA",
+      "kind": "single_directed_edge",
+      "removed_physical_channels": [
+        "Relay->Attacker"
+      ],
+      "fault_mask_zeroes": [
+        "Relay->Attacker"
+      ],
+      "task_graph": {
+        "edges": [
+          "Scout->Relay"
+        ],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 1,
+          "Attacker": 0
+        },
+        "out_degree": {
+          "Scout": 1,
+          "Relay": 0,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": true,
+          "Scout->Attacker": false,
+          "Relay->Scout": false,
+          "Relay->Attacker": false,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": false,
+        "scout_to_attacker_shortest_path": null,
+        "primary_path_count": 0
+      },
+      "note": "enumerated from the physical blue-team communication layer",
+      "mask_hash": "65e199da918460753d8a3ff9052c6821a79cca7d71cd8577e3de224b52b287b9",
+      "signature_hash": "545f3d0020b846a5a6751ae58f99c59238155bf4f357d2ffffb31d7c4bea2f6a"
+    },
+    "TD-RS": {
+      "name": "TD-RS",
+      "kind": "single_directed_edge",
+      "removed_physical_channels": [
+        "Relay->Scout"
+      ],
+      "fault_mask_zeroes": [
+        "Relay->Scout"
+      ],
+      "task_graph": {
+        "edges": [
+          "Relay->Attacker",
+          "Scout->Relay"
+        ],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 1,
+          "Attacker": 1
+        },
+        "out_degree": {
+          "Scout": 1,
+          "Relay": 1,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": true,
+          "Scout->Attacker": true,
+          "Relay->Scout": false,
+          "Relay->Attacker": true,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": true,
+        "scout_to_attacker_shortest_path": 2,
+        "primary_path_count": 1
+      },
+      "note": "enumerated from the physical blue-team communication layer",
+      "mask_hash": "ac97342a4adb1ff07e5f3563322db8ecc1a0600a550f8c5b014cfb4d1e74f438",
+      "signature_hash": "f0451f5a5b9bfadaf4cce00ae9624196edd331fec1949e8fd5bfd8fcaaaf4238"
+    },
+    "TD-SA": {
+      "name": "TD-SA",
+      "kind": "single_directed_edge",
+      "removed_physical_channels": [
+        "Scout->Attacker"
+      ],
+      "fault_mask_zeroes": [
+        "Scout->Attacker"
+      ],
+      "task_graph": {
+        "edges": [
+          "Relay->Attacker",
+          "Scout->Relay"
+        ],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 1,
+          "Attacker": 1
+        },
+        "out_degree": {
+          "Scout": 1,
+          "Relay": 1,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": true,
+          "Scout->Attacker": true,
+          "Relay->Scout": false,
+          "Relay->Attacker": true,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": true,
+        "scout_to_attacker_shortest_path": 2,
+        "primary_path_count": 1
+      },
+      "note": "enumerated from the physical blue-team communication layer",
+      "mask_hash": "9a5a82b3c02d92ddb5ad60eddc1c0cedee186fff7ce763d40a07f037ce92ba1f",
+      "signature_hash": "f0451f5a5b9bfadaf4cce00ae9624196edd331fec1949e8fd5bfd8fcaaaf4238"
+    },
+    "TD-SR": {
+      "name": "TD-SR",
+      "kind": "single_directed_edge",
+      "removed_physical_channels": [
+        "Scout->Relay"
+      ],
+      "fault_mask_zeroes": [
+        "Scout->Relay"
+      ],
+      "task_graph": {
+        "edges": [
+          "Relay->Attacker"
+        ],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 0,
+          "Attacker": 1
+        },
+        "out_degree": {
+          "Scout": 0,
+          "Relay": 1,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": false,
+          "Scout->Attacker": false,
+          "Relay->Scout": false,
+          "Relay->Attacker": true,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": false,
+        "scout_to_attacker_shortest_path": null,
+        "primary_path_count": 0
+      },
+      "note": "enumerated from the physical blue-team communication layer",
+      "mask_hash": "b845189956a549c9e7ef68437f0f2c12aa6a5bbdc92129dcef7450ed5773c7d4",
+      "signature_hash": "d17ef72f161680d9062f744a9c695e1c13e03d52115dc260116cefb986cddd53"
+    },
+    "TD-RX": {
+      "name": "TD-RX",
+      "kind": "relay_inbound_partial",
+      "removed_physical_channels": [
+        "Attacker->Relay",
+        "Scout->Relay"
+      ],
+      "fault_mask_zeroes": [
+        "Attacker->Relay",
+        "Scout->Relay"
+      ],
+      "task_graph": {
+        "edges": [
+          "Relay->Attacker"
+        ],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 0,
+          "Attacker": 1
+        },
+        "out_degree": {
+          "Scout": 0,
+          "Relay": 1,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": false,
+          "Scout->Attacker": false,
+          "Relay->Scout": false,
+          "Relay->Attacker": true,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": false,
+        "scout_to_attacker_shortest_path": null,
+        "primary_path_count": 0
+      },
+      "note": "partial Relay receive-channel outage",
+      "mask_hash": "7e2c3a1ae4e180982f16ae90ee4bbac416c091989f56071260720ad36b75fe8a",
+      "signature_hash": "d17ef72f161680d9062f744a9c695e1c13e03d52115dc260116cefb986cddd53"
+    },
+    "TD-RT": {
+      "name": "TD-RT",
+      "kind": "relay_outbound_partial",
+      "removed_physical_channels": [
+        "Relay->Attacker",
+        "Relay->Scout"
+      ],
+      "fault_mask_zeroes": [
+        "Relay->Attacker",
+        "Relay->Scout"
+      ],
+      "task_graph": {
+        "edges": [
+          "Scout->Relay"
+        ],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 1,
+          "Attacker": 0
+        },
+        "out_degree": {
+          "Scout": 1,
+          "Relay": 0,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": true,
+          "Scout->Attacker": false,
+          "Relay->Scout": false,
+          "Relay->Attacker": false,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": false,
+        "scout_to_attacker_shortest_path": null,
+        "primary_path_count": 0
+      },
+      "note": "partial Relay transmit-channel outage",
+      "mask_hash": "7dc378ab67d134f47401fde07f94ca339c15088a9bd77bbcd3b8588f5e77d7e3",
+      "signature_hash": "545f3d0020b846a5a6751ae58f99c59238155bf4f357d2ffffb31d7c4bea2f6a"
+    },
+    "TD-RN": {
+      "name": "TD-RN",
+      "kind": "full_relay_node",
+      "removed_physical_channels": [
+        "Attacker->Relay",
+        "Relay->Attacker",
+        "Relay->Scout",
+        "Scout->Relay"
+      ],
+      "fault_mask_zeroes": [
+        "Attacker->Relay",
+        "Relay->Attacker",
+        "Relay->Scout",
+        "Scout->Relay"
+      ],
+      "task_graph": {
+        "edges": [],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 0,
+          "Attacker": 0
+        },
+        "out_degree": {
+          "Scout": 0,
+          "Relay": 0,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": false,
+          "Scout->Attacker": false,
+          "Relay->Scout": false,
+          "Relay->Attacker": false,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": false,
+        "scout_to_attacker_shortest_path": null,
+        "primary_path_count": 0
+      },
+      "note": "existing relay-node outage; direct Scout->Attacker recovery is separately enabled by frozen task semantics",
+      "mask_hash": "5ab83bcf11bd1209a7c5385737de046afbac63f4cc5f66b1a351b499389ef26e",
+      "signature_hash": "34ce36beea3297a4ff7377ab8f812ed9c16acb2e8fe0f5a7863abd413c1b4ee8"
+    },
+    "TD-CUT": {
+      "name": "TD-CUT",
+      "kind": "compound_primary_cut",
+      "removed_physical_channels": [
+        "Relay->Attacker",
+        "Scout->Relay"
+      ],
+      "fault_mask_zeroes": [
+        "Relay->Attacker",
+        "Scout->Relay"
+      ],
+      "task_graph": {
+        "edges": [],
+        "in_degree": {
+          "Scout": 0,
+          "Relay": 0,
+          "Attacker": 0
+        },
+        "out_degree": {
+          "Scout": 0,
+          "Relay": 0,
+          "Attacker": 0
+        },
+        "reachability": {
+          "Scout->Relay": false,
+          "Scout->Attacker": false,
+          "Relay->Scout": false,
+          "Relay->Attacker": false,
+          "Attacker->Scout": false,
+          "Attacker->Relay": false
+        },
+        "scout_to_attacker_reachable": false,
+        "scout_to_attacker_shortest_path": null,
+        "primary_path_count": 0
+      },
+      "note": "removes both nominal target-information edges",
+      "mask_hash": "382d2c8fabb4673075413ed130c810b50be8d06c49f282e42c41b9face77620c",
+      "signature_hash": "34ce36beea3297a4ff7377ab8f812ed9c16acb2e8fe0f5a7863abd413c1b4ee8"
+    }
+  },
+  "equivalence_classes": {
+    "nominal_primary_path_intact": [
+      "TD-AR",
+      "TD-AS",
+      "TD-RS",
+      "TD-SA"
+    ],
+    "primary_path_cut": [
+      "TD-RA",
+      "TD-SR",
+      "TD-RX",
+      "TD-RT",
+      "TD-CUT"
+    ],
+    "recovery_reconfigured": [
+      "TD-RN"
+    ]
+  },
+  "rejected": [
+    {
+      "candidate": "TD-AR",
+      "reason": "does not alter the frozen nominal legal target-information path; no policy-free task-relevant structural effect established"
+    },
+    {
+      "candidate": "TD-AS",
+      "reason": "does not alter the frozen nominal legal target-information path; no policy-free task-relevant structural effect established"
+    },
+    {
+      "candidate": "TD-RA",
+      "reason": "cuts the only nominal legal Scout→Relay→Attacker target-information path; terminal stress reference, not a recoverable ordinary group"
+    },
+    {
+      "candidate": "TD-RS",
+      "reason": "does not alter the frozen nominal legal target-information path; no policy-free task-relevant structural effect established"
+    },
+    {
+      "candidate": "TD-SA",
+      "reason": "does not alter the frozen nominal legal target-information path; no policy-free task-relevant structural effect established"
+    },
+    {
+      "candidate": "TD-SR",
+      "reason": "cuts the only nominal legal Scout→Relay→Attacker target-information path; terminal stress reference, not a recoverable ordinary group"
+    },
+    {
+      "candidate": "TD-RX",
+      "reason": "cuts the only nominal legal Scout→Relay→Attacker target-information path; terminal stress reference, not a recoverable ordinary group"
+    },
+    {
+      "candidate": "TD-RT",
+      "reason": "cuts the only nominal legal Scout→Relay→Attacker target-information path; terminal stress reference, not a recoverable ordinary group"
+    },
+    {
+      "candidate": "TD-RN",
+      "reason": "not a pure multiplicative edge mask: frozen Relay-node-failure semantics additionally permit a direct recovery route"
+    },
+    {
+      "candidate": "TD-CUT",
+      "reason": "cuts the only nominal legal Scout→Relay→Attacker target-information path; terminal stress reference, not a recoverable ordinary group"
+    }
+  ]
+}
