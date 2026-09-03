@@ -1,0 +1,8 @@
+candidate,classification,same_environment_support,same_fault_time,same_observation_and_learner,same_env_step_budget,training_only_control,required_disclosure
+Plain corrected SG-MAPPO,FAIR,yes,yes,yes,yes,yes,nominal-only support
+Naive legal-event randomization,FAIR_WITH_MINIMAL_ADAPTATION,yes,yes,yes,yes,yes,event-level support and its induced group frequencies
+Prioritized Level Replay,FAIR_WITH_MINIMAL_ADAPTATION,yes,yes,yes,yes,yes,level definition priority formula replay/new mixture and hyperparameters
+EPOpt or batch-CVaR,FAIR_WITH_MINIMAL_ADAPTATION,yes,yes,yes,yes,yes,worst-fraction epsilon effective sample count and training-return criterion
+Group-DRO,FAIR_WITH_MINIMAL_ADAPTATION,yes,yes,yes,yes,yes,group loss definition weighting update and regularization
+Learned structured communication/GIB-MARL,NOT_DIRECTLY_FAIR,not necessarily,not necessarily,no,no,unclear,architecture and communication assumptions differ
+

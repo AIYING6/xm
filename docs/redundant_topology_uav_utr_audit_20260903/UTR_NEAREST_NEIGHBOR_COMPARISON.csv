@@ -1,0 +1,10 @@
+work,year,nearest_relation,what_it_changes,relation_to_UTR,source_url,claim_boundary
+Tobin et al. Domain Randomization,2017,domain randomization,training-domain distribution,UTR is a constrained finite topology-domain instance of this family,https://arxiv.org/abs/1703.06907,UTR cannot claim generic domain-randomization novelty
+Rajeswaran et al. EPOpt,2017,robust RL over a model ensemble,adversarial/CVaR-like selection of source-domain trajectories,UTR is uniform and does not optimize a worst-domain objective,https://arxiv.org/abs/1610.01283,EPOpt is an external robust-optimization comparator candidate
+Jiang et al. Prioritized Level Replay,2021,scenario/level sampling,adaptive replay distribution from learning potential,UTR is non-adaptive equal-probability sampling,https://proceedings.mlr.press/v139/jiang21b.html,PLR is a fair-with-adaptation sampler comparator
+Sagawa et al. Group DRO,2020,worst-group robustness,group-weighted objective,UTR changes exposure not loss weighting,https://arxiv.org/abs/1911.08731,group-DRO is a fair-with-adaptation optimizer comparator
+Sheng et al. Learning Structured Communication for MARL,2020,communication-aware MARL,learned structured communication,UTR retains fixed physical communication semantics,https://arxiv.org/abs/2002.04235,related work not a direct same-interface baseline
+GIB-MARL,2024,robust communication MARL,communication graph information bottleneck,changes message architecture/objective beyond UTR,https://ojs.aaai.org/index.php/AAAI/article/view/30123,conceptual neighboring method; not a direct fair comparator
+Multi-source plume tracing under common UAV faults,2025,fault-tolerant UAV MARL,host randomization/team-size/noise and recurrent architecture,broader fault randomization but different task and learner,https://www.sciencedirect.com/science/article/pii/S2666827025001203,external context not a direct comparator
+Cho et al. Resilient Multi-UAV Networks,2026,resilient UAV communication MARL,distributed parameter/message-passing resilience,changes distributed training/communication assumptions,https://doi.org/10.1109/TNSM.2025.3650697,external context not a direct comparator
+
