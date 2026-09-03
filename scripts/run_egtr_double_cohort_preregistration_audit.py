@@ -22,6 +22,7 @@ CONDITIONS = ["nominal", "F0", "TE", "TL", "DS", "DL", "CP"]
 MATURE_UPDATES, MATURE_STEPS = 39063, 10_000_128
 SCAN_ROOTS = ("configs", "docs", "scripts", "algorithms", "envs")
 FUTURE_PLAN_FILES = {
+    "docs/egtr_double_cohort_preregistration_20260903/EGTR_SIMULTANEOUS_DUAL_COHORT_AMENDMENT.md",
     "scripts/create_egtr_double_cohort_a_tape.py",
     "scripts/run_egtr_double_cohort_a_single.py",
     "scripts/verify_egtr_double_cohort_a_preflight.py",
@@ -29,6 +30,13 @@ FUTURE_PLAN_FILES = {
     "scripts/aggregate_egtr_double_cohort_a.py",
     "scripts/launch_egtr_double_cohort_a_autodl.sh",
     "scripts/build_egtr_double_cohort_a_cloud_package.py",
+    "scripts/create_egtr_double_cohort_simultaneous_tape.py",
+    "scripts/run_egtr_double_cohort_simultaneous_single.py",
+    "scripts/run_egtr_double_cohort_simultaneous_evaluation.py",
+    "scripts/aggregate_egtr_double_cohort_simultaneous.py",
+    "scripts/launch_egtr_double_cohort_simultaneous_autodl.sh",
+    "scripts/build_egtr_double_cohort_simultaneous_cloud_package.py",
+    "scripts/run_egtr_double_cohort_simultaneous_amendment_audit.py",
 }
 METHOD = ROOT / "algorithms/ri_gmappo/drtp_topology_sampler.py"
 KLR_FREEZE = ROOT / "configs/drtp_klr_final_replication_freeze.json"
