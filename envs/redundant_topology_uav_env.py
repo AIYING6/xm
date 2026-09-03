@@ -45,6 +45,7 @@ class RedundantTopologyConfig:
     seed_comm: int = 20260903
     seed_topology: int = 20260904
     assignment_observation: bool = False
+    scout_assignment_observation: bool = False
 
     def __post_init__(self) -> None:
         if min(self.scouts, self.relays, self.terminals) < 1:
@@ -55,6 +56,8 @@ class RedundantTopologyConfig:
             raise ValueError("invalid physical timing contract")
         if not 0.0 <= self.comm_dropout < 1.0:
             raise ValueError("comm_dropout must be in [0, 1)")
+        if self.scout_assignment_observation and not self.assignment_observation:
+            raise ValueError("scout assignment observation requires the shared assignment append block")
 
     @property
     def num_agents(self) -> int:
@@ -144,8 +147,10 @@ class RedundantTopologyUAVEnv:
         # It is deliberately computed from frozen initial geometry, not from
         # faults, future state, reward, training seed, or an evaluation tape.
         terminal_order = self.terminal_ids[np.argsort(self.positions[self.terminal_ids, 1])]
+        scout_order = self.scout_ids[np.argsort(self.positions[self.scout_ids, 1])]
         objective_order = np.argsort(self.objective_positions[:, 1])
         self.terminal_assignment = {int(terminal): int(objective) for terminal, objective in zip(terminal_order, objective_order)}
+        self.scout_assignment = {int(scout): int(objective) for scout, objective in zip(scout_order, objective_order)}
         self.event_log: list[dict[str, Any]] = []
         self.recovery_times: dict[str, int | None] = {"failure": None, "route": None, "message": None, "task": None}
         return self.actor_observation(), self.critic_observation(), self.graph_observation()
@@ -312,6 +317,8 @@ class RedundantTopologyUAVEnv:
                 obs[agent, base_dim - 1] = float(sum(self._fresh_token(agent, k) is not None for k in range(self.k))) / self.k
                 if self.config.assignment_observation:
                     obs[agent, base_dim + self.terminal_assignment[agent]] = 1.0
+            elif self.roles[agent] == ROLE_SCOUT and self.config.scout_assignment_observation:
+                obs[agent, base_dim + self.scout_assignment[agent]] = 1.0
         return obs
 
     def critic_observation(self) -> np.ndarray:
