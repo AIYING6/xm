@@ -19,5 +19,7 @@ def main():
   with zipfile.ZipFile(out,"x",zipfile.ZIP_DEFLATED,compresslevel=6) as z:
    for x in stage.rglob("*"):
     if x.is_file():z.write(x,x.relative_to(stage).as_posix())
- print(json.dumps({"package":str(out),"sha256":digest(out),"commit":commit},indent=2))
+ checksum = digest(out)
+ out.with_suffix(out.suffix + ".sha256").write_text(f"{checksum}  {out.name}\n", encoding="utf-8")
+ print(json.dumps({"package":str(out),"sha256":checksum,"commit":commit},indent=2))
 if __name__=="__main__":main()
