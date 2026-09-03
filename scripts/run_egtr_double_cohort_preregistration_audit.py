@@ -21,6 +21,15 @@ TAPE_IDS = list(range(720000, 720100))
 CONDITIONS = ["nominal", "F0", "TE", "TL", "DS", "DL", "CP"]
 MATURE_UPDATES, MATURE_STEPS = 39063, 10_000_128
 SCAN_ROOTS = ("configs", "docs", "scripts", "algorithms", "envs")
+FUTURE_PLAN_FILES = {
+    "scripts/create_egtr_double_cohort_a_tape.py",
+    "scripts/run_egtr_double_cohort_a_single.py",
+    "scripts/verify_egtr_double_cohort_a_preflight.py",
+    "scripts/run_egtr_double_cohort_a_evaluation.py",
+    "scripts/aggregate_egtr_double_cohort_a.py",
+    "scripts/launch_egtr_double_cohort_a_autodl.sh",
+    "scripts/build_egtr_double_cohort_a_cloud_package.py",
+}
 METHOD = ROOT / "algorithms/ri_gmappo/drtp_topology_sampler.py"
 KLR_FREEZE = ROOT / "configs/drtp_klr_final_replication_freeze.json"
 P3_REPORT = ROOT / "docs/EGTR_P3_1M_EVALUATION_AND_GATE_REPORT.md"
@@ -44,6 +53,11 @@ def text_seed_hits(value: int) -> list[str]:
             # The audit necessarily contains the prospective identifiers it is
             # auditing; its own source is not prior evidence of their use.
             if path.resolve() == Path(__file__).resolve():
+                continue
+            # These files merely implement this already frozen prospective
+            # registry. They are excluded from the *historical-use* audit;
+            # all other maintained source remains in scope.
+            if path.relative_to(ROOT).as_posix() in FUTURE_PLAN_FILES:
                 continue
             try:
                 if pattern.search(path.read_text(encoding="utf-8", errors="ignore")):
