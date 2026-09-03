@@ -38,6 +38,10 @@ def make_env(seed: int, group: str) -> RedundantTopologyUAVEnv:
 
 def configure_core() -> None:
     core.make_env = make_env
+    core.PROTOCOL = PROTOCOL
+    core.SEEDS = SEEDS
+    core.ARMS = ARMS
+    core.CONTRACT = CONTRACT
     core.episode_eval.__globals__["make_env"] = make_env
 
 
