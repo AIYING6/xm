@@ -40,6 +40,10 @@ def configure_core() -> None:
     core.SEEDS = SEEDS
     core.ARMS = ARMS
     core.CONTRACT = CONTRACT
+    # ``episode_eval`` originates in the P2 runner, so its function globals
+    # otherwise retain P2's unassigned environment factory. Bind the P2.9
+    # factory before every evaluation.
+    core.episode_eval.__globals__["make_env"] = make_env
 
 
 def q0(out: Path, seed: int, device: torch.device) -> None:
