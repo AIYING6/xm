@@ -16,7 +16,7 @@ FILES = (
 )
 
 def main() -> None:
-    target = ROOT / "REDUNDANT_TOPOLOGY_UAV_P4_P0_C_ATTRIBUTION.zip"
+    target = ROOT / "REDUNDANT_TOPOLOGY_UAV_P4_P0_C_ATTRIBUTION_FIX1.zip"
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
         for folder in ("algorithms", "envs", "scripts"):
             archive.writestr(f"{folder}/__init__.py", f'"""P4-P0 isolated {folder}."""\n')
