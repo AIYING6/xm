@@ -74,17 +74,25 @@ def audit(output_root: Path, source_root: Path, device: torch.device) -> None:
             for group_index, group in enumerate(C_GROUPS):
                 for episode in range(EPISODES):
                     row = policy_episode(agent, group, 960000 + arm_index * 100000 + seed * 100 + group_index * EPISODES + episode, device)
-                    row.update({"arm": arm, "episode": episode})
+                    # `seed` inside policy_episode is the diagnostic episode seed;
+                    # retain the independent training seed separately for aggregation.
+                    row.update({"arm": arm, "training_seed": seed, "episode": episode})
                     rows.append(row)
     diag = output_root / "diagnostics"; diag.mkdir(parents=True, exist_ok=True)
-    fields = ("arm", "seed", "group", "episode", "success", "timeout", "collision", "score", "completed_objectives", "scout_nonidle_rate", "scout_assigned_nonidle_rate", "terminal_nonidle_rate", "terminal_assigned_nonidle_rate")
+    fields = ("arm", "training_seed", "seed", "group", "episode", "success", "timeout", "collision", "score", "completed_objectives", "scout_nonidle_rate", "scout_assigned_nonidle_rate", "terminal_nonidle_rate", "terminal_assigned_nonidle_rate")
     with (diag / "P4_P0_C_GROUP_EVENT_LEDGER.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields); writer.writeheader(); writer.writerows(rows)
+    write_report(rows, diag)
+
+
+def write_report(rows: list[dict[str, object]], diag: Path) -> None:
+    """Summarize rows by the independent training seed, never episode seed."""
+    fields = ("arm", "training_seed", "seed", "group", "episode", "success", "timeout", "collision", "score", "completed_objectives", "scout_nonidle_rate", "scout_assigned_nonidle_rate", "terminal_nonidle_rate", "terminal_assigned_nonidle_rate")
     summary: list[dict[str, object]] = []
-    metric_names = fields[4:]
+    metric_names = fields[5:]
     for arm in ARMS:
         for seed in SEEDS:
-            values = [row for row in rows if row["arm"] == arm and row["seed"] == seed]
+            values = [row for row in rows if row["arm"] == arm and int(row["training_seed"]) == seed]
             summary.append({"arm": arm, "seed": seed, **{name: float(np.mean([float(row[name]) for row in values])) for name in metric_names}})
     with (diag / "P4_P0_C_GROUP_SEED_SUMMARY.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(summary[0])); writer.writeheader(); writer.writerows(summary)
@@ -113,17 +121,39 @@ def audit(output_root: Path, source_root: Path, device: torch.device) -> None:
     print(json.dumps(payload, indent=2))
 
 
+def aggregate_existing(output_root: Path) -> None:
+    """Repair only the summary of a completed legacy ledger; takes no env steps."""
+    ledger = output_root / "diagnostics" / "P4_P0_C_GROUP_EVENT_LEDGER.csv"
+    if not ledger.is_file():
+        raise RuntimeError("existing P4-P0 event ledger is missing")
+    rows: list[dict[str, object]] = []
+    with ledger.open(encoding="utf-8") as handle:
+        for raw in csv.DictReader(handle):
+            arm = str(raw["arm"])
+            if arm not in ARMS:
+                raise RuntimeError("legacy ledger contains an unexpected arm")
+            arm_index = ARMS.index(arm)
+            # Legacy episode seed = 960000 + arm_index*100000 + training_seed*100 + offset<100.
+            raw["training_seed"] = (int(raw["seed"]) - 960000 - arm_index * 100000) // 100
+            rows.append(raw)
+    write_report(rows, output_root / "diagnostics")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-root", default="results/development/redundant_topology_uav_p3_p2")
     parser.add_argument("--output-root", default="results/development/redundant_topology_uav_p4_p0")
+    parser.add_argument("--aggregate-existing", action="store_true", help="repair only an existing event-ledger summary")
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute:
         print(json.dumps({"protocol": PROTOCOL, "execute_required": True, "training_started": False, "evaluation_only": True}, indent=2)); return
     if not CONTRACT.is_file():
         raise RuntimeError("frozen P4-P0 contract is missing")
-    audit(Path(args.output_root), Path(args.source_root), torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    if args.aggregate_existing:
+        aggregate_existing(Path(args.output_root))
+    else:
+        audit(Path(args.output_root), Path(args.source_root), torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
 
 if __name__ == "__main__":
