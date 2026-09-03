@@ -1,0 +1,18 @@
+{
+  "protocol": "UTR_NOVELTY_EXTERNAL_COMPARATOR_ZERO_TRAINING_AUDIT_V1",
+  "verdict": "UTR_BENCHMARK_PLUS_SIMPLE_BASELINE_POSITIONING_FEASIBLE",
+  "training_started": false,
+  "evaluation_started": false,
+  "environment_or_learner_modified": false,
+  "utr_algorithm_novelty_supported": false,
+  "framework_positioning_currently_confirmed": false,
+  "benchmark_plus_simple_baseline_positioning_feasible": true,
+  "minimum_next_evidence": [
+    "naive legal-event randomization",
+    "one adaptive sampler (PLR)",
+    "one robust optimizer (Group-DRO or batch-CVaR/EPOpt)",
+    "held-out structural faults",
+    "matched scale evidence if framework claims are desired"
+  ],
+  "automatic_continuation": false
+}
