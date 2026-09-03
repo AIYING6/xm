@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 from envs.redundant_topology_uav_env import ROLE_SCOUT, ROLE_TERMINAL
 import scripts.run_redundant_topology_uav_p2r as core
+from scripts.run_redundant_topology_uav_p2 import maybe_fault
 import scripts.run_redundant_topology_uav_p3_p2 as p3
 
 PROTOCOL = "REDUNDANT-TOPOLOGY-UAV-P4-P0-C-GROUP-ATTRIBUTION-V1"
@@ -33,7 +34,7 @@ def policy_episode(agent: torch.nn.Module, group: str, seed: int, device: torch.
     terminal_nonidle = terminal_aligned = terminal_decisions = 0
     total_reward = 0.0
     while not env.done:
-        core.maybe_fault(env)
+        maybe_fault(env)
         with torch.no_grad():
             actions = agent.action_value(*core.tensors(core.graph_stack([graph]), share[None], device), deterministic=True)[0][0].cpu().numpy()
         for agent_id, action in enumerate(actions):
