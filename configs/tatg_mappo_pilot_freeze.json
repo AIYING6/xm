@@ -1,0 +1,82 @@
+{
+  "protocol": "TATG-MAPPO-FRESH-SEED-PILOT-V1",
+  "status": "PREREGISTERED_NOT_EXECUTED",
+  "authorization": {
+    "training_authorized": false,
+    "evaluation_authorized": false,
+    "automatic_continuation": false,
+    "hyperparameter_sweep": false,
+    "seed_replacement": false,
+    "checkpoint_selection": false,
+    "adaptive_sampling": false,
+    "a_line_modification": false
+  },
+  "training_seeds": [75011, 75012, 75013],
+  "reserved_independent_replication_seeds": [75021, 75022, 75023, 75024, 75025],
+  "reserved_confirmatory_seeds": [75031, 75032, 75033, 75034, 75035],
+  "arms": {
+    "utr_snapshot_sg": "existing snapshot actor and ordinary PPO under fixed UTR exposure",
+    "tatg_cetm_utr": "CETM temporal actor, chronological actor replay and unchanged snapshot critic under the same fixed UTR exposure",
+    "tatg_snapshot_gru_utr": "capacity-matched current-snapshot GRU temporal-actor control under the same fixed UTR exposure",
+    "tatg_zero_residual_utr": "capacity-matched zero-residual CETM temporal-actor control under the same fixed UTR exposure"
+  },
+  "budget": {
+    "num_envs": 8,
+    "rollout_steps": 32,
+    "updates": 3907,
+    "environment_steps_per_trajectory": 1000192,
+    "trajectories": 12,
+    "total_environment_steps": 12002304,
+    "fixed_endpoint_update": 3907,
+    "diagnostic_milestones": {"976": "250k", "1953": "500k", "3907": "1m"}
+  },
+  "training": {
+    "environment": "existing 3D UAV intercept environment",
+    "reward": "unchanged",
+    "transition_semantics": "unchanged",
+    "actor_information": "current legal actor tensors plus frozen local CETM state only for TATG arms",
+    "critic": "existing architecturally unchanged centralized snapshot critic",
+    "exposure": "fixed UTR; identical reset-time topology distribution per matched seed across all arms",
+    "sampler": "no DRTP, EGTR, adaptive sampler, selector, gate or evaluation input",
+    "ppo": {
+      "actor": "ordinary clipped PPO plus entropy; full chronological [time, environment] replay for every temporal-actor epoch",
+      "critic": "ordinary snapshot critic update",
+      "lr": 0.0003,
+      "gamma": 0.99,
+      "gae_lambda": 0.95,
+      "clip_coef": 0.2,
+      "entropy_coef": 0.01,
+      "value_coef": 0.5,
+      "ppo_epochs": 4,
+      "max_grad_norm": 0.5
+    },
+    "runtime": "strict actor/critic/optimizer/environment/RNG checkpoint state; diagnostic milestones are never selected by return"
+  },
+  "evaluation": {
+    "development_only": true,
+    "tape": "configs/tatg_mappo_pilot_development_tape.json",
+    "endpoint": "fixed 1m checkpoint only",
+    "episode_count_per_condition": 100,
+    "forbidden": ["formal tape", "independent tape", "held-out tape", "online gate input", "best checkpoint"]
+  },
+  "primary_analysis": {
+    "independent_unit": "training seed",
+    "primary_metric": "mean non-nominal success across fixed development conditions",
+    "secondary_metrics": ["nominal success", "mission score", "collision", "timeout", "per-condition success", "training PPO health"],
+    "comparison": "paired CETM minus UTR on identical training seed and evaluation tape",
+    "mechanism_disambiguation": "CETM is compared descriptively with both equal-capacity temporal controls; no control result is pooled with CETM"
+  },
+  "pilot_gate": {
+    "pass": "TATG_PILOT_DIRECTIONAL_SIGNAL",
+    "no_go": "TATG_PILOT_NO_DIRECTIONAL_SIGNAL",
+    "required": [
+      "CETM mean primary-metric delta versus UTR is strictly positive",
+      "at least two of three paired CETM-versus-UTR primary-metric deltas are nonnegative",
+      "CETM mean primary metric is not below either temporal control",
+      "CETM has no additional zero-success seed relative to paired UTR",
+      "CETM mean nominal-success delta versus UTR is at least -0.05",
+      "all trajectories, fixed endpoints and tape-integrity checks are complete"
+    ],
+    "rule": "This one three-seed pilot is directional only. Any failure closes this TATG candidate without tuning. A pass permits only a separately authorized independent five-seed replication; it is not a performance or reliability claim."
+  }
+}
