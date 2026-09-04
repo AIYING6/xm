@@ -1,0 +1,14 @@
+{
+  "protocol": "TATG-MAPPO-FRESH-SEED-PILOT-RUNNER-V1",
+  "status": "IMPLEMENTED_NOT_EXECUTED",
+  "depends_on": "TATG_PILOT_P1_EXECUTION_INTERFACE_READY",
+  "runner": "scripts/run_tatg_mappo_pilot_single.py",
+  "baseline": "existing fixed-UTR snapshot PPO via train_ri_gmappo",
+  "temporal_arms": "isolated fixed-UTR collection plus full chronological [time, environment] actor replay",
+  "immutable_layout": {"num_envs": 4, "rollout_steps": 64, "updates": 3907, "trajectories": 12},
+  "evaluation": "not implemented in this runner; a separate fixed-endpoint offline execution interface is required",
+  "forbidden": ["local pilot training", "evaluation tape read", "checkpoint selection", "automatic continuation"],
+  "pass": "TATG_PILOT_P2_RUNNER_IMPLEMENTED",
+  "pass_authorizes_only": "separate cloud packaging and explicit user-authorized execution",
+  "automatic_continuation": false
+}
