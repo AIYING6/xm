@@ -1,0 +1,36 @@
+{
+  "protocol": "TGTR-PPO-P0-ZERO-TRAINING-DESIGN-AUDIT-V1",
+  "verdict": "TGTR_P0_FEASIBLE_FOR_C1",
+  "primary_method": "Topology-Group Trust-Region PPO",
+  "deployment_models": 1,
+  "adaptive_sampler": false,
+  "formal_evaluation_used": false,
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "training_started": false,
+  "checks": {
+    "historical_gradient_projection_not_rebranded": true,
+    "ordinary_ppo_is_high_return_anchor": true,
+    "condition_group_is_training_only": true,
+    "per_group_actor_gradient_available": true,
+    "full_categorical_policy_kl_computable": true,
+    "actor_adam_transaction_available": true,
+    "legacy_four_stream_batch_is_insufficient": true,
+    "synchronized_all_group_batch_is_required": true,
+    "matched_sync_utr_comparator_required": true,
+    "zero_training_p0": true
+  },
+  "proposed_batch": {
+    "num_envs": 24,
+    "rollout_steps": 64,
+    "graphs_per_update": 1536,
+    "nominal_streams": 12,
+    "failure_streams_per_group": 2,
+    "nominal_mass": 0.5,
+    "failure_group_mass": 0.08333333333333333,
+    "design_certificate_split": "fixed_by_stream"
+  },
+  "next_step": "TGTR_C1_IMPLEMENTATION_AND_SAME_ROLLOUT_AUDIT_REQUIRES_SEPARATE_AUTHORIZATION",
+  "fresh_seed_training_authorized": false,
+  "automatic_continuation": false
+}
