@@ -1,0 +1,52 @@
+{
+  "protocol": "TATG-MAPPO-C45-FIRST-UPDATE-SAME-ROLLOUT-AUDIT-V1",
+  "status": "ONE_ACTOR_STEP_PER_FROZEN_VARIANT_AUDIT_ONLY",
+  "rollout": {
+    "environment": "existing 3D UAV intercept environment only",
+    "exposure": "fixed UTR only",
+    "audit_vectorized_environments": 2,
+    "audit_rollout_steps": 3,
+    "evaluation": false,
+    "checkpoint_selection": false
+  },
+  "variants": [
+    "cetm_candidate",
+    "capacity_matched_snapshot_gru_control",
+    "zero_residual_cetm_control"
+  ],
+  "actor_update": {
+    "optimizer": "ordinary Adam",
+    "one_step_per_variant": true,
+    "sequence_order": "full chronological [time, environment] replay",
+    "ppo_actor_term": "ordinary clipped surrogate plus entropy",
+    "clip_coef": 0.2,
+    "entropy_coef": 0.01,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "advantages": "fixed and normalized from the candidate rollout's unchanged critic values",
+    "critic_update": false
+  },
+  "required_checks": [
+    "candidate_preupdate_logprob_replays_exactly",
+    "all_three_variants_have_finite_sequence_actor_losses_and_gradients",
+    "each_variant_changes_an_active_temporal_actor_parameter",
+    "candidate_critic_is_bitwise_unchanged",
+    "inactive_copied_legacy_policy_head_is_excluded_and_unchanged",
+    "postupdate_candidate_sequence_logprob_is_finite",
+    "no_evaluation_or_outcome_comparison"
+  ],
+  "forbidden": [
+    "critic optimizer step",
+    "second update on any variant",
+    "reward or environment change",
+    "adaptive sampler",
+    "evaluation tape",
+    "return comparison",
+    "checkpoint selection",
+    "cloud training",
+    "fresh-seed pilot"
+  ],
+  "pass": "TATG_C45_FIRST_UPDATE_SAME_ROLLOUT_PASS",
+  "pass_authorizes_only": "a separately authorized preregistered fresh-seed pilot contract",
+  "automatic_continuation": false
+}

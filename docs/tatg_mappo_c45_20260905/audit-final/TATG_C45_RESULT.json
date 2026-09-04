@@ -1,0 +1,31 @@
+{
+  "protocol": "TATG-MAPPO-C45-FIRST-UPDATE-SAME-ROLLOUT-AUDIT-V1",
+  "verdict": "TATG_C45_FIRST_UPDATE_SAME_ROLLOUT_PASS",
+  "checks": {
+    "candidate_preupdate_logprob_replays_exactly": true,
+    "all_three_variants_have_finite_sequence_actor_losses_and_gradients": true,
+    "each_variant_changes_an_active_temporal_actor_parameter": true,
+    "candidate_critic_is_bitwise_unchanged": true,
+    "inactive_copied_legacy_policy_head_is_excluded_and_unchanged": true,
+    "postupdate_candidate_sequence_logprob_is_finite": true,
+    "no_evaluation_or_outcome_comparison": true
+  },
+  "audit_details": {
+    "environment_steps": 6,
+    "audit_actor_optimizer_steps": 3,
+    "formal_ppo_updates": 0,
+    "evaluation_episodes": 0,
+    "vectorized_environments": 2,
+    "rollout_steps": 3,
+    "variant_actor_losses": {
+      "cetm_candidate": -0.03276798129081726,
+      "capacity_matched_snapshot_gru_control": -0.03276798129081726,
+      "zero_residual_cetm_control": -0.03276798129081726
+    },
+    "advantages_finite": true,
+    "advantages_standard_deviation": 1.0
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}
