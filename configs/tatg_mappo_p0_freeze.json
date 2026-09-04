@@ -1,0 +1,62 @@
+{
+  "protocol": "TATG-MAPPO-P0-SEMANTIC-AND-NOVELTY-AUDIT-V1",
+  "project_status": "NEW_PROBLEM__ZERO_TRAINING_ONLY",
+  "problem": "decentralized control under dynamic topology failure when a legal current graph snapshot may be insufficient to identify transition context",
+  "candidate_family": "Topology-Transition-Aware Temporal Graph MAPPO",
+  "deployment": "one decentralized policy; no selector, fallback, ensemble, teacher or online failure label",
+  "p0_scope": {
+    "allowed": [
+      "source/interface audit",
+      "problem and information-boundary freeze",
+      "literature positioning",
+      "P1 diagnostic-contract design"
+    ],
+    "forbidden": [
+      "TATG actor or critic implementation",
+      "PPO rollout or update",
+      "supervised probe fitting",
+      "policy evaluation",
+      "checkpoint loading or selection",
+      "fresh-seed or cloud training",
+      "changes to reward, environment, sampler or evaluation tapes"
+    ]
+  },
+  "closed_legacy_families": [
+    "adaptive exposure feedback: DRTP and EGTR",
+    "lagged group actor weighting",
+    "nominal/failure gradient surgery: TCR and TGTR",
+    "cross-fitted group-gradient correction: RACG",
+    "multi-checkpoint consensus distillation: CAPD",
+    "training-seed precursor/root-cause search: B3/H2/D3/B5"
+  ],
+  "candidate_boundary": {
+    "allowed_actor_history": [
+      "previous legal decentralized local observation",
+      "previous legal graph node and edge features",
+      "previous own action",
+      "previous recurrent state"
+    ],
+    "forbidden_actor_inputs": [
+      "failure group",
+      "failed agent identity",
+      "failure onset or duration schedule",
+      "centralized critic state",
+      "global topology",
+      "evaluation tape or return label"
+    ],
+    "novelty_requirement": "A later candidate must encode a local topology-transition residual and must be compared against both capacity-matched snapshot SG-MAPPO and a capacity-matched generic GNN+GRU control. A generic GNN plus GRU alone is not a contribution."
+  },
+  "p1_precommitment": {
+    "question": "Does a short history of legal actor tensors carry repeatable information about a predeclared topology-transition target beyond the current legal snapshot?",
+    "data": "fresh scripted, policy-neutral training-only trajectories in two disjoint state cohorts",
+    "forbidden": [
+      "episode return",
+      "formal, independent or held-out evaluation tapes",
+      "learned-policy outcome labels",
+      "training-seed labels"
+    ],
+    "pass": "TATG_P1_INFORMATION_GAP_PRESENT",
+    "fail": "TATG_P1_NO_INFORMATION_GAP",
+    "pass_authorizes_only": "a separate exact-formula and implementation audit; not PPO training"
+  }
+}
