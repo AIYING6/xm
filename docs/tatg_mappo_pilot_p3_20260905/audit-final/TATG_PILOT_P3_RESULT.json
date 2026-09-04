@@ -1,0 +1,21 @@
+{
+  "protocol": "TATG-MAPPO-FRESH-SEED-PILOT-CLOUD-PACKAGE-AUDIT-V1",
+  "verdict": "TATG_PILOT_P3_CLOUD_PACKAGE_READY",
+  "checks": {
+    "frozen_four_arms_and_three_seeds_are_enumerated": true,
+    "launcher_uses_bounded_dynamic_slots": true,
+    "launcher_requires_all_twelve_completion_manifests": true,
+    "launcher_has_no_evaluation_or_aggregation_command": true,
+    "launcher_rejects_an_evaluation_directory": true,
+    "launcher_does_not_shutdown_the_instance": true,
+    "bundle_is_source_only_and_hashes_each_input": true,
+    "package_contract_remains_unlaunched": true
+  },
+  "details": {
+    "launcher_sha256": "5fe892d5e84b10656f625b47c630449bf86a8887ed2507911500d3a3a4cfb64b",
+    "bundler_sha256": "f1f4f36759a7ca971eea783ddf4ae6de09565a2dc732a233cd22c0e726647102",
+    "training_started": false,
+    "evaluation_started": false
+  },
+  "automatic_continuation": false
+}
