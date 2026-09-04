@@ -1,0 +1,418 @@
+{
+  "protocol": "CAPD-P0.5-TEACHER-ASSET-INVENTORY-V1",
+  "verdict": "CAPD_P05_BLOCKED_ASSETS_NOT_LOCAL",
+  "search_root": "D:\\Code\\Codex\\ri_gmappo_uav",
+  "expected_teacher_runs": 20,
+  "complete_teacher_runs": 0,
+  "missing_or_ambiguous_teacher_runs": 20,
+  "runs": [
+    {
+      "arm": "utr_sg",
+      "seed": 71011,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71012,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71013,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71014,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71015,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71021,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71022,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71023,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71024,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71025,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71011,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71012,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71013,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71014,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71015,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71021,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71022,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71023,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71024,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71025,
+      "candidate_count": 0,
+      "complete_candidate_count": 0,
+      "selected_run_directory": null,
+      "required_files": {
+        "actor_critic_latest.pt": false,
+        "run_manifest.json": false
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": false,
+        "actor_critic_training_state_latest.pt": false,
+        "drtp_topology_sampler_manifest.json": false,
+        "drtp_topology_sampler_log.csv": false,
+        "train_log.csv": false
+      },
+      "checkpoint_sha256": null,
+      "status": "missing_or_incomplete"
+    }
+  ],
+  "interpretation": "Missing local assets mean archival incompleteness, not experiment failure or algorithm failure.",
+  "checkpoint_loading_performed": false,
+  "policy_signal_analysis_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "evaluation_started": false,
+  "student_training_started": false,
+  "automatic_continuation": false
+}
