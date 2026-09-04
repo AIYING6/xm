@@ -1,0 +1,31 @@
+{
+  "protocol": "TATG-MAPPO-FRESH-SEED-PILOT-P0-PREREGISTRATION-AUDIT-V1",
+  "verdict": "TATG_PILOT_P0_PREREGISTRATION_READY",
+  "checks": {
+    "three_fresh_matched_training_seeds_are_frozen": true,
+    "future_replication_and_confirmation_seed_namespaces_are_disjoint": true,
+    "four_required_arms_are_exactly_frozen": true,
+    "all_arms_use_fixed_utr_and_no_adaptive_sampler": true,
+    "candidate_and_controls_share_one_chronological_actor_update_contract": true,
+    "critic_and_environment_semantics_are_frozen": true,
+    "budget_and_fixed_endpoint_are_exact": true,
+    "development_tape_is_new_fixed_and_offline": true,
+    "gate_requires_candidate_direction_and_not_control_pooling": true,
+    "no_training_or_evaluation_is_started_by_this_audit": true
+  },
+  "audit_details": {
+    "frozen_training_seeds": [75011, 75012, 75013],
+    "reserved_independent_replication_seeds": [75021, 75022, 75023, 75024, 75025],
+    "arms": ["tatg_cetm_utr", "tatg_snapshot_gru_utr", "tatg_zero_residual_utr", "utr_snapshot_sg"],
+    "environment_steps_per_trajectory": 1000192,
+    "total_environment_steps_if_authorized": 12002304,
+    "freeze_sha256": "0954084f135d2e8da5f7afefea22053a7cd7ba042823338cce6408baf399de17",
+    "development_tape_sha256": "a3af31f0cfe79d7ea4c93623fecfefa5224003d65c035858b881cfdce927acb1",
+    "environment_steps_executed": 0,
+    "ppo_updates_executed": 0,
+    "evaluation_episodes_executed": 0
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}
