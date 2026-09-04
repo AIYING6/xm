@@ -1,0 +1,105 @@
+{
+  "protocol": "CAPD-P0-ZERO-TRAINING-DESIGN-AUDIT-V1",
+  "verdict": "CAPD_P0_FEASIBLE_FOR_P05_ASSET_SIGNAL_AUDIT",
+  "checks": [
+    {
+      "label": "actor class is explicit and independently callable",
+      "needle": "class RIActor(nn.Module):",
+      "pass": true
+    },
+    {
+      "label": "actor exposes categorical logits before sampling",
+      "needle": "return logits, attn, intent_logits",
+      "pass": true
+    },
+    {
+      "label": "policy distribution is categorical",
+      "needle": "Categorical(logits=logits)",
+      "pass": true
+    },
+    {
+      "label": "deterministic and stochastic execution share one interface",
+      "needle": "deterministic: bool = False",
+      "pass": true
+    },
+    {
+      "label": "checkpoint initialization is already supported",
+      "needle": "init_checkpoint: str | None = None",
+      "pass": true
+    },
+    {
+      "label": "training/evaluation boundary is explicit",
+      "needle": "evaluation_enabled: bool = True",
+      "pass": true
+    },
+    {
+      "label": "frozen EGTR explorer implementation exists",
+      "needle": "class EGTRTopologySampler(DRTPTopologySampler):",
+      "pass": true
+    },
+    {
+      "label": "EGTR runtime state is serializable",
+      "needle": "state[\"format\"] = \"egtr_topology_sampler_runtime_state_v1\"",
+      "pass": true
+    },
+    {
+      "label": "geometric centroids and targets are finite probability simplexes",
+      "pass": true
+    },
+    {
+      "label": "explorer disagreement continuously reduces EGTR influence",
+      "pass": true
+    },
+    {
+      "label": "identical anchor/explorer policies preserve the anchor exactly",
+      "pass": true
+    },
+    {
+      "label": "the rule has no discrete promotion or evaluation threshold",
+      "pass": true
+    },
+    {
+      "label": "teacher targets are stop-gradient actor probabilities on training-only states",
+      "pass": true
+    },
+    {
+      "label": "evaluation tapes and outcome labels are forbidden from training",
+      "pass": true
+    },
+    {
+      "label": "teacher membership is fixed before downstream outcomes",
+      "pass": true
+    },
+    {
+      "label": "final deployment contains one student actor",
+      "pass": true
+    },
+    {
+      "label": "training population size is finite and predeclared",
+      "pass": true
+    },
+    {
+      "label": "deployment inference cost equals one ordinary actor",
+      "pass": true
+    },
+    {
+      "label": "training compute is disclosed rather than claimed compute-matched",
+      "pass": true
+    }
+  ],
+  "source_sha256": {
+    "algorithms/ri_gmappo/simple_ri_gmappo.py": "73ef2d9b54060061a6db1b7770cc541cfc7cc9d48321732d9c7d5e25cf1e7187",
+    "algorithms/ri_gmappo/drtp_topology_sampler.py": "3127bf78b5d89b349abee2da925afb0695a2ab77f8cd8aaee6c30d2ab14e9dc1",
+    "configs/capd_p0_design_freeze.json": "c6ae7b2a18a0fb8a34a7134bf183b243ee4e037117c6cce42a2f6b6478094fbb"
+  },
+  "zero_training": true,
+  "checkpoints_loaded": false,
+  "environment_constructed": false,
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "evaluation_started": false,
+  "teacher_assets_verified": false,
+  "implementation_authorized": false,
+  "p05_authorized": false,
+  "automatic_continuation": false
+}
