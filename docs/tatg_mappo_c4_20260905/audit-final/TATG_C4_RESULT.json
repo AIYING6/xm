@@ -1,0 +1,25 @@
+{
+  "protocol": "TATG-MAPPO-C4-OUTER-ROLLOUT-STRICT-CONTINUATION-AUDIT-V1",
+  "verdict": "TATG_C4_OUTER_ROLLOUT_RUNTIME_PASS",
+  "checks": {
+    "real_3d_utr_rollout_exercises_dynamic_relay_transition": true,
+    "temporal_actor_is_snapshot_equivalent_at_reset": true,
+    "completed_real_environment_slots_are_reset_without_cross_slot_leakage": true,
+    "runtime_checkpoint_restores_exact_real_environment_continuation": true,
+    "centralized_critic_architecture_and_initial_weights_are_unchanged": true,
+    "inactive_legacy_policy_head_is_excluded_from_tatg_optimizer": true,
+    "runtime_payload_keeps_only_tatg_memory_state_for_temporal_history": true,
+    "no_ppo_update_or_evaluation_was_executed": true
+  },
+  "audit_details": {
+    "environment_steps": 12,
+    "ppo_updates": 0,
+    "evaluation_episodes": 0,
+    "vectorized_environments": 2,
+    "short_rollout_steps_per_continuation": 3,
+    "candidate_added_actor_parameters": 3899
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}

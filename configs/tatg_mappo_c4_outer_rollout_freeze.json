@@ -1,0 +1,29 @@
+{
+  "protocol": "TATG-MAPPO-C4-OUTER-ROLLOUT-STRICT-CONTINUATION-AUDIT-V1",
+  "status": "ZERO_PPO_UPDATE_RUNTIME_INTEGRATION_ONLY",
+  "collection": {
+    "environment": "existing 3D UAV intercept environment only",
+    "exposure": "fixed UTR only; no adaptive sampler",
+    "steps": "a small fixed audit rollout with a forced short timeout to exercise completed-slot reset",
+    "evaluation": false,
+    "training": false
+  },
+  "model": {
+    "actor": "CETM / generic snapshot-GRU / zero-residual controls through C3.5 adapter",
+    "critic": "copied architecturally unchanged centralized critic",
+    "optimizer": "ordinary Adam state persisted but never stepped in C4",
+    "inactive_snapshot_policy_head": "excluded from the candidate optimizer because temporal_policy_head replaces it"
+  },
+  "strict_runtime_payload": [
+    "temporal actor and unchanged critic state",
+    "unstepped optimizer state",
+    "TATG three-tensor actor state",
+    "all environment runtime states",
+    "obs/share_obs/graph_obs",
+    "action-generator state"
+  ],
+  "forbidden": ["PPO optimizer step", "reward change", "environment source change", "evaluation tape", "checkpoint selection", "return comparison", "cloud training"],
+  "pass": "TATG_C4_OUTER_ROLLOUT_RUNTIME_PASS",
+  "pass_authorizes_only": "a separately frozen first-update same-rollout audit; no pilot training",
+  "automatic_continuation": false
+}
