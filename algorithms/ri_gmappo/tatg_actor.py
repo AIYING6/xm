@@ -150,3 +150,55 @@ class TATGMemoryActor(nn.Module):
         return sum(parameter.numel() for parameter in self.topology_memory.parameters()) + sum(
             parameter.numel() for parameter in self.temporal_policy_head.parameters()
         )
+
+
+class TATGRuntimeStateBank:
+    """Own one frozen topology-memory state for every vectorized environment.
+
+    This is deliberately a runner-neutral state manager.  C2 verifies the
+    reset and serialization semantics before any change is made to the PPO
+    rollout loop.
+    """
+
+    def __init__(self, actor: TATGMemoryActor, relation_adj: torch.Tensor, edge_feat: torch.Tensor):
+        self.actor = actor
+        self.state = actor.reset_memory(relation_adj, edge_feat)
+
+    @property
+    def batch_size(self) -> int:
+        return int(self.state.memory.shape[0])
+
+    def record_actions(self, actions: torch.Tensor) -> None:
+        self.state = self.actor.record_actions(self.state, actions)
+
+    def replace_state(self, state: TopologyMemoryState) -> None:
+        if state.memory.shape != self.state.memory.shape or state.previous_topology.shape != self.state.previous_topology.shape:
+            raise ValueError("replacement topology-memory state has incompatible dimensions")
+        self.state = state
+
+    def reset_completed(
+        self, completed: torch.Tensor, relation_adj: torch.Tensor, edge_feat: torch.Tensor
+    ) -> None:
+        """Reset only completed vectorized environments using their reset graph."""
+
+        mask = completed.to(device=self.state.memory.device, dtype=torch.bool)
+        if tuple(mask.shape) != (self.batch_size,):
+            raise ValueError("completed must have shape [batch]")
+        reset_state = self.actor.reset_memory(relation_adj, edge_feat)
+        if reset_state.memory.shape != self.state.memory.shape:
+            raise ValueError("reset graph batch does not match the runtime state bank")
+        memory_mask = mask[:, None, None]
+        action_mask = mask[:, None]
+        self.state = TopologyMemoryState(
+            memory=torch.where(memory_mask, reset_state.memory, self.state.memory),
+            previous_topology=torch.where(memory_mask, reset_state.previous_topology, self.state.previous_topology),
+            previous_action=torch.where(action_mask, reset_state.previous_action, self.state.previous_action),
+        )
+
+    def runtime_state_dict(self) -> dict[str, dict[str, torch.Tensor]]:
+        return {"tatg_memory_state": self.state.runtime_state_dict()}
+
+    def load_runtime_state_dict(self, payload: dict[str, dict[str, torch.Tensor]]) -> None:
+        if set(payload) != {"tatg_memory_state"}:
+            raise KeyError("runtime state bank requires exactly the tatg_memory_state field")
+        self.replace_state(TopologyMemoryState.from_runtime_state_dict(payload["tatg_memory_state"]))
