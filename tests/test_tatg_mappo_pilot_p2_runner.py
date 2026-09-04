@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+import numpy as np
+
 from scripts.audit_tatg_mappo_pilot_p2_runner import collect_checks
-from scripts.run_tatg_mappo_pilot_single import ALL_ARMS, BASELINE_ARM, FROZEN_SEEDS, NUM_ENVS, ROLLOUT_STEPS, UPDATES, pilot_config
+from scripts.run_tatg_mappo_pilot_single import ALL_ARMS, BASELINE_ARM, FROZEN_SEEDS, NUM_ENVS, ROLLOUT_STEPS, UPDATES, _build_snapshot, pilot_config
 from scripts.build_tatg_mappo_pilot_cloud_bundle import sources
 from scripts.audit_tatg_mappo_pilot_p3_cloud_package import collect_checks as collect_package_checks
 
@@ -39,3 +43,20 @@ def test_tatg_cloud_package_is_training_only() -> None:
     assert all(checks.values())
     assert details["training_started"] is False
     assert details["evaluation_started"] is False
+
+
+def test_tatg_snapshot_builder_uses_the_common_3d_num_agents_interface() -> None:
+    cfg = pilot_config("tatg_cetm_utr", 75011, "unused-output-root")
+    graph = {
+        "node_feat": np.zeros((4, 4, 20), dtype=np.float32),
+        "edge_feat": np.zeros((4, 4, 4, 17), dtype=np.float32),
+        "role": np.zeros((4, 4), dtype=np.int64),
+    }
+    snapshot = _build_snapshot(
+        graph,
+        np.zeros((4, 3, 10), dtype=np.float32),
+        np.zeros((4, 3, 12), dtype=np.float32),
+        SimpleNamespace(action_dim=5, num_agents=3),
+        cfg,
+    )
+    assert snapshot.num_agents == 3

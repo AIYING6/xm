@@ -28,6 +28,7 @@ def collect_checks() -> tuple[dict[str, bool], dict[str, object]]:
         "temporal_arms_use_fixed_sampler_at_initial_and_completed_resets": source.count("sampler.select(") >= 2 and "on_before_reset=apply_next_selection" in source,
         "temporal_actor_replay_is_chronological": "runner.replay_rollout(" in source and "clipped_actor_objective(" in source,
         "critic_is_updated_without_changing_its_architecture": "system.critic_value(" in source and "TATGActorCriticSystem" in source,
+        "three_dimensional_agent_count_uses_common_num_agents_interface": "num_agents=int(env.num_agents)" in source and "env.num_blue" not in source,
         "runtime_payload_contains_sampler_episode_and_rng_state": all(token in source for token in ("sampler_state", "episode_counts", "action_generator_state", "environment_states", "tatg_actor_runtime_state")),
         "runner_has_no_evaluation_tape_import_or_evaluate_command": "development_tape" not in source and '"evaluate"' not in source,
         "training_requires_explicit_execute": "refusing to train without --execute" in source,
