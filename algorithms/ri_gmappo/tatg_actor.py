@@ -19,6 +19,7 @@ from algorithms.ri_gmappo.tatg_topology_memory import (
     CETMTopologyMemory,
     SnapshotTopologyGRU,
     TopologyMemoryState,
+    ZeroResidualCETMTopologyMemory,
     _TopologyMemoryBase,
 )
 
@@ -34,6 +35,7 @@ class TATGMemoryActor(nn.Module):
     _MEMORY_TYPES: dict[str, Type[_TopologyMemoryBase]] = {
         "cetm": CETMTopologyMemory,
         "snapshot_gru": SnapshotTopologyGRU,
+        "cetm_zero_delta": ZeroResidualCETMTopologyMemory,
     }
 
     def __init__(

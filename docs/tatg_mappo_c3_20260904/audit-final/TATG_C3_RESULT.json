@@ -1,0 +1,25 @@
+{
+  "protocol": "TATG-MAPPO-C3-CHRONOLOGICAL-SAME-ROLLOUT-PPO-AUDIT-V1",
+  "verdict": "TATG_C3_SEQUENCE_PPO_CORRECTNESS_PASS",
+  "checks": {
+    "chronological_replay_reproduces_collected_log_probs_exactly": true,
+    "episode_completion_resets_only_the_completed_sequence_slot": true,
+    "ordinary_clipped_ppo_actor_loss_is_finite": true,
+    "temporal_head_receives_first_same_rollout_gradient": true,
+    "cetm_grucell_receives_gradient_after_memory_columns_activate": true,
+    "generic_and_zero_delta_controls_share_the_same_sequence_replay": true,
+    "generic_and_zero_delta_controls_have_exact_candidate_added_capacity": true,
+    "no_environment_or_evaluation_execution": true
+  },
+  "audit_details": {
+    "synthetic_actor_optimizer_steps": 1,
+    "candidate_added_actor_parameters": 3899,
+    "sequence_time_steps": 4,
+    "sequence_environments": 2
+  },
+  "environment_steps": 0,
+  "formal_ppo_updates": 0,
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}
