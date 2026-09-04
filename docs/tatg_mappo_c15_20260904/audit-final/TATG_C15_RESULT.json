@@ -1,0 +1,25 @@
+{
+  "protocol": "TATG-MAPPO-C1.5-ACTOR-INTEGRATION-AUDIT-V1",
+  "verdict": "TATG_C15_ACTOR_INTEGRATION_PASS",
+  "checks": {
+    "snapshot_logits_exact_at_zero_memory_initialization": true,
+    "cetm_memory_reaches_candidate_logits": true,
+    "candidate_transition_state_changes_only_after_legal_topology_change": true,
+    "generic_control_added_actor_capacity_exactly_matched": true,
+    "generic_control_starts_with_identical_actor_and_temporal_weights": true,
+    "candidate_actor_runtime_continuation_exact": true,
+    "generic_current_snapshot_control_updates_without_transition": true,
+    "no_legacy_actor_or_critic_source_edit": true,
+    "no_environment_or_ppo_execution": true
+  },
+  "parameter_counts": {
+    "candidate_added_actor_parameters": 3899,
+    "generic_control_added_actor_parameters": 3899,
+    "legacy_snapshot_actor_parameters": 3885
+  },
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}
