@@ -1,0 +1,28 @@
+{
+  "protocol": "CAPD-P0.5-TEACHER-ASSET-INVENTORY-V1",
+  "source_experiment": "EGTR-DOUBLE-COHORT-SIMULTANEOUS-10M",
+  "source_root_suffix": "results/development/egtr_double_cohort_simultaneous",
+  "arms": ["utr_sg", "egtr_sg"],
+  "seeds": [71011, 71012, 71013, 71014, 71015, 71021, 71022, 71023, 71024, 71025],
+  "required_files": ["actor_critic_latest.pt", "run_manifest.json"],
+  "provenance_files_if_present": [
+    "actor_critic_runtime_state_latest.pt",
+    "actor_critic_training_state_latest.pt",
+    "drtp_topology_sampler_manifest.json",
+    "drtp_topology_sampler_log.csv",
+    "train_log.csv"
+  ],
+  "forbidden_recovery_inputs": [
+    "evaluations",
+    "raw_episode_metrics.csv",
+    "per_seed_condition_summary.csv",
+    "formal_evaluation_tape",
+    "held_out_tape",
+    "final_seed_quality_label"
+  ],
+  "missing_asset_semantics": "blocked_not_no_go",
+  "checkpoint_loading_authorized": false,
+  "policy_signal_analysis_authorized": false,
+  "student_training_authorized": false,
+  "automatic_continuation": false
+}

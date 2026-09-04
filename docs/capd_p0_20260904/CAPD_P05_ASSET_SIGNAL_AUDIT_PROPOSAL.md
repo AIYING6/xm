@@ -2,6 +2,11 @@
 
 **Status:** `PREPARED_NOT_AUTHORIZED`.
 
+**Archival rule:** completed cloud runs may not be present in the local repository. A
+missing local checkpoint is therefore `BLOCKED_ASSETS_NOT_LOCAL`, never a scientific
+NO-GO and never evidence that the run did not occur. Asset recovery and hash inventory
+must finish before any checkpoint is loaded or policy-space signal is analyzed.
+
 ## Question
 
 Before implementing or training a student, determine whether the completed
