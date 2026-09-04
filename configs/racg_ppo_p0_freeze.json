@@ -1,0 +1,54 @@
+{
+  "protocol": "RACG-PPO-P0-ZERO-TRAINING-DESIGN-AUDIT-V1",
+  "candidate": {
+    "name": "Reliability-Adaptive Cross-fitted Group-Gradient PPO",
+    "short_name": "RACG-PPO",
+    "groups": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "collection": "fixed synchronized topology exposure",
+    "group_mass": {
+      "N": 0.5,
+      "F0": 0.08333333333333333,
+      "TE": 0.08333333333333333,
+      "TL": 0.08333333333333333,
+      "DS": 0.08333333333333333,
+      "DL": 0.08333333333333333,
+      "CP": 0.08333333333333333
+    },
+    "cross_fit": "two fixed training-only stream splits per topology group",
+    "ordinary_anchor": true,
+    "correction_norm_cap_fraction": 0.5,
+    "reliability_range": [0.0, 1.0],
+    "hard_group_nonharm_certificate": false,
+    "rejection_to_zero_step": false,
+    "adaptive_sampler": false,
+    "evaluation_input": false
+  },
+  "p0_gates": {
+    "mathematical_nonfreeze_guarantee": true,
+    "cross_fit_bias_reduction_identity": true,
+    "ordinary_fallback_exact": true,
+    "training_only_interface": true,
+    "low_dimensional_subproblem": true,
+    "cost_requires_c1_measurement": true
+  },
+  "c1_scope_if_separately_authorized": {
+    "source_training_seeds": [2201, 2202, 2203, 2204, 2205],
+    "same_rollout_only": true,
+    "fresh_seed_training": false,
+    "formal_evaluation": false,
+    "hyperparameter_sweep": false,
+    "maximum_wall_time_ratio": 4.0,
+    "minimum_material_correction_states": 3,
+    "minimum_worst_group_harm_reduction_states": 4,
+    "minimum_overall_surrogate_retention_states": 4
+  },
+  "authorization": {
+    "zero_training_design_audit": true,
+    "c1_implementation": false,
+    "rollout": false,
+    "ppo_update": false,
+    "fresh_seed_training": false,
+    "cloud_execution": false,
+    "automatic_continuation": false
+  }
+}
