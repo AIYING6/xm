@@ -21,8 +21,8 @@
     "tatg_zero_residual_utr": "capacity-matched zero-residual CETM temporal-actor control under the same fixed UTR exposure"
   },
   "budget": {
-    "num_envs": 8,
-    "rollout_steps": 32,
+    "num_envs": 4,
+    "rollout_steps": 64,
     "updates": 3907,
     "environment_steps_per_trajectory": 1000192,
     "trajectories": 12,

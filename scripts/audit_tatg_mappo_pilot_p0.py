@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 FREEZE = ROOT / "configs" / "tatg_mappo_pilot_freeze.json"
 TAPE = ROOT / "configs" / "tatg_mappo_pilot_development_tape.json"
+UTR_SAMPLER = ROOT / "algorithms" / "ri_gmappo" / "tcr_topology_sampler.py"
 REQUIRED_ARMS = {
     "utr_snapshot_sg",
     "tatg_cetm_utr",
@@ -36,6 +37,7 @@ def collect_checks() -> tuple[dict[str, bool], dict[str, Any]]:
     confirmatory = freeze["reserved_confirmatory_seeds"]
     budget = freeze["budget"]
     forbidden = tape["forbidden_episode_namespaces"]
+    sampler_source = UTR_SAMPLER.read_text(encoding="utf-8")
     checks = {
         "three_fresh_matched_training_seeds_are_frozen": training == [75011, 75012, 75013],
         "future_replication_and_confirmation_seed_namespaces_are_disjoint": not (
@@ -44,6 +46,9 @@ def collect_checks() -> tuple[dict[str, bool], dict[str, Any]]:
         "four_required_arms_are_exactly_frozen": set(freeze["arms"]) == REQUIRED_ARMS,
         "all_arms_use_fixed_utr_and_no_adaptive_sampler": "fixed UTR" in freeze["training"]["exposure"]
         and "no DRTP, EGTR, adaptive sampler" in freeze["training"]["sampler"],
+        "rollout_layout_matches_existing_fixed_utr_sampler": budget["num_envs"] == 4
+        and budget["rollout_steps"] == 64
+        and "requires exactly four environments" in sampler_source,
         "candidate_and_controls_share_one_chronological_actor_update_contract": "full chronological [time, environment] replay"
         in freeze["training"]["ppo"]["actor"],
         "critic_and_environment_semantics_are_frozen": freeze["training"]["critic"].startswith("existing architecturally unchanged")

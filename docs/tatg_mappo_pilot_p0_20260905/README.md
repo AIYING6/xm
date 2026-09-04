@@ -7,7 +7,8 @@ development pilot. It does not implement or start training.
 - Four arms: snapshot UTR, CETM-UTR, capacity-matched snapshot-GRU-UTR and
   zero-residual-CETM-UTR.
 - Each trajectory has the fixed endpoint of 3,907 updates / 1,000,192
-  environment steps under the same fixed UTR exposure.
+  environment steps under the same fixed UTR exposure, using the established
+  four-environment, 64-step rollout required by the fixed-UTR sampler.
 - The fixed post-training development tape contains five conditions and 100
   common base episodes each; it has no online training input.
 
