@@ -1,0 +1,23 @@
+{
+  "protocol": "TATG-MAPPO-C2-VECTORIZED-RUNTIME-STATE-BANK-AUDIT-V1",
+  "verdict": "TATG_C2_RUNTIME_BANK_PASS",
+  "checks": {
+    "state_bank_owns_one_state_per_vectorized_environment": true,
+    "topology_change_in_slot_zero_does_not_modify_slot_one": true,
+    "completed_slots_reset_memory_topology_and_action": true,
+    "unfinished_slot_is_preserved_exactly": true,
+    "runtime_bank_payload_has_only_frozen_memory_state": true,
+    "runtime_bank_restore_continues_exactly": true,
+    "legacy_runner_has_explicit_done_and_runtime_checkpoint_lifecycle_sites": true,
+    "no_runner_environment_or_ppo_execution": true
+  },
+  "state_shape": {
+    "batch_size": 3,
+    "memory_dim": 16
+  },
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}
