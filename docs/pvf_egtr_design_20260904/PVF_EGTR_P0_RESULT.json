@@ -1,0 +1,121 @@
+{
+  "protocol": "PVF-EGTR-P0-ZERO-TRAINING-DESIGN-AUDIT-V1",
+  "verdict": "PVF_EGTR_P0_FEASIBLE_DESIGN_ONLY",
+  "checks": {
+    "all_sources_present": true,
+    "utr_and_egtr_share_training_entrypoint": true,
+    "egtr_is_sampler_mode_not_policy_architecture": true,
+    "sampler_has_no_evaluation_tape_dependency": true,
+    "paired_final_evaluation_supports_both_arms": true,
+    "old_population_selector_is_not_paired_fallback": true,
+    "namespace_token_730000_unused": true,
+    "namespace_token_730099_unused": true,
+    "namespace_token_731000_unused": true,
+    "namespace_token_731099_unused": true,
+    "namespace_token_740000_unused": true,
+    "namespace_token_742099_unused": true,
+    "namespace_token_760000_unused": true,
+    "namespace_token_762099_unused": true,
+    "clear_repeated_benefit_promotes_egtr": true,
+    "negative_primary_effect_falls_back": true,
+    "cross_tape_disagreement_falls_back": true,
+    "safety_violation_falls_back": true,
+    "nominal_harm_falls_back": true,
+    "worst_group_harm_falls_back": true,
+    "constraint_violation_falls_back": true,
+    "egtr_repeatedly_improves_original": true,
+    "egtr_is_not_unconditionally_reliable_vs_utr": true,
+    "fallback_has_finite_training_and_inference_cost": true,
+    "formal_and_heldout_tapes_excluded_by_contract": true,
+    "no_training_or_evaluation_executed": true
+  },
+  "empirical_premise": {
+    "provenance": "user-supplied repaired EGTR 10M double-cohort final gate transcript",
+    "original_gain_vs_utr": {
+      "A": [
+        -38.9115800081434,
+        -4.366501752085355,
+        -166.16626171319433,
+        -39.89134340796153,
+        -9.103927624525198
+      ],
+      "B": [
+        -128.5594116207352,
+        -21.85187134714954,
+        -30.32116370040302,
+        25.98754788782137,
+        -62.75449409745789
+      ]
+    },
+    "egtr_gain_vs_utr": {
+      "A": [
+        -14.758442283354242,
+        26.315384088111273,
+        -65.79627813877536,
+        -14.816228295885168,
+        67.12607339526215
+      ],
+      "B": [
+        -34.416936250294896,
+        29.94082760592923,
+        7.161212272080604,
+        137.58864267899034,
+        27.577700994907246
+      ]
+    },
+    "egtr_minus_original": [
+      24.15313772478916,
+      30.681885840196628,
+      100.36998357441897,
+      25.07511511207636,
+      76.23000101978735,
+      94.14247537044031,
+      51.79269895307877,
+      37.482375972483624,
+      111.60109479116898,
+      90.33219509236514
+    ],
+    "egtr_improves_original_count": 10,
+    "egtr_positive_vs_utr_count": 6,
+    "egtr_cohort_means_vs_utr": {
+      "A": -0.38589824692826935,
+      "B": 33.570289460322506
+    },
+    "oracle_utr_fallback_ceiling": {
+      "mean_gain_vs_utr": 29.570984103528087,
+      "median_gain_vs_utr": 16.73829818009594,
+      "minimum_gain_vs_utr": 0.0,
+      "positive_seed_count": 6,
+      "note": "non-deployable upper bound; it uses final outcomes and is not algorithm evidence"
+    }
+  },
+  "selector": {
+    "decision": "DEPLOY_EGTR iff both independent selector tapes pass; otherwise DEPLOY_UTR",
+    "epsilon_J": 7.874919837916801,
+    "mean_safety_margin": 0.05,
+    "condition_safety_margin": 0.1,
+    "paired_bootstrap_lcb": "one-sided 95%, fixed 10000 resamples and RNG seed 20260904",
+    "development_selector_tapes": [
+      "730000-730099",
+      "731000-731099"
+    ],
+    "formal_or_heldout_tape_access": "forbidden"
+  },
+  "cost": {
+    "training": "2 matched trajectories per pipeline seed (UTR + EGTR)",
+    "selector": "2800 episodes per pipeline seed (2 arms x 2 tapes x 7 conditions x 100)",
+    "deployment": "1 selected checkpoint; no ensemble and no online gate"
+  },
+  "source_sha256": {
+    "core": "73ef2d9b54060061a6db1b7770cc541cfc7cc9d48321732d9c7d5e25cf1e7187",
+    "sampler": "3127bf78b5d89b349abee2da925afb0695a2ab77f8cd8aaee6c30d2ab14e9dc1",
+    "training": "be2c7694cf78fd273bade4def640fbbc357517ce04ec84630380c3c41809b856",
+    "evaluation": "561d483c1b44c489957c1d37ee10037fde99e0d46aa2828d7bc23b92fa8fbb1d",
+    "old_selector": "272de2cf1f36c740ea47b991d61b57fc1c65172fcd3f3b558abde2e31caed79b",
+    "old_selector_freeze": "2f643bbd77fed771d563340203ee6f965ab2e33b7d9db2986a2720925c889162"
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "new_algorithm_implementation_started": false,
+  "automatic_continuation": false
+}
