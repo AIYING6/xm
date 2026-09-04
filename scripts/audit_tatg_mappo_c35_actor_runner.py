@@ -137,8 +137,10 @@ def main() -> None:
     checks, details = collect_checks()
     result = {"protocol": "TATG-MAPPO-C3.5-ACTOR-RUNNER-INTEGRATION-AUDIT-V1", "verdict": "TATG_C35_ACTOR_RUNNER_INTEGRATION_PASS" if all(checks.values()) else "TATG_C35_ACTOR_RUNNER_INTEGRATION_NO_GO", "checks": checks, "audit_details": details, "training_started": False, "evaluation_started": False, "automatic_continuation": False}
     output.mkdir(parents=True)
-    (output / "TATG_C35_RESULT.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    (output / "TATG_C35_REPORT.md").write_text(render_report(result), encoding="utf-8")
+    (output / "TATG_C35_RESULT.json").write_text(
+        json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
+    (output / "TATG_C35_REPORT.md").write_text(render_report(result), encoding="utf-8", newline="\n")
     print(json.dumps(result, indent=2))
 
 
