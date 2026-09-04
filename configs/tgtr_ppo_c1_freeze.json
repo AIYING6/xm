@@ -1,0 +1,42 @@
+{
+  "protocol": "TGTR-PPO-C1-SAME-ROLLOUT-MECHANISM-AUDIT-V1",
+  "source": {
+    "arm": "utr_sg",
+    "training_seeds": [2201, 2202, 2203, 2204, 2205],
+    "source_update": 3907,
+    "rollout_seed_offset": 910000,
+    "num_envs": 24,
+    "rollout_steps": 64,
+    "graphs_per_update": 1536,
+    "ppo_epochs": 4
+  },
+  "candidate": {
+    "groups": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "design_streams_per_nominal": 6,
+    "certificate_streams_per_nominal": 6,
+    "design_streams_per_failure_group": 1,
+    "certificate_streams_per_failure_group": 1,
+    "backtrack_alphas": [1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625],
+    "kl_cap_formula": "-clip_coef-log(1-clip_coef)",
+    "critic": "ordinary PPO",
+    "actor_adam_on_nonzero_projection": "retain ordinary proposed Adam slots",
+    "actor_adam_on_zero_step": "restore exact pre-epoch slots"
+  },
+  "gate": {
+    "minimum_ordinary_harm_states": 2,
+    "minimum_states_with_nonzero_actor_step": 4,
+    "maximum_zero_step_fraction": 0.25,
+    "minimum_overall_surrogate_noninferior_states": 4,
+    "maximum_wall_time_ratio": 4.0,
+    "maximum_peak_gpu_memory_bytes": 10737418240
+  },
+  "authorization": {
+    "implementation": true,
+    "same_rollout_training_audit": true,
+    "fresh_seed_training": false,
+    "formal_evaluation": false,
+    "heldout_evaluation": false,
+    "hyperparameter_sweep": false,
+    "automatic_development": false
+  }
+}
