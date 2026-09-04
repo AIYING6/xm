@@ -1,0 +1,66 @@
+{
+  "protocol": "CAPD-P0-ZERO-TRAINING-DESIGN-AUDIT-V1",
+  "name": "Consensus-Anchored Policy Distillation",
+  "research_target": "one deployable policy that combines EGTR upside with UTR-centered cross-seed reliability",
+  "population": {
+    "utr_anchor_count": 1,
+    "egtr_explorer_count": 3,
+    "central_student_count": 1,
+    "selection_rule": "all_predeclared_members_no_performance_selection",
+    "future_replication_unit": "meta_seed_expanding_to_predeclared_anchor_explorer_and_student_rng_tuple"
+  },
+  "mathematical_skeleton": {
+    "egtr_centroid": "normalized geometric mean of three explorer categorical policies",
+    "disagreement": "mean Jensen-Shannon divergence from the EGTR centroid",
+    "continuous_confidence": "exp(-disagreement/tau), with tau positive and frozen before any student training",
+    "target": "normalized geometric interpolation from UTR anchor to EGTR centroid using continuous confidence",
+    "student_actor_objective": "ordinary fixed-stratified PPO plus bounded KL(teacher_target || student_policy)",
+    "critic": "ordinary PPO critic only",
+    "no_hard_gate": true,
+    "no_teacher_ranking": true,
+    "no_evaluation_conditioning": true,
+    "numeric_hyperparameters_frozen": false
+  },
+  "information_boundary": {
+    "student_state_source": "future separately frozen fixed-stratified training-only rollouts",
+    "teacher_targets": "stop_gradient_probabilities_on_training_only_states",
+    "prohibited": [
+      "formal_evaluation_tape",
+      "independent_evaluation_tape",
+      "held_out_tape",
+      "evaluation_return",
+      "final_seed_quality_label",
+      "future_trajectory_information",
+      "checkpoint_selection_by_outcome"
+    ]
+  },
+  "deployment": {
+    "actor_count": 1,
+    "selector": false,
+    "fallback": false,
+    "ensemble_inference": false,
+    "teacher_required": false
+  },
+  "cost_model": {
+    "utr_anchors": 1,
+    "egtr_explorers": 3,
+    "central_students": 1,
+    "teacher_forwards_per_student_state": 4,
+    "deployment_actor_forwards_per_decision": 1,
+    "projected_pipeline_multiplier_upper_bound": 5.0,
+    "compute_match_claimed": false
+  },
+  "p0_authorization": {
+    "source_reading": true,
+    "synthetic_probability_algebra": true,
+    "checkpoint_loading": false,
+    "environment_construction": false,
+    "rollout": false,
+    "ppo_update": false,
+    "training": false,
+    "evaluation": false,
+    "cloud_execution": false,
+    "paper_modification": false,
+    "automatic_continuation": false
+  }
+}
