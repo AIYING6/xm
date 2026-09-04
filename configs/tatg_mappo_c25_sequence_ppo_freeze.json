@@ -1,0 +1,35 @@
+{
+  "protocol": "TATG-MAPPO-C2.5-SEQUENCE-PPO-INTERFACE-FREEZE-V1",
+  "status": "ZERO_TRAINING_RUNNER_DESIGN_ONLY",
+  "scope": "TATG actor PPO interface only; no environment, sampler, reward, critic or evaluation change",
+  "collection": {
+    "exposure": "frozen UTR only",
+    "rollout_layout": "[time, vectorized_environment, agent, ...]",
+    "state_before_rollout": "store the exact TATGRuntimeStateBank payload before the first rollout action",
+    "state_after_action": "record each sampled own action in the state bank",
+    "episode_boundary": "after a completed environment resets, reset only that state-bank slot from the newly reset legal graph before the following actor call"
+  },
+  "actor_update": {
+    "sequence_rule": "recompute actor logits in chronological order for every complete vectorized-environment sequence; no random flattening of time-environment graph rows",
+    "epoch_rule": "every PPO epoch replays the same complete rollout sequences from the stored state-before-rollout payload",
+    "minibatch_rule": "initial TATG qualification uses the frozen full rollout as one sequence minibatch; temporal chunks, burn-in and truncated BPTT are prohibited until separately audited",
+    "actions": "use the stored rollout actions only to advance a_previous after each policy log-probability computation",
+    "critic": "retain the existing snapshot centralized critic and its ordinary PPO value loss",
+    "objective": "retain ordinary clipped PPO actor objective, entropy term, optimizer, epochs, reward and environment"
+  },
+  "controls": {
+    "snapshot": "unchanged snapshot SG-MAPPO actor under the existing flattened PPO update",
+    "generic_gnn_gru": "same sequence PPO runner, same full-sequence minibatch and same temporal-head capacity, but current topology input at every step",
+    "cetm_ablation": "same sequence PPO runner with transition residual forced to zero"
+  },
+  "forbidden": [
+    "random flattened time-environment minibatches for a temporal actor",
+    "actor hidden state reconstructed from evaluation or return",
+    "adaptive sampling, group weighting, selector, fallback or teacher",
+    "actor/critic parameter update during C2.5",
+    "environment rollout, evaluation or cloud training during C2.5"
+  ],
+  "pass": "TATG_C25_SEQUENCE_PPO_RUNNER_REQUIRED",
+  "pass_authorizes_only": "a separately frozen sequence-runner implementation and same-rollout PPO correctness audit",
+  "automatic_continuation": false
+}
