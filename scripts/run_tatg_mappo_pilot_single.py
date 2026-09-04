@@ -162,13 +162,34 @@ def _next_values(system: TATGActorCriticSystem, batch: dict[str, Any], device: t
     return values.cpu().numpy()
 
 
+def _temporal_gae(batch: dict[str, Any], next_values: np.ndarray, cfg: RIGMAPPOConfig) -> tuple[np.ndarray, np.ndarray]:
+    """Compute per-agent GAE while retaining episode-level reset semantics.
+
+    The 3D environment reports episode completion once per parallel environment
+    (``[time, environment]``), whereas the centralized critic and the shared
+    team reward are represented per agent (``[time, environment, agent]``).
+    GAE therefore needs the completion indicator broadcast across the agent
+    dimension; the actor replay itself must continue to receive its original
+    episode-level done tensor.
+    """
+
+    rewards = np.asarray(batch["rewards"], dtype=np.float32)
+    values = np.asarray(batch["values"], dtype=np.float32)
+    dones = np.asarray(batch["dones"], dtype=np.float32)
+    if rewards.shape != values.shape:
+        raise ValueError(f"temporal reward/value shape mismatch: {rewards.shape} versus {values.shape}")
+    if dones.shape != rewards.shape[:-1]:
+        raise ValueError(f"temporal done shape must be [time, environment], got {dones.shape}")
+    if np.asarray(next_values).shape != rewards.shape[1:]:
+        raise ValueError(f"temporal next-value shape mismatch: {np.asarray(next_values).shape} versus {rewards.shape[1:]}")
+    return compute_gae(rewards, dones[..., None], values, next_values, cfg.gamma, cfg.gae_lambda)
+
+
 def _update_temporal(system: TATGActorCriticSystem, runner: TATGSequenceActorRunner, optimizer: torch.optim.Optimizer, batch: dict[str, Any], cfg: RIGMAPPOConfig, device: torch.device) -> dict[str, float]:
     """Run ordinary clipped PPO with actor replay kept in [time, environment]."""
 
     next_values = _next_values(system, batch, device)
-    advantages, returns = compute_gae(
-        batch["rewards"], batch["dones"].astype(np.float32), batch["values"], next_values, cfg.gamma, cfg.gae_lambda
-    )
+    advantages, returns = _temporal_gae(batch, next_values, cfg)
     tensors = {
         key: torch.as_tensor(batch[key], dtype=(torch.long if key in {"role", "actions"} else torch.float32), device=device)
         for key in ("obs", "node_feat", "edge_feat", "role", "adj", "relation_adj", "actions", "logp", "share_obs")
@@ -233,10 +254,10 @@ def _save_temporal_runtime(path: Path, system: TATGActorCriticSystem, optimizer:
     }, path)
 
 
-def train_temporal_arm(arm: str, seed: int, output_root: str | Path) -> Path:
+def train_temporal_arm(arm: str, seed: int, output_root: str | Path, *, updates: int = UPDATES) -> Path:
     if arm not in TEMPORAL_ARMS:
         raise ValueError("temporal training requires a temporal pilot arm")
-    cfg = pilot_config(arm, seed, output_root)
+    cfg = pilot_config(arm, seed, output_root, updates=updates)
     output = Path(cfg.out_dir)
     if output.exists():
         raise FileExistsError(f"refusing to overwrite pilot trajectory: {output}")

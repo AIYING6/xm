@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from scripts.audit_tatg_mappo_pilot_p2_runner import collect_checks
-from scripts.run_tatg_mappo_pilot_single import ALL_ARMS, BASELINE_ARM, FROZEN_SEEDS, NUM_ENVS, ROLLOUT_STEPS, UPDATES, _build_snapshot, pilot_config
+from scripts.run_tatg_mappo_pilot_single import ALL_ARMS, BASELINE_ARM, FROZEN_SEEDS, NUM_ENVS, ROLLOUT_STEPS, UPDATES, _build_snapshot, _temporal_gae, pilot_config, train_temporal_arm
 from scripts.build_tatg_mappo_pilot_cloud_bundle import sources
 from scripts.audit_tatg_mappo_pilot_p3_cloud_package import collect_checks as collect_package_checks
 
@@ -60,3 +60,25 @@ def test_tatg_snapshot_builder_uses_the_common_3d_num_agents_interface() -> None
         cfg,
     )
     assert snapshot.num_agents == 3
+
+
+def test_tatg_temporal_gae_broadcasts_episode_completion_over_agents() -> None:
+    cfg = pilot_config("tatg_cetm_utr", 75011, "unused-output-root")
+    batch = {
+        "rewards": np.ones((2, 4, 3), dtype=np.float32),
+        "values": np.zeros((2, 4, 3), dtype=np.float32),
+        "dones": np.array([[False, True, False, False], [False, False, False, True]]),
+    }
+    advantages, returns = _temporal_gae(batch, np.zeros((4, 3), dtype=np.float32), cfg)
+    assert advantages.shape == (2, 4, 3)
+    assert returns.shape == (2, 4, 3)
+    assert np.isfinite(advantages).all()
+    assert np.isfinite(returns).all()
+
+
+def test_tatg_temporal_arm_completes_one_cpu_update(tmp_path) -> None:
+    output = train_temporal_arm("tatg_cetm_utr", 75011, tmp_path, updates=1)
+    assert output.exists()
+    assert (output / "actor_critic_latest.pt").is_file()
+    assert '"status": "completed"' in (output / "run_manifest.json").read_text(encoding="utf-8")
+    assert (output / "train_log.csv").read_text(encoding="utf-8").count("\n") == 2
