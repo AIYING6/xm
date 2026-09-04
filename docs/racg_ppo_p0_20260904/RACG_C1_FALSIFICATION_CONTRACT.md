@@ -1,4 +1,4 @@
-# RACG-PPO C1 falsification contract (implementation not yet authorized)
+# RACG-PPO C1 falsification contract (executed)
 
 ## Scope
 
@@ -23,3 +23,7 @@ The certificate-group quantities in gates 3--4 are outcome measures for the pair
 Failure of any core gate closes this candidate. It does not authorize threshold relaxation, a second C1 formula, fresh-seed training or RACG-v2.
 
 Passing C1 would authorize only a separately preregistered three-seed development experiment. It would not establish performance or cross-seed reliability.
+
+## Recorded outcome
+
+C1 was separately authorized and executed on 2026-09-04. The frozen outcome is `RACG_C1_NO_GO`; see `docs/racg_ppo_c1_20260904/RACG_C1_FINAL_RESULT.md`. No fresh-seed experiment is authorized.
