@@ -1,0 +1,9 @@
+candidate,uses_repeated_empirical_signal,requires_unseen_early_precursor,protects_against_unconditional_harm,training_cost,inference_cost,main_failure,decision
+EGTR parameter retuning,partial,no,no,1x,1x,post-hoc tuning after double-cohort failure,reject
+Online telemetry gate,no,yes,conditional,1x,1x,no repeated training signal across cohorts,reject
+Graph-gated residual specialist,weak,yes,partial,1x,1x,all DRTP groups share relay failure and gate cannot identify bad training seed,defer
+Policy ensemble,no,no,partial,3x,3x,completed ensemble experiment reversed across cohorts,reject
+Cross-seed risk optimization,conceptual,no,possible,very high,1x,math-interface-cost P0 failed,reject
+Frozen UTR only,yes,no,yes,1x,1x,no adaptive upside,baseline
+PVF-EGTR,yes,no,yes through deterministic fallback,2x,1x,selector false-promotion risk must be prospectively measured,primary candidate
+
