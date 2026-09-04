@@ -135,7 +135,10 @@ def _build_snapshot(graph_obs: dict[str, np.ndarray], obs: np.ndarray, share_obs
         edge_feat_dim=int(graph_obs["edge_feat"].shape[-1]),
         share_obs_dim=int(share_obs.shape[-1]),
         action_dim=int(env.action_dim),
-        num_agents=int(env.num_blue),
+        # The 3D environment exposes its blue-agent count through the common
+        # ``num_agents`` interface.  Never reach into a 2D-only ``num_blue``
+        # convenience attribute here.
+        num_agents=int(env.num_agents),
         num_roles=max(4, int(np.max(graph_obs["role"])) + 1),
         hidden_dim=cfg.hidden_dim,
         role_dim=cfg.role_dim,
