@@ -1,0 +1,33 @@
+{
+  "protocol": "TATG-MAPPO-P1-TOPOLOGY-TRANSITION-INFORMATION-GAP-V1",
+  "verdict": "TATG_P1_INFORMATION_GAP_PRESENT",
+  "cohorts": {
+    "A": {
+      "rows": 320,
+      "loss_events": 10,
+      "recovery_events": 10,
+      "mixed_events": 0,
+      "snapshot_mixed_code_count": 1,
+      "snapshot_ambiguous_rows": 130,
+      "history_mixed_code_count": 0,
+      "pass": true
+    },
+    "B": {
+      "rows": 320,
+      "loss_events": 10,
+      "recovery_events": 10,
+      "mixed_events": 0,
+      "snapshot_mixed_code_count": 2,
+      "snapshot_ambiguous_rows": 240,
+      "history_mixed_code_count": 0,
+      "pass": true
+    }
+  },
+  "state_cohorts_separate": true,
+  "training_started": false,
+  "evaluation_started": false,
+  "environment_steps": 640,
+  "ppo_updates": 0,
+  "checkpoint_loaded": false,
+  "automatic_continuation": false
+}

@@ -1,0 +1,64 @@
+{
+  "protocol": "TATG-MAPPO-P1-TOPOLOGY-TRANSITION-INFORMATION-GAP-V1",
+  "status": "AUTHORIZED_ZERO_TRAINING_DIAGNOSTIC_ONLY",
+  "question": "Can one current legal topology snapshot distinguish a stable topology from a just-lost or just-recovered topology, and does one previous legal topology snapshot resolve any observed ambiguity?",
+  "scope": {
+    "allowed": [
+      "fresh deterministic scripted environment trajectories",
+      "current and previous legal graph topology extraction",
+      "fixed deterministic transition-label aggregation"
+    ],
+    "forbidden": [
+      "actor, critic, GRU or TATG implementation",
+      "PPO rollout or update",
+      "checkpoint load, selection or comparison",
+      "learned probe or classifier fitting",
+      "episode-return, evaluation-tape or outcome-label input",
+      "failure identity, onset or duration as an actor input",
+      "reward, transition, sampler or environment modification"
+    ]
+  },
+  "scripted_environment": {
+    "target_policy": "straight",
+    "action": "fixed neutral discrete action index 13 for every blue agent",
+    "strict_target_sensing": true,
+    "agent_target_info_bottleneck": true,
+    "relay_dependent_task": true,
+    "communication_dropout_prob": 0.0,
+    "radar_dropout_prob": 0.0,
+    "failure_role": "existing relay index 1",
+    "failure_onset_step": 12,
+    "failure_duration_steps": 8,
+    "capture_steps": 32
+  },
+  "cohorts": {
+    "A": [83011, 83012, 83013, 83014, 83015, 83016, 83017, 83018, 83019, 83020],
+    "B": [83021, 83022, 83023, 83024, 83025, 83026, 83027, 83028, 83029, 83030]
+  },
+  "actor_legal_snapshot": {
+    "include": [
+      "current communication relation adjacency",
+      "current task-support relation adjacency",
+      "current blue-blue edge message-age feature"
+    ],
+    "exclude": [
+      "failure schedule and failure identity",
+      "global share observation and centralized critic state",
+      "return, reward and all evaluation artefacts"
+    ]
+  },
+  "target": "transition class derived only from the difference between consecutive legal communication relation adjacencies: stable, loss, recovery or mixed",
+  "history": "one immediately preceding legal topology snapshot; no hidden environment variable is retained as history",
+  "decision_rule": {
+    "per_cohort_required_loss_events": 10,
+    "per_cohort_required_recovery_events": 10,
+    "per_cohort_required_ambiguous_snapshot_rows": 10,
+    "per_cohort_required_history_mixed_code_count": 0,
+    "pass": "each cohort meets every threshold; a PASS establishes only a topology-transition information gap",
+    "fail": "any threshold failure yields TATG_P1_NO_INFORMATION_GAP and closes TATG before architecture implementation"
+  },
+  "pass": "TATG_P1_INFORMATION_GAP_PRESENT",
+  "fail": "TATG_P1_NO_INFORMATION_GAP",
+  "pass_authorizes_only": "a separately authorized exact-formula, fairness and serialization audit; not model implementation or PPO training",
+  "automatic_continuation": false
+}
