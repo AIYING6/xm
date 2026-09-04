@@ -1,0 +1,22 @@
+{
+  "protocol": "TGTR-PPO-C1-SAME-ROLLOUT-MECHANISM-AUDIT-V1",
+  "verdict": "TGTR_C1_NO_GO",
+  "checks": {
+    "five_exact_complete_batch_pairs": true,
+    "ordinary_harm_actuation_evidence": true,
+    "tgtr_group_certificate_legality": true,
+    "nonzero_actor_step_rate": false,
+    "overall_surrogate_retention": false,
+    "cost_and_memory": false,
+    "formal_evaluation_absent": true
+  },
+  "ordinary_harm_states": 4,
+  "states_with_nonzero_actor_step": 0,
+  "zero_step_fraction": 1.0,
+  "overall_surrogate_noninferior_states": 1,
+  "formal_evaluation_used": false,
+  "algorithm_performance_claim": false,
+  "automatic_development_authorized": false,
+  "execution_environment": "local CPU mechanism audit",
+  "cloud_repetition_authorized": false
+}

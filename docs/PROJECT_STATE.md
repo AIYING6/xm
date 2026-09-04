@@ -32,5 +32,6 @@ Failed alternative algorithm lines, old manuscript routes, raw development runs,
 - EGTR's fresh 10M double-cohort programme ended `EGTR_DOUBLE_COHORT_REPLICATION_NO_GO`: it improved Original DRTP broadly but did not establish repeatable superiority/reliability versus UTR in both cohorts.
 - PVF is an engineering fallback only, not the primary algorithm line.
 - The current single-model research candidate is **TGTR-PPO** (Topology-Group Trust-Region PPO): fixed synchronized topology exposure, ordinary-PPO anchor, minimal active-group actor correction, held-stream training certificate, and per-group full-policy KL.
-- Zero-training status: `TGTR_P0_FEASIBLE_FOR_C1`. No TGTR implementation, rollout, PPO update, evaluation, or fresh-seed training has been authorized by P0.
-- The only proposed next action is a separately authorized TGTR C1 implementation and exact same-rollout mechanism/cost audit. See `docs/tgtr_ppo_p0_20260904/`.
+- P0 status: `TGTR_P0_FEASIBLE_FOR_C1`.
+- The separately authorized C1 implementation and five-state exact same-rollout audit completed with `TGTR_C1_NO_GO`. Ordinary PPO exposed group harm in 4/5 source states, but the frozen design/certificate rule rejected every TGTR actor epoch (20/20 zero steps), and overall surrogate retention passed in only 1/5 states.
+- TGTR fresh-seed development and cloud repetition are not authorized. The frozen candidate is closed; see `docs/tgtr_ppo_c1_20260904/TGTR_C1_FINAL_RESULT.md`.
