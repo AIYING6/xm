@@ -1,0 +1,54 @@
+{
+  "protocol": "TATG-MAPPO-P1.5-EXACT-FORMULA-FAIRNESS-SERIALIZATION-AUDIT-V1",
+  "status": "ZERO_TRAINING_FORMULA_AUDIT_ONLY",
+  "candidate": "TATG-MAPPO with the Causal Event-Triggered Topology Memory (CETM) module",
+  "base_actor": "the existing snapshot SG-MAPPO role graph actor produces h_i,t from its unchanged current graph interface",
+  "local_topology_state": {
+    "x_i,t": "concat(R_comm[t][i,0:n_blue], R_support[t][i,0:n_blue], edge_age[t][i,0:n_blue])",
+    "legal_scope": "receiver row i only; blue-blue relations and edge-age features only",
+    "forbidden": [
+      "failure identity",
+      "failure onset/duration schedule",
+      "group label",
+      "centralized share observation",
+      "critic input",
+      "reward, return or evaluation tape"
+    ]
+  },
+  "memory_formula": {
+    "residual": "delta_i,t = x_i,t - x_i,t-1",
+    "event_gate": "eta_i,t = 1 - exp(-mean(abs(delta_i,t)))",
+    "proposal": "z_i,t = GRUCell(concat(delta_i,t, one_hot(a_i,t-1)), m_i,t-1)",
+    "update": "m_i,t = (1 - eta_i,t) * m_i,t-1 + eta_i,t * z_i,t",
+    "logits": "ell_i,t = Head(concat(h_i,t, m_i,t))",
+    "initialization": "x_i,0 = x_i,reset; m_i,0 = 0; previous action is the fixed neutral-action one-hot at reset",
+    "invariance": "if delta_i,t = 0 then eta_i,t = 0 and m_i,t = m_i,t-1 exactly"
+  },
+  "training_invariants": {
+    "collection": "frozen UTR exposure only",
+    "ppo": "unchanged objective, epochs, optimizer, reward and environment",
+    "critic": "unchanged snapshot centralized critic",
+    "no_selector_fallback_teacher_ensemble": true
+  },
+  "mandatory_controls": {
+    "snapshot": "unchanged snapshot SG-MAPPO actor",
+    "generic_gnn_gru": "same current topology vector x_i,t and previous own action, same GRUCell input dimension and hidden dimension, but uses m_i,t = GRUCell(concat(x_i,t, one_hot(a_i,t-1)), m_i,t-1) every step",
+    "capacity_rule": "CETM and generic GNN+GRU use the same GRUCell dimensions and the same final Head input dimension; their added actor parameter counts must be exactly equal",
+    "ablation": "CETM with delta forced to zero; this tests whether any effect is transition information rather than parameter count"
+  },
+  "serialization_contract": {
+    "per_environment_actor_state": ["m_i,t", "x_i,t-1", "a_i,t-1"],
+    "reset_rule": "reset all three tensors at every environment reset",
+    "checkpoint_rule": "save and restore all three tensors with actor, optimizer and RNG state; exact continuation is required before any training authorization"
+  },
+  "forbidden": [
+    "implementation or PPO training during P1.5",
+    "formula revision after C1 starts",
+    "adaptive sampler or group weighting",
+    "checkpoint selection by evaluation return"
+  ],
+  "pass": "TATG_P15_FORMULA_FROZEN_FOR_C1_IMPLEMENTATION_AUDIT",
+  "fail": "TATG_P15_FORMULA_AUDIT_NO_GO",
+  "pass_authorizes_only": "a separate implementation and exact-serialization audit; not PPO training",
+  "automatic_continuation": false
+}
