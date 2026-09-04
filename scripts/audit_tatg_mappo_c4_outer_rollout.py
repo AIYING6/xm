@@ -53,7 +53,9 @@ def _new_envs() -> tuple[list[UAVIntercept3DEnv], np.ndarray, np.ndarray, dict[s
     return envs, np.stack(obs), np.stack(share_obs), stack_graphs(list(graph))
 
 
-def _new_system(graph: dict[str, np.ndarray], env: UAVIntercept3DEnv) -> TATGActorCriticSystem:
+def _new_system(
+    graph: dict[str, np.ndarray], env: UAVIntercept3DEnv, *, memory_kind: str = "cetm"
+) -> TATGActorCriticSystem:
     torch.manual_seed(81_101)
     snapshot = RIGMAPPOAgent(
         obs_dim=env.obs_dim,
@@ -69,7 +71,7 @@ def _new_system(graph: dict[str, np.ndarray], env: UAVIntercept3DEnv) -> TATGAct
         use_intent_context=False,
         num_roles=max(4, int(np.max(graph["role"])) + 1),
     ).eval()
-    return TATGActorCriticSystem(snapshot, memory_kind="cetm").eval()
+    return TATGActorCriticSystem(snapshot, memory_kind=memory_kind).eval()
 
 
 def _new_runner(system: TATGActorCriticSystem, graph: dict[str, np.ndarray]) -> TATGSequenceActorRunner:
