@@ -1,0 +1,25 @@
+{
+  "protocol": "TATG-MAPPO-FRESH-SEED-PILOT-RUNNER-AUDIT-V1",
+  "verdict": "TATG_PILOT_P2_RUNNER_IMPLEMENTED",
+  "checks": {
+    "four_frozen_arms_present": true,
+    "fixed_utr_layout_is_exact": true,
+    "baseline_reuses_existing_snapshot_runner": true,
+    "temporal_arms_use_fixed_sampler_at_initial_and_completed_resets": true,
+    "temporal_actor_replay_is_chronological": true,
+    "critic_is_updated_without_changing_its_architecture": true,
+    "runtime_payload_contains_sampler_episode_and_rng_state": true,
+    "runner_has_no_evaluation_tape_import_or_evaluate_command": true,
+    "training_requires_explicit_execute": true,
+    "freeze_keeps_execution_unstarted": true
+  },
+  "details": {
+    "runner_sha256": "8aa74c4a3f484f02c970b50975b8789f9aedf85d288c7c7577256336bdaa024c",
+    "environment_steps_executed": 0,
+    "ppo_updates_executed": 0,
+    "evaluation_episodes_executed": 0
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}

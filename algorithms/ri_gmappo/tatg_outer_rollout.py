@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 import numpy as np
 import torch
@@ -80,6 +80,7 @@ def collect_tatg_utr_rollout(
     rollout_steps: int,
     device: torch.device,
     action_generator: torch.Generator | None,
+    on_before_reset: Callable[[int, Any], None] | None = None,
 ) -> dict[str, Any]:
     """Collect one fixed-UTR rollout without PPO updates or evaluation.
 
@@ -112,6 +113,8 @@ def collect_tatg_utr_rollout(
             next_o, next_s, next_g, reward, done, _ = env.step(actor_step.actions[env_index].cpu().numpy())
             is_completed = bool(np.all(done))
             if is_completed:
+                if on_before_reset is not None:
+                    on_before_reset(env_index, env)
                 next_o, next_s, next_g = env.reset()
             next_obs.append(next_o)
             next_share.append(next_s)
