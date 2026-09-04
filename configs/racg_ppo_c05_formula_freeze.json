@@ -1,0 +1,58 @@
+{
+  "protocol": "RACG-PPO-C0.5-EXACT-FORMULA-FREEZE-V1",
+  "groups": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+  "group_mass": [0.5, 0.08333333333333333, 0.08333333333333333, 0.08333333333333333, 0.08333333333333333, 0.08333333333333333, 0.08333333333333333],
+  "cross_fit": {
+    "split_count": 2,
+    "split_assignment": "fixed before rollout and independent of outcomes",
+    "group_agreement": "positive_part_cosine",
+    "pooled_agreement": "positive_part_cosine",
+    "reliability": "pooled_agreement_times_mass_weighted_group_agreement",
+    "reliability_threshold": null
+  },
+  "proposal": {
+    "family": "average_anchored_cagrad",
+    "unreliable_group_shrinkage": "agreement_times_group_mean_plus_one_minus_agreement_times_pooled_mean",
+    "maximum_strength": 0.5,
+    "strength": "maximum_strength_times_reliability",
+    "coefficient_dimension": 7,
+    "coefficient_constraint": "probability_simplex",
+    "solver": "scipy_slsqp",
+    "solver_initialization": "fixed_group_mass",
+    "solver_ftol": 1e-12,
+    "solver_max_iterations": 256,
+    "solver_failure_action": "exact_ordinary_fallback"
+  },
+  "ordinary_anchor": {
+    "surrogate": "mass_weighted_mean_of_cross_fit_group_gradients",
+    "entropy_included_once": true,
+    "critic_unchanged": true
+  },
+  "correction": {
+    "norm_cap_fraction_of_complete_ordinary_direction": 0.5,
+    "minimum_pre_adam_direction_fraction": 0.5,
+    "hard_group_certificate": false,
+    "zero_step_rejection": false
+  },
+  "numerics": {
+    "relative_epsilon": 1e-12,
+    "nonfinite_action": "exact_ordinary_fallback"
+  },
+  "information_boundary": {
+    "training_only": true,
+    "evaluation_input": false,
+    "future_trajectory_input": false,
+    "final_seed_label_input": false,
+    "adaptive_collection": false
+  },
+  "authorization": {
+    "formula_freeze": true,
+    "c1_implementation": false,
+    "environment_steps": false,
+    "ppo_updates": false,
+    "evaluation": false,
+    "fresh_seed_training": false,
+    "cloud_execution": false,
+    "automatic_continuation": false
+  }
+}

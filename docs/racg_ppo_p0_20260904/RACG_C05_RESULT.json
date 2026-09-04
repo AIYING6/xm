@@ -1,0 +1,35 @@
+{
+  "protocol": "RACG-PPO-C0.5-EXACT-FORMULA-FREEZE-V1",
+  "verdict": "RACG_C05_FORMULA_FROZEN_FOR_C1_IMPLEMENTATION",
+  "checks": {
+    "seven_groups_and_frozen_mass": true,
+    "cross_fit_swap_invariant": true,
+    "positive_scale_equivariant": true,
+    "failure_group_permutation_invariant": true,
+    "zero_reliability_exact_ordinary_fallback": true,
+    "correction_cap_nonfreeze_bound": true,
+    "simplex_solver_valid": true,
+    "finite_direction_or_exact_fallback": true,
+    "formula_has_nonzero_actuation": true,
+    "no_hard_certificate_or_zero_rejection": true,
+    "training_only_and_no_adaptive_collection": true,
+    "c1_and_training_not_authorized": true,
+    "automatic_continuation_absent": true
+  },
+  "witness": {
+    "base_reliability": 0.8938472358480135,
+    "base_strength": 0.44692361792400676,
+    "base_correction_to_ordinary_norm": 0.4400413057546453,
+    "random_cases": 512,
+    "material_correction_cases": 511,
+    "maximum_strength": 0.5,
+    "correction_cap": 0.5,
+    "minimum_pre_adam_direction_fraction": 0.5
+  },
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "evaluation_started": false,
+  "implementation_started": false,
+  "fresh_seed_training_authorized": false,
+  "automatic_continuation": false
+}
