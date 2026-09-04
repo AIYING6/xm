@@ -1,0 +1,21 @@
+{
+  "protocol": "RACG-PPO-C1-SAME-ROLLOUT-MECHANISM-AUDIT-V1",
+  "verdict": "RACG_C1_NO_GO",
+  "checks": {
+    "five_exact_complete_batch_pairs": true,
+    "material_nonordinary_correction": true,
+    "worst_group_harm_reduction": false,
+    "overall_surrogate_retention": true,
+    "nonfreezing_and_realized_motion": true,
+    "critic_exact_vs_ordinary": true,
+    "finite_and_solver_safe": true,
+    "cost_and_memory": false,
+    "formal_evaluation_absent": true
+  },
+  "material_correction_states": 3,
+  "worst_group_harm_reduction_states": 2,
+  "overall_surrogate_retention_states": 4,
+  "formal_evaluation_used": false,
+  "algorithm_performance_claim": false,
+  "automatic_development_authorized": false
+}

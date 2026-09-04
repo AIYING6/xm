@@ -1,0 +1,49 @@
+{
+  "protocol": "RACG-PPO-C1-SAME-ROLLOUT-MECHANISM-AUDIT-V1",
+  "formula_freeze": {
+    "config": "configs/racg_ppo_c05_formula_freeze.json",
+    "config_sha256": "7e30f651645751d87680ad8cab968452b3768c5ee53bcac460dbb7a1837c6dc2",
+    "contract": "docs/racg_ppo_p0_20260904/RACG_C05_EXACT_FORMULA_CONTRACT.md",
+    "contract_sha256": "69b90171a4f832ca74ee6d9cdb5bf99ea2c42fc020c4b6686d969cdb9dbf1f58"
+  },
+  "source": {
+    "arm": "utr_sg",
+    "training_seeds": [2201, 2202, 2203, 2204, 2205],
+    "source_update": 3907,
+    "rollout_seed_offset": 920000,
+    "num_envs": 24,
+    "rollout_steps": 64,
+    "graphs_per_update": 1536,
+    "ppo_epochs": 4
+  },
+  "candidate": {
+    "groups": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "maximum_strength": 0.5,
+    "correction_cap": 0.5,
+    "relative_epsilon": 1e-12,
+    "solver_ftol": 1e-12,
+    "solver_max_iterations": 256,
+    "hard_certificate": false,
+    "zero_step_rejection": false,
+    "critic": "exact matched ordinary PPO"
+  },
+  "gate": {
+    "material_correction_ratio": 0.01,
+    "surrogate_numerical_tolerance": 1e-7,
+    "minimum_material_correction_states": 3,
+    "minimum_worst_group_harm_reduction_states": 4,
+    "minimum_overall_surrogate_retention_states": 4,
+    "maximum_wall_time_ratio": 4.0,
+    "maximum_peak_gpu_memory_bytes": 10737418240,
+    "minimum_realized_actor_displacement": 1e-12
+  },
+  "authorization": {
+    "implementation": true,
+    "same_rollout_training_audit": true,
+    "fresh_seed_training": false,
+    "formal_evaluation": false,
+    "heldout_evaluation": false,
+    "hyperparameter_sweep": false,
+    "automatic_development": false
+  }
+}
