@@ -1,0 +1,24 @@
+{
+  "protocol": "TATG-MAPPO-C3.5-ACTOR-RUNNER-INTEGRATION-AUDIT-V1",
+  "verdict": "TATG_C35_ACTOR_RUNNER_INTEGRATION_PASS",
+  "checks": {
+    "collection_records_actions_only_after_logprobability": true,
+    "stored_rollout_start_state_replays_exactly": true,
+    "completed_environment_resets_before_following_graph": true,
+    "strict_runner_state_restore_continues_exactly": true,
+    "generic_control_uses_identical_collection_and_replay_interface": true,
+    "zero_residual_control_uses_identical_collection_and_replay_interface": true,
+    "runtime_payload_contains_only_frozen_tatg_state": true,
+    "adapter_owns_no_environment_critic_or_evaluation_path": true
+  },
+  "audit_details": {
+    "sequence_time_steps": 4,
+    "sequence_environments": 2,
+    "candidate_added_actor_parameters": 3899,
+    "environment_steps": 0,
+    "formal_ppo_updates": 0
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}

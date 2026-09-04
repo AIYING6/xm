@@ -1,0 +1,23 @@
+{
+  "protocol": "TATG-MAPPO-C3.5-ACTOR-RUNNER-INTEGRATION-AUDIT-V1",
+  "status": "ZERO_TRAINING_ACTOR_ADAPTER_ONLY",
+  "scope": "TATG actor state ownership and chronological replay only; legacy snapshot runner, critic, environment, reward, sampler, evaluation and checkpoint selector are unchanged",
+  "collection": {
+    "state_before_rollout": "clone exactly the TATGRuntimeStateBank payload before the first actor action",
+    "action_order": "compute log-probability before recording each sampled/stored own action",
+    "completed_slot": "after environment reset, reset only completed slot from that reset graph before the next actor action"
+  },
+  "update": {
+    "actor": "replay the complete [time, environment] rollout chronologically from its stored state-before-rollout payload for every PPO epoch",
+    "critic": "not owned or changed by this adapter",
+    "minibatches": "full sequence only; no time-environment flattening, shuffled temporal rows, burn-in or chunks"
+  },
+  "runtime": {
+    "payload": "exactly {tatg_memory_state: {memory, previous_topology, previous_action}}",
+    "forbidden": ["return", "reward", "evaluation", "seed label", "failure schedule", "sampler q"]
+  },
+  "controls": ["CETM", "capacity-matched snapshot GRU", "zero-residual CETM"],
+  "pass": "TATG_C35_ACTOR_RUNNER_INTEGRATION_PASS",
+  "pass_authorizes_only": "a separately frozen outer rollout-loop and strict runtime-checkpoint integration audit",
+  "automatic_continuation": false
+}
