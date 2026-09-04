@@ -160,6 +160,22 @@ class CETMTopologyMemory(_TopologyMemoryBase):
         return memory, TopologyMemoryState(memory, current, state.previous_action)
 
 
+class ZeroResidualCETMTopologyMemory(CETMTopologyMemory):
+    """P1.5's parameter-matched CETM ablation with transition residual removed."""
+
+    def step(
+        self, relation_adj: torch.Tensor, edge_feat: torch.Tensor, state: TopologyMemoryState
+    ) -> tuple[torch.Tensor, TopologyMemoryState]:
+        current = self.extract_local_topology(relation_adj, edge_feat)
+        if current.shape != state.previous_topology.shape:
+            raise ValueError("runtime state is incompatible with the current local topology shape")
+        delta = torch.zeros_like(current)
+        gate = 1.0 - torch.exp(-delta.abs().mean(dim=-1, keepdim=True))
+        proposal = self._proposal(delta, state)
+        memory = (1.0 - gate) * state.memory + gate * proposal
+        return memory, TopologyMemoryState(memory, current, state.previous_action)
+
+
 class SnapshotTopologyGRU(_TopologyMemoryBase):
     """Capacity-matched generic current-snapshot GNN+GRU control.
 
