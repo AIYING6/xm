@@ -1,0 +1,23 @@
+{
+  "protocol": "TATG-MAPPO-FRESH-SEED-PILOT-EXECUTION-PREFLIGHT-V1",
+  "status": "ZERO_TRAINING_EXECUTION_INTERFACE_AUDIT_ONLY",
+  "depends_on": "TATG_PILOT_P0_PREREGISTRATION_READY",
+  "execution_layout": {
+    "baseline": "existing fixed-UTR snapshot PPO runner",
+    "temporal_arms": "isolated TATG outer collection plus chronological full-sequence actor replay",
+    "temporal_critic": "unchanged centralized snapshot critic",
+    "temporal_runtime": "actor/critic/optimizer/environment/RNG plus three-tensor TATG state",
+    "evaluation": "separate endpoint-only offline phase after all training trajectories complete"
+  },
+  "forbidden": [
+    "environment reset or step",
+    "PPO update",
+    "evaluation tape read",
+    "checkpoint selection",
+    "cloud execution",
+    "training seed or hyperparameter change"
+  ],
+  "pass": "TATG_PILOT_P1_EXECUTION_INTERFACE_READY",
+  "pass_authorizes_only": "implementation and separate execution packaging; it does not start pilot training automatically",
+  "automatic_continuation": false
+}
