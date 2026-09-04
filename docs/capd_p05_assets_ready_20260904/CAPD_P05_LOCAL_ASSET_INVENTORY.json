@@ -1,0 +1,418 @@
+{
+  "protocol": "CAPD-P0.5-TEACHER-ASSET-INVENTORY-V1",
+  "verdict": "CAPD_P05_ASSETS_READY_FOR_SIGNAL_AUDIT",
+  "search_root": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904",
+  "expected_teacher_runs": 20,
+  "complete_teacher_runs": 20,
+  "missing_or_ambiguous_teacher_runs": 0,
+  "runs": [
+    {
+      "arm": "utr_sg",
+      "seed": 71011,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71011",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "acd0736ab8b8ba77debfe8fd59b0945acc5d369e991c112b260a22124e1537a5",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71012,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71012",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "321312f1f52215059dadbf16cff41a43bf358ee54931db1e1fe8349444476eb1",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71013,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71013",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "b97891622d3cf0ca56c5bbfacab66e105fdcc0f6af7fddf7ca4a1cf73194bc52",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71014,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71014",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "f07d179d4b8fae39f88f605246da556e671c4d68778d69b1f9c8caece04e4b19",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71015,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71015",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "78312d874e90fe6ab33daf19837f0167958eb23e6540ce89ffa5a77228a1ad65",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71021,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71021",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "896d2e603c090fa55d89cf3fd8505844dc6b098448ab00823f093ea24f991247",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71022,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71022",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "85883500ca114d61a8920486007dc736a4dded94dda6a30f32d7300940fedeaa",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71023,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71023",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "e8300181c22519f698190e815c987fe3221def6878974d7dbb5e096139945d10",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71024,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71024",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "2a3ec0e839d7f22955aabea304f1d464e067f73e25cd5cce84703dadcdc9fa2e",
+      "status": "complete"
+    },
+    {
+      "arm": "utr_sg",
+      "seed": 71025,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\utr_sg\\seed71025",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "f372fe12d78decbaac00e78bcefd89c8fed4243ba5dd7dad9d71ed5f4f81d52a",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71011,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71011",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "1f36cf4556baae0eaebc0a28744a8c31bf633714b09014fa668962c34abf1133",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71012,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71012",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "133c45e2ebd3fb200ef2d8afa485aac171c276f4c6093b4be2cdfa8a7095898f",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71013,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71013",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "486b88def798c60f24498bb7c5883e8242f2b6b20de17d83152600bdd0487048",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71014,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71014",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "a7270e007b66934a683641e6b37ca97291cf97e262293257194e65c802718a7c",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71015,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71015",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "ea371d63d4bfcab8feb7b7368b008bda464b101d21a5f657f11ccc176349d5e0",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71021,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71021",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "7c01714a41a559e7e0601d8761ed510e1ab36e353b81a4cf52966a27b2083899",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71022,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71022",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "db2d1c23ea67119944989eb046b6ed0d9e9e1408fc6d46a5d071abd2e0e6ea6f",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71023,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71023",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "e9db6d36bf9637c7ecac31507071ecc2edef2aada77cecf7c6ab1d3bbea6b3cc",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71024,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71024",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "a2f260e179fd01e4415aae5aefdf35355f75f3efc5a5e36d9dd2d3246cfde48f",
+      "status": "complete"
+    },
+    {
+      "arm": "egtr_sg",
+      "seed": 71025,
+      "candidate_count": 1,
+      "complete_candidate_count": 1,
+      "selected_run_directory": "D:\\Code\\Codex\\ri_gmappo_uav\\tmp\\capd_p05_teacher_assets_20260904\\results\\development\\egtr_double_cohort_simultaneous\\runs\\egtr_sg\\seed71025",
+      "required_files": {
+        "actor_critic_latest.pt": true,
+        "run_manifest.json": true
+      },
+      "provenance_files": {
+        "actor_critic_runtime_state_latest.pt": true,
+        "actor_critic_training_state_latest.pt": true,
+        "drtp_topology_sampler_manifest.json": true,
+        "drtp_topology_sampler_log.csv": true,
+        "train_log.csv": true
+      },
+      "checkpoint_sha256": "22e1d09ce0491534614e9e5a8659e4d25e669a9aacca966feaeec2b3b27289b8",
+      "status": "complete"
+    }
+  ],
+  "interpretation": "Missing local assets mean archival incompleteness, not experiment failure or algorithm failure.",
+  "checkpoint_loading_performed": false,
+  "policy_signal_analysis_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "evaluation_started": false,
+  "student_training_started": false,
+  "automatic_continuation": false
+}

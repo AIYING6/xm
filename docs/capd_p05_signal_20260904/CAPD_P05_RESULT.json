@@ -1,0 +1,40 @@
+{
+  "protocol": "CAPD-P0.5-TRAINING-ONLY-CONSENSUS-SIGNAL-V1",
+  "verdict": "CAPD_P05_NO_CANDIDATE_CONSENSUS_SIGNAL",
+  "asset_integrity": true,
+  "unique_checkpoints": true,
+  "architecture_identical": true,
+  "teacher_runs": 20,
+  "state_count": 168,
+  "agent_state_units_per_meta_seed": 504,
+  "state_tape_hash": "d5cfd9f5ff224a443fd547e514fae7a8bf003ba625796afd8db59334706f248a",
+  "state_tape_namespace_start": 880000,
+  "finite_probability_simplexes": true,
+  "cohorts": [
+    {
+      "cohort": "A",
+      "supporting_meta_seeds": 0,
+      "total_meta_seeds": 5,
+      "median_signal_fraction": 0.0,
+      "median_pairwise_explorer_js": 0.45107191801071167,
+      "pass": false
+    },
+    {
+      "cohort": "B",
+      "supporting_meta_seeds": 0,
+      "total_meta_seeds": 5,
+      "median_signal_fraction": 0.0,
+      "median_pairwise_explorer_js": 0.6245524883270264,
+      "pass": false
+    }
+  ],
+  "interpretation": "policy-space candidate signal only; agreement is not evidence of teacher correctness or return improvement",
+  "evaluation_tape_read": false,
+  "outcome_metrics_read": false,
+  "checkpoint_selection_by_outcome": false,
+  "environment_steps": 3360,
+  "ppo_updates": 0,
+  "student_training_started": false,
+  "implementation_authorized": false,
+  "automatic_continuation": false
+}
