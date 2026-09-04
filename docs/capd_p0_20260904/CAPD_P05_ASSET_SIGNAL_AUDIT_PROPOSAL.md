@@ -1,11 +1,16 @@
 # CAPD P0.5 teacher-asset and consensus-signal audit proposal
 
-**Status:** `PREPARED_NOT_AUTHORIZED`.
+**Status:** `COMPLETED_AS_CAPD_P05_NO_CANDIDATE_CONSENSUS_SIGNAL`.
 
 **Archival rule:** completed cloud runs may not be present in the local repository. A
 missing local checkpoint is therefore `BLOCKED_ASSETS_NOT_LOCAL`, never a scientific
 NO-GO and never evidence that the run did not occur. Asset recovery and hash inventory
 must finish before any checkpoint is loaded or policy-space signal is analyzed.
+
+The recovered archive subsequently passed all 20 checkpoint hash and exact-architecture
+checks. On the preregistered outcome-free state tape, however, no one of ten fixed
+anchor/explorer tuples produced the required low-disagreement, material-deviation
+signal. CAPD is therefore closed before student implementation or training.
 
 ## Question
 

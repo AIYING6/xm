@@ -1,0 +1,31 @@
+{
+  "protocol": "CAPD-P0.5-TRAINING-ONLY-CONSENSUS-SIGNAL-V1",
+  "asset_protocol": "EGTR-DOUBLE-COHORT-SIMULTANEOUS-10M-TRAINING-V1",
+  "arms": ["utr_sg", "egtr_sg"],
+  "cohorts": {
+    "A": [71011, 71012, 71013, 71014, 71015],
+    "B": [71021, 71022, 71023, 71024, 71025]
+  },
+  "explorer_rule": "for anchor index i, use EGTR indices i, i+1 and i+2 cyclically within the same cohort",
+  "state_tape": {
+    "namespace_start": 880000,
+    "groups": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "episodes_per_group": 4,
+    "capture_steps": [0, 27, 43, 59, 79, 119],
+    "behavior_policy": "fixed_zero_acceleration_action_13",
+    "evaluation_tape": false,
+    "outcome_metrics_recorded": false
+  },
+  "signal_gate": {
+    "low_explorer_disagreement_js_max": 0.02,
+    "material_centroid_anchor_tv_min": 0.05,
+    "minimum_signal_fraction_per_meta_seed": 0.05,
+    "minimum_supporting_meta_seeds_per_cohort": 3,
+    "minimum_median_pairwise_explorer_js": 0.0001,
+    "both_cohorts_required": true
+  },
+  "interpretation": "policy-space candidate signal only; agreement is not evidence of teacher correctness or return improvement",
+  "student_training_authorized": false,
+  "evaluation_authorized": false,
+  "automatic_continuation": false
+}
