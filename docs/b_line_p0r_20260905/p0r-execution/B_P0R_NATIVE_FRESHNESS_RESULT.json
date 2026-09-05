@@ -1,0 +1,39 @@
+{
+  "action_mask_sha256": {
+    "fresh": "83812d23ac294887db133e741e084f1acb72d46b024b626276d53d0f09b6b045",
+    "stale": "db8e827ff8958e17aadf627d928735f3aab3c639cc950b4ec5f5d83cfe378a9a"
+  },
+  "automatic_continuation": false,
+  "automatic_p1_authorized": false,
+  "checks": {
+    "cache_threshold_overridden": false,
+    "environment_modified": false,
+    "fresh_objective_action_legal": true,
+    "native_action_masks_differ": true,
+    "new_action_added": false,
+    "only_native_freshness_differs": true,
+    "same_current_physical_snapshot": true,
+    "same_current_physical_snapshot_hash": true,
+    "same_remaining_mission": true,
+    "same_role_assignment": true,
+    "stale_objective_action_illegal": true
+  },
+  "environment": "RedundantTopologyUAVEnv(scale_config('main')) with unmodified native defaults",
+  "environment_steps_for_state_construction": 14,
+  "evaluation_episodes": 0,
+  "evaluation_started": false,
+  "freshness_state_sha256": {
+    "fresh": "277a705d89e4ad9b9ed05d9c2b149d092a4787860f3fca83b7e8335f5e90b130",
+    "stale": "648104ef83a317553167ec6070cdfe1581b47947bee187d63ce0a40fae475227"
+  },
+  "interpretation": "The current physical topology is not sufficient to determine the native terminal feasible-action set. The same physical snapshot admits objective action 1 when the routed cache is fresh and masks it when the cache is stale.",
+  "physical_snapshot_sha256": "a2199e6f01fc112a46885862b85cccdd01c47fc7da4327a52ea4265f427d2e56",
+  "ppo_updates": 0,
+  "protocol": "B-LINE-P0R-NATIVE-FRESHNESS-COUNTEREXAMPLE-V1",
+  "source_sha256": {
+    "environment": "8cca1b500c75e38ad7598ff7465a3bcf53a4bf5cd158f4ed905da34fb02cc7f1",
+    "freeze": "9636259d80e6b4fc18e36d26ee26ea97f930fc52bb88a8c3cb2573570100bab6"
+  },
+  "training_started": false,
+  "verdict": "B_P0R_GO"
+}

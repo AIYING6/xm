@@ -1,0 +1,3 @@
+terminal,fresh_cache_age,stale_cache_age,native_tau_max,fresh_action_mask,stale_action_mask,objective_zero_legal_when_fresh,objective_zero_legal_when_stale
+4,0,6,5,"[1,1,0]","[1,0,0]",True,False
+5,0,6,5,"[1,1,0]","[1,0,0]",True,False
