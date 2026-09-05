@@ -1,0 +1,3 @@
+policy,slot0_action,slot0_immediate_priority,B_route_staged_after_slot0,slot1_action,B_deadline_met,total_completed_priority,finite_horizon_feasible_for_B,is_one_slot_optimum,is_two_slot_optimum
+myopic_serve_A,serve_A,6,False,stage_B_too_late,False,6,False,True,False
+nonmyopic_stage_B_then_serve_B,reserve_capacity_for_disruption_free_B_migration,0,True,serve_B_before_deadline,True,10,True,False,True

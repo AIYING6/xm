@@ -1,0 +1,42 @@
+{
+  "protocol": "C-LINE-C0-PROBLEM-NOVELTY-REALISM-GATE-V1",
+  "date": "2026-09-05",
+  "purpose": "Falsify, rather than promote, the proposed deterministic freshness-constrained multi-UAV service/network reconfiguration problem before any solver, environment, training, or benchmark is implemented.",
+  "candidate_scope": "dynamic UAV communication failures with freshness/service deadlines, limited relay capacity, competing services, and reconfiguration decisions",
+  "required_go_checks": {
+    "real_semantics_supported": true,
+    "at_least_two_competing_decision_variables": true,
+    "strict_nonmyopic_counterexample": true,
+    "nearest_neighbor_not_full_cover": true,
+    "structured_solver_innovation_space": true,
+    "tg_vm_non_overlap": true
+  },
+  "prohibited": [
+    "solver implementation",
+    "environment modification",
+    "RL or other training",
+    "formal performance benchmark",
+    "objective-weight tuning",
+    "checkpoint selection",
+    "evaluation-tape access",
+    "automatic continuation to C1"
+  ],
+  "source_assets_to_audit_only": [
+    "envs/redundant_topology_uav_env.py",
+    "envs/uav_intercept_3d_env.py",
+    "docs/b_line_p15_20260905/B_LINE_P15_FINAL_STATUS.md"
+  ],
+  "allowed_toy": {
+    "description": "A two-slot, two-service deterministic truth table used only to prove or refute a strict myopic-versus-finite-horizon decision conflict.",
+    "not_an_algorithm": true,
+    "not_a_performance_benchmark": true
+  },
+  "verdicts": {
+    "go": "C0_GO",
+    "conditional": "C0_CONDITIONAL",
+    "no_go": "C0_NO_GO"
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}
