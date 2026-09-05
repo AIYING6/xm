@@ -1,0 +1,87 @@
+{
+  "protocol": "B-LINE-P1-FORMAL-PROBLEM-AND-NOVELTY-FREEZE-V1",
+  "purpose": "Formalize the native information-validity problem exposed by P0R, audit nearest methods, and freeze only future solver requirements.",
+  "upstream_evidence": {
+    "required_verdict": "B_P0R_GO",
+    "result_path": "docs/b_line_p0r_20260905/p0r-execution/B_P0R_NATIVE_FRESHNESS_RESULT.json",
+    "environment": "RedundantTopologyUAVEnv(scale_config('main'))",
+    "native_tau_max": 5
+  },
+  "native_information_boundary": {
+    "physical_snapshot_excludes": [
+      "routed_cache_sensing_time",
+      "routed_cache_age",
+      "freshness_dependent_service_mask"
+    ],
+    "legally_observable_or_derivable": [
+      "current_actor_observation",
+      "current_action_mask",
+      "the agent's own past legal observations and actions",
+      "cache age induced by native sensing time and the unmodified tau_max rule"
+    ],
+    "prohibited_privileged_information": [
+      "future failures",
+      "future topology",
+      "hidden random-number-generator state",
+      "evaluation-tape outcomes",
+      "unobserved node-failure flags"
+    ]
+  },
+  "native_decision_variables": {
+    "scout_sensing": "u[s,k] in {0,1}: scout s senses objective k; each scout selects at most one native objective action per step.",
+    "terminal_service": "z[d,k] in {0,1}: terminal d selects native objective action k; each terminal selects at most one action per step.",
+    "relay_control": "absent: relays currently have no transition-effective non-idle action and may not be represented as a controllable P1 variable."
+  },
+  "native_hard_constraints": [
+    "z[d,k] <= eta[d,k], where eta[d,k] is the existing native fresh-token predicate.",
+    "eta[d,k] = 1 only if a valid routed token exists and current_step - t_sense <= tau_max.",
+    "z[d,k] = 0 for completed objectives and for every action masked by the native environment.",
+    "each role obeys its existing per-step action cardinality and action-mask interface.",
+    "no freshness penalty may replace a native infeasibility mask."
+  ],
+  "formal_scope": {
+    "candidate_name": "information-validity constrained sensing-service assignment",
+    "physical_graph": "G_t^P",
+    "validity_service_graph": "G_t^V",
+    "objective": "feasibility first; among native-feasible sensing-service choices, optimize only an objective explicitly derived from existing mission completion/progress and existing safety semantics.",
+    "not_frozen_as_native": [
+      "relay reassignment",
+      "relay activation or route selection",
+      "make-before-break switching",
+      "new communication deadlines",
+      "new reward terms",
+      "new environment actions"
+    ]
+  },
+  "solver_requirements_if_a_future_solver_is_authorized": [
+    "deterministic input-output behavior under a fixed legal history",
+    "explicit certificate of native feasibility or infeasibility",
+    "separate G_t^P from G_t^V rather than using only a scalar freshness penalty",
+    "no privileged future topology or failure information",
+    "a stated structural property to prove before performance claims",
+    "no claim that a generic shortest-path or greedy age rule is the requested high-ceiling solver"
+  ],
+  "literature_audit_axes": [
+    "UAV information freshness / AoI trajectory and scheduling",
+    "multihop AoI routing and deterministic scheduling",
+    "network service-function reconfiguration",
+    "semantic inspection/task-graph planning (TG-VM anti-overlap)"
+  ],
+  "prohibitions": [
+    "solver implementation",
+    "training",
+    "environment modification",
+    "formal performance benchmark",
+    "checkpoint selection",
+    "evaluation tape use",
+    "algorithm naming beyond the descriptive candidate scope"
+  ],
+  "verdicts": {
+    "go": "B_P1_GO",
+    "conditional": "B_P1_CONDITIONAL",
+    "no_go": "B_P1_NO_GO"
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}
