@@ -1,0 +1,19 @@
+{
+  "protocol": "DRTP-STABILIZATION-DEVELOPMENT-V1-FROZEN-EVIDENCE-EXTRACT",
+  "source": "completed V1 fixed-endpoint assessment reported on 2026-09-05",
+  "final_candidate": "anchored_egtr_a075_sg",
+  "development_seeds": [76011, 76012, 76013],
+  "alpha": 0.75,
+  "perturbed_return": {
+    "utr_mean": 88.73894770494856,
+    "drtp_mean": 79.48233260575564,
+    "egtr_mean": 86.45138397215827,
+    "final_mean": 102.34244443265527,
+    "final_median": 105.86198475141427,
+    "final_worst_seed": 69.23298317277687,
+    "utr_worst_seed": 61.31744447287405,
+    "drtp_worst_seed": 57.76639089375618,
+    "egtr_worst_seed": 57.67921649829252
+  },
+  "development_interpretation": "Freeze alpha=.75; raw range is auxiliary because its increase coincides with upper-tail improvement while the worst seed improves."
+}

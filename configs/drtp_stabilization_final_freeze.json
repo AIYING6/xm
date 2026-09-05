@@ -1,0 +1,59 @@
+{
+  "protocol": "DRTP-STABILIZATION-FINAL-FREEZE-AND-CONFIRMATION-V1",
+  "status": "V1_STRONG_FREEZE_CANDIDATE",
+  "final_method": {
+    "name": "Global-Anchored-EGTR-SG-MAPPO",
+    "sampler_mode": "anchored_egtr",
+    "anchor_alpha": 0.75,
+    "formula": "q_final=(1-alpha)*q_utr+alpha*q_egtr",
+    "local_egtr_path": "evidence->bounded-simplex projection->local L1 trust region",
+    "local_trust_region_l1": 0.1,
+    "consequence": "||q_final,t+1-q_final,t||_1<=0.075",
+    "absolute_utr_distance_bound": "||q_final-q_utr||_1<=1.5"
+  },
+  "frozen_training": {
+    "seeds": [78011, 78012, 78013, 78014, 78015],
+    "arms": {
+      "utr_sg": {"sampler_mode": "utr"},
+      "drtp_sg": {"sampler_mode": "drtp"},
+      "egtr_sg": {"sampler_mode": "egtr"},
+      "global_anchored_egtr_a075_sg": {"sampler_mode": "anchored_egtr", "anchor_alpha": 0.75}
+    },
+    "updates": 39063,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "environment_steps_per_trajectory": 10000128,
+    "endpoint_only": true,
+    "early_stopping": false,
+    "checkpoint_promotion": false,
+    "seed_replacement": false
+  },
+  "frozen_model_and_environment": {
+    "graph_encoder": "single",
+    "hidden_dim": 115,
+    "role_dim": 8,
+    "intent_dim": 8,
+    "ppo": {"lr": 0.0003, "gamma": 0.99, "gae_lambda": 0.95, "clip_coef": 0.2, "entropy_coef": 0.01, "value_coef": 0.5, "max_grad_norm": 0.5, "ppo_epochs": 4, "minibatch_graphs": 256},
+    "environment": {"target_policy": "straight", "strict_target_sensing": true, "agent_target_info_bottleneck": true, "relay_dependent_task": true, "business_grounded_geometry": true, "communication_range_scale": 1.0, "communication_dropout_prob": 0.0, "message_delay_steps": 0, "radar_dropout_prob": 0.0, "min_success_step": 260},
+    "training_failure_semantics": "sampler-selected frozen topology groups; nominal exposure remains part of the sampler simplex"
+  },
+  "evaluation": {
+    "tape_protocol": "DRTP-STABILIZATION-CONFIRMATORY-TAPE-V1",
+    "episode_ids": [780000, 780099],
+    "episodes_per_condition": 100,
+    "conditions": ["nominal", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "training_access": "forbidden",
+    "matched_across_arms_and_seeds": true,
+    "endpoint_checkpoint_only": true
+  },
+  "prohibitions": ["adaptive_alpha", "temporal_smoothing", "new_gate", "new_penalty", "ppo_tuning", "reward_tuning", "sampler_redesign", "seed_replacement", "checkpoint_selection", "automatic_algorithm_revision", "automatic_6uav"],
+  "development_provenance": {
+    "development_seeds": [76011, 76012, 76013],
+    "development_tape_ids": [760000, 760099],
+    "development_evidence_file": "configs/drtp_stabilization_final_development_evidence.json",
+    "development_seeds_forbidden_in_confirmation": true
+  },
+  "automatic_training": false,
+  "automatic_algorithm_revision": false,
+  "automatic_6uav": false
+}
