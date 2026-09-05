@@ -1,0 +1,26 @@
+{
+  "automatic_continuation": false,
+  "continuity_limit_slots": 3,
+  "current_snapshot_sha256": "7f5640f258e44086bfb926a9f61c21872a705b7c18977962309a1d826ccaebf5",
+  "different_history_changes_preferred_decision": true,
+  "environment_steps": 0,
+  "evaluation_started": false,
+  "expected_actions_match": true,
+  "ppo_updates": 0,
+  "preferred_actions": {
+    "newly_disconnected": "continue_mission",
+    "persistent_disconnected": "reconfigure_relay"
+  },
+  "protocol": "B-LINE-P0-TRANSITION-HISTORY-COUNTEREXAMPLE-V1",
+  "same_current_snapshot": true,
+  "same_geometry": true,
+  "same_remaining_mission_demand": true,
+  "scope": "minimal deterministic counterexample only; no learned policy, optimiser, environment rollout, evaluation tape or solver benchmark",
+  "snapshot_only_failure_modes": {
+    "continue_mission": "violates the continuity constraint for persistent_disconnected",
+    "reconfigure_relay": "is feasible but is lexicographically dominated by continue_mission for newly_disconnected"
+  },
+  "training_started": false,
+  "unresolved_assumption": "A communication route may be unavailable for at most three consecutive decision slots. This is a domain assumption to be audited against the target environment before P1.",
+  "verdict": "B_P0_CONDITIONAL"
+}
