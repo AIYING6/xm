@@ -3,11 +3,17 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import numpy as np
+import torch
 
+from algorithms.ri_gmappo.simple_ri_gmappo import make_env
+from algorithms.ri_gmappo.tatg_outer_rollout import TATGActorCriticSystem
 from scripts.audit_tatg_mappo_pilot_p2_runner import collect_checks
 from scripts.run_tatg_mappo_pilot_single import ALL_ARMS, BASELINE_ARM, FROZEN_SEEDS, NUM_ENVS, ROLLOUT_STEPS, UPDATES, _build_snapshot, _temporal_gae, pilot_config, train_temporal_arm
 from scripts.build_tatg_mappo_pilot_cloud_bundle import sources
 from scripts.audit_tatg_mappo_pilot_p3_cloud_package import collect_checks as collect_package_checks
+from scripts.audit_tatg_mappo_pilot_p4_evaluation import collect_checks as collect_evaluation_checks
+from scripts.build_tatg_mappo_pilot_evaluation_bundle import sources as evaluation_sources
+from scripts.run_tatg_mappo_pilot_evaluation import episode as evaluate_endpoint_episode
 
 
 def test_tatg_pilot_runner_matches_the_frozen_static_contract() -> None:
@@ -82,3 +88,30 @@ def test_tatg_temporal_arm_completes_one_cpu_update(tmp_path) -> None:
     assert (output / "actor_critic_latest.pt").is_file()
     assert '"status": "completed"' in (output / "run_manifest.json").read_text(encoding="utf-8")
     assert (output / "train_log.csv").read_text(encoding="utf-8").count("\n") == 2
+
+
+def test_tatg_endpoint_evaluation_is_frozen_and_training_free() -> None:
+    assert all(collect_evaluation_checks().values())
+    paths = {path.as_posix() for path in evaluation_sources()}
+    assert any(path.endswith("scripts/run_tatg_mappo_pilot_evaluation.py") for path in paths)
+    assert not any("results/" in path for path in paths)
+
+
+def test_tatg_endpoint_evaluator_runs_snapshot_and_temporal_inference(tmp_path) -> None:
+    device = torch.device("cpu")
+    condition = {"name": "nominal", "failed_blue_agent": -1, "start_step": 44, "duration_steps": 0}
+    cfg = pilot_config("utr_snapshot_sg", 75011, "unused-output-root")
+    env = make_env(cfg, 0, training=False)
+    obs, share_obs, graph = env.reset()
+    snapshot = _build_snapshot(graph, obs, share_obs, env, cfg).to(device)
+    baseline_checkpoint = tmp_path / "baseline.pt"
+    torch.save(snapshot.state_dict(), baseline_checkpoint)
+    baseline_row = evaluate_endpoint_episode("utr_snapshot_sg", 75011, snapshot, "test", 780000, condition, device)
+    assert baseline_row["method"] == "utr_snapshot_sg"
+    assert baseline_row["development_episode_id"] == 780000
+
+    temporal_cfg = pilot_config("tatg_cetm_utr", 75011, "unused-output-root")
+    temporal = TATGActorCriticSystem(_build_snapshot(graph, obs, share_obs, env, temporal_cfg), memory_kind="cetm").to(device)
+    temporal_row = evaluate_endpoint_episode("tatg_cetm_utr", 75011, temporal, "test", 780001, condition, device)
+    assert temporal_row["method"] == "tatg_cetm_utr"
+    assert np.isfinite(float(temporal_row["J"]))
