@@ -51,7 +51,7 @@ from algorithms.ri_gmappo.drtp_topology_sampler import (
     PairedProbeTopologySampler,
 )
 from algorithms.ri_gmappo.snr_topology_sampler import StaticNonuniformTopologySampler
-from algorithms.ri_gmappo.drtp_topology_sampler import EGTRTopologySampler
+from algorithms.ri_gmappo.drtp_topology_sampler import AnchoredEGTRTopologySampler, EGTRTopologySampler
 from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 from algorithms.ri_gmappo.failure_aware_telemetry import FailureAwareTelemetryWriter
@@ -232,6 +232,9 @@ class RIGMAPPOConfig:
     drtp_sampler_mode: str = "none"
     drtp_sampler_seed: int | None = None
     drtp_sampler_logging: bool = False
+    # Used only by ``anchored_egtr``.  The default is neutral for every
+    # existing sampler mode and preserves all historical configurations.
+    drtp_sampler_anchor_alpha: float = 1.0
     # The sampler's protocol horizon can differ from this invocation's local
     # update count during an exact runtime continuation.
     drtp_sampler_total_updates: int | None = None
@@ -1779,8 +1782,13 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.updates,
     )
     drtp_mode = str(cfg.drtp_sampler_mode).lower()
-    if drtp_mode not in {"none", "utr", "snr", "drtp", "pp_drtp", "r_drtp", "egtr", "drtp_tr", "conservative_drtp"}:
+    if drtp_mode not in {"none", "utr", "snr", "drtp", "pp_drtp", "r_drtp", "egtr", "anchored_egtr", "drtp_tr", "conservative_drtp"}:
         raise ValueError("unsupported drtp_sampler_mode")
+    if drtp_mode == "anchored_egtr" and (
+        not math.isfinite(float(cfg.drtp_sampler_anchor_alpha))
+        or not 0.0 <= float(cfg.drtp_sampler_anchor_alpha) <= 1.0
+    ):
+        raise ValueError("anchored-EGTR alpha must be a finite value in [0, 1]")
     actor_gradient_mode = str(cfg.actor_gradient_mode).lower()
     if actor_gradient_mode not in {"standard", "utr", "spc", "tcr"}:
         raise ValueError("actor_gradient_mode must be standard, utr, spc, or tcr")
@@ -1890,6 +1898,12 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         drtp_sampler = EGTRTopologySampler(
             sampler_seed,
             sampler_updates,
+        )
+    elif drtp_mode == "anchored_egtr":
+        drtp_sampler = AnchoredEGTRTopologySampler(
+            sampler_seed,
+            sampler_updates,
+            anchor_alpha=cfg.drtp_sampler_anchor_alpha,
         )
     elif drtp_mode == "pp_drtp":
         drtp_sampler = PairedProbeTopologySampler(

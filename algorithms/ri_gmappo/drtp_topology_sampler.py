@@ -111,7 +111,7 @@ class DRTPTopologySampler:
 
     def __init__(self, mode: str, seed: int, total_updates: int):
         self.mode = str(mode).lower()
-        if self.mode not in {"utr", "drtp", "pp_drtp", "r_drtp", "egtr", "drtp_tr", "conservative_drtp"}:
+        if self.mode not in {"utr", "drtp", "pp_drtp", "r_drtp", "egtr", "anchored_egtr", "drtp_tr", "conservative_drtp"}:
             raise ValueError("unsupported DRTP sampler mode")
         self.seed = int(seed)
         self.total_updates = int(total_updates)
@@ -685,8 +685,10 @@ class PairedProbeTopologySampler(DRTPTopologySampler):
 class EGTRTopologySampler(DRTPTopologySampler):
     """Per-group evidence gate followed by a sampler L1 trust region."""
 
-    def __init__(self, seed: int, total_updates: int):
-        super().__init__("egtr", seed, total_updates)
+    def __init__(self, seed: int, total_updates: int, *, mode: str = "egtr"):
+        if mode not in {"egtr", "anchored_egtr"}:
+            raise ValueError("EGTR sampler mode must be egtr or anchored_egtr")
+        super().__init__(mode, seed, total_updates)
         self.confidence_ema = {group: 0.0 for group in FAILURE_GROUPS}
         self.stale_duration = {group: 0 for group in FAILURE_GROUPS}
         self.last_rho = 0.0
@@ -850,6 +852,154 @@ class EGTRTopologySampler(DRTPTopologySampler):
             "egtr_trust_region_l1": EGTR_TRUST_REGION_L1,
             "egtr_mad_scale": EGTR_MAD_SCALE,
             "trust_region_after_projection": True,
+        })
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return {**payload, "sampler_hash": hashlib.sha256(encoded).hexdigest()}
+
+
+class AnchoredEGTRTopologySampler(EGTRTopologySampler):
+    """EGTR with a fixed global interpolation toward the UTR distribution.
+
+    EGTR first performs its unchanged evidence, bounded-simplex and local-L1
+    trust-region path.  This class then exposes the training sampler actually
+    used for the next resets as ``(1-alpha) * q_UTR + alpha * q_EGTR``.  The
+    latter convex interpolation preserves simplex and floor/cap feasibility
+    while giving a direct absolute bound on its distance from UTR.
+    """
+
+    RUNTIME_FORMAT = "anchored_egtr_topology_sampler_runtime_state_v1"
+
+    def __init__(self, seed: int, total_updates: int, anchor_alpha: float):
+        if not math.isfinite(float(anchor_alpha)) or not 0.0 <= float(anchor_alpha) <= 1.0:
+            raise ValueError("anchored-EGTR alpha must lie in [0, 1]")
+        super().__init__(seed, total_updates, mode="anchored_egtr")
+        self.anchor_alpha = float(anchor_alpha)
+        self.last_pre_anchor_q = {group: UNIFORM_Q for group in FAILURE_GROUPS}
+        self.last_post_anchor_q = {group: UNIFORM_Q for group in FAILURE_GROUPS}
+        self.last_pre_anchor_uniform_l1 = 0.0
+        self.last_post_anchor_uniform_l1 = 0.0
+        self.last_egtr_q_step_l1 = 0.0
+        self.last_anchor_active = False
+        self.cumulative_exposure_deviation = {group: 0.0 for group in FAILURE_GROUPS}
+
+    def state_dict(self) -> dict:
+        state = super().state_dict()
+        state["format"] = self.RUNTIME_FORMAT
+        state.update({
+            "anchor_alpha": self.anchor_alpha,
+            "last_pre_anchor_q": {group: float(self.last_pre_anchor_q[group]) for group in FAILURE_GROUPS},
+            "last_post_anchor_q": {group: float(self.last_post_anchor_q[group]) for group in FAILURE_GROUPS},
+            "last_pre_anchor_uniform_l1": float(self.last_pre_anchor_uniform_l1),
+            "last_post_anchor_uniform_l1": float(self.last_post_anchor_uniform_l1),
+            "last_egtr_q_step_l1": float(self.last_egtr_q_step_l1),
+            "last_anchor_active": bool(self.last_anchor_active),
+            "cumulative_exposure_deviation": {
+                group: float(self.cumulative_exposure_deviation[group]) for group in FAILURE_GROUPS
+            },
+        })
+        return state
+
+    def load_state_dict(self, state: dict) -> None:
+        if state.get("format") != self.RUNTIME_FORMAT:
+            raise ValueError("unsupported anchored-EGTR sampler runtime-state format")
+        if not math.isclose(float(state.get("anchor_alpha")), self.anchor_alpha, rel_tol=0.0, abs_tol=1e-15):
+            raise ValueError("anchored-EGTR runtime state belongs to a different alpha")
+        base = dict(state)
+        base["format"] = "egtr_topology_sampler_runtime_state_v1"
+        super().load_state_dict(base)
+        self.last_pre_anchor_q = {group: float(state["last_pre_anchor_q"][group]) for group in FAILURE_GROUPS}
+        self.last_post_anchor_q = {group: float(state["last_post_anchor_q"][group]) for group in FAILURE_GROUPS}
+        self.last_pre_anchor_uniform_l1 = float(state["last_pre_anchor_uniform_l1"])
+        self.last_post_anchor_uniform_l1 = float(state["last_post_anchor_uniform_l1"])
+        self.last_egtr_q_step_l1 = float(state["last_egtr_q_step_l1"])
+        self.last_anchor_active = bool(state["last_anchor_active"])
+        self.cumulative_exposure_deviation = {
+            group: float(state["cumulative_exposure_deviation"][group]) for group in FAILURE_GROUPS
+        }
+        if any(not math.isfinite(value) for value in (
+            *self.last_pre_anchor_q.values(), *self.last_post_anchor_q.values(),
+            self.last_pre_anchor_uniform_l1, self.last_post_anchor_uniform_l1,
+            self.last_egtr_q_step_l1, *self.cumulative_exposure_deviation.values(),
+        )):
+            raise ValueError("anchored-EGTR runtime state contains non-finite telemetry")
+
+    def _state_row(self) -> dict:
+        row = super()._state_row()
+        row.update({f"pre_anchor_q_{group}": self.last_pre_anchor_q[group] for group in FAILURE_GROUPS})
+        row.update({f"post_anchor_q_{group}": self.last_post_anchor_q[group] for group in FAILURE_GROUPS})
+        row.update({
+            "anchor_alpha": self.anchor_alpha,
+            "anchor_active": self.last_anchor_active,
+            "pre_anchor_uniform_l1": self.last_pre_anchor_uniform_l1,
+            "post_anchor_uniform_l1": self.last_post_anchor_uniform_l1,
+            "global_anchor_l1_bound": 2.0 * self.anchor_alpha,
+            "egtr_q_step_l1": self.last_egtr_q_step_l1,
+        })
+        row.update({
+            f"cumulative_exposure_deviation_{group}": self.cumulative_exposure_deviation[group]
+            for group in FAILURE_GROUPS
+        })
+        return row
+
+    @staticmethod
+    def log_fields() -> list[str]:
+        fields = EGTRTopologySampler.log_fields()
+        fields += [f"pre_anchor_q_{group}" for group in FAILURE_GROUPS]
+        fields += [f"post_anchor_q_{group}" for group in FAILURE_GROUPS]
+        fields += [
+            "anchor_alpha", "anchor_active", "pre_anchor_uniform_l1",
+            "post_anchor_uniform_l1", "global_anchor_l1_bound", "egtr_q_step_l1",
+        ]
+        fields += [f"cumulative_exposure_deviation_{group}" for group in FAILURE_GROUPS]
+        return fields
+
+    def maybe_update(self, update: int) -> dict | None:
+        previous = {group: self.q[group] for group in FAILURE_GROUPS}
+        row = super().maybe_update(update)
+        if row is None:
+            return None
+        counts = {group: int(row[f"window_count_{group}"]) for group in ALL_GROUPS}
+        adapted = bool(row["adapted"])
+        self.last_pre_anchor_q = {group: self.q[group] for group in FAILURE_GROUPS}
+        self.last_pre_anchor_uniform_l1 = sum(
+            abs(self.last_pre_anchor_q[group] - UNIFORM_Q) for group in FAILURE_GROUPS
+        )
+        self.last_egtr_q_step_l1 = self.last_q_step_l1
+        post_anchor = {
+            group: ((1.0 - self.anchor_alpha) * UNIFORM_Q + self.anchor_alpha * self.last_pre_anchor_q[group])
+            for group in FAILURE_GROUPS
+        }
+        if not math.isclose(sum(post_anchor.values()), 1.0, rel_tol=0.0, abs_tol=1e-10):
+            raise AssertionError("anchored-EGTR final q lost simplex mass")
+        if any(value < Q_MIN - 1e-12 or value > Q_MAX + 1e-12 for value in post_anchor.values()):
+            raise AssertionError("anchored-EGTR final q violated floor/cap")
+        self.q = post_anchor
+        self.last_post_anchor_q = dict(post_anchor)
+        self.last_post_anchor_uniform_l1 = sum(abs(post_anchor[group] - UNIFORM_Q) for group in FAILURE_GROUPS)
+        if self.last_post_anchor_uniform_l1 > 2.0 * self.anchor_alpha + 1e-10:
+            raise AssertionError("anchored-EGTR violated its global UTR-distance bound")
+        self.last_q_uniform_distance = self.last_post_anchor_uniform_l1
+        self.last_q_step_l1 = sum(abs(post_anchor[group] - previous[group]) for group in FAILURE_GROUPS)
+        self.last_anchor_active = self.anchor_alpha < 1.0 and any(
+            abs(post_anchor[group] - self.last_pre_anchor_q[group]) > 1e-14 for group in FAILURE_GROUPS
+        )
+        for group in FAILURE_GROUPS:
+            self.cumulative_exposure_deviation[group] += post_anchor[group] - UNIFORM_Q
+        reason = (
+            "egtr_evidence_then_project_then_l1_trust_region_then_global_utr_anchor"
+            if adapted else "egtr_warmup_then_global_utr_anchor"
+        )
+        return self.update_row(int(update), counts, adapted, reason)
+
+    def manifest(self) -> dict:
+        payload = super().manifest()
+        payload.update({
+            "protocol": "GLOBAL-ANCHORED-EGTR-DRTP-SG-MAPPO-CONTRACT-V1",
+            "global_anchor_alpha": self.anchor_alpha,
+            "global_anchor_formula": "q_final=(1-alpha)*q_utr+alpha*q_egtr",
+            "global_anchor_absolute_l1_bound": 2.0 * self.anchor_alpha,
+            "egtr_local_trust_region_path_preserved_before_anchor": True,
+            "anchor_after_egtr_local_trust_region": True,
         })
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
         return {**payload, "sampler_hash": hashlib.sha256(encoded).hexdigest()}
