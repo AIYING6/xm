@@ -1,0 +1,66 @@
+{
+  "protocol": "B-LINE-P0-TRANSITION-HISTORY-COUNTEREXAMPLE-V1",
+  "purpose": "Establish or falsify a minimal deterministic decision distinction; this is not a solver benchmark.",
+  "current_snapshot": {
+    "uav_positions": {
+      "scout": [0, 0],
+      "relay": [1, 0],
+      "terminal": [2, 0]
+    },
+    "communication_edges": {
+      "scout_relay": 1,
+      "relay_terminal": 0
+    },
+    "remaining_mission_demand": 1
+  },
+  "continuity_contract": {
+    "maximum_consecutive_outage_slots": 3,
+    "interpretation": "A communication route may be unavailable for at most three consecutive decision slots. This is a domain assumption to be audited against the target environment before P1."
+  },
+  "candidate_decisions": [
+    {
+      "id": "continue_mission",
+      "mission_completed_this_slot": 1,
+      "reconfiguration_count": 0,
+      "path_cost": 0,
+      "outage_increment": 1
+    },
+    {
+      "id": "reconfigure_relay",
+      "mission_completed_this_slot": 0,
+      "reconfiguration_count": 1,
+      "path_cost": 1,
+      "outage_after_action": 0
+    }
+  ],
+  "paired_histories": [
+    {
+      "id": "newly_disconnected",
+      "legal_history": ["connected", "disconnected"],
+      "current_outage_duration_slots": 1
+    },
+    {
+      "id": "persistent_disconnected",
+      "legal_history": ["connected", "disconnected", "disconnected", "disconnected"],
+      "current_outage_duration_slots": 3
+    }
+  ],
+  "decision_order": [
+    "hard_continuity_feasibility",
+    "maximize_mission_completed_this_slot",
+    "minimize_reconfiguration_count",
+    "minimize_path_cost",
+    "lexicographic_action_id"
+  ],
+  "expected": {
+    "newly_disconnected": "continue_mission",
+    "persistent_disconnected": "reconfigure_relay"
+  },
+  "verdicts": {
+    "conditional": "B_P0_CONDITIONAL",
+    "no_go": "B_P0_NO_GO"
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}

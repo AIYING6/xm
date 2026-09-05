@@ -1,0 +1,5 @@
+history_id,current_outage_duration_slots,decision_id,outage_after_action,continuity_feasible,mission_completed_this_slot,reconfiguration_count,path_cost,preferred
+newly_disconnected,1,continue_mission,2,True,1,0,0,True
+newly_disconnected,1,reconfigure_relay,0,True,0,1,1,False
+persistent_disconnected,3,continue_mission,4,False,1,0,0,False
+persistent_disconnected,3,reconfigure_relay,0,True,0,1,1,True
