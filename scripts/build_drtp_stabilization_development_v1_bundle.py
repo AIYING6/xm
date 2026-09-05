@@ -12,6 +12,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "output" / "DRTP_STABILIZATION_DEVELOPMENT_V1_CLOUD_TRAINING.zip"
+SOURCE_PATHS = ("algorithms", "envs", "scripts", "configs", "requirements.txt", "README.md")
 
 
 def sha256(path: Path) -> str:
@@ -28,7 +29,11 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="drtp_stab_v1_bundle_") as temporary:
         temp = Path(temporary)
         source = temp / "source.zip"
-        subprocess.run(["git", "archive", "--format=zip", f"--output={source}", commit], cwd=ROOT, check=True)
+        subprocess.run(
+            ["git", "archive", "--format=zip", f"--output={source}", commit, "--", *SOURCE_PATHS],
+            cwd=ROOT,
+            check=True,
+        )
         stage = temp / "DRTP_STABILIZATION_DEVELOPMENT_V1"
         stage.mkdir()
         with zipfile.ZipFile(source) as archive:
