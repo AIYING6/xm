@@ -17,10 +17,10 @@ sys.path[:0] = [str(ROOT), str(ROOT / "scripts")]
 import run_phase_rsg1_development_smoke as evaluator  # noqa: E402
 from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv  # noqa: E402
 from run_drtp_stabilization_confirmatory_single import ARMS, SEEDS, STEPS, UPDATES  # noqa: E402
+from scripts.drtp_stabilization_confirmation_contracts import cohort_names, cohort_spec  # noqa: E402
 
 
 PROTOCOL = "DRTP-STABILIZATION-FINAL-CONFIRMATION-10M-EVALUATION-V1"
-TAPE_PROTOCOL = "DRTP-STABILIZATION-CONFIRMATORY-TAPE-V1"
 
 
 def digest(path: Path) -> str:
@@ -44,7 +44,7 @@ def fixed_env(seed: int, condition: dict) -> UAVIntercept3DEnv:
 
 
 def cell(task: tuple) -> list[dict]:
-    arm, seed, checkpoint, episode_ids, conditions, tape_hash = task
+    arm, seed, checkpoint, episode_ids, conditions, tape_hash, protocol = task
     import torch
     torch.set_num_threads(1)
     agent = evaluator.build_agent({"graph_encoder": "single", "hidden_dim": 115}, Path(checkpoint), seed)
@@ -58,7 +58,7 @@ def cell(task: tuple) -> list[dict]:
                     agent, arm, seed, int(episode_id), "nominal" if condition["name"] == "nominal" else "relay_failure"
                 )
                 row.update({
-                    "protocol": PROTOCOL, "topology_condition": condition["name"],
+                    "protocol": protocol, "topology_condition": condition["name"],
                     "scheduled_failure_onset": int(condition["start_step"]),
                     "scheduled_failure_duration": int(condition["duration_steps"]),
                     "checkpoint_sha256": digest(Path(checkpoint)), "tape_hash": tape_hash,
@@ -84,6 +84,7 @@ def mean(rows: list[dict], key: str) -> float:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--cohort", choices=cohort_names(), default="A")
     parser.add_argument("--trained-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=10)
@@ -93,13 +94,14 @@ def main() -> None:
         raise SystemExit("explicit --execute is required")
     if args.output_root.exists():
         raise FileExistsError(f"refusing to overwrite {args.output_root}")
+    spec = cohort_spec(args.cohort)
     tape = json.loads((args.trained_root / "tape" / "tape_manifest.json").read_text(encoding="utf-8"))
-    if (tape.get("protocol") != TAPE_PROTOCOL or tape.get("episode_ids") != list(range(780000, 780100))
-            or tape.get("training_access") != "forbidden"):
-        raise RuntimeError("invalid confirmation tape")
+    if (tape.get("protocol") != spec["tape_protocol"] or tape.get("episode_ids") != spec["episode_ids"]
+            or tape.get("training_access") != "forbidden" or tape.get("cohort") != args.cohort):
+        raise RuntimeError("invalid frozen cohort tape")
     tasks, manifests = [], []
     for arm in ARMS:
-        for seed in SEEDS:
+        for seed in spec["seeds"]:
             run = args.trained_root / "runs" / arm / f"seed{seed}"
             manifest = json.loads((run / "run_manifest.json").read_text(encoding="utf-8"))
             checkpoint = run / "actor_critic_latest.pt"
@@ -113,7 +115,7 @@ def main() -> None:
                 raise RuntimeError(f"invalid confirmatory source run: {arm}/seed{seed}")
             if not checkpoint.is_file() or manifest.get("checkpoint_sha256") != digest(checkpoint):
                 raise RuntimeError(f"invalid endpoint checkpoint: {checkpoint}")
-            tasks.append((arm, seed, str(checkpoint), tape["episode_ids"], tape["conditions"], tape["tape_hash"]))
+            tasks.append((arm, seed, str(checkpoint), tape["episode_ids"], tape["conditions"], tape["tape_hash"], spec["evaluation_protocol"]))
             manifests.append(manifest)
     total = len(tasks) * len(tape["conditions"]) * len(tape["episode_ids"])
     print(f"DRTP final confirmation evaluation: cells={len(tasks)}, episodes={total}, workers={min(args.workers, len(tasks))}", flush=True)
@@ -131,7 +133,7 @@ def main() -> None:
     write_csv(args.output_root / "raw_episode_metrics.csv", raw)
     summary: list[dict] = []
     for arm in ARMS:
-        for seed in SEEDS:
+        for seed in spec["seeds"]:
             for condition in order:
                 subset = [row for row in raw if row["method"] == arm and int(row["train_seed"]) == seed and row["topology_condition"] == condition]
                 summary.append({
@@ -143,7 +145,7 @@ def main() -> None:
                 })
     write_csv(args.output_root / "per_seed_condition_summary.csv", summary)
     evaluation_manifest = {
-        "protocol": PROTOCOL, "status": "completed", "endpoint": "final_10m_only",
+        "protocol": spec["evaluation_protocol"], "cohort": args.cohort, "status": "completed", "endpoint": "final_10m_only",
         "cells": len(tasks), "conditions": [entry["name"] for entry in tape["conditions"]],
         "episodes_per_condition": len(tape["episode_ids"]), "raw_episode_rows": len(raw),
         "summary_rows": len(summary), "tape_hash": tape["tape_hash"], "source_run_manifests": manifests,
