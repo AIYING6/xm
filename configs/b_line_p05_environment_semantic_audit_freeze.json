@@ -1,0 +1,45 @@
+{
+  "protocol": "B-LINE-P0.5-ENVIRONMENT-SEMANTIC-AUDIT-V1",
+  "purpose": "Audit only the existing environment semantics and actor-information boundary behind the conditional B-line P0 counterexample.",
+  "scope": {
+    "environment_sources": [
+      "envs/uav_intercept_3d_env.py",
+      "envs/redundant_topology_uav_env.py"
+    ],
+    "actor_interface_sources": [
+      "algorithms/ri_gmappo/tatg_outer_rollout.py",
+      "scripts/run_redundant_topology_uav_p2.py"
+    ]
+  },
+  "questions": [
+    "Does an existing environment natively impose a persistent communication-outage requirement?",
+    "Can a policy obtain or deterministically reconstruct the relevant timing state from actor-legal information?",
+    "Does the native timing state change a real feasible action set or task-information state, rather than only an added penalty?"
+  ],
+  "classification": [
+    "environment_native_semantics",
+    "legally_derivable_internal_state",
+    "newly_introduced_assumption"
+  ],
+  "p0_assumption_under_audit": {
+    "name": "maximum consecutive route-outage duration requiring relay reconfiguration",
+    "slots": 3,
+    "source": "configs/b_line_p0_counterexample_freeze.json"
+  },
+  "allowed_verdicts": [
+    "B_P05_SEMANTIC_PASS",
+    "B_P05_SEMANTIC_PARTIAL",
+    "B_P05_SEMANTIC_NO_GO"
+  ],
+  "exclusions": [
+    "environment mutation",
+    "reward or termination mutation",
+    "solver implementation",
+    "PPO or RL training",
+    "evaluation rollout",
+    "checkpoint selection"
+  ],
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}
