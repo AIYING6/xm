@@ -1,0 +1,26 @@
+{
+  "allowed_next_step": "At most a new zero-training P0 reformulation audit grounded in a declared native freshness state and an existing action interface; no solver or P1 is authorized.",
+  "automatic_continuation": false,
+  "checks": {
+    "actor_legal_age_or_topology_signal_exists": true,
+    "info_only_failure_labels_excluded_from_actor_legality": true,
+    "native_cache_freshness_can_change_task_information_or_legal_terminal_actions": true,
+    "native_mandatory_relay_reconfiguration_action": false,
+    "native_maximum_consecutive_route_outage_requirement": false,
+    "native_time_dependent_information_semantics": true,
+    "p0_exact_outage_reconfiguration_pair_is_environment_native": false
+  },
+  "conclusion": "The scientific information-gap question remains plausible only after reformulation around native cache/message freshness. The existing P0 outage-duration/reconfigure-relay counterexample is not an exact target-environment statement.",
+  "environment_steps": 0,
+  "evaluation_started": false,
+  "ppo_updates": 0,
+  "protocol": "B-LINE-P0.5-ENVIRONMENT-SEMANTIC-AUDIT-V1",
+  "source_sha256": {
+    "redundant_topology_uav_env.py": "8cca1b500c75e38ad7598ff7465a3bcf53a4bf5cd158f4ed905da34fb02cc7f1",
+    "run_redundant_topology_uav_p2.py": "20a5def72139970151b09919ef4b540740d95fe1dad697c1ebd9fbf01ea9919f",
+    "tatg_outer_rollout.py": "4f44b96bce45f048e7760fb590cb318d57fb55511f3b968e08a3319f3d1c02ec",
+    "uav_intercept_3d_env.py": "06e378d34eb390d8095469e98c7c9d37b244e98d92b93b6b20c24edaa7cd29ff"
+  },
+  "training_started": false,
+  "verdict": "B_P05_SEMANTIC_PARTIAL"
+}
