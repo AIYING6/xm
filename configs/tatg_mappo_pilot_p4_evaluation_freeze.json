@@ -1,0 +1,44 @@
+{
+  "protocol": "TATG-MAPPO-FRESH-SEED-PILOT-P4-FIXED-ENDPOINT-EVALUATION-V1",
+  "depends_on": "12 completed frozen pilot trajectories at update 3907",
+  "authorization": {
+    "evaluation_authorized": true,
+    "training_authorized": false,
+    "resume_authorized": false,
+    "checkpoint_selection_authorized": false,
+    "automatic_aggregation_or_continuation": false
+  },
+  "source": {
+    "training_root": "results/development/tatg_mappo_pilot_v4",
+    "arms": [
+      "utr_snapshot_sg",
+      "tatg_cetm_utr",
+      "tatg_snapshot_gru_utr",
+      "tatg_zero_residual_utr"
+    ],
+    "training_seeds": [75011, 75012, 75013],
+    "required_status": "completed",
+    "fixed_endpoint_update": 3907,
+    "fixed_endpoint_environment_steps": 1000192,
+    "checkpoint": "actor_critic_latest.pt"
+  },
+  "evaluation": {
+    "tape": "configs/tatg_mappo_pilot_development_tape.json",
+    "development_only": true,
+    "conditions": 5,
+    "episodes_per_condition": 100,
+    "total_episodes": 6000,
+    "output": "evaluations/final_1m",
+    "forbidden": [
+      "training",
+      "resume",
+      "optimizer_step",
+      "checkpoint_promotion",
+      "milestone_selection",
+      "heldout_or_canonical_tape",
+      "online_gate_input",
+      "automatic_gate"
+    ]
+  },
+  "analysis_boundary": "This phase produces only fixed development-tape episode and seed-condition records. The preregistered directional gate is a later, separately authorized aggregation phase."
+}
