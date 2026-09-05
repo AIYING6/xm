@@ -1,0 +1,4 @@
+candidate,decisions,myopic_action,myopic_value,optimal_action,optimal_value,hard_coupling
+A,migrate_service_1_now|reserve_relay_for_service_2,migrate_service_1_now,6,reserve_relay_for_service_2,10,one relay slot at t=0; service 2 has an unrecoverable t=1 continuity deadline
+B,execute_local_task_now|synchronize_feasibility_version,execute_local_task_now,4,synchronize_feasibility_version,9,one broadcast at t=0; the high-value t=1 joint action is infeasible until both agents hold the same version
+C,fail_back_to_recovered_route_now|hold_temporary_reservation,fail_back_to_recovered_route_now,5,hold_temporary_reservation,8,one capacity reservation; immediate failback consumes the only recovery buffer required by a t=1 service deadline
