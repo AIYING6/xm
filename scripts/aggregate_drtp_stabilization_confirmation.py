@@ -13,6 +13,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.run_drtp_stabilization_confirmatory_single import ARMS, SEEDS  # noqa: E402
+from scripts.drtp_stabilization_confirmation_contracts import cohort_names, cohort_spec  # noqa: E402
 
 
 PROTOCOL = "DRTP-STABILIZATION-FINAL-CONFIRMATION-REPORT-V1"
@@ -67,13 +68,13 @@ def sampler_record(trained: Path, seed: int) -> dict[str, float | int | bool]:
     }
 
 
-def seed_endpoints(rows: list[dict[str, str]], trained: Path) -> list[dict]:
+def seed_endpoints(rows: list[dict[str, str]], trained: Path, seeds: tuple[int, ...] = SEEDS) -> list[dict]:
     cells: dict[tuple[str, int], dict[str, dict[str, str]]] = defaultdict(dict)
     for row in rows:
         cells[(row["method"], int(row["train_seed"]))][row["condition"]] = row
     endpoints = []
     for arm in ARMS:
-        for seed in SEEDS:
+        for seed in seeds:
             cell = cells[(arm, seed)]
             if set(cell) != {"nominal", *PERTURBED}:
                 raise RuntimeError(f"incomplete confirmation cell {arm}/seed{seed}")
@@ -136,6 +137,7 @@ def classify(summaries: dict[str, dict], paired: list[dict]) -> tuple[str, str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--cohort", choices=cohort_names(), default="A")
     parser.add_argument("--trained-root", type=Path, required=True)
     parser.add_argument("--evaluation-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
@@ -143,18 +145,20 @@ def main() -> None:
     args = parser.parse_args()
     if not args.execute:
         raise SystemExit("explicit --execute is required")
-    out = args.output_root / "diagnostics" / "confirmation_final"
+    spec = cohort_spec(args.cohort)
+    seeds = spec["seeds"]
+    out = args.output_root / "diagnostics" / spec["diagnostic_dir"]
     if out.exists():
         raise FileExistsError(f"refusing to overwrite {out}")
     manifest = json.loads((args.evaluation_root / "evaluation_manifest.json").read_text(encoding="utf-8"))
-    if manifest.get("protocol") != "DRTP-STABILIZATION-FINAL-CONFIRMATION-10M-EVALUATION-V1" or manifest.get("status") != "completed":
+    if manifest.get("protocol") != spec["evaluation_protocol"] or manifest.get("cohort") != args.cohort or manifest.get("status") != "completed":
         raise RuntimeError("incomplete or incompatible confirmatory evaluation")
-    endpoints = seed_endpoints(read_csv(args.evaluation_root / "per_seed_condition_summary.csv"), args.trained_root)
+    endpoints = seed_endpoints(read_csv(args.evaluation_root / "per_seed_condition_summary.csv"), args.trained_root, seeds)
     summaries = {arm: method_summary(endpoints, arm) for arm in ARMS}
     lookup = {(row["method"], int(row["train_seed"])): row for row in endpoints}
     paired = []
     for baseline in BASELINES:
-        for seed in SEEDS:
+        for seed in seeds:
             final, base = lookup[(FINAL, seed)], lookup[(baseline, seed)]
             paired.append({
                 "baseline": baseline, "train_seed": seed,
@@ -168,7 +172,7 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=False)
     write_csv(out / "CONFIRMATION_PER_SEED_ENDPOINTS.csv", endpoints)
     write_csv(out / "CONFIRMATION_PAIRED_SEED_DELTAS.csv", paired)
-    report = {"protocol": PROTOCOL, "verdict": verdict, "interpretation": interpretation, "summaries": summaries, "primary_unit": "training_seed", "raw_range_sd_auxiliary_only": True, "automatic_algorithm_revision": False, "automatic_6uav": False}
+    report = {"protocol": spec["report_protocol"], "cohort": args.cohort, "verdict": verdict, "interpretation": interpretation, "summaries": summaries, "primary_unit": "training_seed", "raw_range_sd_auxiliary_only": True, "pooled_n10_confirmatory_forbidden": args.cohort == "B", "automatic_algorithm_revision": False, "automatic_6uav": False}
     (out / "CONFIRMATION_REPORT.json").write_text(json.dumps(report, indent=2, default=str) + "\n", encoding="utf-8")
     (out / "CONFIRMATION_REPORT.md").write_text(f"# DRTP final confirmation report\n\n**Verdict:** `{verdict}`.\n\n{interpretation}\n\nRange and SD are descriptive only: they must be interpreted together with lower-tail and worst-seed behavior.\n", encoding="utf-8")
     print(json.dumps({"verdict": verdict, "automatic_algorithm_revision": False}, indent=2), flush=True)

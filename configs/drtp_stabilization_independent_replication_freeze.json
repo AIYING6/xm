@@ -1,0 +1,51 @@
+{
+  "protocol": "DRTP-STABILIZATION-INDEPENDENT-REPLICATION-FREEZE-V1",
+  "cohort": "B",
+  "parent_final_freeze": "configs/drtp_stabilization_final_freeze.json",
+  "source_cohort_results_access": "forbidden_until_independent_replication_is_complete",
+  "final_method": {
+    "name": "Global-Anchored-EGTR-SG-MAPPO",
+    "sampler_mode": "anchored_egtr",
+    "anchor_alpha": 0.75,
+    "formula": "q_final=(1-alpha)*q_utr+alpha*q_egtr",
+    "local_egtr_path": "evidence->bounded-simplex projection->local L1 trust region",
+    "local_trust_region_l1": 0.1,
+    "consequence": "||q_final,t+1-q_final,t||_1<=0.075",
+    "absolute_utr_distance_bound": "||q_final-q_utr||_1<=1.5"
+  },
+  "frozen_training": {
+    "seeds": [78021, 78022, 78023, 78024, 78025],
+    "arms": {
+      "utr_sg": {"sampler_mode": "utr"},
+      "drtp_sg": {"sampler_mode": "drtp"},
+      "egtr_sg": {"sampler_mode": "egtr"},
+      "global_anchored_egtr_a075_sg": {"sampler_mode": "anchored_egtr", "anchor_alpha": 0.75}
+    },
+    "updates": 39063,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "environment_steps_per_trajectory": 10000128,
+    "endpoint_only": true,
+    "early_stopping": false,
+    "checkpoint_promotion": false,
+    "seed_replacement": false
+  },
+  "evaluation": {
+    "tape_protocol": "DRTP-STABILIZATION-INDEPENDENT-REPLICATION-TAPE-V1",
+    "episode_ids": [781000, 781099],
+    "episodes_per_condition": 100,
+    "conditions": ["nominal", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "training_access": "forbidden",
+    "matched_across_arms_and_seeds": true,
+    "endpoint_checkpoint_only": true
+  },
+  "prohibitions": ["adaptive_alpha", "temporal_smoothing", "new_gate", "new_penalty", "ppo_tuning", "reward_tuning", "sampler_redesign", "seed_replacement", "checkpoint_selection", "cohort_pooling", "automatic_algorithm_revision", "automatic_6uav"],
+  "reporting": {
+    "cohort_separate_from_A": true,
+    "pooled_n10_confirmatory_forbidden": true,
+    "range_sd_auxiliary_only": true
+  },
+  "automatic_training": false,
+  "automatic_algorithm_revision": false,
+  "automatic_6uav": false
+}

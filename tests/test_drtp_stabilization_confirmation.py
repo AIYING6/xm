@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from scripts.create_drtp_stabilization_confirmatory_tape import payload
+from scripts.drtp_stabilization_confirmation_contracts import cohort_spec
 from scripts.run_drtp_stabilization_confirmatory_single import ARMS, SEEDS, STEPS, UPDATES, training_config
 
 
@@ -49,3 +50,14 @@ def test_confirmation_launcher_has_no_algorithm_revision_path() -> None:
     assert "aggregate_drtp_stabilization_confirmation.py" in launcher
     assert "automatic_algorithm_revision\":false" in launcher
     assert "launch_6uav" not in launcher.lower()
+
+
+def test_independent_replication_is_frozen_before_cohort_a_results() -> None:
+    a, b = cohort_spec("A"), cohort_spec("B")
+    assert a["freeze"]["final_method"] == b["freeze"]["final_method"]
+    assert set(a["seeds"]).isdisjoint(b["seeds"])
+    assert b["seeds"] == (78021, 78022, 78023, 78024, 78025)
+    tape = payload("B")
+    assert tape["protocol"] == "DRTP-STABILIZATION-INDEPENDENT-REPLICATION-TAPE-V1"
+    assert tape["episode_ids"] == list(range(781000, 781100))
+    assert tape["training_access"] == "forbidden"
