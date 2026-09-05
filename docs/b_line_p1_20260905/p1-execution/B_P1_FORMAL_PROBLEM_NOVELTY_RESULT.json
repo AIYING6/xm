@@ -1,0 +1,37 @@
+{
+  "automatic_continuation": false,
+  "checks": {
+    "closest_method_audit_completed": true,
+    "current_native_interface_lacks_controllable_reconfiguration": true,
+    "environment_instantiated": false,
+    "evaluation_started": false,
+    "exact_direct_near_neighbor_not_established_by_audited_set": true,
+    "freshness_changes_native_action_feasibility": true,
+    "native_freshness_is_hard_feasibility_not_soft_penalty": true,
+    "only_native_scout_and_terminal_actions_frozen": true,
+    "p0r_native_snapshot_insufficiency_established": true,
+    "physical_and_validity_graphs_formally_separated": true,
+    "relay_control_not_misrepresented_as_native": true,
+    "selected_solver_implemented": false,
+    "training_started": false
+  },
+  "decision": {
+    "next_gate_if_user_authorizes": "A zero-training native-decision expressiveness audit must decide whether the existing interface can support a nontrivial deterministic planning problem without inventing semantics.",
+    "what_is_frozen": "A legally observable information-validity constrained sensing-service assignment problem and requirements for any future deterministic solver.",
+    "what_is_not_authorized": "A solver, an algorithm name, a new relay/routing action, environment changes, training, or a performance benchmark.",
+    "why_not_go": "P0R proves a native information-validity feasibility gap, but the frozen six-UAV interface exposes scout sensing and terminal service actions only; relay/routing/switching reconfiguration is not a native controllable variable."
+  },
+  "environment_steps": 0,
+  "evaluation_episodes": 0,
+  "evaluation_started": false,
+  "ppo_updates": 0,
+  "protocol": "B-LINE-P1-FORMAL-PROBLEM-AND-NOVELTY-FREEZE-V1",
+  "source_sha256": {
+    "environment": "8cca1b500c75e38ad7598ff7465a3bcf53a4bf5cd158f4ed905da34fb02cc7f1",
+    "freeze": "4a32bc4e60c36eeb973f15033ea872f7c338395bdc4be44ec45200173d710012",
+    "p0r_result": "44ea3dfcd8a84db094a700323b16a1059920a759f236159ef6725490fd80b621"
+  },
+  "training_started": false,
+  "upstream_p0r_verdict": "B_P0R_GO",
+  "verdict": "B_P1_CONDITIONAL"
+}
