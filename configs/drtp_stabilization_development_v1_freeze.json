@@ -1,0 +1,43 @@
+{
+  "protocol": "DRTP-STABILIZATION-DEVELOPMENT-V1",
+  "purpose": "bounded three-seed development comparison; not confirmatory paper evidence",
+  "development_policy": {
+    "no_root_cause_audit": true,
+    "no_single_metric_auto_kill": true,
+    "maximum_major_algorithm_versions": 2,
+    "automatic_v2_or_confirmation": false
+  },
+  "training": {
+    "seeds": [76011, 76012, 76013],
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "updates": 3907,
+    "environment_steps_per_trajectory": 1000192,
+    "endpoint_checkpoint": "actor_critic_latest.pt",
+    "evaluation_during_training": false,
+    "same_environment_ppo_reward_architecture_failure_semantics": true
+  },
+  "arms": {
+    "utr_sg": {"sampler_mode": "utr"},
+    "drtp_sg": {"sampler_mode": "drtp"},
+    "egtr_sg": {"sampler_mode": "egtr"},
+    "anchored_egtr_a035_sg": {"sampler_mode": "anchored_egtr", "anchor_alpha": 0.35},
+    "anchored_egtr_a055_sg": {"sampler_mode": "anchored_egtr", "anchor_alpha": 0.55},
+    "anchored_egtr_a075_sg": {"sampler_mode": "anchored_egtr", "anchor_alpha": 0.75}
+  },
+  "anchored_egtr": {
+    "formula": "q_final=(1-alpha)*q_utr+alpha*q_egtr",
+    "alpha_candidates": [0.35, 0.55, 0.75],
+    "global_l1_bound": "||q_final-q_utr||_1<=2*alpha",
+    "egtr_local_trust_region_path_preserved_before_anchor": true,
+    "telemetry": ["pre_anchor_q", "post_anchor_q", "anchor_alpha", "post_anchor_uniform_l1", "cumulative_exposure_deviation"]
+  },
+  "evaluation": {
+    "development_only": true,
+    "tape_protocol": "DRTP-STABILIZATION-DEVELOPMENT-V1-TAPE",
+    "conditions": 5,
+    "episodes_per_condition": 100,
+    "endpoint_only": true,
+    "forbidden": ["online_evaluation", "checkpoint_promotion", "heldout_input", "automatic_v2", "automatic_confirmation"]
+  }
+}
