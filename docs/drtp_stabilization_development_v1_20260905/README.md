@@ -15,10 +15,10 @@ local L1 trust-region path.  Its applied next-reset distribution is then:
 `q_final = (1 - alpha) q_UTR + alpha q_EGTR`.
 
 This gives a directly logged global UTR-distance bound while retaining a
-nonzero adaptive path for every positive alpha.  Training creates no online
-evaluation.  Fixed endpoint evaluation and the development assessment are
-separate actions; neither a V2 revision nor confirmation may start
-automatically.
+nonzero adaptive path for every positive alpha. Training creates no online
+evaluation. After every frozen trajectory finishes, the authorized launcher
+runs one fixed endpoint evaluation and then the integrated development
+assessment. Neither a V2 revision nor confirmation may start automatically.
 
 The only permissible development outcomes are `V1_STRONG`,
 `V1_PROMISING_NEEDS_ONE_REVISION`, and `V1_WEAK`.  They are based on the full

@@ -1,4 +1,4 @@
-"""Build a source-only AutoDL package for authorized Development V1 training."""
+"""Build a source-only AutoDL package for Development V1 train/evaluate/assess."""
 from __future__ import annotations
 
 import hashlib
@@ -41,9 +41,10 @@ def main() -> None:
         provenance = {
             "protocol": "DRTP-STABILIZATION-DEVELOPMENT-V1-CLOUD-PACKAGE",
             "commit": commit,
-            "scope": "18 development trajectories only: 6 sampler arms x 3 seeds x 1,000,192 environment steps",
-            "training_only": True,
-            "evaluation_started": False,
+            "scope": "18 development trajectories plus frozen fixed-endpoint evaluation and integrated development assessment",
+            "training_only": False,
+            "endpoint_evaluation": "fixed final checkpoint only; 18 cells x 5 conditions x 100 episodes",
+            "integrated_assessment": ["upside", "lower_tail", "mean", "median", "seed_spread", "nominal", "safety", "adaptivity"],
             "automatic_v2_or_confirmation": False,
             "development_seeds": [76011, 76012, 76013],
             "anchor_alphas": [0.35, 0.55, 0.75],
@@ -53,7 +54,8 @@ def main() -> None:
         )
         (stage / "README_AUTODL.txt").write_text(
             "Run scripts/launch_drtp_stabilization_development_v1_autodl.sh only. "
-            "It trains the frozen V1 cells and stops before endpoint evaluation or assessment.\n",
+            "It trains the frozen V1 cells, runs fixed endpoint evaluation, then writes an integrated development assessment. "
+            "It never starts V2 or confirmation automatically.\n",
             encoding="utf-8",
         )
         if OUT.exists():

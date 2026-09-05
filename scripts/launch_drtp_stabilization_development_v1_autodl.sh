@@ -29,4 +29,15 @@ for arm in utr_sg drtp_sg egtr_sg anchored_egtr_a035_sg anchored_egtr_a055_sg an
 done
 wait
 printf '%s\n' '{"status":"DRTP_STABILIZATION_DEVELOPMENT_V1_TRAINING_COMPLETE","trajectories":18,"evaluation_started":false,"automatic_continuation":false}' > "$OUTPUT_ROOT/DEVELOPMENT_V1_TRAINING_COMPLETE.json"
-echo "V1 development training complete. Endpoint evaluation and development assessment require separate authorization."
+"$PYTHON_BIN" scripts/run_drtp_stabilization_development_v1_evaluation.py \
+  --trained-root "$OUTPUT_ROOT" \
+  --output-root "$OUTPUT_ROOT/evaluations/final_1m" \
+  --workers "$MAX_PARALLEL" \
+  --execute
+"$PYTHON_BIN" scripts/aggregate_drtp_stabilization_development_v1.py \
+  --trained-root "$OUTPUT_ROOT" \
+  --evaluation-root "$OUTPUT_ROOT/evaluations/final_1m" \
+  --output-root "$OUTPUT_ROOT" \
+  --execute
+printf '%s\n' '{"status":"DRTP_STABILIZATION_DEVELOPMENT_V1_COMPLETE","trajectories":18,"endpoint_evaluation_completed":true,"integrated_development_assessment_completed":true,"automatic_v2_or_confirmation":false}' > "$OUTPUT_ROOT/DEVELOPMENT_V1_COMPLETE.json"
+echo "V1 training, fixed endpoint evaluation, and integrated development assessment complete. No V2 or confirmation was started automatically."
