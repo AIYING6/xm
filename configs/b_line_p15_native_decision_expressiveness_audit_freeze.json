@@ -1,0 +1,43 @@
+{
+  "protocol": "B-LINE-P15-NATIVE-DECISION-EXPRESSIVENESS-AUDIT-V1",
+  "purpose": "Decide whether the unmodified six-UAV native interface, rather than an imagined extension, supports a nontrivial high-ceiling deterministic information-validity solver.",
+  "environment": {
+    "module": "envs/redundant_topology_uav_env.py",
+    "scale": "main",
+    "configuration_rule": "Use unmodified scale_config('main') defaults only."
+  },
+  "upstream": {
+    "required_p0r_verdict": "B_P0R_GO",
+    "required_p1_verdict": "B_P1_CONDITIONAL"
+  },
+  "required_native_capabilities_for_go": [
+    "a transition-effective controllable reconfiguration variable",
+    "a non-dominated information-validity scheduling or allocation tradeoff under native costs/capacities",
+    "closure between the legal decision interface and the transition-level feasibility semantics",
+    "a nontrivial deterministic problem remaining after native dominance reductions"
+  ],
+  "allowed_audit_operations": [
+    "read source",
+    "reset and step unmodified deterministic environment states",
+    "compare exact state transitions",
+    "static action/reward/route inspection"
+  ],
+  "prohibitions": [
+    "solver implementation",
+    "training",
+    "checkpoint loading",
+    "evaluation tape",
+    "formal performance benchmark",
+    "environment modification",
+    "new action",
+    "new reward or cost"
+  ],
+  "verdicts": {
+    "go": "B_P15_GO",
+    "conditional": "B_P15_CONDITIONAL",
+    "no_go": "B_P15_NO_GO_CURRENT_INTERFACE"
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "automatic_continuation": false
+}

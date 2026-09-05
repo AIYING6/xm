@@ -1,0 +1,57 @@
+{
+  "automatic_continuation": false,
+  "capabilities": {
+    "all_main_legal_routes_active_at_reset": true,
+    "all_main_scout_objective_pairs_senseable_at_reset": true,
+    "main_has_as_many_scouts_as_objectives": true,
+    "nontrivial_native_reconfiguration_variable_exists": false,
+    "p0r_problem_premise_retained": true,
+    "p1_formal_boundary_retained": true,
+    "previous_mask_closed_under_joint_transition": false,
+    "relay_actions_are_transition_effective": false,
+    "sensing_has_no_direct_native_reward_cost": true,
+    "sensing_has_no_direct_physical_effect": true
+  },
+  "decision": {
+    "not_authorized": "No solver, training, benchmark, or environment modification follows from this audit.",
+    "reason": "The native interface has no transition-effective relay/routing/switching control; default main sensing has full coverage with no direct cost; and a prior observation mask is not closed under the joint transition ordering.",
+    "retained_asset": "P0R remains valid evidence that physical snapshots can omit legally relevant information-validity state.",
+    "scope": "This closes only direct high-ceiling solver development on the current unmodified six-UAV action interface."
+  },
+  "environment_steps": 12,
+  "evaluation_episodes": 0,
+  "evaluation_started": false,
+  "observations": {
+    "main_counts": {
+      "objectives": 2,
+      "relays": 2,
+      "scouts": 2,
+      "terminals": 2
+    },
+    "pre_step_stale_terminal_masks": {
+      "4": [
+        1,
+        0,
+        0
+      ],
+      "5": [
+        1,
+        0,
+        0
+      ]
+    },
+    "relay_raw_nonidle_action_transition_inert": true,
+    "same_step_sensing_then_terminal_motion": true,
+    "tau_max": 5
+  },
+  "ppo_updates": 0,
+  "protocol": "B-LINE-P15-NATIVE-DECISION-EXPRESSIVENESS-AUDIT-V1",
+  "source_sha256": {
+    "environment": "8cca1b500c75e38ad7598ff7465a3bcf53a4bf5cd158f4ed905da34fb02cc7f1",
+    "freeze": "8bdc6108fe0ecf21600ffb6c90c2e06d206b3bb3ee02f22d5846c5c5ca810cf2",
+    "p0r_result": "44ea3dfcd8a84db094a700323b16a1059920a759f236159ef6725490fd80b621",
+    "p1_result": "f39a5879351049c5aa2a481782eb79cec10b718cfef94b9c85c96eb52c0833da"
+  },
+  "training_started": false,
+  "verdict": "B_P15_NO_GO_CURRENT_INTERFACE"
+}
