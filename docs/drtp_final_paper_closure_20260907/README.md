@@ -24,4 +24,11 @@ The two running blocks must be incorporated only after their fixed endpoints and
 - `DRTP_FINAL_MANUSCRIPT_SCAFFOLD.md`: English paper structure and claim boundaries.
 - `DRTP_FINAL_TERMINOLOGY_LEDGER.md`: canonical terminology.
 - `scripts/plot_drtp_final_cohort_pairs.py`: Python-only seed-level paired figure generator.
-
+- `DRTP_FINAL_MANUSCRIPT_DRAFT.md`: near-complete English draft with final-result placeholders.
+- `DRTP_FINAL_CLAIM_EVIDENCE_MATRIX.md`: allowed, pending and prohibited manuscript claims.
+- `DRTP_FINAL_TABLE_TEMPLATES.md`: final Table 1--5 import templates.
+- `DRTP_FINAL_ALGORITHM_AND_COMPARATOR_SPEC.md`: Algorithm 1 and comparator mechanism map.
+- `DRTP_FINAL_RUNTIME_COMPLEXITY_PLAN.md`: matched overhead-reporting protocol.
+- `DRTP_FINAL_REPRODUCIBILITY_AND_SUPPLEMENT_PLAN.md`: reproducibility and supplement inventory.
+- `DRTP_FINAL_REVIEWER_ATTACK_LIST.md`: reviewer-risk checklist.
+- `DRTP_FINAL_JOURNAL_SHORTLIST.md`: scope-based venue options.
