@@ -1,0 +1,30 @@
+{
+  "protocol": "DRTP-STABILIZATION-DOUBLE-COHORT-METHOD-SELECTION-V1",
+  "date": "2026-09-06",
+  "evidence_archives": {
+    "A": {"sha256": "429f13444c4ed10327abd62a13a0d9bf8ee737cedb6b6448353fd9087bcb275f", "raw_endpoint_episodes": 14000},
+    "B": {"sha256": "d5c4adbe4f0004f0f415ba38e2b03232c55cb46c7d5dc7c7b1031eef7c1eef73", "raw_endpoint_episodes": 14000}
+  },
+  "primary_unit": "training_seed",
+  "cohorts_remain_separate_for_inference": true,
+  "pooled_n10_descriptive_only": true,
+  "selection": {
+    "principal_method": "drtp_sg",
+    "not_selected": {
+      "egtr_sg": "A-leading performance reversed in B.",
+      "global_anchored_egtr_a075_sg": "Did not preserve a consistent advantage over UTR or DRTP across both cohorts."
+    },
+    "drtp_vs_utr": {
+      "A_mean_perturbed_delta": 39.63699209301825,
+      "B_mean_perturbed_delta": 23.15352566833652,
+      "A_seed_wins": 3,
+      "B_seed_wins": 4,
+      "combined_seed_wins_descriptive": 7,
+      "A_worst_seed": {"drtp": 191.48538625778164, "utr": 79.7514616602473},
+      "B_worst_seed": {"drtp": 172.02629155241883, "utr": 164.9801809477185}
+    }
+  },
+  "claim_boundary": "Under the two completed frozen 10M cohorts and their separate fixed endpoint tapes, Original DRTP repeatedly improves perturbed return over UTR and retains favorable observed lower-tail and timeout behavior. This does not establish universal seed-stable superiority or erase earlier historical cohort-sensitivity evidence.",
+  "algorithm_development_authorized": false,
+  "next_evidence": ["held-out/OOD evaluation", "matched external comparators", "6-UAV or scale-transfer validation", "manuscript evidence integration"]
+}
