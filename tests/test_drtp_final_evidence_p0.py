@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 
+from scripts.aggregate_drtp_final_evidence_heldout_ood import PARAMETER, STRUCTURAL
 from scripts.verify_drtp_final_evidence_p0_preflight import check_environment, load_freeze
 
 
@@ -27,6 +28,14 @@ class FinalEvidenceP0Tests(unittest.TestCase):
             "d5c4adbe4f0004f0f415ba38e2b03232c55cb46c7d5dc7c7b1031eef7c1eef73",
         )
         self.assertTrue(json.dumps(spec))
+
+    def test_heldout_report_registry_matches_the_frozen_tape(self) -> None:
+        spec = load_freeze()
+        by_class = {}
+        for condition in spec["fresh_heldout_ood_tape"]["conditions"]:
+            by_class.setdefault(condition["class"], []).append(condition["name"])
+        self.assertEqual(tuple(by_class["parameter_ood"]), PARAMETER)
+        self.assertEqual(tuple(by_class["structural_ood"]), STRUCTURAL)
 
 
 if __name__ == "__main__":
