@@ -10,9 +10,9 @@
     "implementation_rule": "Independently implement only the published level-score/replay-distribution rule; do not copy non-commercial source code."
   },
   "mapping": {
-    "level": "one of the frozen DRTP topology-condition members",
-    "score": "per-member absolute generalized-advantage/TD learning-potential statistic accumulated from training rollouts only",
-    "replay_distribution": "PLR mixture of staleness and score priority over the same seven-member support",
+    "level": "one of six frozen DRTP failure groups; nominal mass remains fixed at 0.50",
+    "score": "mean absolute unnormalised generalized advantage over vectorised training-rollout fragments only",
+    "replay_distribution": "PLR mixture of staleness and rank priority conditional on the six failure groups; the frozen within-group member draw remains uniform",
     "evaluation_access": "forbidden",
     "forbidden": [
       "evaluation-tape access",

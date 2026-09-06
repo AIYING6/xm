@@ -1,0 +1,41 @@
+{
+  "protocol": "DRTP-PLR-EXTERNAL-FORMAL-TRAINING-FREEZE-V1",
+  "status": "PREPARED_NOT_AUTHORIZED_TO_LAUNCH",
+  "methods": {
+    "utr_sg": {"sampler_mode": "utr"},
+    "drtp_sg": {"sampler_mode": "drtp"},
+    "plr_style_sg": {"sampler_mode": "plr"}
+  },
+  "training": {
+    "seeds": [79011, 79012, 79013, 79014, 79015],
+    "reserved_independent_replication_seeds": [79021, 79022, 79023, 79024, 79025],
+    "updates": 39063,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "environment_steps_per_trajectory": 10000128,
+    "total_trajectories": 15,
+    "from_scratch": true,
+    "early_stopping": false,
+    "checkpoint_promotion": false,
+    "evaluation_during_training": false
+  },
+  "plr_mapping": {
+    "nominal_mass": 0.5,
+    "level": "one of six frozen DRTP failure groups",
+    "within_group_member_draw": "existing frozen uniform draw",
+    "score": "mean absolute unnormalised GAE over vectorised T-step rollout fragments",
+    "rank_priority_temperature": 0.1,
+    "staleness_coefficient": 0.1,
+    "evaluation_access": "forbidden"
+  },
+  "evaluation": {
+    "tape_seed_namespace": [790000, 790099],
+    "endpoint": "10m only",
+    "conditions": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "episodes_per_cell": 100,
+    "training_read_access": "forbidden"
+  },
+  "fairness": ["same environment", "same reward", "same actor and critic", "same PPO", "same model capacity", "same 10M budget", "same fresh seeds", "same fixed endpoint tape"],
+  "automatic_training": false,
+  "automatic_algorithm_revision": false
+}

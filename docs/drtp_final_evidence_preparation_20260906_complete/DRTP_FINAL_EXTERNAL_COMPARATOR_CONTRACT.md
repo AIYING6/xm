@@ -6,7 +6,7 @@ The designated external comparator is a faithful, independent PLR-style topology
 
 | Fairness dimension | Frozen rule |
 |---|---|
-| Support | Same nominal + six topology-condition members |
+| Support | Same nominal group + six failure groups; original uniform member draw remains inside each group |
 | Environment / failures / reward / actor information | Identical to UTR and DRTP |
 | PPO / model / budget | Identical; 10,000,128 environment steps per trajectory |
 | Seeds / endpoint tapes / episodes | Fresh matched cohorts; same fixed endpoint tapes and counts |

@@ -52,6 +52,7 @@ from algorithms.ri_gmappo.drtp_topology_sampler import (
 )
 from algorithms.ri_gmappo.snr_topology_sampler import StaticNonuniformTopologySampler
 from algorithms.ri_gmappo.drtp_topology_sampler import AnchoredEGTRTopologySampler, EGTRTopologySampler
+from algorithms.ri_gmappo.plr_topology_sampler import PLRTopologySampler
 from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 from algorithms.ri_gmappo.failure_aware_telemetry import FailureAwareTelemetryWriter
@@ -1782,7 +1783,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.updates,
     )
     drtp_mode = str(cfg.drtp_sampler_mode).lower()
-    if drtp_mode not in {"none", "utr", "snr", "drtp", "pp_drtp", "r_drtp", "egtr", "anchored_egtr", "drtp_tr", "conservative_drtp"}:
+    if drtp_mode not in {"none", "utr", "snr", "drtp", "pp_drtp", "r_drtp", "egtr", "anchored_egtr", "drtp_tr", "conservative_drtp", "plr"}:
         raise ValueError("unsupported drtp_sampler_mode")
     if drtp_mode == "anchored_egtr" and (
         not math.isfinite(float(cfg.drtp_sampler_anchor_alpha))
@@ -1894,7 +1895,9 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     )
     sampler_seed = cfg.drtp_sampler_seed if cfg.drtp_sampler_seed is not None else cfg.seed
     sampler_updates = cfg.drtp_sampler_total_updates if cfg.drtp_sampler_total_updates is not None else cfg.updates
-    if drtp_mode == "egtr":
+    if drtp_mode == "plr":
+        drtp_sampler = PLRTopologySampler(sampler_seed, sampler_updates)
+    elif drtp_mode == "egtr":
         drtp_sampler = EGTRTopologySampler(
             sampler_seed,
             sampler_updates,
@@ -1954,6 +1957,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             if cfg.fixed_stratified_topology_sampler
             else "snr_static_nonuniform_topology_sampler_manifest.json"
             if drtp_mode == "snr"
+            else "plr_topology_sampler_manifest.json"
+            if drtp_mode == "plr"
             else "drtp_topology_sampler_manifest.json"
         )
         (out_dir / sampler_name).write_text(
@@ -2133,6 +2138,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if cfg.fixed_stratified_topology_sampler
         else "snr_static_nonuniform_topology_sampler_log.csv"
         if drtp_mode == "snr"
+        else "plr_topology_sampler_log.csv"
+        if drtp_mode == "plr"
         else "drtp_topology_sampler_log.csv"
     )
     pp_probe_log_path = out_dir / "pp_drtp_probe_log.csv"
@@ -2421,6 +2428,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 telemetry_writer=telemetry_writer,
             )
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
+            if isinstance(drtp_sampler, PLRTopologySampler):
+                # PLR reads raw rollout GAE only after collection.  It remains
+                # outside all actor/critic inputs, rewards, and PPO losses.
+                drtp_rows.append(
+                    drtp_sampler.record_rollout_scores(
+                        batch["advantages"], batch["condition_group"]
+                    )
+                )
             if isinstance(drtp_sampler, PairedProbeTopologySampler) and update % ADAPT_INTERVAL == 0 and update > WARMUP_UPDATES:
                 records = run_pp_drtp_probe_rollouts(
                     agent,

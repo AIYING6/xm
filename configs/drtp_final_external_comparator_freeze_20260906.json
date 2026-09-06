@@ -5,9 +5,11 @@
   "citation": "Jiang, Grefenstette, Rocktaschel, Prioritized Level Replay, ICML 2021",
   "published_rule": "score-driven replay over a fixed finite training-level support with a staleness mixture",
   "mapping": {
-    "training_level": "one frozen DRTP topology-condition member",
+    "training_level": "one frozen DRTP group; PLR reweights the six failure groups only",
     "support": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
-    "score_source": "training-rollout learning-potential statistic only",
+    "within_group_member_draw": "unchanged uniform draw from the existing frozen group members",
+    "nominal_mass": 0.5,
+    "score_source": "mean absolute unnormalised GAE from vectorised training-rollout fragments only",
     "evaluation_access": "forbidden"
   },
   "fairness": ["same environment", "same failure semantics", "same reward", "same actor information", "same PPO", "same model capacity", "same fresh seeds", "same 10M budget", "same fixed endpoint tape and episodes"],

@@ -131,7 +131,7 @@ def external_comparator_contract() -> dict:
     payload = {
         "protocol": "DRTP-PLR-EXTERNAL-COMPARATOR-CONTRACT-V1", "date": DATE,
         "primary_comparator": {"name": "Prioritized Level Replay (PLR)-style topology-condition replay", "paper": "Jiang, Grefenstette, Rocktaschel, ICML 2021", "paper_url": "https://proceedings.mlr.press/v139/jiang21b.html", "source_url": "https://github.com/facebookresearch/level-replay", "source_license": "CC-BY-NC-4.0", "implementation_rule": "Independently implement only the published level-score/replay-distribution rule; do not copy non-commercial source code."},
-        "mapping": {"level": "one of the frozen DRTP topology-condition members", "score": "per-member absolute generalized-advantage/TD learning-potential statistic accumulated from training rollouts only", "replay_distribution": "PLR mixture of staleness and score priority over the same seven-member support", "evaluation_access": "forbidden", "forbidden": ["evaluation-tape access", "return-selected checkpoint", "post-hoc condition removal", "reward/environment/observation/PPO change"]},
+        "mapping": {"level": "one of seven frozen DRTP groups; PLR reweights only the six failure groups", "score": "mean absolute unnormalised generalized advantage over vectorised training-rollout fragments only", "replay_distribution": "fixed nominal mass 0.50 plus PLR staleness/score mixture conditional on the six failure groups; frozen within-group member draw remains uniform", "evaluation_access": "forbidden", "forbidden": ["evaluation-tape access", "return-selected checkpoint", "post-hoc condition removal", "reward/environment/observation/PPO change"]},
         "fairness": {"same_environment": True, "same_failure_semantics": True, "same_reward_and_actor_information": True, "same_10m_budget": True, "same_fresh_seeds_per_cohort": True, "same_fixed_endpoint_tapes": True, "same_episode_counts": True, "report_parameter_count_and_wall_time": True, "no_endless_tuning": True},
         "status": "CONTRACT_ONLY_NO_EXTERNAL_TRAINING", "training_started": False,
     }
@@ -147,7 +147,7 @@ The designated external comparator is a faithful, independent PLR-style topology
 
 | Fairness dimension | Frozen rule |
 |---|---|
-| Support | Same nominal + six topology-condition members |
+| Support | Same nominal group + six failure groups; original uniform member draw remains inside each group |
 | Environment / failures / reward / actor information | Identical to UTR and DRTP |
 | PPO / model / budget | Identical; 10,000,128 environment steps per trajectory |
 | Seeds / endpoint tapes / episodes | Fresh matched cohorts; same fixed endpoint tapes and counts |

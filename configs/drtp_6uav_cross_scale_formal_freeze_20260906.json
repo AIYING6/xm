@@ -1,0 +1,37 @@
+{
+  "protocol": "DRTP-6UAV-CROSS-SCALE-FORMAL-TRAINING-FREEZE-V1",
+  "status": "PREPARED_NOT_AUTHORIZED_TO_LAUNCH",
+  "methods": {
+    "utr_scout_terminal_assigned_role_sg_mappo": {"sampler_mode": "utr"},
+    "drtp_scout_terminal_assigned_role_sg_mappo": {"sampler_mode": "drtp"}
+  },
+  "training": {
+    "seeds": [69011, 69012, 69013, 69014, 69015],
+    "reserved_independent_replication_seeds": [69021, 69022, 69023, 69024, 69025],
+    "updates": 39063,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "environment_steps_per_trajectory": 10000128,
+    "total_trajectories": 10,
+    "from_scratch": true,
+    "early_stopping": false,
+    "checkpoint_promotion": false,
+    "evaluation_during_training": false
+  },
+  "condition_interface": {
+    "groups": ["nominal", "R_upstream", "R_downstream", "C_relay_node", "C_balanced", "C_cross", "C_same_relay"],
+    "utr": "uniform over all seven frozen groups",
+    "drtp": "fixed nominal mass 1/7 plus adaptive conditional distribution across the six non-nominal frozen groups",
+    "failure_onset": 9,
+    "environment_transition_reward_and_action_masks": "unchanged"
+  },
+  "evaluation": {
+    "endpoint": "10m only",
+    "episodes_per_group_per_seed": 100,
+    "same_fixed_tape_for_matched_arms": true,
+    "training_read_access": "forbidden"
+  },
+  "fairness": ["same 6-UAV environment", "same role-separated learner", "same observation contract", "same PPO", "same model capacity", "same 10M budget", "same fresh seeds", "same endpoint tape"],
+  "automatic_training": false,
+  "automatic_algorithm_revision": false
+}
