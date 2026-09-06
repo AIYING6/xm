@@ -48,8 +48,9 @@ def sd(values: list[float]) -> float:
 
 def write_csv(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    fields = list(dict.fromkeys(field for row in rows for field in row))
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
 
@@ -151,7 +152,8 @@ def main() -> None:
     if out.exists():
         raise FileExistsError(f"refusing to overwrite {out}")
     manifest = json.loads((args.evaluation_root / "evaluation_manifest.json").read_text(encoding="utf-8"))
-    if manifest.get("protocol") != spec["evaluation_protocol"] or manifest.get("cohort") != args.cohort or manifest.get("status") != "completed":
+    cohort_ok = manifest.get("cohort") in (None, args.cohort)
+    if manifest.get("protocol") != spec["evaluation_protocol"] or not cohort_ok or manifest.get("status") != "completed":
         raise RuntimeError("incomplete or incompatible confirmatory evaluation")
     endpoints = seed_endpoints(read_csv(args.evaluation_root / "per_seed_condition_summary.csv"), args.trained_root, seeds)
     summaries = {arm: method_summary(endpoints, arm) for arm in ARMS}

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import csv
+from pathlib import Path
 
+from scripts.aggregate_drtp_stabilization_confirmation import write_csv
 from scripts.create_drtp_stabilization_confirmatory_tape import payload
 from scripts.drtp_stabilization_confirmation_contracts import cohort_spec
 from scripts.run_drtp_stabilization_confirmatory_single import ARMS, SEEDS, STEPS, UPDATES, training_config
@@ -61,3 +64,11 @@ def test_independent_replication_is_frozen_before_cohort_a_results() -> None:
     assert tape["protocol"] == "DRTP-STABILIZATION-INDEPENDENT-REPLICATION-TAPE-V1"
     assert tape["episode_ids"] == list(range(781000, 781100))
     assert tape["training_access"] == "forbidden"
+
+
+def test_confirmation_csv_accepts_final_sampler_telemetry_columns(tmp_path: Path) -> None:
+    target = tmp_path / "endpoints.csv"
+    write_csv(target, [{"method": "utr_sg", "J_perturbed": 1.0}, {"method": "final", "J_perturbed": 2.0, "sampler_adapted_updates": 10}])
+    with target.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    assert rows[1]["sampler_adapted_updates"] == "10"
