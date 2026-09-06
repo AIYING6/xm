@@ -1,0 +1,53 @@
+{
+  "protocol": "DRTP-STABILIZATION-EVIDENCE-GOVERNANCE-V1",
+  "date": "2026-09-06",
+  "scope": "Interpretation and method-selection governance only; it does not alter any frozen training, evaluation, seed, tape, sampler, or PPO setting.",
+  "a_cohort_integrity": {
+    "cohort": "A",
+    "training_seeds": [78011, 78012, 78013, 78014, 78015],
+    "training_trajectories": 20,
+    "endpoint_evaluation_episodes": 14000,
+    "training_and_evaluation_valid": true,
+    "aggregation_field_schema_repaired_without_changing_training_or_evaluation": true
+  },
+  "a_cohort_method_summary": {
+    "primary_metric": "J_perturbed_mean_over_F0_TE_TL_DS_DL_CP",
+    "independent_unit": "training_seed",
+    "methods": {
+      "utr_sg": {"mean": 177.02176143495709, "worst_seed": 79.7514616602473, "sample_sd": 64.526894507127},
+      "drtp_sg": {"mean": 216.65875352797534, "worst_seed": 191.48538625778164, "sample_sd": 23.476344356777645},
+      "egtr_sg": {"mean": 226.1293731570573, "worst_seed": 203.91773965421444, "sample_sd": 15.855853481235844},
+      "global_anchored_egtr_a075_sg": {"mean": 210.81511484256788, "worst_seed": 128.63838670135087, "sample_sd": 46.72800627799376}
+    },
+    "a_cohort_currently_preferred_method": "egtr_sg",
+    "global_anchored_egtr_vs_utr_paired_j_perturbed_deltas": [0.679152111803802, 62.721754297968005, 52.038960880526986, 4.639974706651827, 48.88692504110357],
+    "global_anchored_egtr_vs_utr_all_five_positive": true,
+    "local_limitation": "Global-Anchored EGTR alpha=0.75 did not retain the A-cohort lower-tail reliability of EGTR; this is not evidence that the method is ineffective relative to UTR or that alpha is cross-cohort unreliable."
+  },
+  "interpretation": {
+    "confirmation_weak_meaning": "A cohort-local label: the completed A cohort does not support alpha=0.75 as a final method preferred over EGTR.",
+    "does_not_mean": [
+      "the DRTP research line is closed",
+      "EGTR is ineffective",
+      "Global-Anchored EGTR is ineffective relative to UTR",
+      "independent cohort B is unnecessary",
+      "alpha=0.75 is established as cross-cohort unreliable"
+    ],
+    "automatic_algorithm_revision": false,
+    "automatic_route_closure": false
+  },
+  "frozen_next_step": {
+    "cohort": "B",
+    "seeds": [78021, 78022, 78023, 78024, 78025],
+    "tape_ids": [781000, 781099],
+    "arms": ["utr_sg", "drtp_sg", "egtr_sg", "global_anchored_egtr_a075_sg"],
+    "purpose": "Determine whether the A-cohort method ordering is cohort-specific without changing the frozen methods.",
+    "prohibitions": ["alpha revision", "new gate", "GA-EGTR-v2", "sampler redesign", "post-hoc root-cause chase for seed 78015", "cohort pooling for confirmatory inference"]
+  },
+  "post_b_review": {
+    "review_dimensions": ["code correctness and fairness", "statistical completeness", "claim-to-evidence alignment"],
+    "method_evidence_dimensions": ["mean", "median", "seed-wise consistency", "lower tail", "catastrophic seeds", "A/B cohort direction", "OOD", "safety"],
+    "not_required": ["all ten seeds win", "every metric wins against every baseline", "a single hard gate pass"],
+    "reporting_rule": "Cohorts A and B remain separate inferential units. Any pooled n=10 quantity is descriptive only."
+  }
+}
