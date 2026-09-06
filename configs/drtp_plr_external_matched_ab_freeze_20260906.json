@@ -1,0 +1,15 @@
+{
+  "protocol": "DRTP-PLR-EXTERNAL-MATCHED-AB-10M-V2",
+  "status": "PREPARED_NOT_AUTHORIZED_TO_LAUNCH",
+  "design_rationale": "Existing frozen UTR/Original-DRTP A+B mature 10M endpoints are reused. Only the missing PLR-style external comparator is newly trained, across every pre-existing A/B training seed.",
+  "methods": {"reused": ["utr_sg", "drtp_sg"], "new": ["plr_style_sg"]},
+  "cohorts": {
+    "A": {"seeds": [78011, 78012, 78013, 78014, 78015], "tape_seed_namespace": [780000, 780099]},
+    "B": {"seeds": [78021, 78022, 78023, 78024, 78025], "tape_seed_namespace": [781000, 781099]}
+  },
+  "training": {"updates": 39063, "num_envs": 4, "rollout_steps": 64, "environment_steps_per_trajectory": 10000128, "new_plr_trajectories": 10, "from_scratch": true, "early_stopping": false, "checkpoint_promotion": false, "evaluation_during_training": false},
+  "plr_mapping": {"nominal_mass": 0.5, "level": "one of six frozen DRTP failure groups", "within_group_member_draw": "existing frozen uniform draw", "score": "mean absolute unnormalised GAE over vectorised T-step rollout fragments", "rank_priority_temperature": 0.1, "staleness_coefficient": 0.1},
+  "evaluation": {"endpoint": "10m only", "conditions": ["N", "F0", "TE", "TL", "DS", "DL", "CP"], "episodes_per_cell": 100, "source": "reuse the frozen cohort-matched A/B endpoint tape exactly", "primary_reporting": "A and B separate; pooled n=10 descriptive only"},
+  "prohibitions": ["UTR retraining", "Original DRTP retraining", "cohort selection", "PLR rule modification", "DRTP modification", "performance checkpoint selection", "automatic algorithm revision"],
+  "formal_training_started": false
+}

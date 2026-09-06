@@ -67,3 +67,16 @@ Its DRTP sampler receives the full accumulated return of each completed
 episode; it explicitly does not use the final-step reward that was retained
 in older diagnostic logs.  Neither launcher includes an automatic continuation
 to a replication, algorithm revision, or another line of experiments.
+
+## 5. Compute-efficient PLR revision
+
+`DRTP_PLR_EXTERNAL_FORMAL_10M` is superseded for execution and must not be
+launched.  The replacement `DRTP_PLR_EXTERNAL_MATCHED_AB_10M_V2` trains only
+the missing PLR-style comparator on all ten pre-existing fresh A/B seeds
+(`78011–78015`, `78021–78025`).  It extracts and verifies the frozen 10M UTR
+and Original-DRTP result archives instead of retraining either baseline.
+
+The replacement materializes the exact pre-existing A/B endpoint tape payloads
+(including their hashes), reports A and B separately, and permits a pooled
+ten-seed display only as descriptive material.  It does not modify PLR, DRTP,
+PPO, reward, topology semantics, or any checkpoint-selection rule.
