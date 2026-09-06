@@ -1,0 +1,37 @@
+{
+  "protocol": "DRTP-PLR-EXTERNAL-COMPARATOR-CONTRACT-V1",
+  "date": "2026-09-06",
+  "primary_comparator": {
+    "name": "Prioritized Level Replay (PLR)-style topology-condition replay",
+    "paper": "Jiang, Grefenstette, Rocktaschel, ICML 2021",
+    "paper_url": "https://proceedings.mlr.press/v139/jiang21b.html",
+    "source_url": "https://github.com/facebookresearch/level-replay",
+    "source_license": "CC-BY-NC-4.0",
+    "implementation_rule": "Independently implement only the published level-score/replay-distribution rule; do not copy non-commercial source code."
+  },
+  "mapping": {
+    "level": "one of the frozen DRTP topology-condition members",
+    "score": "per-member absolute generalized-advantage/TD learning-potential statistic accumulated from training rollouts only",
+    "replay_distribution": "PLR mixture of staleness and score priority over the same seven-member support",
+    "evaluation_access": "forbidden",
+    "forbidden": [
+      "evaluation-tape access",
+      "return-selected checkpoint",
+      "post-hoc condition removal",
+      "reward/environment/observation/PPO change"
+    ]
+  },
+  "fairness": {
+    "same_environment": true,
+    "same_failure_semantics": true,
+    "same_reward_and_actor_information": true,
+    "same_10m_budget": true,
+    "same_fresh_seeds_per_cohort": true,
+    "same_fixed_endpoint_tapes": true,
+    "same_episode_counts": true,
+    "report_parameter_count_and_wall_time": true,
+    "no_endless_tuning": true
+  },
+  "status": "CONTRACT_ONLY_NO_EXTERNAL_TRAINING",
+  "training_started": false
+}

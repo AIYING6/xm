@@ -1,0 +1,17 @@
+{
+  "protocol": "DRTP-PLR-EXTERNAL-COMPARATOR-CONTRACT-V1",
+  "date": "2026-09-06",
+  "comparator": "Prioritized Level Replay-style topology-condition replay",
+  "citation": "Jiang, Grefenstette, Rocktaschel, Prioritized Level Replay, ICML 2021",
+  "published_rule": "score-driven replay over a fixed finite training-level support with a staleness mixture",
+  "mapping": {
+    "training_level": "one frozen DRTP topology-condition member",
+    "support": ["N", "F0", "TE", "TL", "DS", "DL", "CP"],
+    "score_source": "training-rollout learning-potential statistic only",
+    "evaluation_access": "forbidden"
+  },
+  "fairness": ["same environment", "same failure semantics", "same reward", "same actor information", "same PPO", "same model capacity", "same fresh seeds", "same 10M budget", "same fixed endpoint tape and episodes"],
+  "source_license": "CC-BY-NC-4.0; do not copy source; independently implement the published algorithmic rule only",
+  "training_started": false,
+  "automatic_execution": false
+}

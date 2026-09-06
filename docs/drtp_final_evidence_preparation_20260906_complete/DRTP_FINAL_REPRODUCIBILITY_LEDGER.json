@@ -1,0 +1,516 @@
+{
+  "protocol": "DRTP-FINAL-EVIDENCE-ZERO-TRAINING-PREPARATION-V1",
+  "date": "2026-09-06",
+  "source_commit": "d73836c55650b2a395fa556815aa0e510f93a98f",
+  "source_sha256": {
+    "learner": "b2ae085ed60e20007ee188a044a2dc53d7061d8f7451c562f15244aeeef33873",
+    "sampler": "5fbd46ceb9673a0b613a695dd82f00f46df2705850811784e3048b2c0ce2e741",
+    "3uav_environment": "06e378d34eb390d8095469e98c7c9d37b244e98d92b93b6b20c24edaa7cd29ff",
+    "6uav_environment": "8cca1b500c75e38ad7598ff7465a3bcf53a4bf5cd158f4ed905da34fb02cc7f1",
+    "ood_freeze": "10bd27446307428076878cc9b5a2bc9e4f36b441d461b8e92ea8375d21748db1"
+  },
+  "archives": {
+    "A": "429f13444c4ed10327abd62a13a0d9bf8ee737cedb6b6448353fd9087bcb275f",
+    "B": "d5c4adbe4f0004f0f415ba38e2b03232c55cb46c7d5dc7c7b1031eef7c1eef73"
+  },
+  "method_selection": {
+    "protocol": "DRTP-STABILIZATION-DOUBLE-COHORT-METHOD-SELECTION-V1",
+    "date": "2026-09-06",
+    "evidence_archives": {
+      "A": {
+        "sha256": "429f13444c4ed10327abd62a13a0d9bf8ee737cedb6b6448353fd9087bcb275f",
+        "raw_endpoint_episodes": 14000
+      },
+      "B": {
+        "sha256": "d5c4adbe4f0004f0f415ba38e2b03232c55cb46c7d5dc7c7b1031eef7c1eef73",
+        "raw_endpoint_episodes": 14000
+      }
+    },
+    "primary_unit": "training_seed",
+    "cohorts_remain_separate_for_inference": true,
+    "pooled_n10_descriptive_only": true,
+    "selection": {
+      "principal_method": "drtp_sg",
+      "not_selected": {
+        "egtr_sg": "A-leading performance reversed in B.",
+        "global_anchored_egtr_a075_sg": "Did not preserve a consistent advantage over UTR or DRTP across both cohorts."
+      },
+      "drtp_vs_utr": {
+        "A_mean_perturbed_delta": 39.63699209301825,
+        "B_mean_perturbed_delta": 23.15352566833652,
+        "A_seed_wins": 3,
+        "B_seed_wins": 4,
+        "combined_seed_wins_descriptive": 7,
+        "A_worst_seed": {
+          "drtp": 191.48538625778164,
+          "utr": 79.7514616602473
+        },
+        "B_worst_seed": {
+          "drtp": 172.02629155241883,
+          "utr": 164.9801809477185
+        }
+      }
+    },
+    "claim_boundary": "Under the two completed frozen 10M cohorts and their separate fixed endpoint tapes, Original DRTP repeatedly improves perturbed return over UTR and retains favorable observed lower-tail and timeout behavior. This does not establish universal seed-stable superiority or erase earlier historical cohort-sensitivity evidence.",
+    "algorithm_development_authorized": false,
+    "next_evidence": [
+      "held-out/OOD evaluation",
+      "matched external comparators",
+      "6-UAV or scale-transfer validation",
+      "manuscript evidence integration"
+    ]
+  },
+  "confirmation": {
+    "A": {
+      "seeds": [
+        78011,
+        78012,
+        78013,
+        78014,
+        78015
+      ],
+      "updates": 39063,
+      "environment_steps": 10000128,
+      "tape": [
+        780000,
+        780001,
+        780002,
+        780003,
+        780004,
+        780005,
+        780006,
+        780007,
+        780008,
+        780009,
+        780010,
+        780011,
+        780012,
+        780013,
+        780014,
+        780015,
+        780016,
+        780017,
+        780018,
+        780019,
+        780020,
+        780021,
+        780022,
+        780023,
+        780024,
+        780025,
+        780026,
+        780027,
+        780028,
+        780029,
+        780030,
+        780031,
+        780032,
+        780033,
+        780034,
+        780035,
+        780036,
+        780037,
+        780038,
+        780039,
+        780040,
+        780041,
+        780042,
+        780043,
+        780044,
+        780045,
+        780046,
+        780047,
+        780048,
+        780049,
+        780050,
+        780051,
+        780052,
+        780053,
+        780054,
+        780055,
+        780056,
+        780057,
+        780058,
+        780059,
+        780060,
+        780061,
+        780062,
+        780063,
+        780064,
+        780065,
+        780066,
+        780067,
+        780068,
+        780069,
+        780070,
+        780071,
+        780072,
+        780073,
+        780074,
+        780075,
+        780076,
+        780077,
+        780078,
+        780079,
+        780080,
+        780081,
+        780082,
+        780083,
+        780084,
+        780085,
+        780086,
+        780087,
+        780088,
+        780089,
+        780090,
+        780091,
+        780092,
+        780093,
+        780094,
+        780095,
+        780096,
+        780097,
+        780098,
+        780099
+      ]
+    },
+    "B": {
+      "seeds": [
+        78021,
+        78022,
+        78023,
+        78024,
+        78025
+      ],
+      "updates": 39063,
+      "environment_steps": 10000128,
+      "tape": [
+        781000,
+        781001,
+        781002,
+        781003,
+        781004,
+        781005,
+        781006,
+        781007,
+        781008,
+        781009,
+        781010,
+        781011,
+        781012,
+        781013,
+        781014,
+        781015,
+        781016,
+        781017,
+        781018,
+        781019,
+        781020,
+        781021,
+        781022,
+        781023,
+        781024,
+        781025,
+        781026,
+        781027,
+        781028,
+        781029,
+        781030,
+        781031,
+        781032,
+        781033,
+        781034,
+        781035,
+        781036,
+        781037,
+        781038,
+        781039,
+        781040,
+        781041,
+        781042,
+        781043,
+        781044,
+        781045,
+        781046,
+        781047,
+        781048,
+        781049,
+        781050,
+        781051,
+        781052,
+        781053,
+        781054,
+        781055,
+        781056,
+        781057,
+        781058,
+        781059,
+        781060,
+        781061,
+        781062,
+        781063,
+        781064,
+        781065,
+        781066,
+        781067,
+        781068,
+        781069,
+        781070,
+        781071,
+        781072,
+        781073,
+        781074,
+        781075,
+        781076,
+        781077,
+        781078,
+        781079,
+        781080,
+        781081,
+        781082,
+        781083,
+        781084,
+        781085,
+        781086,
+        781087,
+        781088,
+        781089,
+        781090,
+        781091,
+        781092,
+        781093,
+        781094,
+        781095,
+        781096,
+        781097,
+        781098,
+        781099
+      ]
+    }
+  },
+  "ood": {
+    "protocol": "DRTP-FINAL-EVIDENCE-HELDOUT-OOD-TAPE-V1",
+    "episode_ids": [
+      782000,
+      782099
+    ],
+    "episodes_per_condition": 100,
+    "same_base_ids_across_conditions": true,
+    "not_read_by_training": true,
+    "conditions": [
+      {
+        "name": "nominal_reference",
+        "class": "reference",
+        "failed_blue_agent": -1,
+        "start_step": 0,
+        "duration_steps": 0,
+        "comm_topology_mode": "none"
+      },
+      {
+        "name": "parameter_early_relay",
+        "class": "parameter_ood",
+        "failed_blue_agent": 1,
+        "start_step": 20,
+        "duration_steps": 80,
+        "comm_topology_mode": "none"
+      },
+      {
+        "name": "parameter_long_relay",
+        "class": "parameter_ood",
+        "failed_blue_agent": 1,
+        "start_step": 44,
+        "duration_steps": 140,
+        "comm_topology_mode": "none"
+      },
+      {
+        "name": "structural_scout_node",
+        "class": "structural_ood",
+        "failed_blue_agent": 0,
+        "start_step": 44,
+        "duration_steps": 80,
+        "comm_topology_mode": "none"
+      },
+      {
+        "name": "structural_symmetric_longest_edge",
+        "class": "structural_ood",
+        "failed_blue_agent": -1,
+        "start_step": 0,
+        "duration_steps": 0,
+        "comm_topology_mode": "symmetric_longest_prune"
+      },
+      {
+        "name": "structural_directed_longest_edge",
+        "class": "structural_ood",
+        "failed_blue_agent": -1,
+        "start_step": 0,
+        "duration_steps": 0,
+        "comm_topology_mode": "directed_longest_prune"
+      },
+      {
+        "name": "structural_scout_node_plus_edge",
+        "class": "structural_ood",
+        "failed_blue_agent": 0,
+        "start_step": 44,
+        "duration_steps": 80,
+        "comm_topology_mode": "symmetric_longest_prune"
+      }
+    ],
+    "primary_structural_conditions": [
+      "structural_scout_node",
+      "structural_symmetric_longest_edge",
+      "structural_directed_longest_edge",
+      "structural_scout_node_plus_edge"
+    ],
+    "diagnostic_parameter_conditions": [
+      "parameter_early_relay",
+      "parameter_long_relay"
+    ]
+  },
+  "six_uav_preflight": {
+    "protocol": "DRTP-FINAL-6UAV-CROSS-SCALE-PREFLIGHT-V1",
+    "verdict": "DRTP_FINAL_6UAV_PREFLIGHT_PASS",
+    "checks": {
+      "six_agents_with_2_2_2_roles": true,
+      "eight_legal_scout_relay_terminal_paths": true,
+      "within_role_sharing_and_cross_role_separation": true,
+      "relay_has_single_effective_policy_action": true,
+      "actor_observation_and_masks_exist": true,
+      "scout_and_terminal_assignments_bijective": true,
+      "graph_transition_changes_are_exposed": true,
+      "termination_reward_and_goal_interfaces_exist": true,
+      "role_actor_forward_is_finite": true,
+      "utr_reference_runner_exists": true,
+      "nonlearning_probe_only": true
+    },
+    "scale": "main",
+    "roles": {
+      "scouts": 2,
+      "relays": 2,
+      "terminals": 2
+    },
+    "legal_paths": [
+      [
+        0,
+        2,
+        4
+      ],
+      [
+        0,
+        2,
+        5
+      ],
+      [
+        0,
+        3,
+        4
+      ],
+      [
+        0,
+        3,
+        5
+      ],
+      [
+        1,
+        2,
+        4
+      ],
+      [
+        1,
+        2,
+        5
+      ],
+      [
+        1,
+        3,
+        4
+      ],
+      [
+        1,
+        3,
+        5
+      ]
+    ],
+    "interface": {
+      "obs": [
+        6,
+        16
+      ],
+      "share_obs": [
+        54
+      ],
+      "node_features": [
+        6,
+        16
+      ],
+      "task_adjacency": [
+        6,
+        6
+      ],
+      "active_adjacency": [
+        6,
+        6
+      ]
+    },
+    "one_step": {
+      "success": false,
+      "timeout": false,
+      "done": false
+    },
+    "training_started": false,
+    "evaluation_started": false
+  },
+  "fairness": {
+    "protocol": "DRTP-UTR-FINAL-FAIRNESS-AUDIT-V1",
+    "verdict": "DRTP_UTR_FINAL_FAIRNESS_PASS",
+    "checks": {
+      "same_ppo_model_reward_environment_budget": true,
+      "only_sampler_mode_differs": true,
+      "same_10m_endpoint_budget": true,
+      "same_frozen_endpoint_protocol": true,
+      "same_arm_specific_seed_set_within_cohort": true,
+      "no_checkpoint_selection_or_early_stopping": true
+    },
+    "allowed_difference": "drtp_sampler_mode only",
+    "training_started": false,
+    "evaluation_started": false
+  },
+  "external_comparator": {
+    "protocol": "DRTP-PLR-EXTERNAL-COMPARATOR-CONTRACT-V1",
+    "date": "2026-09-06",
+    "primary_comparator": {
+      "name": "Prioritized Level Replay (PLR)-style topology-condition replay",
+      "paper": "Jiang, Grefenstette, Rocktaschel, ICML 2021",
+      "paper_url": "https://proceedings.mlr.press/v139/jiang21b.html",
+      "source_url": "https://github.com/facebookresearch/level-replay",
+      "source_license": "CC-BY-NC-4.0",
+      "implementation_rule": "Independently implement only the published level-score/replay-distribution rule; do not copy non-commercial source code."
+    },
+    "mapping": {
+      "level": "one of the frozen DRTP topology-condition members",
+      "score": "per-member absolute generalized-advantage/TD learning-potential statistic accumulated from training rollouts only",
+      "replay_distribution": "PLR mixture of staleness and score priority over the same seven-member support",
+      "forbidden": [
+        "evaluation-tape access",
+        "return-selected checkpoint",
+        "post-hoc condition removal",
+        "reward/environment/observation/PPO change"
+      ]
+    },
+    "fairness": {
+      "same_environment": true,
+      "same_failure_semantics": true,
+      "same_reward_and_actor_information": true,
+      "same_10m_budget": true,
+      "same_fresh_seeds_per_cohort": true,
+      "same_fixed_endpoint_tapes": true,
+      "same_episode_counts": true,
+      "report_parameter_count_and_wall_time": true,
+      "no_endless_tuning": true
+    },
+    "status": "CONTRACT_ONLY_NO_EXTERNAL_TRAINING",
+    "training_started": false
+  },
+  "training_started": false,
+  "evaluation_started": false,
+  "ood_performance_read": false
+}

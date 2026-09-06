@@ -1,0 +1,93 @@
+{
+  "protocol": "DRTP-FINAL-6UAV-CROSS-SCALE-PREFLIGHT-V1",
+  "verdict": "DRTP_FINAL_6UAV_PREFLIGHT_PASS",
+  "checks": {
+    "six_agents_with_2_2_2_roles": true,
+    "eight_legal_scout_relay_terminal_paths": true,
+    "within_role_sharing_and_cross_role_separation": true,
+    "relay_has_single_effective_policy_action": true,
+    "actor_observation_and_masks_exist": true,
+    "scout_and_terminal_assignments_bijective": true,
+    "graph_transition_changes_are_exposed": true,
+    "termination_reward_and_goal_interfaces_exist": true,
+    "role_actor_forward_is_finite": true,
+    "utr_reference_runner_exists": true,
+    "nonlearning_probe_only": true
+  },
+  "scale": "main",
+  "roles": {
+    "scouts": 2,
+    "relays": 2,
+    "terminals": 2
+  },
+  "legal_paths": [
+    [
+      0,
+      2,
+      4
+    ],
+    [
+      0,
+      2,
+      5
+    ],
+    [
+      0,
+      3,
+      4
+    ],
+    [
+      0,
+      3,
+      5
+    ],
+    [
+      1,
+      2,
+      4
+    ],
+    [
+      1,
+      2,
+      5
+    ],
+    [
+      1,
+      3,
+      4
+    ],
+    [
+      1,
+      3,
+      5
+    ]
+  ],
+  "interface": {
+    "obs": [
+      6,
+      16
+    ],
+    "share_obs": [
+      54
+    ],
+    "node_features": [
+      6,
+      16
+    ],
+    "task_adjacency": [
+      6,
+      6
+    ],
+    "active_adjacency": [
+      6,
+      6
+    ]
+  },
+  "one_step": {
+    "success": false,
+    "timeout": false,
+    "done": false
+  },
+  "training_started": false,
+  "evaluation_started": false
+}
