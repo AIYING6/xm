@@ -18,7 +18,7 @@ export OPENBLAS_NUM_THREADS="${OPENBLAS_NUM_THREADS:-$OMP_NUM_THREADS}"
 export NUMEXPR_NUM_THREADS="${NUMEXPR_NUM_THREADS:-$OMP_NUM_THREADS}"
 mkdir -p "$OUTPUT_ROOT/launcher_logs"
 
-"$PYTHON_BIN" scripts/verify_drtp_plr_and_6uav_formal_preflight.py --output-root "$OUTPUT_ROOT/preflight" --execute
+"$PYTHON_BIN" scripts/verify_drtp_plr_and_6uav_formal_preflight.py --line 6uav --output-root "$OUTPUT_ROOT/preflight" --execute
 
 run_train() {
   local arm="$1" seed="$2"
