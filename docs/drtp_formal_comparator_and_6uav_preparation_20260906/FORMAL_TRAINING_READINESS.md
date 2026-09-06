@@ -53,3 +53,17 @@ No single development statistic can trigger an algorithm revision or closure.
 The required zero-training gate is
 `DRTP_PLR_AND_6UAV_PREFLIGHT_PASS`; a separate explicit launch authorization
 is still required after the cloud packages are built and reviewed.
+
+## 4. Executable readiness
+
+Both lines now have separate source-only cloud builders and launchers.  Each
+launcher performs its own zero-training preflight, creates its frozen tape
+before training, retains every fixed-final checkpoint, evaluates only the
+10M endpoint, and writes a non-mutating report.  PLR uses its own sampler
+manifest/log names, so it cannot be confused with an Original-DRTP trajectory.
+
+The six-UAV runner is also isolated from the historical P2/P3 executables.
+Its DRTP sampler receives the full accumulated return of each completed
+episode; it explicitly does not use the final-step reward that was retained
+in older diagnostic logs.  Neither launcher includes an automatic continuation
+to a replication, algorithm revision, or another line of experiments.
