@@ -1,0 +1,59 @@
+{
+  "protocol": "DRTP-FINAL-EVIDENCE-P0-HELDOUT-OOD-FREEZE-V1",
+  "date": "2026-09-06",
+  "scope": "Zero-training asset and semantic preflight for the final DRTP evidence phase.",
+  "source_archives": {
+    "A": {
+      "file": "drtp_stabilization_A_complete_results.tar.gz",
+      "sha256": "429f13444c4ed10327abd62a13a0d9bf8ee737cedb6b6448353fd9087bcb275f",
+      "archive_root": "drtp_stabilization_final_confirmation",
+      "seeds": [78011, 78012, 78013, 78014, 78015]
+    },
+    "B": {
+      "file": "drtp_stabilization_B_complete_results.tar.gz",
+      "sha256": "d5c4adbe4f0004f0f415ba38e2b03232c55cb46c7d5dc7c7b1031eef7c1eef73",
+      "archive_root": "drtp_stabilization_independent_replication",
+      "seeds": [78021, 78022, 78023, 78024, 78025]
+    }
+  },
+  "checkpoint_contract": {
+    "arms": ["utr_sg", "drtp_sg"],
+    "endpoint": "actor_critic_latest.pt at the completed frozen 10M endpoint",
+    "updates": 39063,
+    "environment_steps": 10000128,
+    "checkpoint_selection": "forbidden",
+    "training": "forbidden",
+    "cohorts_separate_for_inference": true,
+    "pooled_n10_descriptive_only": true
+  },
+  "fresh_heldout_ood_tape": {
+    "protocol": "DRTP-FINAL-EVIDENCE-HELDOUT-OOD-TAPE-V1",
+    "episode_ids": [782000, 782099],
+    "episodes_per_condition": 100,
+    "same_base_ids_across_conditions": true,
+    "not_read_by_training": true,
+    "conditions": [
+      {"name": "nominal_reference", "class": "reference", "failed_blue_agent": -1, "start_step": 0, "duration_steps": 0, "comm_topology_mode": "none"},
+      {"name": "parameter_early_relay", "class": "parameter_ood", "failed_blue_agent": 1, "start_step": 20, "duration_steps": 80, "comm_topology_mode": "none"},
+      {"name": "parameter_long_relay", "class": "parameter_ood", "failed_blue_agent": 1, "start_step": 44, "duration_steps": 140, "comm_topology_mode": "none"},
+      {"name": "structural_scout_node", "class": "structural_ood", "failed_blue_agent": 0, "start_step": 44, "duration_steps": 80, "comm_topology_mode": "none"},
+      {"name": "structural_symmetric_longest_edge", "class": "structural_ood", "failed_blue_agent": -1, "start_step": 0, "duration_steps": 0, "comm_topology_mode": "symmetric_longest_prune"},
+      {"name": "structural_directed_longest_edge", "class": "structural_ood", "failed_blue_agent": -1, "start_step": 0, "duration_steps": 0, "comm_topology_mode": "directed_longest_prune"},
+      {"name": "structural_scout_node_plus_edge", "class": "structural_ood", "failed_blue_agent": 0, "start_step": 44, "duration_steps": 80, "comm_topology_mode": "symmetric_longest_prune"}
+    ],
+    "primary_structural_conditions": ["structural_scout_node", "structural_symmetric_longest_edge", "structural_directed_longest_edge", "structural_scout_node_plus_edge"],
+    "diagnostic_parameter_conditions": ["parameter_early_relay", "parameter_long_relay"]
+  },
+  "evaluation_interpretation": {
+    "primary_unit": "training_seed",
+    "required_dimensions": ["perturbed return", "median", "lower tail", "paired seed direction", "timeout", "collision", "structural-versus-parameter shift"],
+    "not_a_hard_gate": true,
+    "no_single_condition_or_sd_rule_can_close_the_method": true,
+    "claim_boundary": "The resulting evidence, if executed, supports only frozen-final-checkpoint performance under the predeclared held-out topology suite. It cannot establish universal generalization."
+  },
+  "next_phases_after_preflight": ["held-out/OOD endpoint evaluation only", "matched external comparator protocol", "6-UAV or scale-transfer protocol", "manuscript evidence integration"],
+  "automatic_training": false,
+  "automatic_algorithm_revision": false,
+  "automatic_checkpoint_selection": false,
+  "automatic_6uav": false
+}
