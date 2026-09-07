@@ -28,6 +28,6 @@
 
 ## 当前终止条件
 
-1. 不启动 semantic ablation：它不是当前投稿证据的前置条件，也不能作为结果驱动补救。
-2. 不对中途或历史停止的 6-UAV run 作正式结论；只等待 fresh restart 的冻结终点。
+1. 不对中途或历史停止的 6-UAV run 作正式结论；只等待 fresh restart 的冻结终点。终点完成后，使用 `DRTP_6UAV_FINALIZATION_PROTOCOL.md` 和只读汇总器生成 Fig. 6 及主表所需的 mean、median、lower tail、success、timeout、collision 与 paired delta。
+2. Semantic ablation 不是当前投稿证据的前置条件，也不能作为结果驱动补救。若最终源码恢复且资源与 fresh seed 注册表另行冻结，可按 `DRTP_SEMANTIC_ABLATION_PROTOCOL.md` 实施唯一的 full DRTP versus Random-DRTP 机制消融；否则不启动、不补跑、不调参。
 3. 主稿可先导入 RQ5 的过程图和边界描述；待 6-UAV 与匹配 profiler 均可追溯时，再填对应的最终图表与表格。
