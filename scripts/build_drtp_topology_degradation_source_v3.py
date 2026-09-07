@@ -136,7 +136,13 @@ def main() -> None:
     text = once(r"## 7 讨论\n\n.*?\n\n## 数据与代码可用性", DISCUSSION + "\n## 数据与代码可用性", text, "discussion-and-conclusion")
     refs = """\n[7] Zhang H H, Li W H, Zheng J Y, et al. 有人/无人机协同作战：概念、技术与挑战. 航空学报, 2024, 45(15):029653. doi:10.7527/S1000-6893.2023.29653\n\n[8] Liang X L, Yang A W, Zhang J Q, et al. 无人集群博弈对抗系统仿真验证及决策关键技术综述. 系统仿真学报, 2024, 36(4):805–816. doi:10.16182/j.issn1004731x.joss.23-0072\n\n[9] Yang M, Shan S, Zhang W. Decision-making and confrontation in close-range air combat based on reinforcement learning. Chinese Journal of Aeronautics, 2025, 38(9):103526. doi:10.1016/j.cja.2025.103526\n\n[10] Xiong W, Zhang D, Yang S H, et al. 面向智能空战的有人/无人机协同可解释方法. 航空学报, 2025. doi:10.7527/S1000-6893.2025.32547\n"""
     text = text.replace("`[投稿前须补充与本文最终版实验协议", refs + "\n`[投稿前须补充与本文最终版实验协议")
-    a.output.parent.mkdir(parents=True, exist_ok=True); a.output.write_text(text, encoding="utf-8")
+    a.output.parent.mkdir(parents=True, exist_ok=True)
+    # Keep the generated Markdown portable and clean under Git's whitespace check.
+    text = text.replace("[作者姓名]  ", "[作者姓名]")
+    text = text.replace("[单位名称]  ", "[单位名称]")
+    text = text.replace("PPO 配置及训练预算。  ", "PPO 配置及训练预算。")
+    with a.output.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text.replace("\r\n", "\n"))
 
 
 if __name__ == "__main__": main()
