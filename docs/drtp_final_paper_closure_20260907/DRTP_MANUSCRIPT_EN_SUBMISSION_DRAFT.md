@@ -89,7 +89,7 @@ The lower bound guarantees continuing exposure to every frozen failure group, wh
 6. Smooth and project the candidate group distribution to `Q`; use the result for subsequent resets.
 7. Persist policy, optimizer, environment random state, and sampler runtime state until the fixed endpoint.
 
-### Table 1. Mechanism comparison
+### Supplementary Table S1. Mechanism comparison
 
 | Property | UTR | PLR-style comparator | DRTP |
 |---|---|---|---|
@@ -106,6 +106,18 @@ The lower bound guarantees continuing exposure to every frozen failure group, wh
 
 All methods used the same heterogeneous-UAV environment, role-graph policy, centralized critic, reward, action mask, communication interface, condition support, PPO hyperparameters, rollout layout, and training budget. The **only** experimental difference between UTR and DRTP was reset-condition allocation. EGTR and GA-EGTR were development candidates and are not combined with the confirmatory Original DRTP evidence.
 
+### Table 1. Experimental settings and matched controls
+
+| Item | Fixed specification | Rationale for comparison |
+|---|---|---|
+| Task | Heterogeneous three-UAV cooperative interception under a frozen topology-failure support | Evaluates role-dependent communication disruption without changing the task definition across methods |
+| Learner | Role-graph actor, centralized critic, and PPO | Holds policy capacity and optimization fixed |
+| Environment interface | Observation, action mask, reward, transition dynamics, and communication interface | Prevents an environment or reward change from explaining a training effect |
+| Training budget | Four parallel environments, 64 rollout steps, 39,063 updates, 10,000,128 environment steps | Uses a common fixed endpoint rather than selected checkpoints |
+| Training seeds | Cohort A: 78011–78015; cohort B: 78021–78025 | Treats independently trained policies as the statistical units |
+| Endpoint evaluation | Frozen tape, inaccessible during training | Separates training exposure from evaluation conditions |
+| UTR–DRTP difference | Reset-condition allocation only | Isolates topology-aware adaptive exposure allocation |
+
 ### 5.2 Training and endpoint evaluation
 
 Each trajectory used four parallel environments, 64 rollout steps, and 39,063 updates, totaling 10,000,128 environment steps. Two independent training cohorts were frozen in advance: A (`78011–78015`) and B (`78021–78025`). Each final checkpoint was evaluated on a fixed tape inaccessible during training. Cohorts are reported separately; any pooled ten-seed statistic is descriptive only.
@@ -116,9 +128,11 @@ The primary endpoint is perturbed return. We also report median, worst seed, sam
 
 ## 6. Results
 
-### 6.1 Repeated cohort-level gains over UTR
+### 6.1 RQ1: Does DRTP improve robustness compared with UTR?
 
 At the fixed endpoint, DRTP achieved a higher perturbed-return mean than UTR in both fresh cohorts (Table 2). In cohort A, the mean was 216.66 for DRTP and 177.02 for UTR; the worst-seed return was 191.49 and 79.75, respectively. In cohort B, the corresponding means were 210.34 and 187.18, and the worst-seed returns were 172.03 and 164.98. The primary result is therefore a repeated positive cohort-level contrast rather than all-seed dominance.
+
+**Interpretation and boundary.** Because UTR and DRTP differ only in reset allocation, the repeated direction of the A/B mean contrast is consistent with a training-exposure contribution under this frozen support. This evidence does not establish that every trained seed benefits, nor does it imply a monotonic collision benefit: collision is higher for DRTP in cohort A and equal in cohort B. Figure 4 should therefore display paired seed endpoints, timeout, and collision separately rather than collapse them into one score.
 
 ### Table 2. Main fixed-endpoint results (`n = 5` independently trained policies per row)
 
@@ -129,11 +143,13 @@ At the fixed endpoint, DRTP achieved a higher perturbed-return mean than UTR in 
 | B | UTR | 187.18 ± 21.66 | 181.42 | 164.98 | 0.000 | 0.711 |
 | B | Original DRTP | 210.34 ± 30.54 | 218.78 | 172.03 | 0.000 | 0.602 |
 
-### 6.2 Frozen held-out structural and parameter shifts
+### 6.2 RQ3: Does DRTP generalize to unseen failures?
 
 DRTP retained positive cohort-level mean differences under the pre-defined structural held-out protocol: +22.77 in cohort A and +11.96 in cohort B. Worst-seed differences were +32.48 and +20.03, respectively. Under the evaluated parameter shift, mean differences were +51.71 in A and +17.48 in B. These results support transfer within the frozen shifts tested here; they do not establish robustness to arbitrary real-world failures.
 
-### Table 3. Frozen OOD contrasts (DRTP minus UTR)
+**Interpretation and boundary.** The positive structural and parameter-shift contrasts indicate that the observed UTR comparison is not confined to the original training-condition mixture. The conclusion remains restricted to the fixed held-out tapes and should not be translated into a claim of open-ended out-of-distribution or real-flight robustness. Figure 5 should visualize paired deltas separately by cohort and shift family.
+
+### Supplementary Table S2. Frozen OOD contrasts (DRTP minus UTR)
 
 | Cohort | Shift family | Mean return difference | Worst-seed difference | Claim boundary |
 |---|---|---:|---:|---|
@@ -142,11 +158,13 @@ DRTP retained positive cohort-level mean differences under the pre-defined struc
 | A | Parameter shift | +51.71 | [import final artifact] | Transfer within the evaluated parameter shift |
 | B | Parameter shift | +17.48 | [import final artifact] | Transfer within the evaluated parameter shift |
 
-### 6.3 Competitive matched comparison with PLR-style replay
+### 6.3 RQ2: Is the result consistent with topology-aware adaptive exposure rather than generic prioritization alone?
 
 The PLR-style comparison does not identify a uniform winner. In cohort A, DRTP had a higher perturbed-return mean (216.66 versus 203.87), higher worst seed (191.49 versus 142.02), and lower timeout (0.597 versus 0.742) than PLR-style replay. In cohort B, PLR-style replay had a higher mean (220.03 versus 210.34), a higher worst seed (201.06 versus 172.03), and lower SD (13.98 versus 30.54), whereas DRTP retained lower timeout (0.602 versus 0.699). This matched comparison shows that generic priority-driven allocation is competitive and that its ordering relative to topology-semantic allocation is cohort-dependent.
 
-### Table 4. Matched external comparison (`n = 5` independently trained policies per row)
+**Interpretation and boundary.** This experiment does not prove a single causal mechanism for every gain; a formal component ablation remains pending. It does, however, reject the simpler presentation that topology-aware allocation is interchangeable with an arbitrary weak comparator. Under a matched support and budget, generic prioritization and topology-semantic allocation produced different return, lower-tail, dispersion, and timeout profiles across the two cohorts. Figure 3 should make the three allocation mechanisms explicit, and Figure 2 should illustrate the role and timing semantics that DRTP groups preserve.
+
+### Table 3. Matched external comparison with PLR-style replay (`n = 5` independently trained policies per row)
 
 | Cohort | Method | Perturbed return, mean ± SD | Median | Worst seed | Collision | Timeout |
 |---|---|---:|---:|---:|---:|---:|
@@ -157,9 +175,24 @@ The PLR-style comparison does not identify a uniform winner. In cohort A, DRTP h
 | B | PLR-style | 220.03 ± 13.98 | 218.22 | 201.06 | 0.000 | 0.699 |
 | B | Original DRTP | 210.34 ± 30.54 | 218.78 | 172.03 | 0.000 | 0.602 |
 
-### 6.4 Cross-scale six-UAV evaluation
+### 6.4 RQ4: Does DRTP scale to larger UAV teams?
 
 **[6UAV_RESULT_PLACEHOLDER]** Insert only the completed frozen 2-scout/2-relay/2-terminal UTR-versus-DRTP results, including five fresh training seeds, perturbed return, success, timeout, collision, and paired deltas. Do not use interim checkpoints or the stopped legacy run.
+
+### Table 4. Six-UAV cross-scale validation [TBD after experiment completion]
+
+| Team scale | Method | Perturbed return, mean ± SD | Success | Timeout | Collision | Paired delta versus UTR |
+|---|---|---:|---:|---:|---:|---:|
+| Six UAVs | UTR | [TBD] | [TBD] | [TBD] | [TBD] | — |
+| Six UAVs | DRTP | [TBD] | [TBD] | [TBD] | [TBD] | [TBD] |
+
+### Table 5. Component ablation [TBD after a frozen ablation protocol]
+
+| Variant | Nominal anchor | Topology-semantic groups | Bounded simplex | Result fields |
+|---|---|---|---|---|
+| UTR | fixed | no adaptive allocation | uniform allocation | completed main control |
+| DRTP | fixed | yes | `0.05 ≤ q_g ≤ 0.35` | completed main method |
+| [ablation variant] | [TBD] | [TBD] | [TBD] | [TBD; no claim before formal execution] |
 
 ### 6.5 Computational overhead
 
@@ -173,11 +206,11 @@ The two independent UTR comparisons are the strongest evidence. The positive mea
 
 The PLR-style outcome helps set the correct scope. It rules out an unqualified claim that DRTP uniformly dominates generic prioritized replay. It does not weaken the main matched UTR result: instead, it identifies an empirical design boundary between generic priority-driven allocation and topology-semantic constrained allocation. This is valuable for method selection because timeout, return, lower-tail behavior, and dispersion need not rank methods identically across cohorts.
 
-## 8. Limitations
+### 7.1 Limitations
 
 The study is simulation based and evaluates a finite, pre-defined topology-failure support. It does not establish real-flight performance, all-seed superiority, or monotonic improvement in every safety metric. The parameter and structural held-out results are bounded by their frozen shift protocols. Cross-scale transfer must be assessed only after the six-UAV formal block is complete. Finally, DRTP reallocates the exposure of existing failures rather than generating new failures or learning a new communication protocol.
 
-## 9. Conclusion
+## 8. Conclusion
 
 DRTP is a constrained reset-side training-exposure allocator for heterogeneous UAV cooperation under topology failures. It preserves the policy learner and environment interfaces while using nominal-referenced group deficits to reallocate exposure over a frozen failure support. In two independent fresh cohorts, DRTP showed repeated cohort-level perturbed-return gains over matched UTR, and frozen held-out evaluations retained positive cohort-level contrasts under the tested shifts. The matched PLR-style comparison was competitive and cohort-dependent, which bounds rather than invalidates the contribution. The completed six-UAV protocol will determine whether a cross-scale claim is warranted.
 

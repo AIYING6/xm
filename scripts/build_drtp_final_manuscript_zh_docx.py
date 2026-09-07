@@ -201,11 +201,9 @@ def main() -> None:
             paragraph.paragraph_format.space_before = Pt(9)
             paragraph.paragraph_format.space_after = Pt(4)
             paragraph.add_run(clean_inline(line[4:]))
-        elif line.startswith("**表 ") or line.startswith("**算法 "):
-            # Keep each result table with its caption rather than leaving a lone
-            # header or final row on a neighboring page.
-            if line.startswith("**表 "):
-                doc.add_page_break()
+        elif line.startswith("**表 ") or line.startswith("**补充表 ") or line.startswith("**算法 "):
+            # Let Word flow tables naturally. Forced breaks leave large empty
+            # regions when a short result paragraph precedes a table.
             paragraph = doc.add_paragraph()
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = paragraph.add_run(clean_inline(line))
