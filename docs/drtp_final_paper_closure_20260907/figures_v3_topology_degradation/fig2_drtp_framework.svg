@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="600.3pt" height="202.896pt" viewBox="0 0 600.3 202.896" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-09-07T15:29:03.413614</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.8.0, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 202.896 
+L 600.3 202.896 
+L 600.3 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 23.6052 115.019712 
+L 102.1158 115.019712 
+Q 113.8338 115.019712 113.8338 111.249792 
+L 113.8338 80.336448 
+Q 113.8338 76.566528 102.1158 76.566528 
+L 23.6052 76.566528 
+Q 11.8872 76.566528 11.8872 80.336448 
+L 11.8872 111.249792 
+Q 11.8872 115.019712 23.6052 115.019712 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #ffffff; stroke: #087e8b; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 129.0672 115.019712 
+L 207.5778 115.019712 
+Q 219.2958 115.019712 219.2958 111.249792 
+L 219.2958 80.336448 
+Q 219.2958 76.566528 207.5778 76.566528 
+L 129.0672 76.566528 
+Q 117.3492 76.566528 117.3492 80.336448 
+L 117.3492 111.249792 
+Q 117.3492 115.019712 129.0672 115.019712 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #ffffff; stroke: #164c78; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 234.5292 115.019712 
+L 313.0398 115.019712 
+Q 324.7578 115.019712 324.7578 111.249792 
+L 324.7578 80.336448 
+Q 324.7578 76.566528 313.0398 76.566528 
+L 234.5292 76.566528 
+Q 222.8112 76.566528 222.8112 80.336448 
+L 222.8112 111.249792 
+Q 222.8112 115.019712 234.5292 115.019712 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #ffffff; stroke: #d97531; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 339.9912 115.019712 
+L 418.5018 115.019712 
+Q 430.2198 115.019712 430.2198 111.249792 
+L 430.2198 80.336448 
+Q 430.2198 76.566528 418.5018 76.566528 
+L 339.9912 76.566528 
+Q 328.2732 76.566528 328.2732 80.336448 
+L 328.2732 111.249792 
+Q 328.2732 115.019712 339.9912 115.019712 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #ffffff; stroke: #d97531; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 445.4532 115.019712 
+L 523.9638 115.019712 
+Q 535.6818 115.019712 535.6818 111.249792 
+L 535.6818 80.336448 
+Q 535.6818 76.566528 523.9638 76.566528 
+L 445.4532 76.566528 
+Q 433.7352 76.566528 433.7352 80.336448 
+L 433.7352 111.249792 
+Q 433.7352 115.019712 445.4532 115.019712 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #ffffff; stroke: #087e8b; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 545.0562 115.019712 
+L 582.5538 115.019712 
+Q 594.2718 115.019712 594.2718 111.249792 
+L 594.2718 80.336448 
+Q 594.2718 76.566528 582.5538 76.566528 
+L 545.0562 76.566528 
+Q 533.3382 76.566528 533.3382 80.336448 
+L 533.3382 111.249792 
+Q 533.3382 115.019712 545.0562 115.019712 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #ffffff; stroke: #164c78; stroke-width: 1.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 108.807018 95.79312 
+Q 115.591683 95.79312 120.978805 95.79312 
+" clip-path="url(#p56293b38d5)" style="fill: none; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+    <path d="M 115.778805 93.19312 
+L 120.978805 95.79312 
+L 115.778805 98.39312 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #667085; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 214.269018 95.79312 
+Q 221.053683 95.79312 226.440805 95.79312 
+" clip-path="url(#p56293b38d5)" style="fill: none; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+    <path d="M 221.240805 93.19312 
+L 226.440805 95.79312 
+L 221.240805 98.39312 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #667085; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 319.731018 95.79312 
+Q 326.515683 95.79312 331.902805 95.79312 
+" clip-path="url(#p56293b38d5)" style="fill: none; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+    <path d="M 326.702805 93.19312 
+L 331.902805 95.79312 
+L 326.702805 98.39312 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #667085; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 425.193018 95.79312 
+Q 431.977683 95.79312 437.364805 95.79312 
+" clip-path="url(#p56293b38d5)" style="fill: none; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+    <path d="M 432.164805 93.19312 
+L 437.364805 95.79312 
+L 432.164805 98.39312 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #667085; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 530.650727 95.79312 
+Q 534.510988 95.79312 536.973707 95.79312 
+" clip-path="url(#p56293b38d5)" style="fill: none; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+    <path d="M 531.773707 93.19312 
+L 536.973707 95.79312 
+L 531.773707 98.39312 
+z
+" clip-path="url(#p56293b38d5)" style="fill: #667085; stroke: #667085; stroke-width: 1.25; stroke-linecap: round"/>
+   </g>
+   <g id="text_1">
+    <text style="fill: #087e8b; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(44.8605 93.311651)">冻结拓扑</text>
+    <text style="fill: #087e8b; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(49.3605 103.450995)">故障库</text>
+   </g>
+   <g id="text_2">
+    <text style="fill: #164c78; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(150.3225 93.319245)">名义组 N</text>
+    <text style="fill: #164c78; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(146.945391 103.468714)">+ 故障组 F</text>
+   </g>
+   <g id="text_3">
+    <text style="fill: #d97531; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(251.2845 93.282964)">相对名义的</text>
+    <text style="fill: #d97531; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(251.2845 103.504995)">困难度估计</text>
+   </g>
+   <g id="text_4">
+    <text style="fill: #d97531; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(356.7465 92.99862)">有界单纯形</text>
+    <text style="fill: #d97531; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(366.247828 103.797776)">q 更新</text>
+   </g>
+   <g id="text_5">
+    <text style="fill: #087e8b; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(463.701234 93.283245)">reset 条件</text>
+    <text style="fill: #087e8b; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(466.7085 103.442839)">训练暴露</text>
+   </g>
+   <g id="text_6">
+    <text style="fill: #164c78; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(547.303359 93.041229)">MAPPO</text>
+    <text style="fill: #164c78; font: 700 9px 'Arial', 'Microsoft YaHei'" transform="translate(545.805 103.210948)">协同策略</text>
+   </g>
+   <g id="text_7">
+    <text style="fill: #164c78; font: 700 12px 'Arial', 'Microsoft YaHei'; text-anchor: middle" x="300.15" y="29.81952" transform="rotate(-0 300.15 29.81952)">DRTP：面向通信拓扑退化的鲁棒性塑造</text>
+   </g>
+   <g id="text_8">
+    <g id="patch_13">
+     <path d="M 120.102891 170.261876 
+L 480.197109 170.261876 
+Q 483.977109 170.261876 483.977109 166.481876 
+L 483.977109 157.051564 
+Q 483.977109 153.271564 480.197109 153.271564 
+L 120.102891 153.271564 
+Q 116.322891 153.271564 116.322891 157.051564 
+L 116.322891 166.481876 
+Q 116.322891 170.261876 120.102891 170.261876 
+z
+" style="fill: #f2f5f8; stroke: #d0d5dd; stroke-linejoin: miter"/>
+    </g>
+    <text style="fill: #667085; font: 9px 'Arial', 'Microsoft YaHei'; text-anchor: middle" x="300.15" y="164.587657" transform="rotate(-0 300.15 164.587657)">保持不变：actor · critic · PPO objective · reward · observation · action interface · transition</text>
+   </g>
+   <g id="text_9">
+    <text style="fill: #087e8b; font: 700 9px 'Arial', 'Microsoft YaHei'; text-anchor: middle" x="300.15" y="180.61632" transform="rotate(-0 300.15 180.61632)">唯一变化：环境 reset 阶段在冻结条件组之间分配训练暴露</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p56293b38d5">
+   <rect x="7.2" y="7.2" width="585.9" height="188.496"/>
+  </clipPath>
+ </defs>
+</svg>
