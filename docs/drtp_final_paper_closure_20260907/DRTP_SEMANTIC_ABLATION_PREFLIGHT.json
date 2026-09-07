@@ -1,0 +1,32 @@
+{
+  "protocol": "DRTP-SEMANTIC-AND-ADAPTIVE-ABLATION-V1",
+  "verdict": "DRTP_SEMANTIC_ABLATION_READY_FOR_SEED_FREEZE",
+  "configuration_valid": true,
+  "exact_source_archive_verified": true,
+  "fresh_seed_registry_frozen": false,
+  "training_authorized": false,
+  "evaluation_authorized": false,
+  "arm_checks": {
+    "utr_sg": true,
+    "fixed_drtp_sg": true,
+    "random_drtp_sg": true,
+    "drtp_sg": true
+  },
+  "source_checks": {
+    "algorithms/ri_gmappo/simple_ri_gmappo.py": true,
+    "algorithms/ri_gmappo/drtp_topology_sampler.py": true,
+    "envs/uav_intercept_3d_env.py": true
+  },
+  "only_reset_side_mechanism_varies": true,
+  "output_schema": [
+    "per_seed_endpoint_table",
+    "cohort_summary_table",
+    "paired_drtp_vs_random_drtp",
+    "paired_drtp_vs_fixed_drtp",
+    "sampler_manifest",
+    "sampler_log",
+    "protocol_report"
+  ],
+  "automatic_algorithm_revision": false,
+  "automatic_continuation": false
+}
