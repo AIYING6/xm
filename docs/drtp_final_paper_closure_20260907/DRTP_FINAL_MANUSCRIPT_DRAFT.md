@@ -14,7 +14,7 @@ This paper asks a focused question: **can a policy become more robust to a froze
 
 The design deliberately separates a training-distribution intervention from a policy-architecture intervention. UTR and DRTP therefore share the same heterogeneous role graph policy, critic, observations, rewards, masks, actions, update budget and fixed endpoint evaluation. This makes the causal contrast narrow: the difference is how often the already-valid topology conditions are encountered during training.
 
-Our evidence is organized around replication rather than a single favorable run. The primary results use two independently trained, fresh five-seed cohorts at a fixed 10M-step endpoint; results are analyzed separately by cohort. A frozen structural and parameter-shift evaluation tests transfer beyond the training condition mixture. The final paper will add a matched PLR-style comparator and a cross-scale six-UAV experiment after their pre-registered runs finish. We make no claim that every seed or every safety metric improves.
+Our evidence is organized around replication rather than a single favorable run. The primary results use two independently trained, fresh five-seed cohorts at a fixed 10M-step endpoint; results are analyzed separately by cohort. A frozen structural and parameter-shift evaluation tests transfer beyond the training condition mixture. A matched PLR-style comparator tests generic priority-driven allocation; the frozen six-UAV experiment remains pending. We make no claim that every seed or every safety metric improves.
 
 Our contributions are:
 
@@ -30,7 +30,7 @@ Communication reliability is a central concern in decentralized multi-agent cont
 
 ### Adaptive training distributions and prioritized replay
 
-Prioritized Level Replay samples environments according to estimated learning potential rather than uniformly sampling a fixed set of levels [Jiang et al., 2021]. DRTP shares the high-level premise that training exposure can be adaptive, but differs in the object being prioritized. Its allocation is over an explicit hierarchy of UAV topology-failure groups, has a fixed nominal mass, uses group-level nominal-referenced difficulty, and enforces per-group bounds. The matched PLR-style study is included specifically to test whether these topology-aware constraints provide value beyond generic priority-driven allocation **[PLR_RESULT_PLACEHOLDER]**.
+Prioritized Level Replay samples environments according to estimated learning potential rather than uniformly sampling a fixed set of levels [Jiang et al., 2021]. DRTP shares the high-level premise that training exposure can be adaptive, but differs in the object being prioritized. Its allocation is over an explicit hierarchy of UAV topology-failure groups, has a fixed nominal mass, uses group-level nominal-referenced difficulty, and enforces per-group bounds. The matched PLR-style study shows a demanding external comparator: A favors DRTP on mean, lower tail and timeout, whereas B favors PLR-style replay on return and dispersion while DRTP has lower timeout. Thus, the study supports a mechanism distinction and a competitive comparison, not uniform dominance of DRTP over generic priority-driven replay.
 
 ### Robust UAV coordination
 
@@ -86,7 +86,7 @@ Under the frozen structural held-out protocol, the cohort-level DRTP--UTR mean r
 
 ### 6.3 External prioritization comparison
 
-**[PLR_RESULT_PLACEHOLDER]** Insert only the completed A/B matched PLR-style outcomes, with the same metrics and no primary pooled analysis. The interpretation must answer whether topology-semantic, bounded nominal-anchored allocation offers evidence beyond generic priority-based replay.
+The matched PLR-style comparison is cohort-dependent. In cohort A, DRTP exceeds PLR-style replay in perturbed mean return (216.66 versus 203.87), median (223.82 versus 214.02), worst seed (191.49 versus 142.02), and mean timeout (0.597 versus 0.742). In cohort B, PLR-style replay has the higher perturbed mean (220.03 versus 210.34), stronger worst seed (201.06 versus 172.03), and lower sample SD (13.98 versus 30.54), whereas DRTP has lower mean timeout (0.602 versus 0.699). Results are not pooled for a primary winner declaration. The correct conclusion is that generic priority-driven replay is competitive under the matched protocol and that the ordering is cohort-specific.
 
 ### 6.4 Cross-scale transfer
 
@@ -106,11 +106,10 @@ DRTP is evaluated in a simulation benchmark with a specific heterogeneous-UAV in
 
 ## 9. Conclusion
 
-DRTP provides an interpretable way to adapt training exposure to topology-failure groups while holding the policy learner and environment interfaces fixed. The completed fresh cohorts show repeated cohort-level robustness gains versus matched UTR, and the frozen held-out results support transfer within the tested structural and parameter shifts. Final PLR-style and six-UAV results will determine the permissible external-comparator and cross-scale claims. The central result remains bounded: adaptive, topology-semantic reset allocation can improve robustness in the evaluated heterogeneous UAV setting without altering PPO, rewards or the policy architecture.
+DRTP provides an interpretable way to adapt training exposure to topology-failure groups while holding the policy learner and environment interfaces fixed. The completed fresh cohorts show repeated cohort-level robustness gains versus matched UTR, and the frozen held-out results support transfer within the tested structural and parameter shifts. The PLR-style comparison is competitive and cohort-dependent; the pending six-UAV result will determine the permissible cross-scale claim. The central result remains bounded: adaptive, topology-semantic reset allocation can improve robustness in the evaluated heterogeneous UAV setting without altering PPO, rewards or the policy architecture.
 
 ## Reference anchors to complete in the bibliography
 
 - Jiang, M., Grefenstette, E., and Rocktäschel, T. *Prioritized Level Replay*. ICML, 2021. Official record: https://proceedings.mlr.press/v139/jiang21b.html
 - Zhang, et al. *Effective Communications: Joint Learning and Communication Framework for Multi-Agent Reinforcement Learning Over Noisy Channels*. IEEE JSAC, 2021. https://ieeexplore.ieee.org/document/9466501/
 - Chen, et al. *Distributed Reinforcement Learning for Flexible and Efficient UAV Swarm Control*. IEEE TCCN, 2021. https://ieeexplore.ieee.org/document/9366781/
-

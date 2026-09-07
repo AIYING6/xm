@@ -12,7 +12,7 @@ In heterogeneous UAV coordination under topology perturbations, Original DRTP ad
 |---|---|---|
 | Matched UTR/DRTP, cohort A and B | complete | Main robustness evidence |
 | Held-out / OOD endpoint evaluation | complete | Generalization evidence |
-| PLR-style matched external comparator | running | External adaptive-sampling comparison |
+| PLR-style matched external comparator | complete; cohort-dependent ordering | Competitive external adaptive-sampling comparison |
 | Six-UAV cross-scale UTR/DRTP run | running | Cross-scale evidence |
 
 The two running blocks must be incorporated only after their fixed endpoints and manifests are complete. No training-time measurement may be used as a final result.
