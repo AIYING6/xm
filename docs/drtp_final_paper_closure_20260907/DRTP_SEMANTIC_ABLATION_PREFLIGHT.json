@@ -1,16 +1,14 @@
 {
   "protocol": "DRTP-SEMANTIC-AND-ADAPTIVE-ABLATION-V1",
-  "verdict": "DRTP_SEMANTIC_ABLATION_READY_FOR_SEED_FREEZE",
+  "verdict": "DRTP_SEMANTIC_ABLATION_READY_FOR_EXECUTION",
   "configuration_valid": true,
   "exact_source_archive_verified": true,
-  "fresh_seed_registry_frozen": false,
+  "fresh_seed_registry_frozen": true,
   "training_authorized": false,
   "evaluation_authorized": false,
   "arm_checks": {
-    "utr_sg": true,
     "fixed_drtp_sg": true,
-    "random_drtp_sg": true,
-    "drtp_sg": true
+    "random_drtp_sg": true
   },
   "source_checks": {
     "algorithms/ri_gmappo/simple_ri_gmappo.py": true,
@@ -18,11 +16,16 @@
     "envs/uav_intercept_3d_env.py": true
   },
   "only_reset_side_mechanism_varies": true,
+  "new_trajectory_count": 10,
+  "reused_main_arms_not_retrained": [
+    "drtp_sg",
+    "utr_sg"
+  ],
+  "paired_delta_with_reused_reference_forbidden": true,
   "output_schema": [
     "per_seed_endpoint_table",
     "cohort_summary_table",
-    "paired_drtp_vs_random_drtp",
-    "paired_drtp_vs_fixed_drtp",
+    "unpaired_comparison_to_reused_drtp_reference",
     "sampler_manifest",
     "sampler_log",
     "protocol_report"

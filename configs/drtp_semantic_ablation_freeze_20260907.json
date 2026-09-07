@@ -1,6 +1,6 @@
 {
   "protocol": "DRTP-SEMANTIC-AND-ADAPTIVE-ABLATION-V1",
-  "status": "DESIGN_FROZEN_PENDING_FRESH_SEED_REGISTRY",
+  "status": "NONPAIRED_FRESH_ABLATION_AUTHORIZED",
   "purpose": "Isolate topology-semantic allocation from generic adaptive reset-side allocation.",
   "source_archive": "output/DRTP_STABILIZATION_FINAL_CONFIRMATION_10M.zip",
   "source_members_sha256": {
@@ -8,22 +8,24 @@
     "algorithms/ri_gmappo/drtp_topology_sampler.py": "5fbd46ceb9673a0b613a695dd82f00f46df2705850811784e3048b2c0ce2e741",
     "envs/uav_intercept_3d_env.py": "06e378d34eb390d8095469e98c7c9d37b244e98d92b93b6b20c24edaa7cd29ff"
   },
-  "arms": {
-    "utr_sg": {"sampler_mode": "utr", "topology_semantic": false, "adaptive_update": false},
+  "reused_frozen_reference_arms": {
+    "utr_sg": "main A/B endpoint results only; no rerun in this ablation cohort",
+    "drtp_sg": "main A/B endpoint results only; no rerun in this ablation cohort"
+  },
+  "newly_trained_arms": {
     "fixed_drtp_sg": {"sampler_mode": "fixed_drtp", "topology_semantic": true, "adaptive_update": false},
-    "random_drtp_sg": {"sampler_mode": "random_drtp", "topology_semantic": false, "adaptive_update": true},
-    "drtp_sg": {"sampler_mode": "drtp", "topology_semantic": true, "adaptive_update": true}
+    "random_drtp_sg": {"sampler_mode": "random_drtp", "topology_semantic": false, "adaptive_update": true}
   },
   "identical_controls": [
     "environment", "PPO", "actor", "critic", "reward", "observation", "action_interface",
     "failure_condition_library", "nominal_mass", "probability_bounds", "training_budget", "endpoint_evaluation_protocol"
   ],
   "training": {"updates": 39063, "num_envs": 4, "rollout_steps": 64, "environment_steps": 10000128},
-  "fresh_seed_registry": null,
+  "fresh_seed_registry": [80011, 80012, 80013, 80014, 80015],
   "endpoint_evaluation": {"type": "fixed_final_10m_only", "training_access": "forbidden"},
   "primary_unit": "training_seed",
   "output_schema": [
-    "per_seed_endpoint_table", "cohort_summary_table", "paired_drtp_vs_random_drtp", "paired_drtp_vs_fixed_drtp",
+    "per_seed_endpoint_table", "cohort_summary_table", "unpaired_comparison_to_reused_drtp_reference",
     "sampler_manifest", "sampler_log", "protocol_report"
   ],
   "automatic_algorithm_revision": false,

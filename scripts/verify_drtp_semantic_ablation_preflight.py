@@ -26,13 +26,11 @@ def main() -> None:
         raise SystemExit("explicit --execute is required")
     freeze = json.loads(FREEZE.read_text(encoding="utf-8"))
     expected_arms = {
-        "utr_sg": ("utr", False, False),
         "fixed_drtp_sg": ("fixed_drtp", True, False),
         "random_drtp_sg": ("random_drtp", False, True),
-        "drtp_sg": ("drtp", True, True),
     }
     arm_checks = {
-        arm: tuple(freeze["arms"][arm][key] for key in ("sampler_mode", "topology_semantic", "adaptive_update")) == expected
+        arm: tuple(freeze["newly_trained_arms"][arm][key] for key in ("sampler_mode", "topology_semantic", "adaptive_update")) == expected
         for arm, expected in expected_arms.items()
     }
     source_checks: dict[str, bool] = {}
@@ -56,12 +54,10 @@ def main() -> None:
         "updates": 39063, "num_envs": 4, "rollout_steps": 64, "environment_steps": 10000128,
     }
     source_exact = all(source_checks.values())
-    fresh_seed_registry_frozen = isinstance(freeze.get("fresh_seed_registry"), list) and len(freeze["fresh_seed_registry"]) > 0
+    fresh_seed_registry_frozen = freeze.get("fresh_seed_registry") == [80011, 80012, 80013, 80014, 80015]
     report = {
         "protocol": freeze["protocol"],
-        "verdict": "DRTP_SEMANTIC_ABLATION_READY_FOR_SEED_FREEZE" if configuration_valid and source_exact and not fresh_seed_registry_frozen else (
-            "DRTP_SEMANTIC_ABLATION_READY_FOR_EXECUTION" if configuration_valid and source_exact and fresh_seed_registry_frozen else "DRTP_SEMANTIC_ABLATION_PREFLIGHT_BLOCKED"
-        ),
+        "verdict": "DRTP_SEMANTIC_ABLATION_READY_FOR_EXECUTION" if configuration_valid and source_exact and fresh_seed_registry_frozen else "DRTP_SEMANTIC_ABLATION_PREFLIGHT_BLOCKED",
         "configuration_valid": configuration_valid,
         "exact_source_archive_verified": source_exact,
         "fresh_seed_registry_frozen": fresh_seed_registry_frozen,
@@ -70,6 +66,9 @@ def main() -> None:
         "arm_checks": arm_checks,
         "source_checks": source_checks,
         "only_reset_side_mechanism_varies": True,
+        "new_trajectory_count": 10,
+        "reused_main_arms_not_retrained": sorted(freeze["reused_frozen_reference_arms"]),
+        "paired_delta_with_reused_reference_forbidden": True,
         "output_schema": freeze["output_schema"],
         "automatic_algorithm_revision": False,
         "automatic_continuation": False,
@@ -79,7 +78,11 @@ def main() -> None:
         if args.output.exists():
             raise FileExistsError(f"refusing to overwrite {args.output}")
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(encoded, encoding="utf-8")
+    # ``Path.write_text`` gained a ``newline`` argument only in newer Python
+    # releases.  Keep the generated provenance record byte-stable while
+    # remaining runnable on the Python versions used by the cloud runners.
+    with args.output.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(encoded)
     print(encoded, end="")
 
 
