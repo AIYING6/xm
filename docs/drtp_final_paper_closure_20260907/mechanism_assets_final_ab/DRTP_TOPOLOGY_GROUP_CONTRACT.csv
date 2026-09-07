@@ -1,0 +1,8 @@
+group,condition_count,condition_ids,failure_start_min,failure_start_max,failure_duration_min,failure_duration_max,graph_edge_definition_available,graph_path_metrics_available,note
+N,1,nominal,-1,-1,0,0,False,False,Archive manifest supplies group/time semantics; no explicit adjacency matrix or edge list is assumed.
+F0,1,f0,44,44,80,80,False,False,Archive manifest supplies group/time semantics; no explicit adjacency matrix or edge list is assumed.
+TE,2,te_28_80|te_36_80,28,36,80,80,False,False,Archive manifest supplies group/time semantics; no explicit adjacency matrix or edge list is assumed.
+TL,2,tl_52_80|tl_60_80,52,60,80,80,False,False,Archive manifest supplies group/time semantics; no explicit adjacency matrix or edge list is assumed.
+DS,2,ds_44_40|ds_44_60,44,44,40,60,False,False,Archive manifest supplies group/time semantics; no explicit adjacency matrix or edge list is assumed.
+DL,2,dl_44_100|dl_44_120,44,44,100,120,False,False,Archive manifest supplies group/time semantics; no explicit adjacency matrix or edge list is assumed.
+CP,2,cp_28_120|cp_60_120,28,60,120,120,False,False,Archive manifest supplies group/time semantics; no explicit adjacency matrix or edge list is assumed.

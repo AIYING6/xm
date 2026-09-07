@@ -1,0 +1,6 @@
+cohort,train_seed,spearman_final_logged_difficulty_vs_actual_exposure,interpretation
+A,78011,0.9856107606091623,Descriptive within-seed six-group association; not a causal estimate.
+A,78012,0.6,Descriptive within-seed six-group association; not a causal estimate.
+A,78013,0.7142857142857143,Descriptive within-seed six-group association; not a causal estimate.
+A,78014,-0.14285714285714285,Descriptive within-seed six-group association; not a causal estimate.
+A,78015,-0.08571428571428572,Descriptive within-seed six-group association; not a causal estimate.
