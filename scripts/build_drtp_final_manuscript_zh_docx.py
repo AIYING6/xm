@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
+import argparse
 
 from docx import Document
 from docx.enum.table import WD_ALIGN_VERTICAL
@@ -13,8 +14,8 @@ from docx.shared import Cm, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "docs" / "drtp_final_paper_closure_20260907" / "DRTP_FINAL_MANUSCRIPT_ZH_DRAFT.md"
-OUTPUT = ROOT / "docs" / "drtp_final_paper_closure_20260907" / "DRTP_FINAL_MANUSCRIPT_ZH_DRAFT.docx"
+DEFAULT_SOURCE = ROOT / "docs" / "drtp_final_paper_closure_20260907" / "DRTP_FINAL_MANUSCRIPT_ZH_DRAFT.md"
+DEFAULT_OUTPUT = ROOT / "docs" / "drtp_final_paper_closure_20260907" / "DRTP_FINAL_MANUSCRIPT_ZH_DRAFT.docx"
 
 
 def set_cell_shading(cell, fill: str) -> None:
@@ -124,6 +125,11 @@ def add_table(doc: Document, rows: list[list[str]]) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--footer", default="DRTP 中文期刊论文初稿")
+    args = parser.parse_args()
     doc = Document()
     section = doc.sections[0]
     section.top_margin = Cm(2.2)
@@ -142,7 +148,7 @@ def main() -> None:
         style.font.size = Pt(size)
         style.font.color.rgb = RGBColor(0, 0, 0)
 
-    lines = SOURCE.read_text(encoding="utf-8").splitlines()
+    lines = args.source.read_text(encoding="utf-8").splitlines()
     table_rows: list[list[str]] = []
 
     def flush_table() -> None:
@@ -225,13 +231,13 @@ def main() -> None:
 
     footer = section.footer.paragraphs[0]
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    footer.add_run("DRTP 中文期刊论文初稿")
+    footer.add_run(args.footer)
     footer.runs[0].font.size = Pt(8)
     doc.core_properties.title = "动态鲁棒拓扑优先训练 中文期刊论文初稿"
     doc.core_properties.author = "[作者姓名]"
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    doc.save(OUTPUT)
-    print(OUTPUT)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    doc.save(args.output)
+    print(args.output)
 
 
 if __name__ == "__main__":

@@ -28,7 +28,7 @@
 
 1. 提出一种拓扑语义化的动态训练条件分配机制。DRTP 在不修改策略、奖励或 PPO 的前提下，通过名义参考的组级困难度与有界概率更新，自适应地重分配既有故障条件的训练暴露。
 2. 建立严格的匹配评估协议。UTR 与 DRTP 在模型、训练预算、环境接口和固定终点评估上完全匹配；以训练 seed 为独立单位，采用两批独立 fresh cohort，且 A/B 分开报告。
-3. 在完成的主实验与 OOD 评估中，证明 DRTP 相对 UTR 存在重复的 cohort-level 鲁棒性收益；同时通过 PLR-style 外部比较界定方法与通用优先回放之间的经验边界。
+3. 在完成的主实验与 OOD 评估中，显示 DRTP 相对 UTR 存在重复的 cohort-level 鲁棒性收益；同时通过 PLR-style 外部比较界定方法与通用优先回放之间的经验边界。
 4. `[6UAV 待填]` 在冻结的跨尺度六无人机协议下报告 UTR 与 DRTP 的正式比较，以检验该训练分配机制在更大团队配置下的适用范围。
 
 ## 2 相关工作
@@ -97,11 +97,33 @@ d_g=\min\left\{2,\max\left[0,
 5. 按式（1）生成候选分布，平滑并投影到 \(\mathcal Q\)，得到 \(q_{t+1}\)。
 6. 保存策略、优化器、环境随机状态和 sampler runtime state，直至固定训练预算结束。
 
+**表 1 UTR、PLR-style 与 DRTP 的机制比较**
+
+| 属性 | UTR | PLR-style 外部比较器 | Original DRTP |
+|---|---|---|---|
+| 采样对象 | 冻结拓扑条件 | 匹配的冻结支持集 | 冻结拓扑故障组 |
+| 自适应信号 | 无 | 通用 priority-driven replay 信号 | 名义参考的组级完成回报缺口 |
+| 拓扑语义 | 支持集固定，但不参与分配 | 不以拓扑语义定义优先级 | 显式故障组与组内条件层级 |
+| 名义锚点 | 匹配的固定质量 | 匹配协议 | 固定 (m_N=0.5) |
+| 概率约束 | 非名义组均匀 | 比较器自身优先规则 | (0.05\le q_g\le0.35) 的有界单纯形 |
+| 策略、奖励与 PPO 改动 | 无 | 匹配实现中无 | 无 |
+
 ## 5 实验设置
 
 ### 5.1 环境与对照方法
 
 实验采用异构无人机协同拦截环境。各方法共享相同的角色图策略、集中式 critic、奖励、通信范围、目标运动、训练预算与故障条件支持集。UTR 是严格匹配的均匀拓扑回放基线；Original DRTP 是本文主方法；PLR-style 是按照匹配协议实现的外部自适应采样比较器。EGTR 与 GA-EGTR 属于开发阶段候选，不作为本文主方法，也不与 Original DRTP 的 confirmatory 结果混合。
+
+**表 2 匹配环境与训练协议**
+
+| 项目 | 所有主比较方法的固定设置 |
+|---|---|
+| 环境与故障支持集 | 相同的异构无人机协同环境与预先冻结的名义/非名义拓扑条件 |
+| 策略学习器 | 相同的角色图 actor、集中式 critic 与 MAPPO/PPO 更新 |
+| 环境接口 | 相同的观测、奖励、转移、通信范围与动作掩码 |
+| 训练预算 | 4 个并行环境、64 个 rollout step、39,063 个 update、10,000,128 个环境步 |
+| 终点评估 | 相同的训练不可访问固定 endpoint tape；不使用 early stopping 或 checkpoint promotion |
+| 唯一 UTR–DRTP 差异 | 环境 reset 时已有冻结条件的分配概率 |
 
 ### 5.2 训练与评估协议
 
@@ -172,9 +194,11 @@ PLR-style 比较用于排除“任何自适应优先分配都会同样产生结�
 
 PLR-style 结果为方法定位增加了必要的边界。A 中 DRTP 的回报和 timeout 更有利；B 中 PLR-style 的回报与离散度更有利，而 DRTP 仍具有 timeout 优势。这意味着现有证据不支持“DRTP 对任意优先采样均一致更优”的宽泛主张。相反，论文应强调一个更具可验证性的事实：DRTP 通过拓扑故障语义、名义锚点和有界组级分配，提供了与通用 priority replay 不同的训练机制；在主问题上，其相对 UTR 的收益已在两批独立 cohort 中复现。
 
-本文仍有明确边界。第一，所有结论来自仿真环境及其定义的故障接口，不能外推为实飞部署性能。第二，当前证据不支持逐 seed 一致优越或所有安全指标单调改善。第三，跨尺度结论必须由正在执行的 6-UAV 正式协议确定。上述边界限定了结论范围，而不改变本文针对“冻结故障支持集内如何安排训练暴露”的核心回答。
+## 8 局限性
 
-## 8 结论
+本研究在仿真环境及其定义的有限拓扑故障接口内开展，不能外推为实飞部署性能。当前证据不支持逐 seed 一致优越，也不支持所有安全指标单调改善；collision 与 timeout 因而在主表中分开报告。参数与结构 OOD 结论仅适用于各自冻结的 shift 协议。跨尺度结论必须由正在执行的 6-UAV 正式协议确定。上述边界限定了结论范围，而不改变本文针对“冻结故障支持集内如何安排训练暴露”的核心回答。
+
+## 9 结论
 
 本文提出 DRTP，一种面向异构无人机拓扑故障鲁棒训练的 reset 侧条件分配方法。DRTP 不修改策略、奖励、环境转移或 PPO 优化，而是利用名义参考的组级完成回报，在预定义故障组之间动态、受约束地分配训练暴露。两个独立 fresh cohort 的固定 10M 终点结果显示，DRTP 相对匹配 UTR 具有重复的 cohort-level 扰动鲁棒性收益；冻结结构与参数 OOD 评估进一步支持其在所测 shift 中的转移能力。匹配 PLR-style 比较显示外部优先采样具有竞争性且排序依赖 cohort，因此本文不作 DRTP 对所有通用优先方法一致占优的主张。`[6UAV 待填]`。总体而言，DRTP 为拓扑故障条件下的多智能体训练提供了一个可解释、可审计且不改变策略学习接口的鲁棒训练分配方案。
 
@@ -186,13 +210,18 @@ PLR-style 结果为方法定位增加了必要的边界。A 中 DRTP 的回报�
 
 作者声明不存在利益冲突。
 
-## 参考文献（初始锚点；投稿前须补全和逐条核验）
+## 参考文献（提交前按目标期刊格式逐条核验）
 
-[1] Zhang X, et al. Effective Communications: Joint Learning and Communication Framework for Multi-Agent Reinforcement Learning Over Noisy Channels. *IEEE Journal on Selected Areas in Communications*, 2021. https://ieeexplore.ieee.org/document/9466501/
+[1] Tung T, et al. Effective Communications: Joint Learning and Communication Framework for Multi-Agent Reinforcement Learning Over Noisy Channels. *IEEE Journal on Selected Areas in Communications*, 39(8):2590–2603, 2021. https://doi.org/10.1109/JSAC.2021.3087248
 
-[2] Chen X, et al. Distributed Reinforcement Learning for Flexible and Efficient UAV Swarm Control. *IEEE Transactions on Cognitive Communications and Networking*, 2021. https://ieeexplore.ieee.org/document/9366781/
+[2] Chen X, et al. Distributed Reinforcement Learning for Flexible and Efficient UAV Swarm Control. *IEEE Transactions on Cognitive Communications and Networking*, 7(3):955–969, 2021. https://doi.org/10.1109/TCCN.2021.3063170
 
-[3] Jiang M, Grefenstette E, Rocktäschel T. Prioritized Level Replay. In: *Proceedings of the 38th International Conference on Machine Learning*, 2021. https://proceedings.mlr.press/v139/jiang21b.html
+[3] Narvekar S, Peng B, Leonetti M, Sinapov J, Taylor ME, Stone P. Curriculum Learning for Reinforcement Learning Domains: A Framework and Survey. *Journal of Machine Learning Research*, 21(181):1–50, 2020.
 
-`[待补：MAPPO、通信鲁棒 MARL、UAV 故障恢复、课程学习/域随机化的直接原始文献；所有作者、卷期、页码和 DOI 必须在投稿前核验。]`
+[4] Jiang M, Grefenstette E, Rocktäschel T. Prioritized Level Replay. In: *Proceedings of the 38th International Conference on Machine Learning*, 4940–4950, 2021. https://proceedings.mlr.press/v139/jiang21b.html
 
+[5] Tobin J, Fong R, Ray A, et al. Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World. In: *IEEE/RSJ International Conference on Intelligent Robots and Systems*, 2017. https://doi.org/10.1109/IROS.2017.8202133
+
+[6] Yu C, Velu A, Vinitsky E, et al. The Surprising Effectiveness of PPO in Cooperative, Multi-Agent Games. *NeurIPS Datasets and Benchmarks Track*, 2022. arXiv:2103.01955.
+
+`[投稿前须补充与本文最终版实验协议直接对应的 MAPPO、通信鲁棒 MARL、UAV 故障恢复原始文献，并用目标期刊的参考文献格式逐条核验作者、卷期、页码与 DOI。]`
