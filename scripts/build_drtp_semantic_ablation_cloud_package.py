@@ -71,6 +71,7 @@ def main() -> None:
         runner = replace_once(runner, 'SEEDS = (78011, 78012, 78013, 78014, 78015)', 'SEEDS = (80011, 80012, 80013, 80014, 80015)')
         runner = replace_once(runner, 'ARMS = {\n    "utr_sg": ("utr", None), "drtp_sg": ("drtp", None), "egtr_sg": ("egtr", None),\n    "global_anchored_egtr_a075_sg": ("anchored_egtr", 0.75),\n}', 'ARMS = {"fixed_drtp_sg": ("fixed_drtp", None), "random_drtp_sg": ("random_drtp", None)}')
         runner = replace_once(runner, 'TAPE_PROTOCOL = "DRTP-STABILIZATION-CONFIRMATORY-TAPE-V1"', 'TAPE_PROTOCOL = "DRTP-SEMANTIC-ABLATION-NONPAIRED-TAPE-V1"')
+        runner = replace_once(runner, 'list(range(780000, 780100))', 'list(range(800000, 800100))')
         write(package / "scripts" / "run_drtp_semantic_ablation_single.py", runner)
 
         tape = (package / "scripts" / "create_drtp_stabilization_confirmatory_tape.py").read_text(encoding="utf-8")
