@@ -24,7 +24,7 @@ from docx.shared import Cm, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parent
-OUT = ROOT / "DRTP_FINAL_MANUSCRIPT_SUBMISSION_READY.docx"
+OUT = ROOT / "DRTP_MANUSCRIPT_FIRST_DRAFT_ZH.docx"
 FIG = ROOT / "figures"
 FIG.mkdir(exist_ok=True)
 
