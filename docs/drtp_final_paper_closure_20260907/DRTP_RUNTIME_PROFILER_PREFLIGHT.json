@@ -1,0 +1,29 @@
+{
+  "protocol": "DRTP-RUNTIME-PROFILER-PREFLIGHT-V1",
+  "final_archive": "D:\\File\\Downloads\\drtp_stabilization_A_complete_results.tar.gz",
+  "source_root": "D:\\Code\\Codex\\ri_gmappo_uav_push_confirmation_20260905",
+  "checks": {
+    "sampler": {
+      "path": "algorithms\\ri_gmappo\\drtp_topology_sampler.py",
+      "expected_sha256": "5fbd46ceb9673a0b613a695dd82f00f46df2705850811784e3048b2c0ce2e741",
+      "actual_sha256": "5fbd46ceb9673a0b613a695dd82f00f46df2705850811784e3048b2c0ce2e741",
+      "exact": true
+    },
+    "learner": {
+      "path": "algorithms\\ri_gmappo\\simple_ri_gmappo.py",
+      "expected_sha256": "b2ae085ed60e20007ee188a044a2dc53d7061d8f7451c562f15244aeeef33873",
+      "actual_sha256": "895eb0da3b4d1d803f386ed0229a0c8a4a20b87c75d84402c23040fe57a57a6b",
+      "exact": false
+    },
+    "environment": {
+      "path": "envs\\uav_intercept_3d_env.py",
+      "expected_sha256": "06e378d34eb390d8095469e98c7c9d37b244e98d92b93b6b20c24edaa7cd29ff",
+      "actual_sha256": "06e378d34eb390d8095469e98c7c9d37b244e98d92b93b6b20c24edaa7cd29ff",
+      "exact": true
+    }
+  },
+  "verdict": "RUNTIME_PROFILER_BLOCKED_SOURCE_MISMATCH",
+  "training_started": false,
+  "evaluation_started": false,
+  "allowed_next_step": "Recover the exact frozen learner source/package; do not publish or compare runtime from this source tree."
+}

@@ -36,9 +36,12 @@ def main() -> None:
         frame = pd.read_csv(args.input_dir / f"DRTP_MECHANISM_{cohort}_Q_TRAJECTORY.csv")
         for group in GROUPS:
             summary = frame.groupby("milestone_fraction")[f"q_{group}"].agg(["mean", "min", "max"]).reset_index()
-            x = summary["milestone_fraction"].to_numpy()
-            axis.plot(x, summary["mean"], color=COLORS[group], lw=1.5, label=group)
-            axis.fill_between(x, summary["min"], summary["max"], color=COLORS[group], alpha=0.10, linewidth=0)
+            x = summary["milestone_fraction"].to_numpy(dtype=float)
+            mean = summary["mean"].to_numpy(dtype=float)
+            lower = summary["min"].to_numpy(dtype=float)
+            upper = summary["max"].to_numpy(dtype=float)
+            axis.plot(x, mean, color=COLORS[group], lw=1.5, label=group)
+            axis.fill_between(x, lower, upper, color=COLORS[group], alpha=0.10, linewidth=0)
         axis.axhline(1 / 6, color="#4D4D4D", lw=0.8, ls="--", label="uniform 1/6")
         axis.set_title(f"({cohort}) Cohort {cohort}: 非名义组采样概率 $q$")
         axis.set_xlabel("训练进度（归一化 update）")
@@ -78,6 +81,37 @@ def main() -> None:
     )
     fig.subplots_adjust(left=.075, right=.99, top=.88, bottom=.24, wspace=.40)
     stem = args.output_dir / "Fig3_DRTP_topology_exposure_evolution"
+    fig.savefig(stem.with_suffix(".pdf"), bbox_inches="tight")
+    fig.savefig(stem.with_suffix(".svg"), bbox_inches="tight")
+    fig.savefig(stem.with_suffix(".tiff"), dpi=600, pil_kwargs={"compression": "tiff_lzw"}, bbox_inches="tight")
+    fig.savefig(stem.with_suffix(".png"), dpi=250, bbox_inches="tight")
+    plt.close(fig)
+
+    difficulty = pd.read_csv(args.input_dir / "DRTP_FINAL_TOPOLOGY_DIFFICULTY_SUMMARY.csv")
+    fig, axes = plt.subplots(1, 2, figsize=(6.3, 2.65), sharey=True)
+    for axis, cohort in zip(axes, ("A", "B")):
+        frame = difficulty[difficulty["cohort"] == cohort]
+        for _, row in frame.iterrows():
+            group = row["group"]
+            offset = {
+                ("A", "F0"): (7, 7),
+                ("A", "TL"): (4, 12),
+                ("B", "F0"): (6, 7),
+            }.get((cohort, group), (4, 4))
+            axis.scatter(row["mean_return_degradation"], row["mean_actual_exposure_share"], s=55,
+                         color=COLORS[group], edgecolors="white", linewidths=.6, zorder=3)
+            axis.annotate(group, (row["mean_return_degradation"], row["mean_actual_exposure_share"]),
+                          xytext=offset, textcoords="offset points", fontsize=8)
+        axis.set_title(f"({cohort}) Cohort {cohort}")
+        axis.set_xlabel("固定终点：平均名义相对回报缺口")
+        axis.grid(color="#D9D9D9", lw=.5)
+        for spine in ("top", "right"):
+            axis.spines[spine].set_visible(False)
+    axes[0].set_ylabel("训练期实际非名义组暴露占比")
+    fig.text(.5, -.02, "每点为五个训练 seed 的组级平均。该关系是描述性的 endpoint/exposure 对照，不构成难度决定性能的因果主张。",
+             ha="center", va="top", fontsize=7, color="#404040")
+    fig.subplots_adjust(left=.10, right=.99, top=.86, bottom=.25, wspace=.18)
+    stem = args.output_dir / "Fig3b_topology_group_difficulty_vs_exposure"
     fig.savefig(stem.with_suffix(".pdf"), bbox_inches="tight")
     fig.savefig(stem.with_suffix(".svg"), bbox_inches="tight")
     fig.savefig(stem.with_suffix(".tiff"), dpi=600, pil_kwargs={"compression": "tiff_lzw"}, bbox_inches="tight")

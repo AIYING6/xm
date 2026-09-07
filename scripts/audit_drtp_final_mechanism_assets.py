@@ -312,6 +312,47 @@ def main() -> None:
         )
     write_csv(args.output_dir / "DRTP_TOPOLOGY_GROUP_CONTRACT.csv", result_a["topology_contract"], list(result_a["topology_contract"][0]))
 
+    q_summary_rows: list[dict[str, Any]] = []
+    difficulty_rows: list[dict[str, Any]] = []
+    for result in (result_a, result_b):
+        for row in result["seed_rows"]:
+            seed_groups = [item for item in result["group_rows"] if item["train_seed"] == row["train_seed"]]
+            highest_exposed = max(seed_groups, key=lambda item: item["actual_non_nominal_exposure_share"])
+            highest_q_group = max(FAILURE_GROUPS, key=lambda group: float(row[f"final_q_{group}"]))
+            q_summary_rows.append(
+                {
+                    "cohort": result["label"],
+                    "train_seed": row["train_seed"],
+                    "final_q_l1_distance_from_uniform": row["last_q_l1_distance_from_uniform"],
+                    "highest_actual_exposure_group": highest_exposed["group"],
+                    "highest_actual_exposure_share": highest_exposed["actual_non_nominal_exposure_share"],
+                    "highest_final_q_group": highest_q_group,
+                    "highest_final_q": row[f"final_q_{highest_q_group}"],
+                }
+            )
+        for row in result["aggregate_rows"]:
+            difficulty_rows.append(
+                {
+                    "cohort": result["label"],
+                    "group": row["group"],
+                    "mean_final_return_J": row["mean_J"],
+                    "mean_nominal_return_J": row["mean_J_nominal"],
+                    "mean_return_degradation": row["mean_J_nominal_minus_group"],
+                    "mean_success": row["mean_success"],
+                    "mean_timeout": row["mean_timeout"],
+                    "mean_collision": row["mean_collision"],
+                    "mean_actual_exposure_share": row["mean_actual_non_nominal_exposure_share"],
+                    "mean_final_q": row["mean_final_q"],
+                    "mean_logged_difficulty": row["mean_final_logged_difficulty"],
+                }
+            )
+    for cohort in ("A", "B"):
+        same = [row for row in difficulty_rows if row["cohort"] == cohort]
+        for index, row in enumerate(sorted(same, key=lambda item: float(item["mean_return_degradation"]), reverse=True), start=1):
+            row["return_degradation_rank_desc"] = index
+    write_csv(args.output_dir / "DRTP_FINAL_Q_ALLOCATION_SUMMARY.csv", q_summary_rows, list(q_summary_rows[0]))
+    write_csv(args.output_dir / "DRTP_FINAL_TOPOLOGY_DIFFICULTY_SUMMARY.csv", difficulty_rows, list(difficulty_rows[0]))
+
     inventory = {
         "protocol": "DRTP-FINAL-MECHANISM-ASSET-AUDIT-V1",
         "mode": "read_only_archive_analysis",

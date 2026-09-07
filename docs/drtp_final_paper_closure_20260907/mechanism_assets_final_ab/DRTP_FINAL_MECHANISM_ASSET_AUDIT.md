@@ -1,1 +1,18 @@
-# DRTP final A/B topology-exposure asset audit\n\n**Verdict:** `MECHANISM_ALIGNMENT_DESCRIPTIVE_ONLY`.\n\nThe two SHA256-verified final archives contain five DRTP sampler logs, five sampler manifests, and fixed endpoint condition summaries for each cohort. The analysis read these archives directly; it did not extract or alter checkpoints, invoke evaluation, train a model, select checkpoints, or read an evaluation tape online.\n\n## Available final assets\n\n| Cohort | DRTP sampler logs | Endpoint source | SHA256 |\n|---|---:|---|---|\n| A | 5 | `drtp_stabilization_final_confirmation/evaluations/final_10m/per_seed_condition_summary.csv` | `429f13444c4ed10327abd62a13a0d9bf8ee737cedb6b6448353fd9087bcb275f` |\n| B | 5 | `drtp_stabilization_independent_replication/evaluations/final_10m/per_seed_condition_summary.csv` | `d5c4adbe4f0004f0f415ba38e2b03232c55cb46c7d5dc7c7b1031eef7c1eef73` |\n\nThe output CSVs provide group-level endpoint outcomes, actual reset exposure, final logged `q`, logged difficulty, and five normalized training milestones for each seed. A/B are never pooled.\n\n## Boundary\n\nThe sampler manifests expose frozen group membership and failure timing, but do not themselves carry an explicit adjacency matrix or edge list. Therefore, this audit does **not** calculate broken-edge counts, graph connectivity, or shortest-path statistics. Those values may only be added after locating the exact frozen graph-definition artifact. The present outputs support descriptive topology-group/time and exposure analysis, not causal attribution or a post-hoc root-cause claim.\n
+# DRTP final A/B topology-exposure asset audit
+
+**Verdict:** `MECHANISM_ALIGNMENT_DESCRIPTIVE_ONLY`.
+
+The two SHA256-verified final archives contain five DRTP sampler logs, five sampler manifests, and fixed endpoint condition summaries for each cohort. The analysis read these archives directly; it did not extract or alter checkpoints, invoke evaluation, train a model, select checkpoints, or read an evaluation tape online.
+
+## Available final assets
+
+| Cohort | DRTP sampler logs | Endpoint source | SHA256 |
+|---|---:|---|---|
+| A | 5 | `drtp_stabilization_final_confirmation/evaluations/final_10m/per_seed_condition_summary.csv` | `429f13444c4ed10327abd62a13a0d9bf8ee737cedb6b6448353fd9087bcb275f` |
+| B | 5 | `drtp_stabilization_independent_replication/evaluations/final_10m/per_seed_condition_summary.csv` | `d5c4adbe4f0004f0f415ba38e2b03232c55cb46c7d5dc7c7b1031eef7c1eef73` |
+
+The output CSVs provide group-level endpoint outcomes, actual reset exposure, final logged `q`, logged difficulty, and five normalized training milestones for each seed. A/B are never pooled.
+
+## Boundary
+
+The sampler manifests expose frozen group membership and failure timing, but do not themselves carry an explicit adjacency matrix or edge list. Therefore, this audit does **not** calculate broken-edge counts, graph connectivity, or shortest-path statistics. Those values may only be added after locating the exact frozen graph-definition artifact. The present outputs support descriptive topology-group/time and exposure analysis, not causal attribution or a post-hoc root-cause claim.
