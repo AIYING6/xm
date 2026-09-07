@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="505.44pt" height="194.58pt" viewBox="0 0 505.44 194.58" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-09-07T14:36:53.075166</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.8.0, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 194.58 
+L 505.44 194.58 
+L 505.44 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="PathCollection_1">
+    <defs>
+     <path id="m097670ad9a" d="M 0 3.708099 
+C 0.983399 3.708099 1.926654 3.317391 2.622022 2.622022 
+C 3.317391 1.926654 3.708099 0.983399 3.708099 0 
+C 3.708099 -0.983399 3.317391 -1.926654 2.622022 -2.622022 
+C 1.926654 -3.317391 0.983399 -3.708099 0 -3.708099 
+C -0.983399 -3.708099 -1.926654 -3.317391 -2.622022 -2.622022 
+C -3.317391 -1.926654 -3.708099 -0.983399 -3.708099 0 
+C -3.708099 0.983399 -3.317391 1.926654 -2.622022 2.622022 
+C -1.926654 3.317391 -0.983399 3.708099 0 3.708099 
+z
+" style="stroke: #164c78"/>
+    </defs>
+    <g clip-path="url(#pf0772c03b1)">
+     <use xlink:href="#m097670ad9a" x="56.304" y="63.50625" style="fill: #164c78; stroke: #164c78"/>
+    </g>
+   </g>
+   <g id="PathCollection_2">
+    <defs>
+     <path id="m04d51c4fcf" d="M 0 3.708099 
+C 0.983399 3.708099 1.926654 3.317391 2.622022 2.622022 
+C 3.317391 1.926654 3.708099 0.983399 3.708099 0 
+C 3.708099 -0.983399 3.317391 -1.926654 2.622022 -2.622022 
+C 1.926654 -3.317391 0.983399 -3.708099 0 -3.708099 
+C -0.983399 -3.708099 -1.926654 -3.317391 -2.622022 -2.622022 
+C -3.317391 -1.926654 -3.708099 -0.983399 -3.708099 0 
+C -3.708099 0.983399 -3.317391 1.926654 -2.622022 2.622022 
+C -1.926654 3.317391 -0.983399 3.708099 0 3.708099 
+z
+" style="stroke: #087e8b"/>
+    </defs>
+    <g clip-path="url(#pf0772c03b1)">
+     <use xlink:href="#m04d51c4fcf" x="56.304" y="78.82155" style="fill: #087e8b; stroke: #087e8b"/>
+    </g>
+   </g>
+   <g id="PathCollection_3">
+    <defs>
+     <path id="mbaafbe3469" d="M 0 3.708099 
+C 0.983399 3.708099 1.926654 3.317391 2.622022 2.622022 
+C 3.317391 1.926654 3.708099 0.983399 3.708099 0 
+C 3.708099 -0.983399 3.317391 -1.926654 2.622022 -2.622022 
+C 1.926654 -3.317391 0.983399 -3.708099 0 -3.708099 
+C -0.983399 -3.708099 -1.926654 -3.317391 -2.622022 -2.622022 
+C -3.317391 -1.926654 -3.708099 -0.983399 -3.708099 0 
+C -3.708099 0.983399 -3.317391 1.926654 -2.622022 2.622022 
+C -1.926654 3.317391 -0.983399 3.708099 0 3.708099 
+z
+" style="stroke: #d97531"/>
+    </defs>
+    <g clip-path="url(#pf0772c03b1)">
+     <use xlink:href="#mbaafbe3469" x="56.304" y="94.13685" style="fill: #d97531; stroke: #d97531"/>
+    </g>
+   </g>
+   <g id="PathCollection_4">
+    <defs>
+     <path id="m9133b6c1f3" d="M 0 3.708099 
+C 0.983399 3.708099 1.926654 3.317391 2.622022 2.622022 
+C 3.317391 1.926654 3.708099 0.983399 3.708099 0 
+C 3.708099 -0.983399 3.317391 -1.926654 2.622022 -2.622022 
+C 1.926654 -3.317391 0.983399 -3.708099 0 -3.708099 
+C -0.983399 -3.708099 -1.926654 -3.317391 -2.622022 -2.622022 
+C -3.317391 -1.926654 -3.708099 -0.983399 -3.708099 0 
+C -3.708099 0.983399 -3.317391 1.926654 -2.622022 2.622022 
+C -1.926654 3.317391 -0.983399 3.708099 0 3.708099 
+z
+" style="stroke: #7a5af8"/>
+    </defs>
+    <g clip-path="url(#pf0772c03b1)">
+     <use xlink:href="#m9133b6c1f3" x="56.304" y="109.45215" style="fill: #7a5af8; stroke: #7a5af8"/>
+    </g>
+   </g>
+   <g id="PathCollection_5">
+    <defs>
+     <path id="m5af0967f3b" d="M 0 3.708099 
+C 0.983399 3.708099 1.926654 3.317391 2.622022 2.622022 
+C 3.317391 1.926654 3.708099 0.983399 3.708099 0 
+C 3.708099 -0.983399 3.317391 -1.926654 2.622022 -2.622022 
+C 1.926654 -3.317391 0.983399 -3.708099 0 -3.708099 
+C -0.983399 -3.708099 -1.926654 -3.317391 -2.622022 -2.622022 
+C -3.317391 -1.926654 -3.708099 -0.983399 -3.708099 0 
+C -3.708099 0.983399 -3.317391 1.926654 -2.622022 2.622022 
+C -1.926654 3.317391 -0.983399 3.708099 0 3.708099 
+z
+" style="stroke: #12b76a"/>
+    </defs>
+    <g clip-path="url(#pf0772c03b1)">
+     <use xlink:href="#m5af0967f3b" x="56.304" y="124.76745" style="fill: #12b76a; stroke: #12b76a"/>
+    </g>
+   </g>
+   <g id="PathCollection_6">
+    <defs>
+     <path id="m2e6a27f016" d="M 0 3.708099 
+C 0.983399 3.708099 1.926654 3.317391 2.622022 2.622022 
+C 3.317391 1.926654 3.708099 0.983399 3.708099 0 
+C 3.708099 -0.983399 3.317391 -1.926654 2.622022 -2.622022 
+C 1.926654 -3.317391 0.983399 -3.708099 0 -3.708099 
+C -0.983399 -3.708099 -1.926654 -3.317391 -2.622022 -2.622022 
+C -3.317391 -1.926654 -3.708099 -0.983399 -3.708099 0 
+C -3.708099 0.983399 -3.317391 1.926654 -2.622022 2.622022 
+C -1.926654 3.317391 -0.983399 3.708099 0 3.708099 
+z
+" style="stroke: #eaaa08"/>
+    </defs>
+    <g clip-path="url(#pf0772c03b1)">
+     <use xlink:href="#m2e6a27f016" x="56.304" y="140.08275" style="fill: #eaaa08; stroke: #eaaa08"/>
+    </g>
+   </g>
+   <g id="line2d_1">
+    <path d="M 56.304 63.50625 
+L 444.2256 63.50625 
+" clip-path="url(#pf0772c03b1)" style="fill: none; stroke: #eaecf0; stroke-width: 4; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 56.304 78.82155 
+L 444.2256 78.82155 
+" clip-path="url(#pf0772c03b1)" style="fill: none; stroke: #eaecf0; stroke-width: 4; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 56.304 94.13685 
+L 444.2256 94.13685 
+" clip-path="url(#pf0772c03b1)" style="fill: none; stroke: #eaecf0; stroke-width: 4; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_4">
+    <path d="M 56.304 109.45215 
+L 444.2256 109.45215 
+" clip-path="url(#pf0772c03b1)" style="fill: none; stroke: #eaecf0; stroke-width: 4; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_5">
+    <path d="M 56.304 124.76745 
+L 444.2256 124.76745 
+" clip-path="url(#pf0772c03b1)" style="fill: none; stroke: #eaecf0; stroke-width: 4; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_6">
+    <path d="M 56.304 140.08275 
+L 444.2256 140.08275 
+" clip-path="url(#pf0772c03b1)" style="fill: none; stroke: #eaecf0; stroke-width: 4; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_7">
+    <path d="M 56.304 187.38 
+L 56.304 7.2 
+" clip-path="url(#pf0772c03b1)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #667085"/>
+   </g>
+   <g id="line2d_8">
+    <path d="M 444.2256 187.38 
+L 444.2256 7.2 
+" clip-path="url(#pf0772c03b1)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #667085"/>
+   </g>
+   <g id="text_1">
+    <text style="fill: #164c78; font: 700 12px 'Arial', 'Microsoft YaHei'; text-anchor: middle" x="252.72" y="27.47025" transform="rotate(-0 252.72 27.47025)">DRTP 采样概率 q 的可审计导入位</text>
+   </g>
+   <g id="text_2">
+    <text style="fill: #164c78; font: 700 9px 'Arial', 'Microsoft YaHei'; text-anchor: end" x="42.55488" y="65.839219" transform="rotate(-0 42.55488 65.839219)">F0</text>
+   </g>
+   <g id="text_3">
+    <text style="fill: #087e8b; font: 700 9px 'Arial', 'Microsoft YaHei'; text-anchor: end" x="42.55488" y="81.154519" transform="rotate(-0 42.55488 81.154519)">TE</text>
+   </g>
+   <g id="text_4">
+    <text style="fill: #d97531; font: 700 9px 'Arial', 'Microsoft YaHei'; text-anchor: end" x="42.55488" y="96.469819" transform="rotate(-0 42.55488 96.469819)">TL</text>
+   </g>
+   <g id="text_5">
+    <text style="fill: #7a5af8; font: 700 9px 'Arial', 'Microsoft YaHei'; text-anchor: end" x="42.55488" y="111.785119" transform="rotate(-0 42.55488 111.785119)">DS</text>
+   </g>
+   <g id="text_6">
+    <text style="fill: #12b76a; font: 700 9px 'Arial', 'Microsoft YaHei'; text-anchor: end" x="42.55488" y="127.100419" transform="rotate(-0 42.55488 127.100419)">DL</text>
+   </g>
+   <g id="text_7">
+    <text style="fill: #eaaa08; font: 700 9px 'Arial', 'Microsoft YaHei'; text-anchor: end" x="42.55488" y="142.415719" transform="rotate(-0 42.55488 142.415719)">CP</text>
+   </g>
+   <g id="text_8">
+    <text style="fill: #667085; font: 9px 'Arial', 'Microsoft YaHei'; text-anchor: middle" x="56.304" y="167.10975" transform="rotate(-0 56.304 167.10975)">q0：均匀初始化</text>
+   </g>
+   <g id="text_9">
+    <text style="fill: #667085; font: 9px 'Arial', 'Microsoft YaHei'; text-anchor: middle" x="444.2256" y="167.10975" transform="rotate(-0 444.2256 167.10975)">终点：冻结日志导入</text>
+   </g>
+   <g id="text_10">
+    <g id="patch_2">
+     <path d="M 108.217266 151.091156 
+L 397.222734 151.091156 
+Q 402.622734 151.091156 402.622734 145.691156 
+L 402.622734 125.465344 
+Q 402.622734 120.065344 397.222734 120.065344 
+L 108.217266 120.065344 
+Q 102.817266 120.065344 102.817266 125.465344 
+L 102.817266 145.691156 
+Q 102.817266 151.091156 108.217266 151.091156 
+z
+" style="fill: #f2f5f8; stroke: #d0d5dd; stroke-linejoin: miter"/>
+    </g>
+    <text style="fill: #344054; font: 9px 'Arial', 'Microsoft YaHei'" transform="translate(139.462734 133.028156)">该面板只接受与正式训练轨迹一一对应的 sampler CSV。</text>
+    <text style="fill: #344054; font: 9px 'Arial', 'Microsoft YaHei'" transform="translate(108.217266 143.902406)">当前论文资产未归档最终 q 日志，故不以汇总结果代替轨迹或合成曲线。</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pf0772c03b1">
+   <rect x="7.2" y="7.2" width="491.04" height="180.18"/>
+  </clipPath>
+ </defs>
+</svg>
