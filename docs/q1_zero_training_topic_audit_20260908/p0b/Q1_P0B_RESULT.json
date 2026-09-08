@@ -1,0 +1,35 @@
+{
+  "protocol": "Q1-P0B-BROAD-ZERO-TRAINING-TOPIC-SEARCH-V1",
+  "date": "2026-09-08",
+  "verdict": "Q1_P0B_TIV_CONDITIONAL_GO_TO_P0C_ONLY",
+  "training_started": false,
+  "evaluation_started": false,
+  "environment_modified": false,
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "preferred_candidate": "task-information viability under dynamic communication failures",
+  "new_decision_object": "task-information viability set and temporal task-information cut",
+  "closed_candidates": [
+    "active topology-fault diagnosis under the current repository interface",
+    "causal-invariant topology representation as a Q1 mainline",
+    "local information contracts as a standalone Q1 topic"
+  ],
+  "authorized_next_step_only": "P0C zero-training formal definition, counterexamples, theorem-target and exact-overlap audit",
+  "p0c_required_outputs": [
+    "minimal TIV definition with robust and local-observable variants",
+    "three strict counterexamples",
+    "temporal task-information cut audit",
+    "at least three theorem candidates",
+    "15-25 nearest-neighbor exact-overlap matrix",
+    "native physical-action controllability proof",
+    "binary P0C GO or NO-GO"
+  ],
+  "prohibited": [
+    "environment modification",
+    "algorithm implementation",
+    "training",
+    "evaluation",
+    "cloud execution",
+    "renaming connectivity, AoI, or generic viability as novelty"
+  ]
+}
