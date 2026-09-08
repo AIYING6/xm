@@ -10,6 +10,7 @@ no pending 6-UAV or ablation result is inserted.
 from __future__ import annotations
 
 import re
+import os
 from pathlib import Path
 
 from docx import Document
@@ -23,10 +24,10 @@ from docx.shared import Cm, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "paper" / "q2_final_zh" / "main_zh.md"
+SOURCE = Path(os.environ.get("DRTP_MANUSCRIPT_SOURCE", ROOT / "paper" / "q2_final_zh" / "main_zh.md"))
 OUT = ROOT / "docs" / "drtp_submission_ready"
-DOCX = OUT / "DRTP_FINAL_MANUSCRIPT_SUBMISSION_READY_FULL.docx"
-PDF = OUT / "DRTP_FINAL_MANUSCRIPT_SUBMISSION_READY_FULL.pdf"
+DOCX = Path(os.environ.get("DRTP_MANUSCRIPT_DOCX", OUT / "DRTP_FINAL_MANUSCRIPT_SUBMISSION_READY_FULL.docx"))
+PDF = Path(os.environ.get("DRTP_MANUSCRIPT_PDF", OUT / "DRTP_FINAL_MANUSCRIPT_SUBMISSION_READY_FULL.pdf"))
 
 
 def set_font(run, name="宋体", size=10.5, bold=None, color=None, italic=None):
@@ -109,7 +110,7 @@ def add_math(doc, text):
 
 
 def add_heading(doc, text, level):
-    p = doc.add_paragraph()
+    p = doc.add_paragraph(style=f"Heading {min(level, 3)}")
     pf = p.paragraph_format
     pf.keep_with_next = True
     pf.space_before = Pt(15 if level == 1 else 9)
@@ -127,7 +128,7 @@ def add_heading(doc, text, level):
 
 
 def add_caption(doc, text):
-    p = doc.add_paragraph()
+    p = doc.add_paragraph(style="Caption")
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.line_spacing = 1.15
     p.paragraph_format.space_after = Pt(7)
@@ -212,30 +213,37 @@ def transform_section_title(text):
     return replacements.get(text, text)
 
 
+def read_front_matter():
+    lines = SOURCE.read_text(encoding="utf-8").splitlines()
+    title = next((line[2:].strip() for line in lines if line.startswith("# ")), "DRTP manuscript")
+    abstract_start = lines.index("## 摘要") + 1
+    keyword_start = lines.index("## 关键词")
+    abstract = " ".join(line.strip() for line in lines[abstract_start:keyword_start] if line.strip())
+    body_start = next(i for i, line in enumerate(lines[keyword_start + 1:], keyword_start + 1) if line.startswith("## 1 "))
+    keywords = " ".join(line.strip() for line in lines[keyword_start + 1:body_start] if line.strip())
+    return title, abstract, keywords
+
+
 def add_front_matter(doc):
+    title, abstract, keywords = read_front_matter()
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_after = Pt(10)
-    r = p.add_run("面向中继拓扑退化的异构多无人机协同训练暴露塑形")
+    r = p.add_run(clean_inline(title))
     set_font(r, "黑体", 18, True, (20, 61, 91))
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_after = Pt(15)
-    r = p.add_run("一种有界自适应拓扑扰动重加权的受控实证研究")
+    r = p.add_run("一种有界自适应拓扑扰动重加权的双 cohort 受控实证研究")
     set_font(r, "宋体", 12.5, False, (76, 86, 96))
 
     add_heading(doc, "摘  要", 1)
-    abstract = (
-        "异构多无人机协同依赖目标感知、通信转发和任务支撑在角色之间形成连续的信息链。继电节点故障并不必然导致完全断联，却会改变攻击角色可合法使用的信息来源、缓存时效及协同路径，从而造成训练阶段拓扑暴露与故障任务需求之间的失配。本文围绕这一失配研究训练暴露塑形问题：在策略主干、集中训练分散执行框架、PPO 目标、奖励、观测、动作、执行期信息边界、训练预算、名义工况质量及故障支持集合均保持一致时，仅改变多个冻结故障组在 reset 阶段的采样分配，能否改变故障条件下的协同任务表现与可靠性代价。"
-        "为此，本文提出有界自适应拓扑扰动重加权方法（DRTP）。该方法以故障组回报相对名义工况的偏离构造训练期困难代理，周期性更新故障组采样质量，并以概率下上界维持覆盖。"
-        "在轻量三自由度侦察—继电—攻击协作任务的正式五种子、固定 10M 终点评价中，DRTP 相对参数量、条件集合和预算匹配的均匀拓扑随机化基线，在典型 F0、跨扰动平均和跨扰动最差端点上的配对平均差分别为 52.13、55.00 和 63.01，三个端点均为 5/5 个训练种子正向；平均超时率由 0.874 降至 0.694。与此同时，碰撞率由 0.005 升至 0.008，故任务收益不能被直接等同为全面安全改进。采样器遥测验证了训练分布确实被重分配，但不单独证明特定策略内部机制。本文以正式受控队列为主要经验结论，并将独立队列出现的方向反转作为适用边界：DRTP 在冻结主合同中展示了相对于均匀暴露的队列级故障任务收益，但不据此宣称跨训练队列的一致优越、一般分布鲁棒保证或执行期信息恢复。"
-    )
     add_body(doc, abstract)
     p = doc.add_paragraph()
     p.paragraph_format.space_after = Pt(9)
     r = p.add_run("关键词：")
     set_font(r, "黑体", 10.5, True)
-    r = p.add_run("异构多无人机；多智能体强化学习；通信拓扑退化；继电节点故障；训练暴露塑形；固定终点评价")
+    r = p.add_run(clean_inline(keywords))
     set_font(r, "宋体", 10.5)
 
 
@@ -243,6 +251,7 @@ def build():
     OUT.mkdir(parents=True, exist_ok=True)
     doc = Document()
     sec = doc.sections[0]
+    sec.page_width = Cm(21.0); sec.page_height = Cm(29.7)
     sec.top_margin = Cm(1.9); sec.bottom_margin = Cm(1.8)
     sec.left_margin = Cm(2.05); sec.right_margin = Cm(2.05)
     sec.header_distance = Cm(0.8); sec.footer_distance = Cm(0.75)
@@ -250,6 +259,15 @@ def build():
     styles["Normal"].font.name = "宋体"
     styles["Normal"]._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
     styles["Normal"].font.size = Pt(10.5)
+    for index, size in ((1, 15), (2, 12), (3, 10.8)):
+        heading = styles[f"Heading {index}"]
+        heading.font.name = "黑体" if index < 3 else "宋体"
+        heading._element.rPr.rFonts.set(qn("w:eastAsia"), "黑体" if index < 3 else "宋体")
+        heading.font.size = Pt(size)
+        heading.font.bold = True
+    styles["Caption"].font.name = "宋体"
+    styles["Caption"]._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
+    styles["Caption"].font.size = Pt(8.5)
     if "List Bullet" in styles:
         styles["List Bullet"].font.name = "宋体"
         styles["List Bullet"]._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
