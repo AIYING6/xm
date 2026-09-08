@@ -1,0 +1,17 @@
+{
+  "protocol": "STRONG-Q2-BROAD-TOPIC-SEARCH-P0F-V1",
+  "date": "2026-09-09",
+  "verdict": "P0F_NO_GO_FOR_ALL_THREE_AS_PRIMARY_ALGORITHM",
+  "training_started": false,
+  "algorithm_modified": false,
+  "environment_modified": false,
+  "candidates": {
+    "constrained_offline_adaptation_from_fault_data": "NO_GO_DATASET_ABSENT_AND_DIRECT_OVERLAP",
+    "finite_sample_deployment_risk_calibration": "NO_GO_AS_PRIMARY_ALGORITHM",
+    "cross_task_cross_platform_topology_benchmark": "NO_GO_AS_HIGH_RETURN_ALGORITHM"
+  },
+  "authorized_next_step": "P0G_CLEAN_SHEET_PROBLEM_SEARCH_ZERO_TRAINING",
+  "project_split_required": true,
+  "existing_drtp_results_reusable_as_new_project_confirmation": false,
+  "software_infrastructure_reusable": true
+}
