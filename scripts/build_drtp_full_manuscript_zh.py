@@ -277,7 +277,7 @@ def build():
     set_font(hr, "宋体", 8.3, color=(90, 90, 90))
     footer = sec.footer.paragraphs[0]
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    fr = footer.add_run("投稿初稿")
+    fr = footer.add_run("投稿稿件")
     set_font(fr, "宋体", 8.3, color=(90, 90, 90))
 
     add_front_matter(doc)
