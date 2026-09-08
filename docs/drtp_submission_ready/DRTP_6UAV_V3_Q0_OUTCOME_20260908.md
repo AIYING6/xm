@@ -1,7 +1,7 @@
 # 6-UAV V3 Q0 outcome
 
-**Protocol:** `DRTP-6UAV-V3-SUSTAINED-SUPPORT-Q0-V1`  
-**Verdict:** `V3_Q0_PASS`  
+**Protocol:** `DRTP-6UAV-V3-SUSTAINED-SUPPORT-Q0-V1`
+**Verdict:** `V3_Q0_PASS`
 **Evidence status:** environment-semantic diagnostic only; not manuscript
 performance evidence.
 
