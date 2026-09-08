@@ -297,6 +297,10 @@ cohort A 和 B 的训练种子、训练过程与评价 tape 相互独立。训�
 | B | UTR | 187.18 | 181.42 | 164.98 | 21.66 | 0.289 | 0.711 | 0.000 |
 | B | DRTP | 210.34 | 218.78 | 172.03 | 30.54 | 0.398 | 0.602 | 0.000 |
 
+![图4｜最终冻结 10M endpoint 的配对训练种子结果。](final_figures/Fig4_final_ab_paired_endpoint.png)
+
+**图4｜最终冻结 10M endpoint 的同训练种子配对结果。** a，A cohort；b，B cohort。点表示独立训练 seed 的扰动条件回报，灰线连接同一 seed 的 UTR 与 DRTP endpoint，短横线为 cohort 均值（每面板 n=5）。该图展示配对方向及离散性，不将五个 seed 的 episode 轨迹视为额外独立样本，也不表示显著性检验。
+
 ### 6.2 配对方向与下尾表现共同限定结果解释
 
 平均值不应替代逐 seed 检查。A 中 DRTP 的扰动回报在 3/5 个配对 seed 中为正，B 中为 4/5 个配对 seed 为正。尽管 A 未达到逐 seed 单调获益，DRTP 的观测最差 seed 在两批中均高于 UTR：A 为 191.49 对 79.75，B 为 172.03 对 164.98。该模式说明本文的主要证据并非仅由上尾偶然值驱动；但 3/5 与 4/5 也明确要求避免“每个 seed 均提升”的表述。
@@ -327,6 +331,10 @@ cohort A 和 B 的训练种子、训练过程与评价 tape 相互独立。训�
 | B | UTR | 179.38 | 149.03 | 0.628 | 0.0015 |
 | B | DRTP | 191.34 | 169.06 | 0.689 | 0.0000 |
 
+![图5｜训练未读取 structural 条件带上的固定 endpoint 配对结果。](final_figures/Fig5_heldout_structural_endpoint.png)
+
+**图5｜训练未读取 structural 条件带上的固定 endpoint 配对结果。** a--b 为四个 structural 条件聚合后的平均回报，c--d 为每个训练 seed 的最低 structural 条件回报；A/B 分层显示。点和配对线均以训练 seed 为单位，短横线为 cohort 均值（每面板 n=5）。结果仅覆盖该冻结条件带，不能外推为任意未见拓扑的普适泛化。
+
 ### 6.5 与 PLR-style 外部比较的定位：竞争性而非全面支配
 
 PLR-style 采用与 A/B 对应的训练种子、10M 预算、任务环境、网络维度和 PPO 超参数从零开始训练；它是定位“通用优先级式暴露调整”而非替代主要因果对照的外部比较。表5中，A cohort 的 DRTP 平均扰动回报为 216.66，高于 PLR-style 的 203.87，且 DRTP timeout 更低；B cohort 则由 PLR-style 获得更高的平均扰动回报（220.03 对 210.34），同时 DRTP 的 success 更高、timeout 更低。由此，证据并不支持 DRTP 对通用 prioritization 的跨 cohort 全面支配；它支持的是 DRTP 在这一外部比较中具有竞争力，并呈现由拓扑语义暴露和通用优先级各自可能影响的性能—可靠性权衡。
@@ -340,11 +348,19 @@ PLR-style 采用与 A/B 对应的训练种子、10M 预算、任务环境、网�
 | B | DRTP | 210.34 | 218.78 | 172.03 | 0.602 | 0.000 |
 | B | PLR-style | 220.03 | 218.22 | 201.06 | 0.699 | 0.000 |
 
+![图6｜PLR-style 外部定位的 A/B 分层 endpoint。](final_figures/Fig6_plr_style_positioning.png)
+
+**图6｜PLR-style 外部定位的 A/B 分层 endpoint。** 点表示训练 seed 的扰动条件回报，短横线为 cohort 均值（每种方法、每个 cohort 均为 n=5）。该图用于比较相同预算下的结果位置；由于 PLR-style 并非本文主受控比较的唯一变量对照，不能由此识别拓扑语义本身的因果效应。
+
 ### 6.6 方法选择与采样器遥测的证据角色
 
 最初冻结合同同时保留 EGTR 与 Global-Anchored EGTR 作为候选 arm。A/B 完成后的方法选择文件将 Original DRTP 指定为 principal method：EGTR 在 A 的领先次序未在 B 保持，而 Global-Anchored EGTR 未在两批中维持相对于 UTR 或 DRTP 的一致优势。该选择过程说明主方法并非根据单一 cohort 的最高值事后替换。
 
-DRTP 的训练日志记录每个故障组的权重和实际暴露计数，因此可直接审计 sampler 是否偏离 UTR 的均匀故障组质量。该遥测用于验证“训练暴露确实被重分配”这一实施事实；它不单独识别权重变化如何改变策略内部表示、信息路径利用或泛化机制。后续关于 q 演化与拓扑难度的图表只能在其源日志、训练合同和统计单位均核对后作为机制描述性证据加入。
+DRTP 的训练日志记录每个故障组的权重和实际暴露计数，因此可直接审计 sampler 是否偏离 UTR 的均匀故障组质量。图3汇总最终 A/B cohort 的 10 条 DRTP 日志：两批中均出现了与均匀质量不同的、按组变化的暴露分配，且组别排序与幅度保留 seed 间差异。该遥测用于验证“训练暴露确实被重分配”这一实施事实；它不单独识别权重变化如何改变策略内部表示、信息路径利用或泛化机制。
+
+![图3｜DRTP 训练日志中的故障组暴露质量演化。](final_figures/Fig3_drtp_q_evolution.png)
+
+**图3｜DRTP 训练日志中的故障组暴露质量演化。** a，A cohort；b，B cohort。实线为 cohort 内五个训练 seed 在冻结里程碑处的平均实际选择质量，阴影为对应 seed 的最小—最大范围；虚线为 UTR 在六个故障组间的均匀质量 1/6。该图只证明训练采样分布确实发生了非均匀重分配，不证明特定权重变化已导致某种策略内部机制或泛化能力。
 
 ## 7 讨论
 

@@ -1,0 +1,28 @@
+{
+  "backend": "Python/matplotlib",
+  "independent_unit": "training_seed",
+  "figures": {
+    "Fig3": "DRTP sampler q telemetry; implementation evidence only",
+    "Fig4": "final A/B UTR--DRTP primary paired comparison",
+    "Fig5": "predeclared held-out structural condition band",
+    "Fig6": "PLR-style external positioning; not the primary causal comparison"
+  },
+  "archives": {
+    "A": {
+      "path": "D:\\File\\Downloads\\drtp_stabilization_A_complete_results.tar.gz",
+      "sha256": "429f13444c4ed10327abd62a13a0d9bf8ee737cedb6b6448353fd9087bcb275f"
+    },
+    "B": {
+      "path": "D:\\File\\Downloads\\drtp_stabilization_B_complete_results.tar.gz",
+      "sha256": "d5c4adbe4f0004f0f415ba38e2b03232c55cb46c7d5dc7c7b1031eef7c1eef73"
+    },
+    "heldout": {
+      "path": "D:\\File\\Downloads\\drtp_final_evidence_heldout_ood_results.tar.gz",
+      "sha256": "68ae5c54da53b64f0ac3e8ecb5a909f9cd5af38920b16543be777b570eef0bf1"
+    },
+    "plr": {
+      "path": "D:\\File\\Downloads\\drtp_plr_matched_ab_results.tar.gz",
+      "sha256": "a9ce5eeb977bfe024f98277d69e443e06bb8b59b60403ed277442f218da965f4"
+    }
+  }
+}
