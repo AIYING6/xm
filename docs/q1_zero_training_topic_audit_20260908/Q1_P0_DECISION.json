@@ -1,0 +1,31 @@
+{
+  "protocol": "Q1-ZERO-TRAINING-TOPIC-NOVELTY-INFORMATION-GAP-AUDIT-V1",
+  "date": "2026-09-08",
+  "verdict": "Q1_TOPIC_CONDITIONAL_GO_TO_C0R_ONLY",
+  "training_started": false,
+  "evaluation_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "authorized_next_step_only": "C0R exact-overlap, minimal-counterexample, and theorem-target audit",
+  "preferred_candidate": "information-validity-constrained active sensing-routing-service reconfiguration under dynamic topology failures",
+  "closed_candidates": [
+    "TATG/CETM restart or rename",
+    "generic CVaR or worst-group topology PPO",
+    "DRTP/EGTR sampler refinement"
+  ],
+  "c0r_required_outputs": [
+    "15-25-paper exact-overlap matrix",
+    "minimal formal problem",
+    "two strict counterexamples",
+    "at least three theorem targets",
+    "environment interface gap table",
+    "binary GO or NO-GO decision"
+  ],
+  "prohibited": [
+    "environment modification",
+    "algorithm implementation",
+    "training",
+    "cloud execution",
+    "hyperparameter tuning"
+  ]
+}
