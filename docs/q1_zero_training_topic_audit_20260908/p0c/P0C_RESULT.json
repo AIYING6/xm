@@ -1,0 +1,35 @@
+{
+  "protocol": "Q1-P0C-TASK-INFORMATION-VIABILITY-FORMAL-AUDIT-V1",
+  "date": "2026-09-09",
+  "verdict": "P0C_NO_GO",
+  "candidate": "task-information viability under dynamic communication failures",
+  "training_started": false,
+  "evaluation_started": false,
+  "environment_modified": false,
+  "environment_steps": 0,
+  "ppo_updates": 0,
+  "checks": {
+    "minimal_definition_completed": true,
+    "three_strict_counterexamples_completed": true,
+    "native_physical_action_controllability": true,
+    "nearest_neighbor_count_at_least_20": true,
+    "task_information_cut_independently_novel": false,
+    "nontrivial_non_generic_theorem_target_found": false,
+    "q1_novelty_gate_passed": false
+  },
+  "primary_failure_reasons": [
+    "viability theory has already been explicitly combined with task-oriented communication",
+    "the fixed-trajectory task-information cut reduces to temporal reachability/min-cut",
+    "the action-dependent problem is covered by communication-aware task and motion planning",
+    "the decentralized partially observed problem is covered by epistemic planning and Dec-POMDP formulations",
+    "no credible nontrivial theorem specific to the native UAV role structure was found"
+  ],
+  "authorized_next_step_only": "Q1-P0D zero-training search for a theorem-level learning problem outside communication-task-viability combinations",
+  "prohibited": [
+    "TIV algorithm implementation",
+    "TIV environment modification",
+    "TIV training or evaluation",
+    "cloud execution",
+    "renaming temporal reachability, AoI feasibility, or generic viability as novelty"
+  ]
+}
