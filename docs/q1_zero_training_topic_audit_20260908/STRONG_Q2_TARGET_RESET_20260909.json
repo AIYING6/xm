@@ -1,0 +1,22 @@
+{
+  "protocol": "DRTP-STRONG-Q2-TARGET-RESET-V1",
+  "date": "2026-09-09",
+  "verdict": "STRONG_Q2_CONDITIONAL_GO_EXISTING_DRTP_CORE",
+  "principal_evidence": [
+    "final_frozen_cohort_A",
+    "final_frozen_cohort_B",
+    "structural_heldout_evaluation",
+    "plr_style_matched_AB"
+  ],
+  "boundary_evidence": [
+    "semantic_factorial_completion",
+    "six_uav_v2_faultstep3",
+    "historical_development_cohorts"
+  ],
+  "tiv_standalone_status": "NO_GO_REMAINS_IN_FORCE",
+  "algorithm_modification_authorized": false,
+  "new_performance_training_authorized": false,
+  "runtime_benchmark_authorized": true,
+  "next_phase": "zero_training_formal_evidence_registry_and_seed_level_statistics",
+  "claim_ceiling": "repeated cohort-level gains under the final evaluated three-UAV topology-failure contracts"
+}
