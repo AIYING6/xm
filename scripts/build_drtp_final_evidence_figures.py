@@ -129,6 +129,12 @@ def export(fig: plt.Figure, stem: str) -> None:
     fig.savefig(FIG_DIR / f"{stem}.pdf", bbox_inches="tight", facecolor="white")
     fig.savefig(FIG_DIR / f"{stem}.png", dpi=300, bbox_inches="tight", facecolor="white")
     fig.savefig(FIG_DIR / f"{stem}.tiff", dpi=600, bbox_inches="tight", facecolor="white")
+    # Matplotlib follows the host newline convention for SVG.  Keep the tracked
+    # vector source stable across Windows/Linux regenerations, and strip only
+    # line-final layout whitespace (the newline remains XML whitespace).
+    svg = FIG_DIR / f"{stem}.svg"
+    svg_bytes = svg.read_bytes().replace(b"\r\n", b"\n")
+    svg.write_bytes(b"\n".join(line.rstrip(b" \t") for line in svg_bytes.split(b"\n")))
     plt.close(fig)
 
 
@@ -208,7 +214,7 @@ def q_milestones(q_data: pd.DataFrame) -> pd.DataFrame:
 
 def figure_q(q_data: pd.DataFrame) -> None:
     sampled = q_milestones(q_data)
-    sampled.to_csv(SOURCE_DIR / "Fig3_q_evolution_milestones.csv", index=False)
+    sampled.to_csv(SOURCE_DIR / "Fig3_q_evolution_milestones.csv", index=False, lineterminator="\n")
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.1), sharey=True, constrained_layout=True)
     groups = ("F0", "TE", "TL", "DS", "DL", "CP")
     labels = ("F0", "TE", "TL", "DS", "DL", "CP")
@@ -271,15 +277,15 @@ def main() -> None:
         [final_endpoint(archives["A"]).assign(cohort="A"), final_endpoint(archives["B"]).assign(cohort="B")],
         ignore_index=True,
     )
-    primary.to_csv(SOURCE_DIR / "Fig4_final_ab_paired_endpoint.csv", index=False)
+    primary.to_csv(SOURCE_DIR / "Fig4_final_ab_paired_endpoint.csv", index=False, lineterminator="\n")
 
     heldout = csv_from_tar(archives["heldout"], lambda name: name.endswith("DRTP_FINAL_EVIDENCE_PER_SEED_ENDPOINTS.csv"))
     heldout = heldout[heldout["method"].isin(["utr_sg", "drtp_sg"])].copy()
-    heldout.to_csv(SOURCE_DIR / "Fig5_heldout_structural_endpoint.csv", index=False)
+    heldout.to_csv(SOURCE_DIR / "Fig5_heldout_structural_endpoint.csv", index=False, lineterminator="\n")
 
     plr = csv_from_tar(archives["plr"], lambda name: name.endswith("PLR_MATCHED_AB_PER_SEED_ENDPOINTS.csv"))
     plr = plr[plr["method"].isin(["utr_sg", "drtp_sg", "plr_style_sg"])].copy()
-    plr.to_csv(SOURCE_DIR / "Fig6_plr_style_positioning.csv", index=False)
+    plr.to_csv(SOURCE_DIR / "Fig6_plr_style_positioning.csv", index=False, lineterminator="\n")
 
     q = pd.concat([q_log_rows(archives["A"], "A"), q_log_rows(archives["B"], "B")], ignore_index=True)
 
