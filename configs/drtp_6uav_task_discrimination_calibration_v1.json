@@ -1,0 +1,97 @@
+{
+  "protocol": "DRTP-6UAV-TASK-DISCRIMINATION-CALIBRATION-V1",
+  "purpose": "Diagnostic-only, zero-training calibration of 6-UAV task discriminability before any new formal UTR/DRTP experiment.",
+  "evidence_status": "NOT_FOR_MANUSCRIPT_PERFORMANCE_CLAIMS",
+  "source_checkpoints": {
+    "arm": "utr_scout_terminal_assigned_role_sg_mappo",
+    "seeds": [69021, 69022, 69023]
+  },
+  "evaluation": {
+    "groups": ["nominal", "R_upstream", "R_downstream", "C_relay_node", "C_balanced", "C_cross", "C_same_relay"],
+    "fault_step": 3,
+    "episodes_per_group_per_seed": 40,
+    "training_started": false,
+    "checkpoint_overwrite": false
+  },
+  "candidates": [
+    {
+      "id": "v2_reference",
+      "description": "Exact fault-step=3 v2 geometry, retained as the known ceiling reference.",
+      "scout_x": 0.0,
+      "relay_x": 35.0,
+      "terminal_x": 70.0,
+      "objective_x": 90.0,
+      "scout_sense_range": 120.0,
+      "relay_radio_range": 55.0,
+      "terminal_speed": 10.0,
+      "tau_max": 5,
+      "deadline_steps": 48,
+      "boundary": 160.0
+    },
+    {
+      "id": "moderate_route_cache1",
+      "description": "A one-and-a-half-fold terminal route (30 distance units) with a one-step legal cache horizon. This retains the native role geometry and action scale while requiring post-fault information renewal to complete a task.",
+      "scout_x": 0.0,
+      "relay_x": 35.0,
+      "terminal_x": 70.0,
+      "objective_x": 100.0,
+      "scout_sense_range": 120.0,
+      "relay_radio_range": 55.0,
+      "terminal_speed": 10.0,
+      "tau_max": 1,
+      "deadline_steps": 48,
+      "boundary": 160.0
+    },
+    {
+      "id": "moderate_route_cache1_dist40",
+      "description": "A two-fold terminal route (40 distance units) with the same one-step legal cache horizon. It tests whether a slightly longer post-fault support requirement remains nominally solvable for frozen endpoints.",
+      "scout_x": 0.0,
+      "relay_x": 35.0,
+      "terminal_x": 70.0,
+      "objective_x": 110.0,
+      "scout_sense_range": 120.0,
+      "relay_radio_range": 55.0,
+      "terminal_speed": 10.0,
+      "tau_max": 1,
+      "deadline_steps": 48,
+      "boundary": 160.0
+    },
+    {
+      "id": "long_route_cache5",
+      "description": "Longer post-fault task path with the original cache horizon; tests whether trajectory duration alone removes the ceiling.",
+      "scout_x": 0.0,
+      "relay_x": 50.0,
+      "terminal_x": 100.0,
+      "objective_x": 190.0,
+      "scout_sense_range": 205.0,
+      "relay_radio_range": 75.0,
+      "terminal_speed": 10.0,
+      "tau_max": 5,
+      "deadline_steps": 48,
+      "boundary": 260.0
+    },
+    {
+      "id": "long_route_freshness2",
+      "description": "Same longer path but shorter legal cache freshness; tests whether ongoing path support, rather than merely fault occurrence, yields discriminable topology pressure.",
+      "scout_x": 0.0,
+      "relay_x": 50.0,
+      "terminal_x": 100.0,
+      "objective_x": 190.0,
+      "scout_sense_range": 205.0,
+      "relay_radio_range": 75.0,
+      "terminal_speed": 10.0,
+      "tau_max": 2,
+      "deadline_steps": 48,
+      "boundary": 260.0
+    }
+  ],
+  "eligibility_rule": {
+    "nominal_success_min": 0.6,
+    "perturbed_success_min_exclusive": 0.1,
+    "perturbed_success_max_exclusive": 0.9,
+    "nominal_minus_perturbed_success_min": 0.1,
+    "affected_groups_min": 2,
+    "post_fault_steps_median_min": 3,
+    "interpretation": "A candidate passing this rule is eligible for a separately reviewed formal protocol; passing does not authorize training or establish a DRTP advantage."
+  }
+}
