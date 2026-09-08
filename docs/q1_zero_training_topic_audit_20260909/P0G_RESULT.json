@@ -1,0 +1,32 @@
+{
+  "protocol": "Q1-P0G-CLEAN-SHEET-TOPIC-AUDIT-V1",
+  "date": "2026-09-09",
+  "verdict": "P0G_CONDITIONAL_GO_ACTIVE_DIAGNOSIS_ONLY",
+  "selected_candidate": "active fault diagnosis and cooperative control under latent communication failures",
+  "rejected_candidates": [
+    {
+      "candidate": "failure-triggered task reallocation and graceful degradation",
+      "reason": "direct overlap with mature resilient heterogeneous MRTA and formal planning"
+    },
+    {
+      "candidate": "communication request, routing, or information-freshness control",
+      "reason": "previously falsified locally and crowded by active communication and scheduling work"
+    }
+  ],
+  "new_decision_object": "choose whether and how to execute a costly physical probing action that disambiguates latent failure hypotheses while continuing the task",
+  "checks": {
+    "major_interface_revision_authorized": true,
+    "new_decision_object_identified": true,
+    "not_reducible_to_sampler_patch": true,
+    "not_reducible_to_gnn_gru_rename": true,
+    "exact_single_paper_full_cover_found": false,
+    "adjacent_fields_crowded": true,
+    "strict_identifiability_counterexample_completed": false,
+    "second_standard_environment_frozen": false
+  },
+  "next_gate": "P1_ACTIVE_DIAGNOSIS_IDENTIFIABILITY_AND_INTERFACE_GATE",
+  "training_authorized": false,
+  "implementation_authorized": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
