@@ -1,0 +1,39 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P1-COUNTEREXAMPLE-V1",
+  "hypotheses": [
+    "recoverable_range_loss",
+    "hard_relay_failure"
+  ],
+  "prior_recoverable": 0.5,
+  "probe_observation": "handshake_ack",
+  "ack_probability": {
+    "recoverable_range_loss": 0.9,
+    "hard_relay_failure": 0.1
+  },
+  "terminal_utility": {
+    "recover_link": {
+      "recoverable_range_loss": 2.0,
+      "hard_relay_failure": 0.0
+    },
+    "degrade_task": {
+      "recoverable_range_loss": 0.8,
+      "hard_relay_failure": 1.6
+    }
+  },
+  "probe_cost": 0.2,
+  "extreme_priors": [0.05, 0.95],
+  "requirements": {
+    "minimum_probe_tv": 0.5,
+    "minimum_probe_value_gain_at_balanced_prior": 0.1,
+    "probe_must_be_suboptimal_for_at_least_one_extreme_prior": true
+  },
+  "semantics": {
+    "shared_initial_observation": "no fresh relay message and identical currently delivered communication edges",
+    "probe": "relay approaches a frozen handshake zone and requests an acknowledgement; this consumes time/energy",
+    "recover_link": "continue the relay-dependent cooperative plan",
+    "degrade_task": "switch to a lower-utility plan that does not require the failed relay"
+  },
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}

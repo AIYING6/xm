@@ -1,0 +1,60 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P1-COUNTEREXAMPLE-V1",
+  "verdict": "P1_IDENTIFIABILITY_COUNTEREXAMPLE_PASS",
+  "checks": {
+    "passive_history_observation_equivalent": true,
+    "hypotheses_require_different_terminal_actions": true,
+    "probe_increases_observation_separation": true,
+    "probe_has_nonzero_cost": true,
+    "probe_improves_value_at_balanced_prior": true,
+    "always_probe_is_not_optimal": true,
+    "training_started": false
+  },
+  "probe_total_variation": 0.8,
+  "optimal_action_by_hypothesis": {
+    "recoverable_range_loss": "recover_link",
+    "hard_relay_failure": "degrade_task"
+  },
+  "balanced_prior": {
+    "prior_recoverable": 0.5,
+    "passive_value": 1.2000000000000002,
+    "passive_action": "degrade_task",
+    "probe_value": 1.4600000000000002,
+    "probe_gain": 0.26,
+    "p_ack": 0.5,
+    "posterior_recoverable_given_ack": 0.9,
+    "posterior_recoverable_given_silence": 0.09999999999999998,
+    "action_after_ack": "recover_link",
+    "action_after_silence": "degrade_task"
+  },
+  "extreme_priors": [
+    {
+      "prior_recoverable": 0.05,
+      "passive_value": 1.56,
+      "passive_action": "degrade_task",
+      "probe_value": 1.36,
+      "probe_gain": -0.19999999999999996,
+      "p_ack": 0.14,
+      "posterior_recoverable_given_ack": 0.32142857142857145,
+      "posterior_recoverable_given_silence": 0.005813953488372092,
+      "action_after_ack": "degrade_task",
+      "action_after_silence": "degrade_task"
+    },
+    {
+      "prior_recoverable": 0.95,
+      "passive_value": 1.9,
+      "passive_action": "recover_link",
+      "probe_value": 1.7,
+      "probe_gain": -0.19999999999999996,
+      "p_ack": 0.86,
+      "posterior_recoverable_given_ack": 0.9941860465116279,
+      "posterior_recoverable_given_silence": 0.6785714285714283,
+      "action_after_ack": "recover_link",
+      "action_after_silence": "recover_link"
+    }
+  ],
+  "interpretation": "The toy model establishes a non-trivial value of active diagnosis under observation-equivalent latent failures. It does not establish that the current UAV environment realizes the same ambiguity or that any learning algorithm succeeds.",
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
