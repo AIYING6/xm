@@ -1,0 +1,38 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P2-PILOT-FREEZE-V1",
+  "methods": [
+    "information_set_commitment",
+    "capacity_and_risk_matched_recurrent"
+  ],
+  "training_seeds": [98101, 98102, 98103],
+  "physical_steps_per_episode": 16,
+  "episodes_per_run": 62500,
+  "physical_steps_per_run": 1000000,
+  "episodes_per_update": 100,
+  "updates_per_run": 625,
+  "ppo_epochs_per_update": 4,
+  "evaluation_episodes": 300,
+  "evaluation_tape_start_episode_id": 910000,
+  "actor_hidden_dim": 32,
+  "critic_hidden_dim": 32,
+  "actor_learning_rate": 0.0003,
+  "critic_learning_rate": 0.001,
+  "ppo_clip_epsilon": 0.2,
+  "calibration_weight": 0.1,
+  "ambiguity_radius": 0.05,
+  "robust_softmin_temperature": 0.1,
+  "checkpoint_every_updates": 25,
+  "fixed_endpoint_only": true,
+  "checkpoint_selection_forbidden": true,
+  "continue_gate": {
+    "minimum_seeds_passing": 2,
+    "minimum_single_sided_commitment_reduction": 0.05,
+    "minimum_task_value_delta": -0.5,
+    "minimum_high_minus_low_commit_rate": 0.2,
+    "maximum_fallback_rate_increase": 0.2,
+    "baseline_mean_task_value_floor": 2.933333333333333
+  },
+  "automatic_hyperparameter_revision": false,
+  "automatic_seed_extension": false,
+  "scientific_status": "pilot_only"
+}
