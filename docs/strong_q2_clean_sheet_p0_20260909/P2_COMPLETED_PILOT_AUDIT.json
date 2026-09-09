@@ -1,0 +1,25 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P2-COMPLETED-PILOT-AUDIT-V1",
+  "source_archive": "D:\\File\\Downloads\\epistemic_commitment_p2_pilot_v1_results.tar.gz",
+  "sha256": "a92f49786b48391fbf5c06ffe590472359f4ebb98455a0499a0f47e88e28f441",
+  "checksum_match": true,
+  "execution_complete": true,
+  "training_trajectories": 6,
+  "physical_steps_per_trajectory": 1000000,
+  "evaluation_files": 6,
+  "evaluation_rows_per_file": 300,
+  "frozen_verdict": "P2_PILOT_STOP",
+  "baseline_learnable": false,
+  "baseline_mean_task_value": 2.933333333333333,
+  "candidate_seed_gate_passes": 0,
+  "required_candidate_seed_gate_passes": 2,
+  "behavior": {
+    "recurrent_baseline": "three_of_three_seeds_defer_only",
+    "information_set_candidate": "two_seeds_defer_only_one_seed_fallback_only",
+    "all_high_minus_low_commit_rates": 0.0
+  },
+  "classification": "COMPLETE_NEGATIVE_PRECURSOR_PILOT",
+  "can_replace_p3_q1": false,
+  "can_enter_submission_main_results": false,
+  "evidence_boundary": "The completed P2 pilot documents policy collapse in an earlier two-stage abstract task. It does not establish P3 learnability or method performance."
+}
