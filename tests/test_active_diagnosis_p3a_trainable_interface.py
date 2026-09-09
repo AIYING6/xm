@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
 
-from envs.active_diagnosis_semantic_env import HARD_RELAY_FAILURE, RECOVERABLE_RANGE_LOSS
+from envs.active_diagnosis_semantic_env import RECOVERABLE_RANGE_LOSS
 from envs.active_diagnosis_trainable_uav_env import (
     ActiveDiagnosisTrainableConfig,
     ActiveDiagnosisTrainableUAVEnv,
+    HARD_TERMINAL_COMM_FAILURE,
 )
 from scripts.audit_active_diagnosis_p3a_trainable_interface import run_gate
 
@@ -19,7 +20,7 @@ def test_p3a_gate_passes() -> None:
 
 def test_hidden_modes_share_pre_probe_actor_inputs() -> None:
     a = ActiveDiagnosisTrainableUAVEnv(ActiveDiagnosisTrainableConfig(RECOVERABLE_RANGE_LOSS, 91))
-    b = ActiveDiagnosisTrainableUAVEnv(ActiveDiagnosisTrainableConfig(HARD_RELAY_FAILURE, 91))
+    b = ActiveDiagnosisTrainableUAVEnv(ActiveDiagnosisTrainableConfig(HARD_TERMINAL_COMM_FAILURE, 91))
     ao, ashare, ag = a.reset()
     bo, bshare, bg = b.reset()
     assert np.array_equal(ao, bo)

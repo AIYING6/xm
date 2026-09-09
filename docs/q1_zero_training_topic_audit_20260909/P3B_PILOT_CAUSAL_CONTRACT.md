@@ -19,10 +19,10 @@
 ## 3. 固定项
 
 - 三架异构 UAV、3DOF 动力学和任务几何；
-- 27 个低层飞行动作及同一个 relay-only probe option；
+- 27 个低层飞行动作、同一个 relay-only probe option 及 attacker-only prior-guided fallback option；
 - actor/critic 隐藏宽度、循环状态维度、PPO 目标与优化器；
 - 奖励、安全约束、最大回合长度和每条 1M environment-step 预算；
-- recoverable range loss 与 hard relay failure 的支持集合；
+- recoverable relay--terminal range loss 与 hard terminal communication failure 的支持集合；
 - 每回合最多一次、持续 12 步的物理握手探测；
 - fixed endpoint，不按回报选 checkpoint；
 - 相同训练 seed 和独立 evaluation tape。
@@ -35,7 +35,7 @@
 - 3 arms × 3 seeds × 1M steps = 9M environment steps；
 - 独立统计单位是 training seed；
 - episode 和 condition 只用于构造每个 seed 的端点，不能扩成独立样本量；
-- fixed evaluation priors：recoverable probability `0.50` 与 `0.75`；
+- fixed evaluation priors：recoverable probability `0.50` 与 `0.90`；后者用于检验高置信先验下方法能否拒绝低价值探测；
 - balanced 与 biased prior 分开报告，不池化为扩大 n。
 
 ## 5. 主要端点
@@ -73,4 +73,3 @@
 - 旧环境和旧 DRTP 路线回归测试。
 
 这些检查未通过前，`pilot_authorized=false`。
-
