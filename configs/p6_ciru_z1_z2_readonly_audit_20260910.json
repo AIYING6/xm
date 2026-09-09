@@ -1,0 +1,21 @@
+{
+  "protocol": "P6-CIRU-Z1-Z2-READONLY-AUDIT-V1",
+  "source_archive_sha256": "715B204079548813933608081F0B327D51D8DC1289C2BFE4685BB9D91F9D7F4E",
+  "scenario_tape": "evaluation/scenarios/3v3_eval_v2.npz",
+  "scenario_count": 32,
+  "prefix_steps": 60,
+  "blue_responses": ["R1", "R2", "R3", "R4"],
+  "red_strategies": ["R1", "R2", "R3", "R4"],
+  "reference_blue_response_for_aliasing": "R1",
+  "base_policy_seed": 960000,
+  "gates": {
+    "z1_case_shift_threshold": 0.05,
+    "z1_min_shifted_case_fraction": 0.5,
+    "z1_min_median_max_shift": 0.02,
+    "z2_alias_distance_threshold": 0.15,
+    "z2_min_best_response_margin": 0.1,
+    "z2_min_qualifying_pairs": 1
+  },
+  "training_authorized": false,
+  "read_only": true
+}
