@@ -45,8 +45,7 @@ m_i^*=\arg\max_{m\in\{C,D,F\}}
 
 | 对照 | 目的 | 公平性要求 |
 |---|---|---|
-| Recurrent MAPPO | 检查普通历史记忆是否已足够 | 相同 actor 参数预算、局部历史和训练步数 |
-| Risk-matched recurrent MAPPO | 排除仅由风险惩罚造成的收益 | 使用相同单边承诺代价，但不使用信息集决策层 |
+| Capacity/risk-matched recurrent MAPPO | 检查普通历史记忆是否已足够，并排除风险任务代价本身的作用 | 相同 actor 参数预算、局部历史、任务代价和训练步数，但不使用信息集决策层 |
 | Common-information/communication baseline | 对齐最近邻方法类别 | 不允许额外可靠 ack；相同通信机会与消息预算 |
 | Oracle upper bound | 量化信息损失，不作为公平主基线 | 仅评估时读取投递真值，明确标为上界 |
 | Always-commit / always-fallback | 检查任务是否被常数策略支配 | 相同评估带 |
@@ -72,7 +71,7 @@ m_i^*=\arg\max_{m\in\{C,D,F\}}
 
 - 3 个全新训练 seed；
 - 每个方法每 seed 最多 1M environment steps；
-- 总训练预算不超过 15M environment steps；
+- 两个训练方法共 6M environment steps，低于 15M 总上限；
 - 所有方法使用同一冻结 evaluation tape；
 - 不根据中间曲线挑 checkpoint，使用固定终点；
 - pilot 前冻结阈值，不因结果调整。
