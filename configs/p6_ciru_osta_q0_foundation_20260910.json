@@ -1,0 +1,18 @@
+{
+  "protocol": "P6-CIRU-OSTA-Q0-FOUNDATION-V1",
+  "date": "2026-09-10",
+  "decision": "OSTA_V1_STRONG_Q2_NO_GO_CIRU_Q0_CANDIDATE",
+  "training_authorized": false,
+  "original_osta_risk": "high overlap with GSCU HOP OMIS MBOM Bayesian policy reuse and open-set opponent modeling",
+  "candidate_problem": "counterfactual response-utility inference under interaction-induced shift",
+  "required_zero_training_gates": [
+    "Z1_RESPONSE_INDUCED_BEHAVIOR_SHIFT",
+    "Z2_BEHAVIORAL_ALIASING_WITH_RESPONSE_RANK_DISAGREEMENT",
+    "Z3_RESPONSE_SPECIALIZATION",
+    "Z4_ORACLE_RESPONSE_HEADROOM",
+    "Z5_COUNTERFACTUAL_SUPPORT",
+    "Z6_BASELINE_LEARNABILITY"
+  ],
+  "next_action": "IMPLEMENT_READ_ONLY_Z1_Z2_ANALYTIC_AUDIT",
+  "g2_seed2_package_authorized": false
+}
