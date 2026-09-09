@@ -1,0 +1,15 @@
+{
+  "protocol": "P7-TCARC-STAGE0-ASSET-FEASIBILITY-V1",
+  "calibration_cohort": "A",
+  "locked_test_cohort": "B",
+  "methods": ["drtp_sg", "utr_sg"],
+  "risk_label": "1 - success_at_horizon",
+  "legal_predeployment_features": ["method", "topology_condition", "scheduled_failure_onset", "scheduled_failure_duration"],
+  "minimum_rows_per_method_stratum": 100,
+  "minimum_positive_and_negative_events": 20,
+  "nondegenerate_risk_interval": [0.1, 0.9],
+  "minimum_global_conditional_max_error": 0.05,
+  "minimum_methods_showing_conditional_miscalibration": 1,
+  "minimum_methods_where_stratification_reduces_mae": 1,
+  "training_authorized": false
+}

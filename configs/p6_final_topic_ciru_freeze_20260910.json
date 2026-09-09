@@ -1,14 +1,14 @@
 {
   "protocol": "P6-CIRU-FINAL-TOPIC-FREEZE-V1",
   "date": "2026-09-10",
-  "status": "CURRENT_OSTA_INSTANTIATION_FAILED_Z2_ONE_TASK_REDESIGN_ALLOWED",
+  "status": "CLOSED_AFTER_ONE_TASK_REDESIGN_FAILED_Z2_Z3",
   "title_zh": "交互诱导偏移下的反事实响应效用学习：面向开放集多无人机团队对抗的无梯度适应",
   "title_en": "Counterfactual Response-Utility Learning under Interaction-Induced Shift for Open-Set Multi-UAV Team Adaptation",
   "single_core_innovation": "support-aware estimation of counterfactual team response utility under response-induced trajectory shift",
   "topic_search_closed": true,
   "training_authorized": false,
-  "current_stage": "STAGE_0_TASK_INSTANTIATION_REDESIGN",
-  "next_action": "DESIGN_ONE_IDENTIFIABLE_ESCORT_INTERCEPTION_INSTANTIATION_AND_REPEAT_Z1_Z2_Z3",
+  "current_stage": "TERMINATED",
+  "next_action": "NONE_CIRU_CLOSED",
   "stop_conditions": [
     "NO_RESPONSE_INDUCED_SHIFT",
     "NO_BEHAVIORAL_ALIASING_WITH_RESPONSE_RANK_DISAGREEMENT",
