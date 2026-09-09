@@ -12,10 +12,11 @@ P3A 只检查主动诊断问题能否以合法、可训练且不泄漏故障真�
 
 - 原有 27 个离散 3DOF 飞行动作保持不变；
 - 新增第 28 个动作 `handshake probe`，仅中继机可选；
+- P3B 进一步加入第 29 个 `prior-guided fallback`，仅攻击机可选，用冻结任务先验执行自主搜索，不读取真实目标或故障标签；
 - 探测 option 固定执行 P1C 已验证的 12 步物理机动；
 - option 执行期间，中继机动作掩码只允许继续探测；
 - 每回合最多一次探测，完成后预算永久关闭；
-- actor 只看到 `probe_available`、`probe_active` 和已经发生的 ACK 状态，不看到潜在故障标签；
+- actor 只看到 option 可用性、执行状态和已经发生的 ACK 状态，不看到潜在故障标签；
 - graph actor 使用三架蓝方 UAV 的合法局部观测、角色、当前通信邻接和动作掩码；中央 critic 沿用全局状态接口，但没有新增故障真值字段。
 
 ## 3. 可执行证据
@@ -27,9 +28,9 @@ P3A 只检查主动诊断问题能否以合法、可训练且不泄漏故障真�
 通过项：
 
 1. 标准 `reset/step` 张量形状有效；
-2. recoverable range loss 与 hard relay failure 在探测前的全部 actor 输入逐元素相同；
+2. recoverable relay--terminal range loss 与 hard terminal communication failure 在探测前的全部 actor 输入逐元素相同；
 3. actor/graph 字段不含故障真值；
-4. 探测动作仅中继机可用且受一次性预算约束；
+4. 探测与降级恢复动作分别仅对中继机和攻击机开放，且均受一次性预算约束；
 5. 12 步探测在回合终止前完成，并产生 `ACK=+1` 与 `no ACK=-1` 的可辨识结果；
 6. masked SG-MAPPO rollout 未产生非法动作；
 7. 单次 PPO 数值烟测的 loss 与梯度有限；
@@ -50,4 +51,3 @@ P3A 只检查主动诊断问题能否以合法、可训练且不泄漏故障真�
 ## 5. 决策
 
 P3A 允许进入 P3B 的**零训练对照冻结与实现审计**。在三个 arm 的输入、容量、override 语义和统计合同全部实现并通过之前，不启动 9M-step pilot。
-

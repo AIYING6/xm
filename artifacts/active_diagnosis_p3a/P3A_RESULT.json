@@ -14,15 +14,12 @@
   },
   "dimensions": {
     "agents": 3,
-    "actor_obs": 37,
-    "critic_obs": 50,
+    "actor_obs": 39,
+    "critic_obs": 52,
     "flight_actions": 27,
-    "total_actions": 28
+    "total_actions": 29
   },
-  "probe_outcomes": {
-    "recoverable": 1.0,
-    "hard_failure": -1.0
-  },
+  "probe_outcomes": {"recoverable": 1.0, "hard_failure": -1.0},
   "smoke_environment_steps": 32,
   "ppo_smoke_updates": 1,
   "performance_training_started": false,

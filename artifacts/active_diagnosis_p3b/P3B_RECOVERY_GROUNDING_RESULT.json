@@ -1,0 +1,24 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P3B-RECOVERY-GROUNDING-V1",
+  "verdict": "P3B_RECOVERY_GROUNDING_PASS",
+  "checks": {
+    "all_recovery_plans_complete_task": true,
+    "no_recovery_plan_timeout": true,
+    "no_collision_or_constraint_failure": true,
+    "probe_ack_separates_modes": true,
+    "conditional_plan_uses_distinct_recovery": true,
+    "balanced_prior_probe_has_positive_net_task_value": true
+  },
+  "balanced_prior_return_gain": 0.05338408052921295,
+  "probe_cost_in_environment_reward": 0.12,
+  "trajectories": [
+    {"hypothesis": "recoverable_range_loss", "plan": "immediate_fallback", "return": 6.725091606378555, "steps": 20, "success": 1.0, "timeout": 0.0, "collision": 0.0, "constraint_violation": 0.0, "probe_count": 0, "fallback_count": 1, "probe_ack_state": 0.0},
+    {"hypothesis": "recoverable_range_loss", "plan": "probe_then_condition", "return": 6.8693273440003395, "steps": 23, "success": 1.0, "timeout": 0.0, "collision": 0.0, "constraint_violation": 0.0, "probe_count": 1, "fallback_count": 0, "probe_ack_state": 1.0},
+    {"hypothesis": "hard_terminal_comm_failure", "plan": "immediate_fallback", "return": 6.715561404824257, "steps": 21, "success": 1.0, "timeout": 0.0, "collision": 0.0, "constraint_violation": 0.0, "probe_count": 0, "fallback_count": 1, "probe_ack_state": 0.0},
+    {"hypothesis": "hard_terminal_comm_failure", "plan": "probe_then_condition", "return": 6.678093828260899, "steps": 24, "success": 1.0, "timeout": 0.0, "collision": 0.0, "constraint_violation": 0.0, "probe_count": 1, "fallback_count": 1, "probe_ack_state": -1.0}
+  ],
+  "environment_steps": 88,
+  "training_started": false,
+  "performance_pilot_authorized": false,
+  "automatic_continuation": false
+}

@@ -16,10 +16,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from algorithms.redundant_topology_sg_mappo import SGMPPO
-from envs.active_diagnosis_semantic_env import HARD_RELAY_FAILURE, RECOVERABLE_RANGE_LOSS
+from envs.active_diagnosis_semantic_env import RECOVERABLE_RANGE_LOSS
 from envs.active_diagnosis_trainable_uav_env import (
     ActiveDiagnosisTrainableConfig,
     ActiveDiagnosisTrainableUAVEnv,
+    HARD_TERMINAL_COMM_FAILURE,
 )
 
 
@@ -52,7 +53,7 @@ def run_gate() -> dict:
         ActiveDiagnosisTrainableConfig(hypothesis=RECOVERABLE_RANGE_LOSS, seed=7301)
     )
     hard = ActiveDiagnosisTrainableUAVEnv(
-        ActiveDiagnosisTrainableConfig(hypothesis=HARD_RELAY_FAILURE, seed=7301)
+        ActiveDiagnosisTrainableConfig(hypothesis=HARD_TERMINAL_COMM_FAILURE, seed=7301)
     )
     r_obs, r_share, r_graph = recoverable.reset()
     h_obs, h_share, h_graph = hard.reset()
@@ -73,6 +74,9 @@ def run_gate() -> dict:
         initial_masks[recoverable.relay_id, recoverable.probe_action] == 1
         and initial_masks[0, recoverable.probe_action] == 0
         and initial_masks[2, recoverable.probe_action] == 0
+        and initial_masks[recoverable.attacker_id, recoverable.fallback_action] == 1
+        and initial_masks[0, recoverable.fallback_action] == 0
+        and initial_masks[recoverable.relay_id, recoverable.fallback_action] == 0
         and np.all(initial_masks[:, : recoverable.flight_action_dim] == 1)
     )
 
@@ -83,7 +87,7 @@ def run_gate() -> dict:
 
     envs = [
         ActiveDiagnosisTrainableUAVEnv(ActiveDiagnosisTrainableConfig(hypothesis=hyp, seed=7400 + i))
-        for i, hyp in enumerate((RECOVERABLE_RANGE_LOSS, HARD_RELAY_FAILURE))
+        for i, hyp in enumerate((RECOVERABLE_RANGE_LOSS, HARD_TERMINAL_COMM_FAILURE))
     ]
     agent = SGMPPO(envs[0].obs_dim, envs[0].share_obs_dim, envs[0].action_dim)
     optimizer = torch.optim.Adam(agent.parameters(), lr=3e-4)

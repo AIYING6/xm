@@ -13,4 +13,6 @@ from .uav_intercept_3d_env import (
 from .active_diagnosis_trainable_uav_env import (
     ActiveDiagnosisTrainableConfig,
     ActiveDiagnosisTrainableUAVEnv,
+    HARD_TERMINAL_COMM_FAILURE,
+    TRAINABLE_FAILURE_HYPOTHESES,
 )
