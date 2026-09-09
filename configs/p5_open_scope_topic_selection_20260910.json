@@ -1,0 +1,56 @@
+{
+  "protocol": "P5-OPEN-SCOPE-STRONG-Q2-TOPIC-SELECTION-V1",
+  "status": "OPEN_SCOPE_SHORTLISTED",
+  "scope_constraints": {
+    "communication_required": false,
+    "topology_required": false,
+    "uav_required_for_core_theory": false,
+    "reuse_existing_assets_required": false,
+    "major_method_redesign_allowed": true,
+    "major_task_redesign_allowed": true
+  },
+  "training_authorized": false,
+  "primary_candidate": {
+    "id": "P5-A",
+    "name": "counterfactual_team_avoidable_harm_responsibility",
+    "question": "Can a cooperative policy constrain only the avoidable team harm caused by joint decisions and allocate that responsibility among heterogeneous agents?",
+    "status": "Q0_REQUIRED",
+    "novelty_claimed": false,
+    "required_q0_gates": {
+      "nearest_neighbor_full_text_audit": false,
+      "avoidable_harm_formally_defined": false,
+      "responsibility_axioms_defined": false,
+      "counterfactual_identifiability_defined": false,
+      "analytic_non_degenerate_game": false,
+      "enumerated_axiom_validation": false,
+      "learnable_non_saturated_task": false,
+      "controlled_factorial_ablation": false
+    }
+  },
+  "secondary_candidate": {
+    "id": "P5-B",
+    "name": "task_level_coordination_recoverability",
+    "communication_specific": false,
+    "status": "Q0_REQUIRED",
+    "novelty_claimed": false
+  },
+  "deprioritized_families": [
+    "generic_dynamic_team_composition",
+    "generic_capability_conditioned_zero_shot_teaming",
+    "generic_cvar_or_lagrangian_safe_marl",
+    "generic_causal_credit_assignment",
+    "learned_communication_timing",
+    "post_failure_connectivity_restoration"
+  ],
+  "next_authorized_actions": [
+    "P5-A-Q0 nearest-neighbor difference matrix and analytical game only",
+    "P5-B-Q0 non-communication recoverability audit and counterexample only"
+  ],
+  "prohibited_until_q0_pass": [
+    "learning implementation",
+    "hyperparameter selection",
+    "pilot training",
+    "paper novelty claim",
+    "selection based on expected positive results"
+  ]
+}
