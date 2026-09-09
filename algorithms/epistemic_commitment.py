@@ -85,7 +85,6 @@ def smooth_robust_mode_values(
 class CommitmentActorConfig:
     input_dim: int
     hidden_dim: int = 64
-    physical_action_dim: int = 27
     robust_softmin_temperature: float = 0.10
 
 
@@ -94,7 +93,6 @@ class _HistoryBackbone(nn.Module):
         super().__init__()
         self.config = config
         self.history = nn.GRU(config.input_dim, config.hidden_dim, batch_first=True)
-        self.physical_head = nn.Linear(config.hidden_dim, config.physical_action_dim)
 
     def encode(self, local_history: torch.Tensor, hidden: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
         if local_history.ndim != 3 or local_history.shape[-1] != self.config.input_dim:
@@ -122,7 +120,6 @@ class InformationSetCommitmentActor(_HistoryBackbone):
             self.config.robust_softmin_temperature,
         )
         return {
-            "physical_logits": self.physical_head(encoded),
             "interval_logits": interval_logits,
             "interval": interval,
             "endpoint_values": endpoint_values,
@@ -159,7 +156,6 @@ class CapacityMatchedRecurrentActor(_HistoryBackbone):
         mode_logits = direct_features @ self.mode_projection.transpose(0, 1)
         interval_logits = direct_features[..., :2]
         return {
-            "physical_logits": self.physical_head(encoded),
             "interval_logits": interval_logits,
             "interval": probability_interval(interval_logits),
             "mode_logits": mode_logits,

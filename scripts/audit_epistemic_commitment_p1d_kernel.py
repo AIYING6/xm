@@ -32,7 +32,7 @@ from envs.epistemic_commitment_uav_shadow_env import EpistemicCommitmentUAVShado
 
 def run_kernel_audit(seed: int = 20260909) -> dict:
     torch.manual_seed(seed)
-    config = CommitmentActorConfig(input_dim=37, hidden_dim=32, physical_action_dim=27)
+    config = CommitmentActorConfig(input_dim=37, hidden_dim=32)
     candidate = InformationSetCommitmentActor(config)
     baseline = CapacityMatchedRecurrentActor(config)
 
@@ -70,7 +70,7 @@ def run_kernel_audit(seed: int = 20260909) -> dict:
         "leader_input_exact_across_delivery_states": bool(np.array_equal(delivered, lost)),
         "candidate_output_exact_for_identical_legal_history": all(
             torch.equal(delivered_output[key], lost_output[key])
-            for key in ("physical_logits", "interval", "endpoint_values", "mode_values", "mode")
+            for key in ("interval", "endpoint_values", "mode_values", "mode")
         ),
         "forward_interface_contains_no_hidden_truth": not bool(forward_parameters & forbidden),
         "probability_intervals_valid": all(

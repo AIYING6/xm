@@ -1,0 +1,57 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P1G-LOCAL-OPTIMIZER-SMOKE-AUDIT-V1",
+  "verdict": "P1G_LOCAL_OPTIMIZER_AND_RESUME_SMOKE_PASS",
+  "checks": {
+    "candidate_actor_parameters_update": true,
+    "recurrent_actor_parameters_update": true,
+    "candidate_required_metrics_complete": true,
+    "recurrent_required_metrics_complete": true,
+    "candidate_metrics_finite": true,
+    "recurrent_metrics_finite": true,
+    "fixed_checkpoint_refuses_overwrite": true,
+    "checkpoint_continuation_metrics_exact": true,
+    "checkpoint_continuation_actor_exact": true,
+    "checkpoint_continuation_critic_exact": true,
+    "smoke_uses_fixed_seed_registry": true
+  },
+  "one_update_metrics": {
+    "information_set_commitment": {
+      "update": 0,
+      "method": "information_set_commitment",
+      "episodes": 12,
+      "mean_task_value": -1.9166666269302368,
+      "bilateral_commitment_rate": 0.0,
+      "single_sided_commitment_rate": 0.25,
+      "defer_rate": 0.16666666666666666,
+      "fallback_rate": 0.16666666666666666,
+      "collision_rate": 0.0,
+      "constraint_violation_rate": 0.0,
+      "stale_token_commit_rate": 0.16666666666666666,
+      "actor_loss": 0.010289772413671017,
+      "critic_loss": 16.902408599853516,
+      "calibration_loss": 0.10289762169122696
+    },
+    "capacity_and_risk_matched_recurrent": {
+      "update": 0,
+      "method": "capacity_and_risk_matched_recurrent",
+      "episodes": 12,
+      "mean_task_value": -3.0833332538604736,
+      "bilateral_commitment_rate": 0.0,
+      "single_sided_commitment_rate": 0.4166666666666667,
+      "defer_rate": 0.16666666666666666,
+      "fallback_rate": 0.16666666666666666,
+      "collision_rate": 0.0,
+      "constraint_violation_rate": 0.0,
+      "stale_token_commit_rate": 0.16666666666666666,
+      "actor_loss": 0.010922928340733051,
+      "critic_loss": 27.180349349975586,
+      "calibration_loss": 0.10922962427139282
+    }
+  },
+  "evidence_boundary": "This local smoke proves wiring, finite updates, endpoint logging, overwrite protection, and exact checkpoint continuation. Its sampled returns are not scientific performance evidence.",
+  "scientific_evidence": false,
+  "performance_training_started": false,
+  "smoke_optimizer_updates": 5,
+  "smoke_episodes": 60,
+  "smoke_physics_steps": 960
+}

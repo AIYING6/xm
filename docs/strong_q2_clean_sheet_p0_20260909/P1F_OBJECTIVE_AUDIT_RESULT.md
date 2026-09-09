@@ -8,7 +8,7 @@
 
 ## 核心审计结果
 
-- 两个 actor 的参数量完全一致；在 39 维合法局部观测、32 维 GRU 下均为 8,163 个参数。
+- 在 39 维正式任务观测下，两个高层 actor 均为 7,272 个参数。低层 3DOF 控制器冻结且无可训练参数，不再保留无梯度的物理动作 head。
 - 两种方法均产生有限且归一化的三模式概率分布。
 - 两者使用同一个 `commitment_actor_loss`：PPO clipped surrogate 加公开可靠度区间校准项。
 - 候选的 GRU、interval head 和 endpoint-value head 均获得有限梯度。
