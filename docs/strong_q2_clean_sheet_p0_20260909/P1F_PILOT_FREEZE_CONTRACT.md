@@ -21,8 +21,8 @@ P1F 只判断候选决策核能否形成公平、可微、无真值泄漏的 PPO
 |---|---|
 | 方法 | 信息集候选、容量与风险同时匹配的 recurrent 主对照 |
 | training seeds | 98101、98102、98103 |
-| 每条固定终点 | 1M environment steps |
-| 总上限 | 6M environment steps |
+| 每条固定终点 | 1,000,000 个 3DOF 物理步，即 62,500 个完整 episode |
+| 总上限 | 6,000,000 个 3DOF 物理步 |
 | checkpoint 选择 | 禁止；只用固定终点 |
 | 评价 tape | P1E 冻结的 300 episode tape |
 | PPO clip | 0.20 |
@@ -31,6 +31,8 @@ P1F 只判断候选决策核能否形成公平、可微、无真值泄漏的 PPO
 | smooth-min temperature | 0.10 |
 
 recurrent 主对照使用相同的单边承诺任务代价与校准目标，因此它同时完成容量匹配和风险匹配；另设一个重复的“risk-matched”训练 arm 不会增加可识别信息，故不纳入 pilot。
+
+高层策略只选择 commit、defer 或 fallback；每次决策由同一个冻结低层控制器执行 16 个 3DOF 物理步。训练预算按物理步计数，公开线索阶段不推进物理仿真，也不计入 1M。
 
 ## 训练前最后检查
 

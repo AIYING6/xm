@@ -33,8 +33,6 @@ def _gradient_summary(model: torch.nn.Module, loss: torch.Tensor) -> dict[str, b
     loss.backward()
     summary: dict[str, bool] = {}
     for name, parameter in model.named_parameters():
-        if name.startswith("physical_head"):
-            continue
         summary[name] = parameter.grad is not None and bool(torch.isfinite(parameter.grad).all())
     return summary
 
@@ -44,7 +42,6 @@ def run_p1f_audit(seed: int = 20260909) -> dict:
     config = CommitmentActorConfig(
         input_dim=39,
         hidden_dim=32,
-        physical_action_dim=27,
         robust_softmin_temperature=0.10,
     )
     candidate = InformationSetCommitmentActor(config)

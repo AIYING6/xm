@@ -15,8 +15,8 @@
     "all_matched_baseline_head_outputs_affect_decision": true
   },
   "parameter_counts": {
-    "candidate": 7971,
-    "matched_recurrent": 7971
+    "candidate": 7080,
+    "matched_recurrent": 7080
   },
   "counterfactual_decisions": {
     "low": {

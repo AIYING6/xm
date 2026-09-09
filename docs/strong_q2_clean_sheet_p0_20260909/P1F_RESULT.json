@@ -16,8 +16,8 @@
     "pilot_seeds_exact": true
   },
   "parameter_counts": {
-    "candidate": 8163,
-    "capacity_matched_recurrent": 8163
+    "candidate": 7272,
+    "capacity_matched_recurrent": 7272
   },
   "gradient_paths": {
     "candidate": {
