@@ -7,8 +7,10 @@
 planning 和 value of information。P3 只有升级为可校准、风险约束、模型自由的认知承诺学习
 框架，才保留进一步验证的价值。
 
-当前结论是 `CONDITIONAL_NOVELTY_CANDIDATE`，不是 `NOVELTY_PASS`。本轮完成最邻近方向检索，
-但尚需导出式 CrossRef/arXiv/Scopus 检索、去重和逐篇全文核对。
+更新后的结论是 `NOVELTY_COLLISION_STOP`，不是 `NOVELTY_PASS`。2026-09-10 的扩展检索发现
+SafeCommit（arXiv:2608.04289）已经公开“校准潜在世界集合—对集合中所有世界执行安全承诺
+证书—证书失败时探测或回退”的同构决策结构。应用对象不同不足以支撑强二区方法创新，因此
+当前 CEC-MAPPO 定义不得直接进入实现或训练。
 
 ## 差异矩阵
 
@@ -22,10 +24,11 @@ planning 和 value of information。P3 只有升级为可校准、风险约束�
 | Belief Representation RL (ICML 2023) | 从训练期状态学习任务相关 belief representation | 训练期辅助真值和显式 belief 重叠 | 集合输出必须具有独立校准覆盖，而非仅作为 latent feature |
 | VoI POMDP planning (NeurIPS 2020) | 用信息价值组织 belief-dependent macro-action | 等待信息的期权价值重叠 | VoI 不是创新；创新候选是其与去中心化一致性集合、风险门和 MAPPO 的联合实现 |
 | Bayesian ambiguity-set robust MDP (NeurIPS 2019) | ambiguity set 下的稳健决策 | support-wise downside 约束重叠 | 不声称发明 ambiguity set；证明其用于错误联合承诺而非一般转移不确定性 |
+| SafeCommit (2026 preprint) | 从校准潜在世界集合构造全支持承诺证书，失败时探测或回退 | 与 CEC-MAPPO 的“集合—承诺—探测/回退”核心结构近乎同构 | 仅换成 UAV/MAPPO 不构成充分方法差异；当前创新核失效 |
 
 ## 暂定创新核
 
-候选方法更名为 **CEC-MAPPO（Calibrated Epistemic-Commitment MAPPO）**。其可检验创新核为：
+以下是已被冻结但被最近邻工作击穿的候选定义，不再视为可投稿创新核：
 
 1. 从各智能体合法通信历史估计计划一致性 posterior，并通过独立 calibration split 输出具有
    冻结覆盖目标的 agreement set；
@@ -34,8 +37,10 @@ planning 和 value of information。P3 只有升级为可校准、风险约束�
 3. 在完全配对的 MAPPO 四格实验中，分别识别 calibrated set representation 与 commitment
    gate 的增量作用。
 
-若后续全文检索发现已有工作同时具备以上三项，则 P3 必须停止或再次重构，不能靠 UAV 应用
-场景包装为方法创新。
+SafeCommit 已同时覆盖其中最关键的第一、二项，并给出概率风险界。第三项四格消融只是识别
+工程组件贡献，不能恢复方法新颖性。因此 P3 按预先约定停止：保留 Q0/Q0B 任务资产和实验
+设计知识，但不实现、不训练当前 CEC-MAPPO。若重开，只能提出与 SafeCommit 在优化对象、
+信息获取方式或多智能体耦合结构上可形式化区分的新机制，并重新执行本审计。
 
 ## 关键来源
 
@@ -52,3 +57,5 @@ planning 和 value of information。P3 只有升级为可校准、风险约束�
   <https://proceedings.neurips.cc/paper/2020/hash/7f2be1b45d278ac18804b79207a24c53-Abstract.html>
 - Beyond Confidence Regions: Tight Bayesian Ambiguity Sets for Robust MDPs：
   <https://proceedings.neurips.cc/paper/2019/hash/b994697479c5716eda77e8e9713e5f0f-Abstract.html>
+- SafeCommit: Certifying When Memory-Grounded Agents May Safely Act：
+  <https://arxiv.org/abs/2608.04289>
