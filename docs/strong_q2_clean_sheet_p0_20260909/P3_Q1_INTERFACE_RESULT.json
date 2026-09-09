@@ -1,0 +1,23 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P3-Q1-TRAINABLE-INTERFACE-AUDIT-V1",
+  "verdict": "P3_Q1_INTERFACE_PASS_TO_RUNNER_IMPLEMENTATION",
+  "checks": {
+    "q0_pass_is_registered": true,
+    "pilot_budget_arithmetic_exact": true,
+    "fresh_three_seed_registry": true,
+    "heldout_cells_excluded_from_training": true,
+    "mixed_action_shapes_exact": true,
+    "one_closed_loop_rollout_completed": true,
+    "losses_and_gradients_finite": true,
+    "actor_and_critic_update_live": true,
+    "relay_mode_excluded_from_policy_loss": true,
+    "training_remains_locked": true
+  },
+  "actor_parameters": 28231,
+  "critic_parameters": 34049,
+  "technical_smoke_environment_steps": 64,
+  "technical_smoke_ppo_updates": 1,
+  "scientific_training_started": false,
+  "next_authorized_action": "implement exact-resume Q1 runner, evaluator, aggregate gate, and cloud preflight",
+  "evidence_boundary": "The one-update smoke validates tensor, action, loss and gradient plumbing only; it does not establish learnability or method performance."
+}
