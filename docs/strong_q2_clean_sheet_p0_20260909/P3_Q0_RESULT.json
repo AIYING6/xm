@@ -1,0 +1,28 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P3-Q0-ZERO-TRAINING-AUDIT-V1",
+  "verdict": "P3_Q0_PASS_TO_TINY_LEARNABILITY_PILOT",
+  "checks": {
+    "all_communication_cells_reachable": true,
+    "private_observation_relations_exact": true,
+    "at_least_four_decision_epochs_before_termination": true,
+    "mode_changes_alter_closed_loop_guidance": true,
+    "unilateral_entry_emerges_from_trajectory": true,
+    "scripted_safe_success_exists": true,
+    "scripted_unilateral_failure_exists": true,
+    "scripted_recovery_exists": true,
+    "constant_modes_do_not_dominate": true,
+    "nominal_not_saturated": true,
+    "collision_and_constraint_telemetry_live": true,
+    "runtime_restore_exact": true
+  },
+  "constant_mode_mean_task_value": {
+    "commit": 4.285714285714286,
+    "defer": 0.0,
+    "fallback": 2.0
+  },
+  "scripted_oracle_feasibility_mean_task_value": 5.428571428571429,
+  "training_started": false,
+  "ppo_updates": 0,
+  "next_authorized_action": "bounded P3-Q1 tiny learnability pilot only",
+  "evidence_boundary": "Q0 establishes reachability, privacy, non-degeneracy, trajectory-derived endpoints, live telemetry and exact runtime restoration; it does not establish learnability or method performance."
+}
