@@ -1,0 +1,67 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P1D-KERNEL-AUDIT-V1",
+  "verdict": "P1D_COMMITMENT_KERNEL_AUDIT_PASS",
+  "checks": {
+    "leader_input_exact_across_delivery_states": true,
+    "candidate_output_exact_for_identical_legal_history": true,
+    "forward_interface_contains_no_hidden_truth": true,
+    "probability_intervals_valid": true,
+    "counterfactual_low_prior_selects_fallback": true,
+    "counterfactual_middle_prior_selects_defer": true,
+    "counterfactual_high_prior_selects_commit": true,
+    "candidate_and_recurrent_baseline_parameter_counts_exact": true,
+    "candidate_decision_uses_interval_values": true,
+    "baseline_decision_is_direct_recurrent_policy": true,
+    "all_matched_baseline_head_outputs_affect_decision": true
+  },
+  "parameter_counts": {
+    "candidate": 7971,
+    "matched_recurrent": 7971
+  },
+  "counterfactual_decisions": {
+    "low": {
+      "interval": [
+        0.10000000149011612,
+        0.20000000298023224
+      ],
+      "mode": "fallback",
+      "robust_values": [
+        -6.199999809265137,
+        1.399999976158142,
+        2.0
+      ]
+    },
+    "middle": {
+      "interval": [
+        0.4000000059604645,
+        0.5
+      ],
+      "mode": "defer",
+      "robust_values": [
+        -0.7999997138977051,
+        2.5999999046325684,
+        2.0
+      ]
+    },
+    "high": {
+      "interval": [
+        0.800000011920929,
+        0.8999999761581421
+      ],
+      "mode": "commit",
+      "robust_values": [
+        6.40000057220459,
+        4.199999809265137,
+        2.0
+      ]
+    }
+  },
+  "actor_forward_parameters": [
+    "hidden",
+    "local_history"
+  ],
+  "evidence_boundary": "This audit validates the isolated decision kernel, legal interface, analytic decision ordering, and exact parameter-count match. It does not validate calibration, PPO integration, learnability, or empirical advantage.",
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
