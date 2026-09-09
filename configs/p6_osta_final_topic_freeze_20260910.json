@@ -1,0 +1,20 @@
+{
+  "protocol": "P6-OSTA-FINAL-TOPIC-SELECTION-V1",
+  "date": "2026-09-10",
+  "decision": "TOPIC_SELECTED_TRAINING_NOT_AUTHORIZED",
+  "working_title_zh": "开放集对手团队下的响应效用推断与无梯度策略适应：面向3v3多无人机对抗博弈",
+  "working_title_en": "Response-Utility Inference for Gradient-Free Adaptation to Open-Set Opponent Teams in Multi-UAV Adversarial Games",
+  "primary_novelty": "infer calibrated utilities over a frozen response library directly from opponent-team behavior history without requiring opponent identity classification",
+  "required_gates": [
+    "G2_BASELINE_LEARNABILITY",
+    "G3_RESPONSE_SPECIALIZATION",
+    "G4_OPEN_SET_GAP",
+    "G5_ORACLE_RESPONSE_HEADROOM"
+  ],
+  "next_action": "VERIFY_LATEST_SEED2_THEN_ADJUDICATE_G2",
+  "source_archive": {
+    "path": "D:/File/MyFile/Temp/backup/OSTA_UAV_Project_Code_and_Scheme_2026-08-23.zip",
+    "sha256": "715B204079548813933608081F0B327D51D8DC1289C2BFE4685BB9D91F9D7F4E"
+  },
+  "training_authorized": false
+}
