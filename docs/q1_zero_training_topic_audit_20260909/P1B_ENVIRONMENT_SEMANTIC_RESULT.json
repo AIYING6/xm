@@ -1,0 +1,32 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P1B-SEMANTIC-GATE-V1",
+  "verdict": "P1B_ACTIVE_DIAGNOSIS_ENVIRONMENT_SEMANTIC_PASS",
+  "checks": {
+    "pre_probe_actor_observation_exact": true,
+    "post_probe_observation_separable": true,
+    "fault_truth_absent_from_actor_observation": true,
+    "probe_cost_exact": true,
+    "probe_trajectory_safe": true,
+    "policy_ordering_nontrivial": true,
+    "runtime_restore_exact": true
+  },
+  "empirical_ack_rates": {
+    "recoverable_range_loss": 0.8925,
+    "hard_relay_failure": 0.11
+  },
+  "empirical_ack_gap": 0.7825,
+  "actor_observation_fields": [
+    "energy",
+    "handshake_ack",
+    "message_age_norm",
+    "message_received",
+    "mode",
+    "probe_budget_remaining",
+    "relay_handshake_distance_norm",
+    "step_norm"
+  ],
+  "scope": "minimal semantic state machine; not the trainable 3DOF UAV environment",
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}

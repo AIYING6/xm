@@ -15,10 +15,12 @@
 | 鲁棒通信 MARL | Yu et al., *Robust Communicative Multi-Agent Reinforcement Learning with Active Defense*, AAAI 2024, DOI: 10.1609/aaai.v38i16.29708 | 区分被动消息可靠性加权与主动制造诊断信息 |
 | MAS 模型诊断综述 | Kalech and Natan, *Model-Based Diagnosis of Multi-Agent Systems: A Survey*, AAAI 2022, DOI: 10.1609/aaai.v36i11.21498 | 显示 MAS 诊断成熟，同时指出 troubleshooting、恢复和间歇故障仍有空间 |
 | 间歇通信 MARL | *Multi-agent reinforcement learning for cooperative search under aperiodically intermittent communication*, ESWA, DOI: 10.1016/j.eswa.2025.127526 | 区分丢失信息重建与故障原因主动辨识 |
+| 主动诊断与最优控制联合设计 | Guo and He, *Integrated design for active fault diagnosis and fault-tolerant optimal control for stochastic systems with non-convex input constraints*, Automatica 188, 2026, DOI: 10.1016/j.automatica.2026.112960 | 说明“诊断+控制”组合本身不新；候选必须聚焦分散协同与决策相关辨识 |
+| RL 主动诊断与跟踪控制 | *Reinforcement learning-based integrated active fault diagnosis and tracking control*, ISA Transactions, DOI 页面 PII: S0019057822003299 | 排除仅用 CRL 同时优化诊断和跟踪的泛化表述 |
+| 带成本/收益的主动诊断 | *Active Diagnosis with Costs and Rewards*, CONCUR 2026, DOI: 10.4230/LIPIcs.CONCUR.2026.37 | 表明诊断成本和任务收益已有形式化；不能把非零 probe cost 当作独立创新 |
 
 ## 当前结论边界
 
 现有检索只支持“尚未发现完整覆盖精确交叉点”，不支持“首次提出”。P1 必须继续围绕以下组合做定向排重：
 
 `active fault diagnosis` + `Dec-POMDP` + `communication failure` + `embodied probing` + `cooperative control`。
-

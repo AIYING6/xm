@@ -1,0 +1,26 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P2-ALGORITHM-DESIGN-FREEZE-V1",
+  "date": "2026-09-09",
+  "verdict": "P2_MATH_CORE_PASS_TRAINABLE_INTERFACE_PENDING",
+  "algorithmic_object": "decision-relevant value of information over recovery-action equivalence classes",
+  "primary_quantity": "expected reduction in Bayes task regret net of physical probe cost",
+  "not_claimed_as_novel": [
+    "active fault diagnosis",
+    "joint diagnosis and fault-tolerant control",
+    "nonzero diagnosis cost",
+    "belief-state control",
+    "MAPPO with recurrence"
+  ],
+  "required_properties": [
+    "decision_irrelevant_label_invariance",
+    "nonnegative_information_value_at_zero_cost",
+    "probe_cost_threshold",
+    "oracle_upper_bound",
+    "uninformative_probe_rejection"
+  ],
+  "property_tests_passed": 6,
+  "training_authorized": false,
+  "implementation_authorized": true,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
