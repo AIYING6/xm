@@ -1,0 +1,27 @@
+{
+  "protocol": "P4-COORDINATION-RECOVERABILITY-Q0-V1",
+  "status": "FORMULATION_CANDIDATE",
+  "inherits_drtp_method": false,
+  "inherits_cec_mappo_method": false,
+  "training_authorized": false,
+  "candidate_question": "Can a multi-UAV policy preserve task-level continuation options before an unknown structural failure occurs?",
+  "candidate_object": "task-level coordination recoverability margin",
+  "excluded_as_primary_novelty": [
+    "adaptive topology sampling",
+    "learned communication timing",
+    "counterfactual message credit",
+    "conformal safe commitment",
+    "post-failure connectivity restoration",
+    "generic graph neural network encoding"
+  ],
+  "required_q0_gates": {
+    "nearest_neighbor_full_text_audit": false,
+    "recoverability_margin_uniquely_defined": false,
+    "execution_information_boundary_defined": false,
+    "connected_but_task_unrecoverable_counterexample": false,
+    "enumerated_predictive_validity": false,
+    "baseline_learnable_non_saturated_task": false,
+    "controlled_ablation_identifiable": false
+  },
+  "next_authorized_action": "P4-Q0 literature audit and analytical counterexample only; no learning implementation or training"
+}
