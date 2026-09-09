@@ -1,6 +1,6 @@
 # P3B：belief/gate 与 PPO 归因实现状态
 
-**状态：** `P3B_GATE_ATTRIBUTION_PASS_VALUE_ESTIMATOR_PENDING`
+**状态：** `P3B_GATE_AND_VALUE_COMPONENTS_PASS_RUNNER_PENDING`
 
 ## 1. 已实现部分
 
@@ -48,5 +48,8 @@ DVOI 当前接受调用方提供的 `task_values[hypothesis, recovery_action]`�
 - 估计器、优化器、replay/normalization 状态必须完整序列化；
 - 需要检查估计误差是否足以改变 gate 决策，而不能只报告 MSE。
 
-此外，`recurrent_mappo` 的序列 learner 与截断 BPTT 合同尚未实现。故当前 `performance_pilot_authorized=false`。
+`algorithms/active_diagnosis/task_value_estimator.py` 现已实现上述 estimator、归一化、监督 replay 和 checkpoint 合同；`algorithms/active_diagnosis/recurrent_sg_mappo.py` 现已实现共享 role-graph GRU actor、snapshot centralized critic、时间顺序重放、回合槽位清零、truncated BPTT 和 control-mask PPO actor loss。
 
+独立技术审计在 32 步×2 环境的合成序列上通过，且 task-value estimator 的合成监督误差没有改变 0.50/0.90 两个冻结先验下的 gate 决策。这里的合成 target 只验证可训练性、序列化和决策敏感性，**不是环境任务价值证据，也禁止作为 pilot 输入**。
+
+尚未完成的是统一 outer runner：它必须从真实完整 episode return 形成 estimator 监督，保存 sampled/executed action 双轨迹，计算真实 executed transition 的 critic/GAE，并把三 arm、环境运行态、gate/belief、estimator replay 和所有 RNG 纳入同一 checkpoint。故当前 `performance_pilot_authorized=false`。

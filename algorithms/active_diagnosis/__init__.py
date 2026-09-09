@@ -7,6 +7,8 @@ from .decision_relevant_probe import (
     decision_relevant_probe_value,
     select_probe,
 )
+from .recurrent_sg_mappo import RecurrentSGMAPPO, replay_recurrent_sequence
+from .task_value_estimator import TaskValueEstimator, TaskValueReplayBuffer
 
 __all__ = [
     "ProbeValue",
@@ -14,4 +16,8 @@ __all__ = [
     "decision_equivalence_classes",
     "decision_relevant_probe_value",
     "select_probe",
+    "RecurrentSGMAPPO",
+    "replay_recurrent_sequence",
+    "TaskValueEstimator",
+    "TaskValueReplayBuffer",
 ]
