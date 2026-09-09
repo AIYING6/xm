@@ -1,0 +1,45 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P3B-REMAINING-COMPONENTS-V1",
+  "verdict": "P3B_REMAINING_COMPONENTS_PASS",
+  "checks": {
+    "task_value_model_enumerates_all_candidate_modes_without_truth_input": true,
+    "technical_value_fit_preserves_gate_decision_at_both_frozen_priors": true,
+    "task_value_model_optimizer_normalizer_and_replay_restore_exactly": true,
+    "three_arms_share_identical_recurrent_policy_parameter_count": true,
+    "chronological_32_step_two_environment_replay_is_exact": true,
+    "episode_local_reset_and_truncated_bptt_are_explicit": true,
+    "gate_control_mask_excludes_forced_agent_time_samples": true,
+    "recurrent_actor_loss_and_gru_gradient_are_finite": true,
+    "recurrent_model_optimizer_hidden_and_auxiliary_restore_exactly": true
+  },
+  "details": {
+    "sequence_time_steps": 32,
+    "sequence_environments": 2,
+    "bptt_horizon": 8,
+    "parameter_counts": {
+      "recurrent_mappo": 3626,
+      "entropy_probe": 3626,
+      "decision_relevant_probe": 3626
+    },
+    "technical_value_max_abs_error": 0.0006384849548339844,
+    "technical_gate_decisions": {
+      "0.5": {
+        "estimated_probe": true,
+        "reference_probe": true,
+        "same_decision": true
+      },
+      "0.9": {
+        "estimated_probe": false,
+        "reference_probe": false,
+        "same_decision": true
+      }
+    },
+    "task_value_target_source": "fixed synthetic technical target; prohibited as pilot task value"
+  },
+  "environment_steps": 0,
+  "ppo_performance_updates": 0,
+  "technical_auxiliary_gradient_steps": 180,
+  "performance_pilot_authorized": false,
+  "remaining_blocker": "integrated three-arm rollout/training/evaluation runner and frozen tape",
+  "automatic_continuation": false
+}

@@ -1,6 +1,6 @@
 # P3B：1M pilot 因果对照与停止合同
 
-**状态：** `P3B_CONTRACT_FROZEN_IMPLEMENTATION_PENDING`
+**状态：** `P3B_COMPONENTS_PASS_INTEGRATED_RUNNER_PENDING`
 
 ## 1. 唯一目的
 
@@ -73,3 +73,16 @@
 - 旧环境和旧 DRTP 路线回归测试。
 
 这些检查未通过前，`pilot_authorized=false`。
+
+## 8. 2026-09-09 实现门进展
+
+以下组件已经通过独立技术审计：
+
+- 候选假设枚举式 task-value estimator；真实故障标签只选择监督单元，不进入部署查询；
+- estimator、优化器、输入归一化和监督 replay 的完整序列化；
+- 三个 arm 参数量一致的 role-graph GRU actor 与 snapshot centralized critic；
+- 32 步、2 环境的时间顺序 replay、回合槽位清零和 8 步 truncated BPTT；
+- gate 强制 option 对应 agent-time 的 actor loss 归因屏蔽；
+- recurrent model、优化器、hidden state 与辅助运行态 checkpoint 恢复。
+
+这些结果仅证明组件接口和更新路径可执行。技术审计中用于检查 gate 敏感性的 task-value target 是固定合成量，禁止进入性能 pilot。下一道、也是最后一道训练前实现门，是把环境、三 arm、真实 episode-return 监督、belief/gate、rollout、GAE、PPO、fixed tape 和完整 checkpoint 接入同一个 runner，并执行 32–128 步真实环境 checkpoint replay。完成前 `performance_pilot_authorized=false`。
