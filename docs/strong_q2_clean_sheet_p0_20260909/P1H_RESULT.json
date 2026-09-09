@@ -1,0 +1,27 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P1H-P2-RUNNER-AUDIT-V1",
+  "verdict": "P1H_P2_RUNNER_AND_PREFLIGHT_PASS",
+  "checks": {
+    "frozen_budget_exact": true,
+    "formal_resume_state_exact": true,
+    "fixed_endpoint_manifest_enforced": true,
+    "evaluation_tape_balance_enforced": true,
+    "leader_context_commit_gate_exact": true,
+    "capacity_match_exact": true,
+    "linux_launcher_syntax_pass": true,
+    "zero_training_preflight_pass": true
+  },
+  "training_authorized": true,
+  "training_started": false,
+  "formal_environment_steps": 0,
+  "local_smoke_only": true,
+  "local_smoke_physics_steps": 336,
+  "scientific_evidence_generated": false,
+  "cloud_package": {
+    "name": "EPISTEMIC_COMMITMENT_P2_PILOT_V1.zip",
+    "sha256": "271a16fa399486746c9dc9959502807ef55cabae21c6f7ee699b50ef06da76d4",
+    "unpacked_preflight_pass": true,
+    "unpacked_smoke_pass": true
+  },
+  "automatic_continuation": false
+}
