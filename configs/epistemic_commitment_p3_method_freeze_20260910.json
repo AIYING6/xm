@@ -1,0 +1,75 @@
+{
+  "protocol": "CALIBRATED-EPISTEMIC-COMMITMENT-MAPPO-METHOD-FREEZE-V1",
+  "method_name": "CEC-MAPPO",
+  "expanded_name": "Calibrated Epistemic-Commitment MAPPO",
+  "latent_agreement_states": [
+    "current_plan_jointly_actionable",
+    "plan_received_ack_unconfirmed",
+    "plan_not_shared",
+    "shared_plan_stale"
+  ],
+  "execution_inputs": [
+    "legal_local_observation_history",
+    "local_send_and_receive_events",
+    "local_plan_and_ack_versions",
+    "message_age",
+    "public_link_context",
+    "remaining_task_window"
+  ],
+  "evaluator_truth_for_execution_forbidden": true,
+  "modules": {
+    "agreement_estimator": {
+      "output": "posterior over latent agreement states",
+      "calibration": "split-conformal set calibrated on disjoint training-only trajectories",
+      "set_output": "Gamma_i,t(alpha)",
+      "target_marginal_coverage": 0.9,
+      "mondrian_groups": ["public_link_context", "task_urgency"]
+    },
+    "option_value_model": {
+      "actions": ["commit", "defer", "fallback"],
+      "state_conditioning": "local history and candidate agreement state",
+      "defer_semantics": "return includes later commit or fallback after additional local evidence"
+    },
+    "commitment_gate": {
+      "commit_admissible_if": [
+        "supportwise lower option value is no worse than fallback floor",
+        "estimated unsupported-commit probability is at most epsilon"
+      ],
+      "epsilon": 0.1,
+      "decision": "maximize posterior expected option value among admissible actions",
+      "defer_and_fallback_always_admissible": true
+    }
+  },
+  "training_objective": {
+    "policy": "standard clipped PPO objective over the gated action distribution",
+    "value": "standard centralized value regression using only union of legal local observations",
+    "agreement_auxiliary": "cross-entropy agreement-state estimation on simulator-labelled training trajectories",
+    "calibration_data_disjoint_from_optimizer_updates": true,
+    "all_factorial_cells_receive_same_auxiliary_labels_and_capacity_matched_estimator": true
+  },
+  "factorial_switches": {
+    "recurrent_mappo": {"set_to_actor": false, "gate": false},
+    "point_belief_commitment": {"set_to_actor": false, "gate": "point_posterior_only"},
+    "information_set_direct_policy": {"set_to_actor": true, "gate": false},
+    "cec_mappo": {"set_to_actor": true, "gate": "support_aware"}
+  },
+  "frozen_hyperparameters_before_performance_results": {
+    "alpha": 0.1,
+    "epsilon": 0.1,
+    "fallback_floor": "predicted lower option value of fallback",
+    "selection_rule": "no post-result tuning"
+  },
+  "required_zero_training_checks": [
+    "set_coverage_calculation_exact",
+    "no_evaluator_truth_at_execution",
+    "q0b_commit_is_rejected_before_ack",
+    "q0b_defer_has_highest_admissible_expected_option_value",
+    "q0b_commit_becomes_admissible_after_ack",
+    "factorial_switches_change_only_declared modules",
+    "auxiliary_supervision_and_capacity_matched",
+    "all_losses_and_masks_finite",
+    "exact_resume_restores_calibrator_and_gate"
+  ],
+  "implementation_complete": false,
+  "training_authorized": false
+}

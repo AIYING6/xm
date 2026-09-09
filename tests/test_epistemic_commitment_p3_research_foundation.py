@@ -7,7 +7,9 @@ def test_foundation_blocks_training_until_novelty_and_method_are_frozen():
     assert report["checks"]["q0_environment_correct"] is True
     assert report["checks"]["q0b_decision_relevant_information_gap"] is True
     assert report["checks"]["novelty_search_complete"] is False
-    assert report["checks"]["full_method_math_frozen"] is False
+    assert report["checks"]["targeted_adjacent_search_complete"] is True
+    assert report["checks"]["full_method_math_frozen"] is True
+    assert report["checks"]["all_four_methods_implemented"] is False
     assert report["checks"]["scientific_training_locked"] is True
 
 
