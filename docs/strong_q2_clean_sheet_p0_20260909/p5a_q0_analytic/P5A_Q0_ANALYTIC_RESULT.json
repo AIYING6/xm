@@ -1,0 +1,13 @@
+{
+  "protocol": "P5-A-COUNTERFACTUAL-TEAM-HARM-Q0-V1",
+  "verdict": "P5A_ANALYTIC_NONDEGENERACY_PASS",
+  "training_started": false,
+  "cases": 24,
+  "checks": {
+    "unavoidable_cost_removed_from_harm": true,
+    "joint_causation_shared_equally": true,
+    "null_agent_receives_zero_responsibility": true,
+    "shapley_efficiency_exact": true
+  },
+  "scope": "The result establishes algebraic non-degeneracy only; it does not establish novelty, observational identifiability, estimator accuracy, or policy improvement."
+}
