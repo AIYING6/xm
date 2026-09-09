@@ -1,0 +1,118 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P3-TASK-DESIGN-CONTRACT-V1",
+  "scientific_role": "submission_task_candidate",
+  "training_authorized": false,
+  "task": {
+    "team": ["scout_leader", "relay", "attacker_follower"],
+    "physical_backend": "UAVIntercept3DEnv.step_guidance",
+    "decision_epochs": 8,
+    "physical_steps_per_decision_epoch": 8,
+    "maximum_physical_steps": 64,
+    "stages": [
+      "task_discovery",
+      "plan_emission",
+      "private_receipt",
+      "approach",
+      "commitment_window",
+      "joint_execution",
+      "recovery_or_fallback"
+    ],
+    "learned_outputs": {
+      "leader_and_attacker": ["commit", "defer", "fallback", "turn_guidance", "climb_guidance"],
+      "relay": ["turn_guidance", "climb_guidance"]
+    },
+    "fixed_controller_outputs": ["acceleration_boundary_protection"]
+  },
+  "communication_factors": {
+    "plan_delivery": ["delivered", "lost", "delayed"],
+    "ack_delivery": ["delivered", "lost", "not_applicable"],
+    "plan_freshness": ["current", "stale"],
+    "public_link_context": ["low", "middle", "high"],
+    "task_urgency": ["relaxed", "tight"]
+  },
+  "frozen_training_cells": [
+    "delivered|delivered|current",
+    "delivered|lost|current",
+    "lost|not_applicable|current",
+    "delayed|not_applicable|current",
+    "delivered|delivered|stale"
+  ],
+  "heldout_compositional_cells": [
+    "delayed|not_applicable|stale",
+    "delivered|lost|stale"
+  ],
+  "information_boundary": {
+    "actor_visible": [
+      "own_kinematics",
+      "legal_local_target_estimate",
+      "local_message_age",
+      "public_link_context",
+      "own_sent_plan_version",
+      "locally_received_plan_version",
+      "locally_received_ack_version",
+      "remaining_task_window",
+      "own_previous_mode"
+    ],
+    "critic_visible": "union_of_legal_actor_observations_only",
+    "evaluator_only": [
+      "global_plan_delivery_truth",
+      "global_ack_delivery_truth",
+      "cross_agent_plan_version_match",
+      "latent_teammate_commitment_state"
+    ]
+  },
+  "trajectory_derived_endpoints": [
+    "joint_task_success",
+    "unsupported_corridor_entry",
+    "recovery_after_mismatch",
+    "graceful_fallback_completion",
+    "timeout",
+    "collision",
+    "constraint_violation",
+    "energy_cost"
+  ],
+  "forbidden_endpoint_construction": [
+    "direct_reward_lookup_from_delivery_truth",
+    "direct_success_assignment_from_commitment_label",
+    "fixed_complete_flight_script_selected_by_mode"
+  ],
+  "controlled_methods": [
+    {
+      "name": "recurrent_mappo",
+      "interval_estimation": false,
+      "robust_task_value": false
+    },
+    {
+      "name": "point_belief_commitment",
+      "interval_estimation": false,
+      "robust_task_value": true
+    },
+    {
+      "name": "interval_direct_policy",
+      "interval_estimation": true,
+      "robust_task_value": false
+    },
+    {
+      "name": "information_set_commitment",
+      "interval_estimation": true,
+      "robust_task_value": true
+    }
+  ],
+  "upper_bound_only": "delivery_truth_oracle",
+  "q0_required_checks": [
+    "all_communication_cells_reachable",
+    "private_observation_relations_exact",
+    "at_least_four_decision_epochs_before_termination",
+    "mode_changes_alter_closed_loop_guidance",
+    "unilateral_entry_emerges_from_trajectory",
+    "scripted_safe_success_exists",
+    "scripted_unilateral_failure_exists",
+    "scripted_recovery_exists",
+    "constant_modes_do_not_dominate",
+    "nominal_not_saturated",
+    "collision_and_constraint_telemetry_live",
+    "runtime_restore_exact"
+  ],
+  "automatic_training_start": false,
+  "automatic_hyperparameter_revision": false
+}
