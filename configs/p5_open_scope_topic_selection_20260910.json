@@ -1,6 +1,6 @@
 {
   "protocol": "P5-OPEN-SCOPE-STRONG-Q2-TOPIC-SELECTION-V1",
-  "status": "OPEN_SCOPE_SHORTLISTED",
+  "status": "P5A_Q0_CONDITIONAL_SURVIVAL",
   "scope_constraints": {
     "communication_required": false,
     "topology_required": false,
@@ -14,15 +14,15 @@
     "id": "P5-A",
     "name": "counterfactual_team_avoidable_harm_responsibility",
     "question": "Can a cooperative policy constrain only the avoidable team harm caused by joint decisions and allocate that responsibility among heterogeneous agents?",
-    "status": "Q0_REQUIRED",
+    "status": "Q0_ANALYTIC_PASS_IDENTIFIABILITY_OPEN",
     "novelty_claimed": false,
     "required_q0_gates": {
-      "nearest_neighbor_full_text_audit": false,
-      "avoidable_harm_formally_defined": false,
-      "responsibility_axioms_defined": false,
+      "nearest_neighbor_full_text_audit": "CONDITIONAL_PASS_STRONG_COMPONENT_COLLISIONS",
+      "avoidable_harm_formally_defined": true,
+      "responsibility_axioms_defined": "PARTIAL_EFFICIENCY_AND_NULL_PLAYER_ONLY",
       "counterfactual_identifiability_defined": false,
-      "analytic_non_degenerate_game": false,
-      "enumerated_axiom_validation": false,
+      "analytic_non_degenerate_game": true,
+      "enumerated_axiom_validation": true,
       "learnable_non_saturated_task": false,
       "controlled_factorial_ablation": false
     }
@@ -43,8 +43,8 @@
     "post_failure_connectivity_restoration"
   ],
   "next_authorized_actions": [
-    "P5-A-Q0 nearest-neighbor difference matrix and analytical game only",
-    "P5-B-Q0 non-communication recoverability audit and counterexample only"
+    "P5-A-Q1 counterfactual identifiability, temporal responsibility, and baseline-choice audit only",
+    "P5-B-Q0 remains available only if P5-A fails identifiability"
   ],
   "prohibited_until_q0_pass": [
     "learning implementation",
