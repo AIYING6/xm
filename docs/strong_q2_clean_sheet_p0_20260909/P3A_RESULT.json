@@ -1,0 +1,21 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P3A-DESIGN-AUDIT-V1",
+  "verdict": "P3A_DESIGN_CONTRACT_PASS_TO_Q0_IMPLEMENTATION",
+  "checks": {
+    "submission_role_not_pilot": true,
+    "multistage_decision_exact": true,
+    "continuous_closed_loop_backend": true,
+    "high_level_and_guidance_jointly_learned": true,
+    "communication_mismatch_family_nontrivial": true,
+    "actor_evaluator_truth_disjoint": true,
+    "all_endpoints_trajectory_derived": true,
+    "factorial_mechanism_ablation_complete": true,
+    "oracle_is_upper_bound_only": true,
+    "q0_gate_complete": true
+  },
+  "training_authorized": false,
+  "training_started": false,
+  "environment_steps": 0,
+  "next_authorized_action": "implement environment and run zero-training Q0 only",
+  "evidence_boundary": "The design is identifiable on paper; environment correctness, learnability and performance remain untested."
+}
