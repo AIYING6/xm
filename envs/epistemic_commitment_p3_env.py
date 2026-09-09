@@ -87,7 +87,7 @@ class EpistemicCommitmentP3Env:
         self.base.seed(self.seed_value)
         self.base.reset()
         self.base.blue_pos = np.asarray(
-            [[-6_000.0, -1_000.0, 5_000.0], [-6_500.0, 0.0, 5_000.0], [-6_000.0, 1_000.0, 5_000.0]],
+            [[-10_500.0, -1_000.0, 5_000.0], [-11_000.0, 0.0, 5_000.0], [-10_500.0, 1_000.0, 5_000.0]],
             dtype=np.float32,
         )
         self.base.blue_heading[:] = 0.0
@@ -98,7 +98,7 @@ class EpistemicCommitmentP3Env:
         self.epoch = 0
         self.done = False
         self.sent_plan_version = 1
-        self.plan_route_sign = 1 if self.seed_value % 2 else -1
+        self.plan_route_sign = 1
         self.follower_route_sign = 0
         self.leader_ack_route_sign = 0
         self.follower_plan_version = -1
@@ -168,7 +168,9 @@ class EpistemicCommitmentP3Env:
             if agent_id == self.leader_id:
                 route_sign = self.plan_route_sign
             elif agent_id == self.follower_id:
-                route_sign = self.follower_route_sign
+                # The shared route token maps to mirrored role-relative turns:
+                # the leader starts below the corridor and the follower above it.
+                route_sign = -self.follower_route_sign
             # Normalize for the heterogeneous turn-rate envelopes so matching
             # route tokens describe the same physical curvature.
             scale = (
@@ -178,13 +180,7 @@ class EpistemicCommitmentP3Env:
             )
             return np.asarray([scale * route_sign, 0.0], dtype=np.float32)
         if mode == MODE_DEFER:
-            if agent_id == self.leader_id:
-                turn = 0.25
-            elif agent_id == self.follower_id:
-                turn = 0.25 * (0.035 / 185.0) * (205.0 / 0.052)
-            else:
-                turn = 0.0
-            return np.asarray([turn, 0.0], dtype=np.float32)
+            return np.asarray([0.0, 0.0], dtype=np.float32)
         if mode == MODE_FALLBACK:
             return np.asarray([-1.0 if agent_id == 0 else 1.0, 0.35], dtype=np.float32)
         raise ValueError("unknown task mode")
@@ -234,11 +230,15 @@ class EpistemicCommitmentP3Env:
         separation = float(
             np.linalg.norm(self.base.blue_pos[self.leader_id] - self.base.blue_pos[self.follower_id])
         )
+        leader_corridor_error = abs(float(self.base.blue_pos[self.leader_id, 1]) - 500.0)
+        follower_corridor_error = abs(float(self.base.blue_pos[self.follower_id, 1]) + 800.0)
+        corridor_aligned = leader_corridor_error <= 1_000.0 and follower_corridor_error <= 1_000.0
         joint_success = (
             leader_task >= 0
             and follower_task >= 0
             and abs(leader_task - follower_task) <= 1
             and separation <= 2_500.0
+            and corridor_aligned
         )
         retreat_evidence = False
         arrested_entry_evidence = False
@@ -257,22 +257,25 @@ class EpistemicCommitmentP3Env:
                 and recent_dx[1, 0] < recent_dx[0, 0]
                 and recent_dx[1, 0] < 500.0
             )
-        no_risk_entry = bool(
-            np.all(self.risk_entry_epoch[[self.leader_id, self.follower_id]] < 0)
-        )
         recovered = (
             self.unilateral_risk_observed
-            and (retreat_evidence or arrested_entry_evidence)
+            and (
+                (leader_task < 0 and follower_task < 0)
+                or retreat_evidence
+                or arrested_entry_evidence
+            )
             and not joint_success
         )
         fallback_complete = (
-            no_risk_entry
-            and retreat_evidence
+            retreat_evidence
             and leader_task < 0
             and follower_task < 0
             and not self.unilateral_risk_observed
         )
-        unsupported = self.unilateral_risk_observed and not recovered and not joint_success
+        corridor_mismatch_entry = leader_task >= 0 and follower_task >= 0 and not joint_success
+        unsupported = (
+            self.unilateral_risk_observed or corridor_mismatch_entry
+        ) and not recovered and not joint_success
         if self.base.collision:
             endpoint, task_value = "collision", -10.0
         elif self.base.constraint_violation:
@@ -300,6 +303,9 @@ class EpistemicCommitmentP3Env:
             "leader_task_entry_epoch": leader_task,
             "follower_task_entry_epoch": follower_task,
             "final_pair_separation": separation,
+            "leader_corridor_error": leader_corridor_error,
+            "follower_corridor_error": follower_corridor_error,
+            "corridor_aligned": float(corridor_aligned),
         }
 
     def step(self, actions):

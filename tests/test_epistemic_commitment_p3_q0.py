@@ -50,10 +50,11 @@ def test_endpoints_are_separated_by_closed_loop_trajectory() -> None:
     success_env = EpistemicCommitmentP3Env(nominal)
     failure_env = EpistemicCommitmentP3Env(lost)
     recovery_env = EpistemicCommitmentP3Env(lost)
+    for action in [_action(MODE_DEFER, MODE_DEFER, MODE_DEFER)] * 3 + [commit] * 5:
+        *_, success = success_env.step(action)
     for _ in range(8):
-        *_, success = success_env.step(commit)
         *_, failure = failure_env.step(unilateral)
-    for action in [unilateral] * 2 + [fallback] * 6:
+    for action in [unilateral] * 3 + [fallback] * 5:
         *_, recovery = recovery_env.step(action)
 
     assert success["endpoint"] == "joint_task_success"

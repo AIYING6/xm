@@ -1,0 +1,56 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P3-Q0B-IDENTIFIABILITY-AUDIT-V1",
+  "verdict": "P3_Q0B_INFORMATION_GAP_PASS_WITH_INDUCTIVE_BIAS_SCOPE",
+  "checks": {
+    "leader_histories_observation_equivalent": true,
+    "teammate_information_states_differ": true,
+    "commit_value_changes_across_hidden_states": true,
+    "commit_has_positive_expectation_and_negative_lower_bound": true,
+    "defer_preserves_information_value": true,
+    "bayes_information_aware_choice_is_defer": true,
+    "certainty_equivalent_choice_is_commit": true,
+    "ack_receipt_shrinks_information_set": true,
+    "post_ack_choice_switches_to_commit": true,
+    "constant_policy_does_not_match_contingent_value": true
+  },
+  "exact_check_registry": true,
+  "pre_ack_commit_values": {
+    "current_plan": 10.0,
+    "no_plan": -8.0
+  },
+  "defer_then_contingent_values": {
+    "ack_current": 10.0,
+    "no_ack": 0.0
+  },
+  "fallback_now_values": {
+    "current_plan": 3.0,
+    "no_plan": 3.0
+  },
+  "public_probability_current_plan": 0.8,
+  "expected_commit_value": 6.4,
+  "expected_defer_then_contingent_value": 8.0,
+  "expected_fallback_now_value": 3.0,
+  "bayes_action_values": {
+    "commit_now": 6.4,
+    "defer_for_ack": 8.0,
+    "fallback_now": 3.0
+  },
+  "bayes_information_aware_choice": "defer_for_ack",
+  "robust_action_values": {
+    "commit_now": -8.0,
+    "defer_for_ack": 0.0,
+    "fallback_now": 3.0
+  },
+  "robust_pre_ack_choice": "fallback_now",
+  "certainty_equivalent_choice": "commit_now",
+  "constant_policy_expected_values": {
+    "always_commit": -8.0,
+    "always_defer": -8.0,
+    "always_fallback": 2.0
+  },
+  "representational_impossibility_claim_allowed": false,
+  "training_started": false,
+  "ppo_updates": 0,
+  "next_authorized_action": "retain Q1 learnability pilot; evaluate calibration and sample efficiency rather than representational impossibility",
+  "evidence_boundary": "The audit establishes a trajectory-grounded information gap and a Bayes value-of-information action switch under the frozen public prior. Strict maximin instead selects immediate fallback. A sufficiently trained GRU can still represent the contingent policy, so future evidence concerns inductive bias, calibration, reliability, and sample efficiency, not theoretical incapability."
+}
