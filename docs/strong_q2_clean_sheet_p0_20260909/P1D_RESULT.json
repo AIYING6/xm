@@ -1,0 +1,14 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P1D-TRAINING-BEFORE-ALGORITHM-CONTRACT-V1",
+  "verdict": "P1D_CONDITIONAL_PASS_TO_IMPLEMENTATION_AUDIT_ONLY",
+  "prior_gates": {
+    "P1A_nearest_neighbor_gap": "pass_with_narrow_scope",
+    "P1B_analytic_counterexample": "pass",
+    "P1C_uav_shadow_semantics": "pass"
+  },
+  "training_authorized": false,
+  "cloud_package_authorized": false,
+  "next_authorized_action": "implement candidate mechanism and matched baselines, then run zero-training leakage/counterfactual/capacity audits",
+  "pilot_cap_environment_steps": 15000000,
+  "independent_unit": "training_seed"
+}

@@ -1,0 +1,101 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P1C-UAV-SHADOW-GATE-V1",
+  "verdict": "P1C_UAV_COMMITMENT_SEMANTIC_PASS",
+  "checks": {
+    "leader_history_indistinguishable_across_delivery_states": true,
+    "receiver_privately_observes_delivery": true,
+    "other_agents_do_not_receive_global_delivery_truth": true,
+    "bilateral_commitment_completes_shadow_task": true,
+    "unilateral_commitment_has_strict_cost": true,
+    "fallback_is_finite_and_below_bilateral_value": true,
+    "defer_is_distinct_from_fallback_and_commit": true,
+    "all_choices_have_nonzero_physical_cost": true,
+    "fixed_scripts_are_collision_free": true,
+    "fixed_scripts_respect_flight_envelope": true,
+    "task_is_neither_impossible_nor_saturated": true,
+    "runtime_restore_exact": true
+  },
+  "seed": 20260909,
+  "outcomes": {
+    "bilateral_commitment": {
+      "outcome": "bilateral_commitment",
+      "task_value": 10.0,
+      "elapsed_steps": 16,
+      "energy_cost": [
+        0.014399528503417969,
+        0.012000083923339844,
+        0.018400192260742188
+      ],
+      "leader_progress": 3848.0,
+      "follower_progress": 4256.0,
+      "leader_follower_distance": 2041.1917724609375,
+      "supported_corridor_entry": true,
+      "unsupported_corridor_entry": false,
+      "joint_commit": true,
+      "unilateral_commit": false,
+      "collision": false,
+      "constraint_violation": false
+    },
+    "unilateral_commitment": {
+      "outcome": "unilateral_commitment",
+      "task_value": -6.0,
+      "elapsed_steps": 16,
+      "energy_cost": [
+        0.014399528503417969,
+        0.012000083923339844,
+        0.04121589660644531
+      ],
+      "leader_progress": 3848.0,
+      "follower_progress": 3586.90478515625,
+      "leader_follower_distance": 3889.826171875,
+      "supported_corridor_entry": false,
+      "unsupported_corridor_entry": true,
+      "joint_commit": false,
+      "unilateral_commit": true,
+      "collision": false,
+      "constraint_violation": false
+    },
+    "graceful_degradation": {
+      "outcome": "graceful_degradation",
+      "task_value": 2.0,
+      "elapsed_steps": 16,
+      "energy_cost": [
+        0.032256126403808594,
+        0.012000083923339844,
+        0.04121589660644531
+      ],
+      "leader_progress": 3527.502197265625,
+      "follower_progress": 3586.90478515625,
+      "leader_follower_distance": 4811.8681640625,
+      "supported_corridor_entry": false,
+      "unsupported_corridor_entry": false,
+      "joint_commit": false,
+      "unilateral_commit": false,
+      "collision": false,
+      "constraint_violation": false
+    },
+    "coordinated_defer": {
+      "outcome": "coordinated_defer",
+      "task_value": 1.0,
+      "elapsed_steps": 16,
+      "energy_cost": [
+        0.02591991424560547,
+        0.012000083923339844,
+        0.033120155334472656
+      ],
+      "leader_progress": 3627.329833984375,
+      "follower_progress": 3729.783203125,
+      "leader_follower_distance": 926.8984985351562,
+      "supported_corridor_entry": false,
+      "unsupported_corridor_entry": false,
+      "joint_commit": false,
+      "unilateral_commit": false,
+      "collision": false,
+      "constraint_violation": false
+    }
+  },
+  "evidence_boundary": "The gate proves private-delivery semantics and distinct embodied task consequences only. It does not prove policy learnability, algorithmic novelty, or performance improvement.",
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
