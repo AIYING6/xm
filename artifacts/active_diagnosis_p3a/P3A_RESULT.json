@@ -1,0 +1,32 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P3A-TRAINABLE-INTERFACE-GATE-V1",
+  "verdict": "P3A_TRAINABLE_INTERFACE_PASS",
+  "checks": {
+    "standard_interface_shapes": true,
+    "pre_probe_actor_inputs_identical": true,
+    "latent_truth_not_exposed": true,
+    "relay_only_probe_action_mask": true,
+    "probe_separates_decision_relevant_modes": true,
+    "probe_completes_before_episode_terminal": true,
+    "masked_actor_rollout_actions_legal": true,
+    "single_ppo_smoke_update_finite": true,
+    "runtime_checkpoint_restore_exact": true
+  },
+  "dimensions": {
+    "agents": 3,
+    "actor_obs": 37,
+    "critic_obs": 50,
+    "flight_actions": 27,
+    "total_actions": 28
+  },
+  "probe_outcomes": {
+    "recoverable": 1.0,
+    "hard_failure": -1.0
+  },
+  "smoke_environment_steps": 32,
+  "ppo_smoke_updates": 1,
+  "performance_training_started": false,
+  "p3b_implementation_authorized": true,
+  "performance_pilot_authorized": false,
+  "automatic_continuation": false
+}
