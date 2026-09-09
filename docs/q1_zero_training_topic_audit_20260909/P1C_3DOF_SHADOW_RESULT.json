@@ -1,0 +1,41 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P1C-3DOF-SHADOW-GATE-V1",
+  "verdict": "P1C_3DOF_PHYSICAL_PROBE_SEMANTIC_PASS",
+  "checks": {
+    "full_actor_share_graph_pre_probe_exact": true,
+    "recoverable_range_loss_acknowledges": true,
+    "hard_relay_failure_remains_silent": true,
+    "probe_elapsed_time_nonzero": true,
+    "probe_energy_cost_nonzero": true,
+    "probe_collision_free": true,
+    "probe_constraint_safe": true,
+    "runtime_restore_exact": true
+  },
+  "seed": 20260909,
+  "recoverable_probe": {
+    "ack": true,
+    "elapsed_steps": 12,
+    "energy_cost": [
+      0.005400180816650391,
+      0.004499673843383789,
+      0.00690007209777832
+    ],
+    "collision": false,
+    "constraint_violation": false
+  },
+  "hard_failure_probe": {
+    "ack": false,
+    "elapsed_steps": 12,
+    "energy_cost": [
+      0.005400180816650391,
+      0.004499673843383789,
+      0.00690007209777832
+    ],
+    "collision": false,
+    "constraint_violation": false
+  },
+  "scope": "zero-training shadow adapter over UAVIntercept3DEnv; not a trainable policy interface",
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}

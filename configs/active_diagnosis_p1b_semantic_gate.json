@@ -1,0 +1,32 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P1B-SEMANTIC-GATE-V1",
+  "environment": "envs.active_diagnosis_semantic_env.ActiveDiagnosisSemanticEnv",
+  "hypotheses": [
+    "recoverable_range_loss",
+    "hard_relay_failure"
+  ],
+  "probe": {
+    "mode": "handshake_probe",
+    "duration_steps": 3,
+    "energy_cost": 0.12,
+    "maximum_count": 1,
+    "ack_probability_recoverable": 0.9,
+    "ack_probability_hard_failure": 0.1
+  },
+  "distribution_audit": {
+    "seed_count_per_hypothesis": 2000,
+    "minimum_empirical_ack_gap": 0.7
+  },
+  "required_checks": [
+    "pre_probe_actor_observation_exact",
+    "post_probe_observation_separable",
+    "fault_truth_absent_from_actor_observation",
+    "probe_cost_exact",
+    "probe_trajectory_safe",
+    "policy_ordering_nontrivial",
+    "runtime_restore_exact"
+  ],
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
