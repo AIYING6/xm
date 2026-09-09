@@ -1,6 +1,6 @@
 {
   "protocol": "P5-OPEN-SCOPE-STRONG-Q2-TOPIC-SELECTION-V1",
-  "status": "P5A_Q0_CONDITIONAL_SURVIVAL",
+  "status": "P5A_STOP_P5B_Q0_ACTIVE",
   "scope_constraints": {
     "communication_required": false,
     "topology_required": false,
@@ -14,13 +14,13 @@
     "id": "P5-A",
     "name": "counterfactual_team_avoidable_harm_responsibility",
     "question": "Can a cooperative policy constrain only the avoidable team harm caused by joint decisions and allocate that responsibility among heterogeneous agents?",
-    "status": "Q0_ANALYTIC_PASS_IDENTIFIABILITY_OPEN",
+    "status": "STOP_NOVELTY_AND_IDENTIFIABILITY_RISK",
     "novelty_claimed": false,
     "required_q0_gates": {
       "nearest_neighbor_full_text_audit": "CONDITIONAL_PASS_STRONG_COMPONENT_COLLISIONS",
       "avoidable_harm_formally_defined": true,
       "responsibility_axioms_defined": "PARTIAL_EFFICIENCY_AND_NULL_PLAYER_ONLY",
-      "counterfactual_identifiability_defined": false,
+      "counterfactual_identifiability_defined": "NONIDENTIFIABLE_WITHOUT_ADDITIONAL_SCM_ASSUMPTIONS",
       "analytic_non_degenerate_game": true,
       "enumerated_axiom_validation": true,
       "learnable_non_saturated_task": false,
@@ -31,7 +31,7 @@
     "id": "P5-B",
     "name": "task_level_coordination_recoverability",
     "communication_specific": false,
-    "status": "Q0_REQUIRED",
+    "status": "Q0_ACTIVE",
     "novelty_claimed": false
   },
   "deprioritized_families": [
@@ -43,8 +43,8 @@
     "post_failure_connectivity_restoration"
   ],
   "next_authorized_actions": [
-    "P5-A-Q1 counterfactual identifiability, temporal responsibility, and baseline-choice audit only",
-    "P5-B-Q0 remains available only if P5-A fails identifiability"
+    "P5-B-Q0 nearest-neighbor full-text audit across viability, contingency planning, option preservation, resilient control, and multi-agent task allocation",
+    "P5-B-Q0 analytical non-communication counterexample only"
   ],
   "prohibited_until_q0_pass": [
     "learning implementation",

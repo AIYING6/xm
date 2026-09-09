@@ -1,0 +1,45 @@
+{
+  "protocol": "P5-A-COUNTERFACTUAL-IDENTIFIABILITY-Q1-V1",
+  "verdict": "P5A_IDENTIFIABILITY_AND_BASELINE_RISK_CONFIRMED",
+  "training_started": false,
+  "responsibilities": {
+    "baseline_00": [
+      0.5,
+      0.5
+    ],
+    "baseline_10": [
+      0.0,
+      1.0
+    ],
+    "baseline_01": [
+      1.0,
+      0.0
+    ]
+  },
+  "interventional_distributions": {
+    "action_coupled": {
+      "p_y1_do_a0": 0.5,
+      "p_y1_do_a1": 0.5
+    },
+    "action_irrelevant": {
+      "p_y1_do_a0": 0.5,
+      "p_y1_do_a1": 0.5
+    }
+  },
+  "individual_counterfactual_effects": {
+    "action_coupled": [
+      1,
+      -1
+    ],
+    "action_irrelevant": [
+      0,
+      0
+    ]
+  },
+  "checks": {
+    "responsibility_changes_with_legal_baseline": true,
+    "interventional_distributions_match": true,
+    "individual_counterfactual_effects_differ": true
+  },
+  "interpretation": "A responsibility score is not intrinsic without a justified baseline, and transition/interventional distributions alone do not identify individual counterfactual effects without additional SCM assumptions."
+}
