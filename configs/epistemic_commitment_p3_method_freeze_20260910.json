@@ -70,6 +70,14 @@
     "all_losses_and_masks_finite",
     "exact_resume_restores_calibrator_and_gate"
   ],
+  "novelty_audit": {
+    "status": "NOVELTY_COLLISION_STOP",
+    "decisive_nearest_work": "SafeCommit: Certifying When Memory-Grounded Agents May Safely Act (arXiv:2608.04289)",
+    "collision": "calibrated latent-world set plus supportwise commitment certificate plus probe-or-fallback",
+    "application_transfer_to_uav_mappo_is_not_sufficient_method_novelty": true,
+    "audit_document": "docs/strong_q2_clean_sheet_p0_20260909/P3_SYSTEMATIC_NOVELTY_AUDIT_20260910.md"
+  },
   "implementation_complete": false,
+  "implementation_authorized": false,
   "training_authorized": false
 }

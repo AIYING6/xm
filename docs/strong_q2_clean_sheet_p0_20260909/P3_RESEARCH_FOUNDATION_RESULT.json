@@ -1,11 +1,12 @@
 {
   "protocol": "EPISTEMIC-COMMITMENT-P3-RESEARCH-FOUNDATION-AUDIT-V1",
-  "verdict": "P3_FOUNDATION_BLOCKS_TRAINING_PENDING_NOVELTY_AND_METHOD_FREEZE",
+  "verdict": "P3_NOVELTY_COLLISION_STOP",
   "checks": {
     "q0_environment_correct": true,
     "q0b_decision_relevant_information_gap": true,
     "novelty_claim_excludes_known_delay_and_belief_claims": true,
     "novelty_search_complete": false,
+    "decisive_positive_collision_found": true,
     "targeted_adjacent_search_complete": true,
     "full_method_math_frozen": true,
     "all_four_methods_implemented": false,
@@ -21,9 +22,9 @@
     "scientific_training_locked": true
   },
   "blocking_items": [
-    "novelty_search_complete",
-    "all_four_methods_implemented"
+    "current_method_core_collides_with_safecommit_2026",
+    "new_formal_mechanism_not_defined"
   ],
   "training_started": false,
-  "next_authorized_action": "complete bibliographic novelty audit and implement four controlled cells; do not run Q1 yet"
+  "next_authorized_action": "stop current CEC-MAPPO implementation; retain Q0/Q0B assets and formulate a genuinely distinct mechanism before any new implementation"
 }
