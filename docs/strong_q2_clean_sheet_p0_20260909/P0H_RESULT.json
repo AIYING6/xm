@@ -1,0 +1,25 @@
+{
+  "protocol": "STRONG-Q2-CLEAN-SHEET-P0H-V1",
+  "date": "2026-09-09",
+  "verdict": "P0H_CONDITIONAL_GO_EPISTEMIC_COMMITMENT_TO_P1_ZERO_TRAINING_ONLY",
+  "training_authorized": false,
+  "implementation_authorized": false,
+  "candidate_ranking": [
+    "epistemic_consistency_aware_task_commitment",
+    "counterfactual_graph_intervention_planning",
+    "certified_multi_tier_mission_degradation"
+  ],
+  "selected_candidate": "epistemic_consistency_aware_task_commitment",
+  "p1_required_gates": [
+    "nearest_neighbor_full_text_gap",
+    "analytic_information_structure_counterexample",
+    "uav_shadow_environment_semantics",
+    "pretraining_algorithm_and_stop_contract"
+  ],
+  "excluded_evidence": [
+    "drtp_historical_or_formal_returns",
+    "historical_development_seeds",
+    "invalid_6uav_runs",
+    "active_diagnosis_performance_claims"
+  ]
+}
