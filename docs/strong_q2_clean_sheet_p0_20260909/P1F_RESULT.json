@@ -1,0 +1,65 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P1F-OBJECTIVE-AUDIT-V1",
+  "verdict": "P1F_OBJECTIVE_AND_FAIRNESS_AUDIT_PASS",
+  "checks": {
+    "candidate_and_baseline_parameter_counts_exact": true,
+    "candidate_mode_distribution_finite_and_normalized": true,
+    "baseline_mode_distribution_finite_and_normalized": true,
+    "candidate_loss_finite": true,
+    "baseline_loss_finite": true,
+    "candidate_interval_and_value_heads_receive_gradient": true,
+    "baseline_active_mode_head_receives_gradient": true,
+    "same_actor_loss_function_used_for_both": true,
+    "objective_interface_contains_no_delivery_truth": true,
+    "calibration_targets_public_prior_not_realized_delivery": true,
+    "pilot_budget_within_15m_cap": true,
+    "pilot_seeds_exact": true
+  },
+  "parameter_counts": {
+    "candidate": 8163,
+    "capacity_matched_recurrent": 8163
+  },
+  "gradient_paths": {
+    "candidate": {
+      "history.weight_ih_l0": true,
+      "history.weight_hh_l0": true,
+      "history.bias_ih_l0": true,
+      "history.bias_hh_l0": true,
+      "interval_head.weight": true,
+      "interval_head.bias": true,
+      "endpoint_value_head.weight": true,
+      "endpoint_value_head.bias": true
+    },
+    "baseline": {
+      "history.weight_ih_l0": true,
+      "history.weight_hh_l0": true,
+      "history.bias_ih_l0": true,
+      "history.bias_hh_l0": true,
+      "mode_head.weight": true,
+      "mode_head.bias": true
+    }
+  },
+  "frozen_hyperparameters": {
+    "ppo_clip_epsilon": 0.2,
+    "calibration_weight": 0.1,
+    "ambiguity_radius": 0.05,
+    "robust_softmin_temperature": 0.1
+  },
+  "pilot": {
+    "methods": [
+      "information_set_commitment",
+      "capacity_and_risk_matched_recurrent"
+    ],
+    "training_seeds": [
+      98101,
+      98102,
+      98103
+    ],
+    "fixed_endpoint_steps_per_run": 1000000,
+    "maximum_total_environment_steps": 6000000
+  },
+  "evidence_boundary": "This audit proves a finite differentiable loss, active gradient paths, exact capacity matching, and absence of realized-delivery labels from the actor objective. It does not prove calibration, learnability, novelty, or empirical improvement.",
+  "training_started": false,
+  "training_environment_steps": 0,
+  "ppo_updates": 0
+}

@@ -62,11 +62,31 @@ def select_robust_mode(endpoint_values: torch.Tensor, interval: torch.Tensor) ->
     return torch.argmax(values, dim=-1), values
 
 
+def smooth_robust_mode_values(
+    endpoint_values: torch.Tensor,
+    interval: torch.Tensor,
+    temperature: float,
+) -> torch.Tensor:
+    """Differentiable conservative value used as policy logits during training."""
+
+    if temperature <= 0.0:
+        raise ValueError("soft minimum temperature must be positive")
+    low = interval[..., 0].unsqueeze(-1)
+    high = interval[..., 1].unsqueeze(-1)
+    incompatible = endpoint_values[..., :, 0]
+    compatible = endpoint_values[..., :, 1]
+    low_value = incompatible + low * (compatible - incompatible)
+    high_value = incompatible + high * (compatible - incompatible)
+    candidates = torch.stack((low_value, high_value), dim=-1)
+    return -temperature * torch.logsumexp(-candidates / temperature, dim=-1)
+
+
 @dataclass(frozen=True)
 class CommitmentActorConfig:
     input_dim: int
     hidden_dim: int = 64
     physical_action_dim: int = 27
+    robust_softmin_temperature: float = 0.10
 
 
 class _HistoryBackbone(nn.Module):
@@ -93,15 +113,22 @@ class InformationSetCommitmentActor(_HistoryBackbone):
 
     def forward(self, local_history: torch.Tensor, hidden: torch.Tensor | None = None) -> dict[str, torch.Tensor]:
         encoded, next_hidden = self.encode(local_history, hidden)
-        interval = probability_interval(self.interval_head(encoded))
+        interval_logits = self.interval_head(encoded)
+        interval = probability_interval(interval_logits)
         endpoint_values = self.endpoint_value_head(encoded).reshape(-1, 3, 2)
-        mode, mode_values = select_robust_mode(endpoint_values, interval)
+        mode_values = smooth_robust_mode_values(
+            endpoint_values,
+            interval,
+            self.config.robust_softmin_temperature,
+        )
         return {
             "physical_logits": self.physical_head(encoded),
+            "interval_logits": interval_logits,
             "interval": interval,
             "endpoint_values": endpoint_values,
             "mode_values": mode_values,
-            "mode": mode,
+            "mode_logits": mode_values,
+            "mode": torch.argmax(mode_values, dim=-1),
             "hidden": next_hidden,
         }
 
@@ -130,8 +157,11 @@ class CapacityMatchedRecurrentActor(_HistoryBackbone):
         encoded, next_hidden = self.encode(local_history, hidden)
         direct_features = self.mode_head(encoded)
         mode_logits = direct_features @ self.mode_projection.transpose(0, 1)
+        interval_logits = direct_features[..., :2]
         return {
             "physical_logits": self.physical_head(encoded),
+            "interval_logits": interval_logits,
+            "interval": probability_interval(interval_logits),
             "mode_logits": mode_logits,
             "direct_features": direct_features,
             "mode": torch.argmax(mode_logits, dim=-1),

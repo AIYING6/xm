@@ -83,7 +83,7 @@ def run_kernel_audit(seed: int = 20260909) -> dict:
         "counterfactual_middle_prior_selects_defer": decisions["middle"]["mode"] == MODE_NAMES[MODE_DEFER],
         "counterfactual_high_prior_selects_commit": decisions["high"]["mode"] == MODE_NAMES[MODE_COMMIT],
         "candidate_and_recurrent_baseline_parameter_counts_exact": candidate_count == baseline_count,
-        "candidate_decision_uses_interval_values": "select_robust_mode" in inspect.getsource(candidate.forward),
+        "candidate_decision_uses_interval_values": "smooth_robust_mode_values" in inspect.getsource(candidate.forward),
         "baseline_decision_is_direct_recurrent_policy": "mode_logits" in inspect.getsource(baseline.forward),
         "all_matched_baseline_head_outputs_affect_decision": bool(
             torch.all(torch.any(baseline.mode_projection != 0.0, dim=0))
