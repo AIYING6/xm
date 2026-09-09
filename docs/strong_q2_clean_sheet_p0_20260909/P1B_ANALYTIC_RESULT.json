@@ -1,0 +1,33 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P1B-ANALYTIC-AUDIT-V1",
+  "verdict": "P1B_ANALYTIC_COUNTEREXAMPLE_PASS",
+  "training_started": false,
+  "environment_steps": 0,
+  "neural_policy_used": false,
+  "model": {
+    "latent_delivery_states": [
+      "shared_commitment",
+      "private_commitment_only"
+    ],
+    "agent1_legal_history": "identical in both latent delivery states",
+    "actions": [
+      "commit",
+      "defer",
+      "fallback"
+    ],
+    "thresholds": {
+      "fallback_to_defer": 0.25,
+      "defer_to_commit": 0.6428571428571429
+    }
+  },
+  "checks": {
+    "agent1_history_identical_across_delivery_states": true,
+    "centralized_optimal_action_differs_by_delivery_state": true,
+    "unilateral_commitment_has_strict_loss": true,
+    "fallback_optimal_on_nonempty_prior_interval": true,
+    "defer_optimal_on_nonempty_prior_interval": true,
+    "commit_optimal_on_nonempty_prior_interval": true,
+    "strict_information_gap_at_middle_prior": true
+  },
+  "interpretation_limit": "This establishes a minimal information-structure gap and a nontrivial commit/defer/fallback trade-off. It does not establish algorithmic novelty, UAV task validity, learnability, or performance improvement."
+}
