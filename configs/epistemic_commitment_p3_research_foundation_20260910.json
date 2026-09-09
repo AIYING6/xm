@@ -21,7 +21,9 @@
       "robust and ambiguity-set POMDP decision making",
       "value-of-information POMDP planning"
     ],
-    "exhaustive_search_complete": false
+    "exhaustive_search_complete": false,
+    "targeted_adjacent_search_complete": true,
+    "novelty_status": "conditional_candidate_only_pending_bibliographic_systematic_search"
   },
   "full_method": {
     "name": "epistemic_commitment_mappo",
@@ -29,6 +31,7 @@
     "decision_rule": "maximize posterior expected option value among actions satisfying a frozen support-wise downside constraint",
     "actions": ["commit", "defer", "fallback"],
     "claim_scope": "inductive bias, calibration, reliability, and sample efficiency",
+    "mathematical_specification_frozen": true,
     "implementation_complete": false
   },
   "controlled_factorial": {

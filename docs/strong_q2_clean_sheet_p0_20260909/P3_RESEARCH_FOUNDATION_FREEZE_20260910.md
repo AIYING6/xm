@@ -3,8 +3,8 @@
 ## 当前决策
 
 P3 暂停在训练门外。Q0 已证明环境有效，Q0B 已证明信息会改变合理决策，但这两项仍不足以
-授权 Q1。正式训练之前必须再完成两件事：一是完成系统的新颖性地图，二是冻结完整方法的数学
-定义与四格受控实现。此次暂停不是算法失败，而是防止“训练完成后才发现创新重叠或消融不可
+授权 Q1。完整方法数学已冻结；正式训练之前仍必须完成两件事：一是完成可导出的系统新颖性
+检索，二是实现并审计四格受控方法。此次暂停不是算法失败，而是防止“训练完成后才发现创新重叠或消融不可
 识别”。
 
 ## 论文唯一主问题
@@ -95,9 +95,8 @@ regret，以及 defer 后转向 commit/fallback 的比例。遥测只能证明�
 
 1. 完成覆盖 delay-aware communication、belief MARL、robust POMDP、value of information 和
    decentralized agreement uncertainty 的系统检索与逐项差异表；
-2. 写出完整方法的状态、假设集合更新、posterior、option value、下行约束和 PPO 联合损失；
-3. 实现四方法并通过容量、信息边界、单步行为和 exact-resume 审计；
-4. 之后才允许运行 Q1 基线可学习性 pilot。
+2. 实现四方法并通过容量、信息边界、单步行为和 exact-resume 审计；
+3. 之后才允许运行 Q1 基线可学习性 pilot。
 
 当前 verdict：`P3_FOUNDATION_BLOCKS_TRAINING_PENDING_NOVELTY_AND_METHOD_FREEZE`。
 

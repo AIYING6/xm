@@ -27,7 +27,9 @@ def audit() -> dict:
         == "P3_Q0B_INFORMATION_GAP_PASS_WITH_INDUCTIVE_BIAS_SCOPE",
         "novelty_claim_excludes_known_delay_and_belief_claims": len(novelty["not_claimed"]) >= 4,
         "novelty_search_complete": novelty["exhaustive_search_complete"] is True,
-        "full_method_math_frozen": foundation["full_method"]["implementation_complete"] is True,
+        "targeted_adjacent_search_complete": novelty["targeted_adjacent_search_complete"] is True,
+        "full_method_math_frozen": foundation["full_method"]["mathematical_specification_frozen"] is True,
+        "all_four_methods_implemented": foundation["full_method"]["implementation_complete"] is True,
         "factorial_cells_complete": factor_cells == {(False, False), (False, True), (True, False), (True, True)},
         "primary_endpoint_single_and_frozen": isinstance(endpoints["primary"], str)
         and bool(endpoints["primary"]),
@@ -56,7 +58,7 @@ def audit() -> dict:
         "blocking_items": blockers,
         "training_started": False,
         "next_authorized_action": (
-            "freeze novelty map and full method mathematics; implement four controlled cells; do not run Q1 yet"
+            "complete bibliographic novelty audit and implement four controlled cells; do not run Q1 yet"
             if blockers
             else "run Q1 bounded baseline learnability pilot"
         ),
