@@ -1,0 +1,30 @@
+{
+  "protocol": "P7-TCARC-FINAL-TOPIC-FREEZE-V1",
+  "status": "STAGE0_FEASIBILITY_PASS_RISK_CONTROL_PROTOTYPE_AUTHORIZED",
+  "title_zh": "拓扑条件化共形风险控制：面向通信退化下多无人机强化学习策略的选择性部署",
+  "title_en": "Topology-Conditional Conformal Risk Control for Selective Deployment of Multi-UAV Reinforcement Learning Policies under Communication Degradation",
+  "acronym": "TC-CRC",
+  "problem": "A high average return does not tell an operator when a frozen multi-UAV policy is likely to violate a mission-risk tolerance under topology degradation or structural shift.",
+  "single_core_innovation": "finite-sample topology-conditional risk calibration and selective deployment for frozen MARL policies, with explicit risk-coverage control under communication-topology strata",
+  "fixed_policy": true,
+  "policy_training_modified": false,
+  "primary_endpoint": "mission_failure_or_timeout",
+  "secondary_endpoints": ["collision", "constraint_violation", "return_shortfall"],
+  "independent_unit": "training_seed_for_policy_level_claims; episode_for_calibration_coverage_conditional_on_a_frozen_policy",
+  "closest_work_boundaries": {
+    "conformal_policy_evaluation": "provides return intervals but does not by itself deliver topology-stratified selective deployment for cooperative UAV policies",
+    "CAMMARL": "conformalizes other-agent actions for decision making rather than calibrating mission risk under communication-topology shift",
+    "risk_averse_calibration": "supplies general decision-theoretic foundations; TC-CRC must contribute the topology-stratified sequential deployment formulation and UAV evidence",
+    "generic_uncertainty_or_abstention": "cannot replace finite-sample risk calibration and violation-rate auditing"
+  },
+  "stage0_gates": {
+    "formal_asset_provenance_complete": true,
+    "risk_endpoint_non_degenerate": true,
+    "topology_strata_have_minimum_events": true,
+    "independent_calibration_and_test_cohorts_available": true,
+    "legal_deployment_features_available_without_future_leakage": true,
+    "global_calibration_shows_topology_conditional_miscalibration": true
+  },
+  "training_authorized": false,
+  "next_action": "IMPLEMENT_PREREGISTERED_GLOBAL_GROUPWISE_AND_HIERARCHICAL_CONFORMAL_RISK_CONTROL_PROTOTYPE"
+}

@@ -1,0 +1,59 @@
+{
+  "protocol": "P6-CIRU-ESCORT-INTERCEPTION-STAGE0-FREEZE-V1",
+  "status": "DESIGN_FROZEN_IMPLEMENTATION_PENDING",
+  "task": "3v3_multi_uav_escort_interception",
+  "horizon_steps": 240,
+  "decision_step": 48,
+  "prefix_fraction": 0.2,
+  "teams": {
+    "blue": ["protected_asset", "defender_left", "defender_right"],
+    "red": ["striker_1", "striker_2", "support_decoy"]
+  },
+  "red_intents": {
+    "direct_strike": "concentrated attack on the protected asset",
+    "split_saturation": "multi-axis asset attack that overloads one defensive sector",
+    "decoy_flank": "one aircraft pulls defenders while a delayed striker attacks the asset",
+    "defender_attrition": "neutralize a defender before transitioning to the asset"
+  },
+  "blue_responses": {
+    "close_escort": "both defenders maintain a compact asset-centered screen",
+    "forward_intercept": "both defenders commit early against the leading threat",
+    "split_screen": "defenders divide lateral sectors and independently intercept",
+    "reserve_counter": "one defender pressures while one remains as an asset-side reserve"
+  },
+  "information_boundary": {
+    "actor_visible": ["own_team_kinematics", "observable_opponent_kinematics", "alive_masks", "time"],
+    "hidden": ["red_intent_label", "future_red_actions", "counterfactual_branch_outcomes"],
+    "response_decision": "select one frozen team response at decision_step from the legal history prefix"
+  },
+  "outcome_definition": {
+    "success": "protected asset reaches the defended exit corridor alive",
+    "failure": "protected asset is neutralized or exits the safety corridor",
+    "utility_terms": ["asset_survival", "route_progress", "red_neutralization", "defender_survival", "time"],
+    "prohibited_shortcuts": ["intent_label_in_observation", "intent_specific_reward", "response_specific_reward", "scripted_payoff_table"]
+  },
+  "stage0": {
+    "scenario_count": 64,
+    "paired_counterfactual_branches": true,
+    "training_allowed": false,
+    "z1": {
+      "question": "does the pre-decision red trajectory depend on the blue pre-decision interaction policy",
+      "minimum_shifted_case_fraction": 0.5,
+      "minimum_median_standardized_distance": 0.05
+    },
+    "z2": {
+      "question": "do observationally aliased prefixes require different best post-decision responses",
+      "maximum_alias_distance": 0.15,
+      "minimum_best_response_margin_normalized": 0.1,
+      "minimum_qualifying_intent_pairs": 2
+    },
+    "z3": {
+      "question": "is the response library complementary rather than dominated",
+      "minimum_distinct_best_responses": 3,
+      "maximum_universal_dominance_fraction": 0.5,
+      "minimum_oracle_gain_over_best_static_normalized": 0.1
+    }
+  },
+  "stop_rule": "If any of Z1, Z2, or Z3 fails, close CIRU after this single task-redesign attempt; do not tune gates or start learning.",
+  "next_action": "IMPLEMENT_DETERMINISTIC_STAGE0_DYNAMICS_AND_RUN_Z1_Z2_Z3"
+}
