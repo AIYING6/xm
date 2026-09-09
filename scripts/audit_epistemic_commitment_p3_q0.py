@@ -146,9 +146,9 @@ def audit() -> dict[str, Any]:
 
     nominal = P3CommunicationSpec("delivered", "delivered", "current")
     lost = P3CommunicationSpec("lost", "not_applicable", "current")
-    safe_env, safe = _run(nominal, [COMMIT] * 8)
+    safe_env, safe = _run(nominal, [DEFER] * 3 + [COMMIT] * 5)
     failure_env, failure = _run(lost, [UNILATERAL] * 8)
-    recovery_env, recovery = _run(lost, [UNILATERAL] * 2 + [FALLBACK] * 6)
+    recovery_env, recovery = _run(lost, [UNILATERAL] * 3 + [FALLBACK] * 5)
 
     guidance_env = EpistemicCommitmentP3Env(nominal)
     checkpoint = guidance_env.state_dict()
@@ -167,14 +167,19 @@ def audit() -> dict[str, Any]:
         for name, action in (("commit", COMMIT), ("defer", DEFER), ("fallback", FALLBACK)):
             _, info = _run(spec, [action] * 8)
             constant_values[name].append(float(info["task_value"]))
-        is_current_receipt = spec.plan_freshness == "current" and spec.plan_delivery != "lost"
-        _, info = _run(spec, [COMMIT] * 8 if is_current_receipt else [FALLBACK] * 8)
+        if spec.plan_freshness == "current" and spec.plan_delivery == "delivered":
+            schedule = [DEFER] * 3 + [COMMIT] * 5
+        elif spec.plan_freshness == "current" and spec.plan_delivery == "delayed":
+            schedule = [DEFER] * 4 + [COMMIT] * 4
+        else:
+            schedule = [FALLBACK] * 8
+        _, info = _run(spec, schedule)
         scripted_values.append(float(info["task_value"]))
     constant_means = {key: float(np.mean(value)) for key, value in constant_values.items()}
     scripted_mean = float(np.mean(scripted_values))
     constant_modes_do_not_dominate = scripted_mean > max(constant_means.values())
 
-    same_condition_values = []
+    same_condition_values = [float(safe["task_value"])]
     for action in (COMMIT, DEFER, FALLBACK, UNILATERAL):
         _, info = _run(nominal, [action] * 8)
         same_condition_values.append(float(info["task_value"]))

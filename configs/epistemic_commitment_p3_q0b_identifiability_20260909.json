@@ -1,0 +1,28 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P3-Q0B-IDENTIFIABILITY-CONTRACT-V1",
+  "decision_epoch": 3,
+  "prefix_modes": ["defer", "defer", "defer"],
+  "observation_equivalent_latent_states": [
+    "follower_has_current_plan_ack_pending",
+    "follower_has_no_plan"
+  ],
+  "public_probability_current_plan": 0.8,
+  "candidate_actions": ["commit_now", "defer_for_ack", "fallback_now"],
+  "post_ack_action": "commit",
+  "post_no_ack_action": "fallback",
+  "required_checks": [
+    "leader_histories_observation_equivalent",
+    "teammate_information_states_differ",
+    "commit_value_changes_across_hidden_states",
+    "commit_has_positive_expectation_and_negative_lower_bound",
+    "defer_preserves_information_value",
+    "bayes_information_aware_choice_is_defer",
+    "certainty_equivalent_choice_is_commit",
+    "ack_receipt_shrinks_information_set",
+    "post_ack_choice_switches_to_commit",
+    "constant_policy_does_not_match_contingent_value"
+  ],
+  "representational_impossibility_claim_allowed": false,
+  "allowed_future_claim": "explicit information-set structure is an inductive bias for calibrated contingent commitment under the frozen public prior",
+  "training_authorized": false
+}
