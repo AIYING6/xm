@@ -1,0 +1,73 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P3B-PILOT-FREEZE-V1",
+  "status": "staged_common_prefix_and_calibration_authorized",
+  "arms": [
+    "recurrent_mappo",
+    "entropy_probe",
+    "decision_relevant_probe"
+  ],
+  "training_seeds": [83011, 83012, 83013],
+  "logical_environment_steps_per_arm_seed": 1000000,
+  "common_prefix": {
+    "environment_steps": 250000,
+    "arm": "recurrent_mappo",
+    "checkpoint_reused_as_identical_initialization": true
+  },
+  "task_value_calibration": {
+    "status": "implemented_with_hard_quality_stop",
+    "performed_after_common_prefix": true,
+    "episodes_per_training_seed": 64,
+    "hypotheses_stratified": true,
+    "recovery_options_stratified": true,
+    "probe_precedes_recovery_assignment": true,
+    "ppo_updates_during_calibration": 0,
+    "estimator_frozen_after_calibration": true,
+    "identical_estimator_checkpoint_for_entropy_and_decision_relevant_arms": true,
+    "calibration_simulator_steps_reported_separately": true,
+    "baseline_runs_same_calibration_tape_without_using_estimator": true
+  },
+  "task_value_information_boundary": {
+    "input": "relay_actor_local_observation",
+    "centralized_critic_share_observation_forbidden": true,
+    "latent_hypothesis_used_only_as_supervised_loss_row_index": true
+  },
+  "arm_specific_environment_steps": 750000,
+  "recurrent": {
+    "rollout_steps": 64,
+    "bptt_horizon": 16,
+    "hidden_dim": 96,
+    "role_dim": 8
+  },
+  "ppo": {
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_coef": 0.2,
+    "entropy_coef": 0.01,
+    "value_coef": 0.5,
+    "max_grad_norm": 0.5,
+    "epochs": 4,
+    "learning_rate": 0.0003
+  },
+  "evaluation": {
+    "checkpoint": "fixed_1m_endpoint",
+    "recoverable_priors": [0.5, 0.9],
+    "episodes_per_hypothesis_prior_cell": 100,
+    "training_seed_is_independent_unit": true,
+    "cells_pooled_for_inference": false,
+    "episode_id_cells": {
+      "prior_0.5_recoverable": [850000, 850099],
+      "prior_0.5_hard": [850100, 850199],
+      "prior_0.9_recoverable": [850200, 850299],
+      "prior_0.9_hard": [850300, 850399]
+    }
+  },
+  "performance_pilot_authorized": false,
+  "common_prefix_stage_authorized": true,
+  "calibration_stage_authorized": true,
+  "arm_specific_stage_authorized_only_after_all_seed_calibration_pass": true,
+  "authorization_requires": [
+    "integrated_real_environment_rollout_update_checkpoint_audit_pass",
+    "task_value_calibration_runner_and_decision_error_audit_pass",
+    "evaluation_tape_hash_frozen"
+  ]
+}

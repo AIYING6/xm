@@ -1,6 +1,6 @@
 # P3B：1M pilot 因果对照与停止合同
 
-**状态：** `P3B_COMPONENTS_PASS_INTEGRATED_RUNNER_PENDING`
+**状态：** `P3B_STAGED_PREFIX_AND_CALIBRATION_AUTHORIZED`
 
 ## 1. 唯一目的
 
@@ -62,27 +62,32 @@
 
 若不满足，路线停止；不做 v2/v3 gate 修补，不扫大量超参数。
 
-## 7. 训练前尚需通过的实现门
+## 7. 分阶段执行门
 
-- 三个 arm 的参数量、循环状态和可见输入审计；
-- gate override 的 log-probability / PPO 归因合同；
-- option 持续期间的动作与折扣语义审计；
-- prior、likelihood 与 belief 更新的运行态序列化；
-- fixed evaluation tape 哈希与 seed 去重；
-- 32–128 步多环境 rollout + checkpoint replay；
-- 旧环境和旧 DRTP 路线回归测试。
+- `0–0.25M`：三个 seed 分别训练一个 recurrent MAPPO 公共前缀；
+- 前缀后：每个 seed 执行 64 个固定策略校准回合，完整覆盖 16 个几何 seed × 2 个潜在故障模式 × 2 个恢复 option；
+- 校准期间 PPO 更新数固定为 0，校准 simulator steps 与 1M 性能预算分开报告；
+- 只有三个 seed 均通过 estimator 有限误差、held-out gate 决策一致率和 balanced-prior decision relevance 检查，才允许从同一个前缀分叉三个 `0.75M` arm；
+- 任一 seed 校准失败即写出 `P3B_CALIBRATION_STOP`，不启动 arm-specific 训练，也不据此修改算法；
+- arm 训练通过后才运行固定端点评估，禁止按回报选择 checkpoint。
 
-这些检查未通过前，`pilot_authorized=false`。
+因此，当前授权只覆盖公共前缀和校准。`performance_pilot_authorized=false` 表示三个完整性能 arm 尚未无条件授权，不表示 runner 未实现。
 
 ## 8. 2026-09-09 实现门进展
 
-以下组件已经通过独立技术审计：
+以下组件及统一 runner 已经通过真实环境技术审计：
 
 - 候选假设枚举式 task-value estimator；真实故障标签只选择监督单元，不进入部署查询；
 - estimator、优化器、输入归一化和监督 replay 的完整序列化；
 - 三个 arm 参数量一致的 role-graph GRU actor 与 snapshot centralized critic；
 - 32 步、2 环境的时间顺序 replay、回合槽位清零和 8 步 truncated BPTT；
 - gate 强制 option 对应 agent-time 的 actor loss 归因屏蔽；
-- recurrent model、优化器、hidden state 与辅助运行态 checkpoint 恢复。
+- recurrent model、优化器、hidden state 与辅助运行态 checkpoint 恢复；
+- 三个 arm 均完成 64 步 × 2 环境 rollout 和一次有限 PPO 更新；
+- sampled action 与 executed action 双轨保存，外部 option 的 agent-time 不进入 actor loss；
+- 真实 completed episode return 写入 task-value 监督缓存；
+- probe-then-recovery 校准完整覆盖模式 × option 因子设计，且 actor 参数逐位不变；
+- DVOI 查询只读取中继机 deployment-legal actor 局部观测，禁止读取 centralized critic `share_obs`；
+- 固定评价 tape 唯一且与训练 seed 不相交。
 
-这些结果仅证明组件接口和更新路径可执行。技术审计中用于检查 gate 敏感性的 task-value target 是固定合成量，禁止进入性能 pilot。下一道、也是最后一道训练前实现门，是把环境、三 arm、真实 episode-return 监督、belief/gate、rollout、GAE、PPO、fixed tape 和完整 checkpoint 接入同一个 runner，并执行 32–128 步真实环境 checkpoint replay。完成前 `performance_pilot_authorized=false`。
+这些结果证明集成实现和因果归因合同成立，但不证明 DVOI 的任务收益。审计使用的短校准只检查控制流，其 balanced-prior decision relevance 为 false，禁止将其解释为性能失败或成功。下一道科学门是运行冻结的 `0.25M` 公共前缀后校准；只有其通过，才自动进入三个 arm 的 `0.75M` 分叉训练。
