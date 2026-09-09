@@ -1,6 +1,6 @@
 # P3B：belief/gate 与 PPO 归因实现状态
 
-**状态：** `P3B_GATE_AND_VALUE_COMPONENTS_PASS_RUNNER_PENDING`
+**状态：** `P3B_GATE_VALUE_AND_INTEGRATED_RUNNER_PASS`
 
 ## 1. 已实现部分
 
@@ -40,10 +40,11 @@
 
 DVOI 当前接受调用方提供的 `task_values[hypothesis, recovery_action]`。单元测试中的常数只用于验证数学和控制流，**禁止进入性能 pilot**。
 
-正式 pilot 前必须实现 task-value estimator：
+正式 pilot 的 task-value estimator 合同为：
 
 - 训练时可用模拟器故障标签监督候选模式价值，但不得把真实模式输入 actor；
-- 部署时对每个候选模式分别查询价值，再按 belief 计算 DVOI；
+- 部署时仅从中继机合法局部 actor 观测对每个候选模式分别查询价值，再按 belief 计算 DVOI；
+- centralized critic `share_obs`、潜在故障真值和 counterfactual outcome 均不得进入 gate 查询；
 - entropy 与 DVOI arm 必须携带同一估计器、接收同一训练信号，entropy arm 只是不使用其输出做 gate；
 - 估计器、优化器、replay/normalization 状态必须完整序列化；
 - 需要检查估计误差是否足以改变 gate 决策，而不能只报告 MSE。
@@ -52,4 +53,4 @@ DVOI 当前接受调用方提供的 `task_values[hypothesis, recovery_action]`�
 
 独立技术审计在 32 步×2 环境的合成序列上通过，且 task-value estimator 的合成监督误差没有改变 0.50/0.90 两个冻结先验下的 gate 决策。这里的合成 target 只验证可训练性、序列化和决策敏感性，**不是环境任务价值证据，也禁止作为 pilot 输入**。
 
-尚未完成的是统一 outer runner：它必须从真实完整 episode return 形成 estimator 监督，保存 sampled/executed action 双轨迹，计算真实 executed transition 的 critic/GAE，并把三 arm、环境运行态、gate/belief、estimator replay 和所有 RNG 纳入同一 checkpoint。故当前 `performance_pilot_authorized=false`。
+统一 outer runner 已完成并通过真实环境审计：它从真实完整 episode return 形成 estimator 监督，保存 sampled/executed action 双轨迹，使用真实 executed transition 计算 critic/GAE，并把三 arm、环境运行态、gate/belief、estimator replay 和 RNG 纳入 checkpoint。正式执行采用公共前缀—固定策略校准—条件分叉三阶段；只有全部 seed 的校准质量门通过，才授权性能分叉。因此当前 `performance_pilot_authorized=false` 是有意保留的科学质量门，而不是实现缺口。

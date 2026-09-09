@@ -1,0 +1,90 @@
+{
+  "protocol": "ACTIVE-DIAGNOSIS-P3B-INTEGRATED-RUNNER-AUDIT-V1",
+  "verdict": "P3B_INTEGRATED_RUNNER_PASS",
+  "checks": {
+    "three_arms_share_exact_initial_recurrent_parameters": true,
+    "all_three_arms_take_finite_real_environment_ppo_update": true,
+    "all_executed_actions_are_legal": true,
+    "ungated_arm_has_no_external_action_attribution": true,
+    "both_gated_arms_store_distinct_sampled_and_executed_tracks": true,
+    "mid_probe_checkpoint_continuation_is_exact": true,
+    "completed_training_episodes_create_real_return_supervision": true,
+    "fixed_tape_episode_ids_are_unique_and_disjoint_from_training_seeds": true,
+    "calibration_is_explicit_and_not_hidden_in_ppo_budget": true,
+    "probe_then_recovery_calibration_covers_full_factorial_without_actor_update": true,
+    "task_value_gate_uses_relay_local_observation_not_centralized_critic_state": true
+  },
+  "arm_audit": {
+    "recurrent_mappo": {
+      "environment_steps": 128,
+      "illegal_executed_actions": 0,
+      "sampled_executed_difference_count": 0,
+      "externally_controlled_agent_time_count": 0,
+      "finite_update": true,
+      "metrics": {
+        "actor_loss": -0.027076654136180878,
+        "value_loss": 0.5646480917930603,
+        "gradient_norm": 0.25411921739578247,
+        "controlled_fraction": 1.0
+      }
+    },
+    "entropy_probe": {
+      "environment_steps": 128,
+      "illegal_executed_actions": 0,
+      "sampled_executed_difference_count": 48,
+      "externally_controlled_agent_time_count": 48,
+      "finite_update": true,
+      "metrics": {
+        "actor_loss": -0.0328226201236248,
+        "value_loss": 0.45244917273521423,
+        "gradient_norm": 0.36014384031295776,
+        "controlled_fraction": 0.875
+      }
+    },
+    "decision_relevant_probe": {
+      "environment_steps": 128,
+      "illegal_executed_actions": 0,
+      "sampled_executed_difference_count": 88,
+      "externally_controlled_agent_time_count": 88,
+      "finite_update": true,
+      "metrics": {
+        "actor_loss": -0.03282473236322403,
+        "value_loss": 1.6050682067871094,
+        "gradient_norm": 1.0713337659835815,
+        "controlled_fraction": 0.7708333134651184
+      }
+    }
+  },
+  "fixed_tape_sha256": "5dc9e9f5eabb0abe458803d77c131e7076abdfd6c8ba45be372002004db98a32",
+  "real_environment_steps": 1554,
+  "ppo_smoke_updates": 3,
+  "performance_training_started": false,
+  "performance_pilot_authorized": false,
+  "calibration_technical_summary": {
+    "protocol": "ACTIVE-DIAGNOSIS-TASK-VALUE-CALIBRATION-V1",
+    "geometry_seeds": [
+      8211,
+      8212
+    ],
+    "train_geometry_count": 1,
+    "validation_geometry_count": 1,
+    "episodes": 8,
+    "environment_steps": 1128,
+    "final_training_loss": 5.027320384979248,
+    "validation_mean_absolute_error": 5.6832515001297,
+    "validation_gate_decision_agreement": 1.0,
+    "validation_empirical_probe_rate": {
+      "0.5": 0.0,
+      "0.9": 0.0
+    },
+    "validation_predicted_probe_rate": {
+      "0.5": 0.0,
+      "0.9": 0.0
+    },
+    "decision_relevant_balanced_prior_present": false,
+    "ppo_updates": 0,
+    "actor_parameters_changed": false
+  },
+  "remaining_blocker": "full common-prefix task-value calibration must pass before arm-specific training",
+  "automatic_continuation": false
+}
