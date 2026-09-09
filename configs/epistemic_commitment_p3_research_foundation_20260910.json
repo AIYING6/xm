@@ -1,0 +1,138 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P3-RESEARCH-FOUNDATION-V1",
+  "scientific_question": "Can decentralized UAV policies use locally defensible agreement uncertainty to time commitment under delayed, lost, or stale plan acknowledgements?",
+  "one_sentence_thesis": "Epistemic commitment control separates agreement uncertainty from physical control and uses risk-constrained Bayesian option value to choose when to commit, wait for information, or degrade gracefully.",
+  "novelty_boundary": {
+    "not_claimed": [
+      "first delay-aware MARL method",
+      "first policy that waits for messages",
+      "first belief-state reinforcement learning method",
+      "representational impossibility of recurrent policies"
+    ],
+    "candidate_differentiator": [
+      "explicit decentralized plan-consistency hypothesis set",
+      "support-aware commitment admissibility constraint",
+      "Bayesian option value for defer versus graceful fallback",
+      "closed-loop heterogeneous UAV coordination under private acknowledgement mismatch"
+    ],
+    "targeted_prior_art_checked": [
+      "DACOM delay-aware waiting",
+      "belief representation learning for POMDPs",
+      "robust and ambiguity-set POMDP decision making",
+      "value-of-information POMDP planning"
+    ],
+    "exhaustive_search_complete": false
+  },
+  "full_method": {
+    "name": "epistemic_commitment_mappo",
+    "representation": "local plan-consistency hypothesis set with posterior mass",
+    "decision_rule": "maximize posterior expected option value among actions satisfying a frozen support-wise downside constraint",
+    "actions": ["commit", "defer", "fallback"],
+    "claim_scope": "inductive bias, calibration, reliability, and sample efficiency",
+    "implementation_complete": false
+  },
+  "controlled_factorial": {
+    "factor_A": "explicit plan-consistency set representation",
+    "factor_B": "epistemic commitment gate",
+    "cells": [
+      {"method": "recurrent_mappo", "A": false, "B": false},
+      {"method": "point_belief_commitment", "A": false, "B": true},
+      {"method": "information_set_direct_policy", "A": true, "B": false},
+      {"method": "epistemic_commitment_mappo", "A": true, "B": true}
+    ],
+    "matched_controls": [
+      "actor and critic capacity within declared tolerance",
+      "PPO objective and optimizer",
+      "physical environment and reward",
+      "legal execution-time information",
+      "training cells and episode tape",
+      "physical-step budget",
+      "fixed endpoint evaluation"
+    ]
+  },
+  "research_questions": {
+    "RQ1": "Does the full method improve fixed-endpoint task value over recurrent MAPPO?",
+    "RQ2": "Does it reduce unsupported commitment without replacing useful commitment by universal fallback?",
+    "RQ3": "Does explicit consistency representation add value beyond a point-belief gate?",
+    "RQ4": "Does the commitment gate add value beyond feeding the information set directly to a policy?",
+    "RQ5": "Does the learned behavior react to information-set shrinkage and acknowledgement arrival in the predicted direction?",
+    "RQ6": "What computation and decision-delay costs accompany the method?"
+  },
+  "endpoints": {
+    "primary": "per-seed mean task_value over the five frozen training-support evaluation cells",
+    "reliability_secondary": [
+      "unsupported_corridor_entry_rate",
+      "joint_task_success_rate",
+      "timeout_rate",
+      "graceful_fallback_completion_rate",
+      "recovery_after_mismatch_rate"
+    ],
+    "safety_separate": [
+      "collision_rate",
+      "constraint_violation_rate",
+      "energy_cost"
+    ],
+    "mechanism": [
+      "false_commit_rate_when_no_current_shared_plan",
+      "missed_commit_opportunity_rate_when_current_shared_plan",
+      "ack_responsive_action_switch_rate",
+      "information_set_coverage",
+      "information_set_width_before_and_after_ack",
+      "oracle_regret_on_observation_equivalent_pairs",
+      "defer_to_commit_or_fallback_transition_rate"
+    ],
+    "exploratory_only": [
+      "performance on the two compositional heldout cells",
+      "per-episode subgroup effects"
+    ]
+  },
+  "statistics": {
+    "independent_unit": "training_seed",
+    "pairing": "same training seeds and evaluation tapes across all four cells",
+    "planned_confirmatory_seeds": 8,
+    "primary_contrasts": [
+      "epistemic_commitment_mappo minus recurrent_mappo",
+      "epistemic_commitment_mappo minus point_belief_commitment",
+      "epistemic_commitment_mappo minus information_set_direct_policy"
+    ],
+    "reporting": [
+      "paired seed differences",
+      "mean and median paired effect",
+      "minimum and maximum paired effect",
+      "confidence interval",
+      "exact paired randomization test",
+      "Holm correction across three frozen primary contrasts"
+    ],
+    "episodes_are_not_independent_replicates": true,
+    "seed_extension_after_results_forbidden": true
+  },
+  "staging": {
+    "Q1": "three-seed recurrent-MAPPO task learnability pilot",
+    "Q2": "one-seed technical integration smoke for all four methods",
+    "Q3": "eight paired confirmatory seeds only after Q1 and Q2 pass",
+    "formal_budget_rule": "derive a fixed endpoint from blinded Q1 learning-curve maturity; do not inherit 10M by convention"
+  },
+  "pretraining_gates": [
+    "q0_environment_correct",
+    "q0b_decision_relevant_information_gap",
+    "novelty_search_complete",
+    "full_method_math_frozen",
+    "all_four_methods_implemented",
+    "capacity_and_information_controls_audited",
+    "primary_endpoint_frozen",
+    "mechanism_metrics_frozen",
+    "statistical_plan_frozen",
+    "exact_resume_and_tape_replay_audited",
+    "Q1_baseline_learnability_pass",
+    "Q2_four_method_integration_pass"
+  ],
+  "interpretation_matrix": {
+    "full_beats_baseline_but_not_ablations": "task benefit supported; proposed mechanism decomposition unresolved",
+    "set_only_matches_full": "explicit representation may help; commitment gate necessity unsupported",
+    "point_gate_matches_full": "commitment control may help; set representation necessity unsupported",
+    "all_methods_match": "no empirical incremental value under the frozen task and budget",
+    "task_value_rises_but_unsupported_commit_rises": "performance-reliability tradeoff; no robustness or safety superiority claim",
+    "full_improves_primary_and_both_module_contrasts": "full mechanism supported within the frozen task family"
+  },
+  "training_authorized": false
+}

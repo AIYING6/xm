@@ -1,0 +1,27 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P3-RESEARCH-FOUNDATION-AUDIT-V1",
+  "verdict": "P3_FOUNDATION_BLOCKS_TRAINING_PENDING_NOVELTY_AND_METHOD_FREEZE",
+  "checks": {
+    "q0_environment_correct": true,
+    "q0b_decision_relevant_information_gap": true,
+    "novelty_claim_excludes_known_delay_and_belief_claims": true,
+    "novelty_search_complete": false,
+    "full_method_math_frozen": false,
+    "factorial_cells_complete": true,
+    "primary_endpoint_single_and_frozen": true,
+    "reliability_and_safety_separated": true,
+    "mechanism_metrics_predeclared": true,
+    "seed_is_independent_unit": true,
+    "paired_factorial_and_multiplicity_plan_frozen": true,
+    "post_result_seed_extension_forbidden": true,
+    "budget_not_inherited_from_10m": true,
+    "interpretation_outcomes_predeclared": true,
+    "scientific_training_locked": true
+  },
+  "blocking_items": [
+    "novelty_search_complete",
+    "full_method_math_frozen"
+  ],
+  "training_started": false,
+  "next_authorized_action": "freeze novelty map and full method mathematics; implement four controlled cells; do not run Q1 yet"
+}
