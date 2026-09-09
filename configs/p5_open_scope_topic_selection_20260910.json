@@ -1,6 +1,6 @@
 {
   "protocol": "P5-OPEN-SCOPE-STRONG-Q2-TOPIC-SELECTION-V1",
-  "status": "P5A_STOP_P5B_Q0_ACTIVE",
+  "status": "P5_CLOSED_P6_PROBLEM_DISCOVERY_REQUIRED",
   "scope_constraints": {
     "communication_required": false,
     "topology_required": false,
@@ -31,7 +31,7 @@
     "id": "P5-B",
     "name": "task_level_coordination_recoverability",
     "communication_specific": false,
-    "status": "Q0_ACTIVE",
+    "status": "STOP_REDUCIBLE_TO_ROBUST_REACHABILITY_AND_CONTINGENCY_PLANNING",
     "novelty_claimed": false
   },
   "deprioritized_families": [
@@ -43,8 +43,8 @@
     "post_failure_connectivity_restoration"
   ],
   "next_authorized_actions": [
-    "P5-B-Q0 nearest-neighbor full-text audit across viability, contingency planning, option preservation, resilient control, and multi-agent task allocation",
-    "P5-B-Q0 analytical non-communication counterexample only"
+    "P6 zero-training problem discovery across changing task specifications, latent capability degradation, and cross-timescale uncertainty",
+    "No method naming, implementation, or training until a problem family passes nearest-neighbor and identifiability gates"
   ],
   "prohibited_until_q0_pass": [
     "learning implementation",

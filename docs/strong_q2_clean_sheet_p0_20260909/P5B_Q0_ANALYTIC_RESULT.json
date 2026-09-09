@@ -1,0 +1,45 @@
+{
+  "protocol": "P5-B-TASK-RECOVERABILITY-Q0-V1",
+  "verdict": "P5B_DISTINCT_FROM_NARROW_SAFETY_BUT_REDUCIBLE_TO_ROBUST_REACHABILITY",
+  "training_started": false,
+  "states": {
+    "reserve_preserved": {
+      "energies": [
+        2,
+        2
+      ],
+      "communication_complete": true,
+      "immediate_safe": true,
+      "nominal_task_feasible": true,
+      "failure_completion": {
+        "agent0_fails": true,
+        "agent1_fails": true
+      },
+      "recoverability_fraction": 1.0,
+      "robust_goal_reachable": true
+    },
+    "reserve_depleted": {
+      "energies": [
+        2,
+        1
+      ],
+      "communication_complete": true,
+      "immediate_safe": true,
+      "nominal_task_feasible": true,
+      "failure_completion": {
+        "agent0_fails": false,
+        "agent1_fails": true
+      },
+      "recoverability_fraction": 0.5,
+      "robust_goal_reachable": false
+    }
+  },
+  "checks": {
+    "same_connectivity": true,
+    "same_immediate_safety": true,
+    "same_nominal_feasibility": true,
+    "different_task_recoverability": true,
+    "recoverability_equals_failure_conditioned_goal_reachability": true
+  },
+  "interpretation": "Task recoverability is not connectivity or immediate safety, but in this finite construction it is a goal-conditioned robust reachability quantity."
+}
