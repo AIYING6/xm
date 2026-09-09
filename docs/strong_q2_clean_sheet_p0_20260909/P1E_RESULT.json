@@ -1,0 +1,1542 @@
+{
+  "protocol": "EPISTEMIC-COMMITMENT-P1E-TRAINABLE-CONTRACT-AUDIT-V1",
+  "verdict": "P1E_TRAINABLE_CONTRACT_AUDIT_PASS",
+  "checks": {
+    "standard_interface_shapes_exact": true,
+    "cue_stage_contains_no_delivery_leak": true,
+    "decision_stage_sender_observation_matched": true,
+    "decision_stage_receiver_observation_private": true,
+    "decision_stage_relay_observation_matched": true,
+    "adaptive_script_beats_all_constant_modes": true,
+    "no_constant_mode_dominates_task": true,
+    "endpoint_values_reconstruct_from_telemetry": true,
+    "success_failure_and_degradation_endpoints_covered": true,
+    "fixed_tape_size_exact": true,
+    "training_seeds_fresh_and_exact": true,
+    "physical_safety_telemetry_present": true
+  },
+  "training_seeds": [
+    98101,
+    98102,
+    98103
+  ],
+  "evaluation_tape": [
+    {
+      "episode_id": 910000,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910001,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910002,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910003,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910004,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910005,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910006,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910007,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910008,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910009,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910010,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910011,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910012,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910013,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910014,
+      "context": "low",
+      "delivered": true
+    },
+    {
+      "episode_id": 910015,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910016,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910017,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910018,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910019,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910020,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910021,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910022,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910023,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910024,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910025,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910026,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910027,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910028,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910029,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910030,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910031,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910032,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910033,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910034,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910035,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910036,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910037,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910038,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910039,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910040,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910041,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910042,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910043,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910044,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910045,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910046,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910047,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910048,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910049,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910050,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910051,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910052,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910053,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910054,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910055,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910056,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910057,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910058,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910059,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910060,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910061,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910062,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910063,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910064,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910065,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910066,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910067,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910068,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910069,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910070,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910071,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910072,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910073,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910074,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910075,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910076,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910077,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910078,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910079,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910080,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910081,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910082,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910083,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910084,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910085,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910086,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910087,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910088,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910089,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910090,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910091,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910092,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910093,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910094,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910095,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910096,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910097,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910098,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910099,
+      "context": "low",
+      "delivered": false
+    },
+    {
+      "episode_id": 910100,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910101,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910102,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910103,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910104,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910105,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910106,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910107,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910108,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910109,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910110,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910111,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910112,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910113,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910114,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910115,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910116,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910117,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910118,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910119,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910120,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910121,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910122,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910123,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910124,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910125,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910126,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910127,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910128,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910129,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910130,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910131,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910132,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910133,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910134,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910135,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910136,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910137,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910138,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910139,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910140,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910141,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910142,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910143,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910144,
+      "context": "middle",
+      "delivered": true
+    },
+    {
+      "episode_id": 910145,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910146,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910147,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910148,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910149,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910150,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910151,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910152,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910153,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910154,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910155,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910156,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910157,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910158,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910159,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910160,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910161,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910162,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910163,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910164,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910165,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910166,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910167,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910168,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910169,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910170,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910171,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910172,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910173,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910174,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910175,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910176,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910177,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910178,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910179,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910180,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910181,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910182,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910183,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910184,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910185,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910186,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910187,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910188,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910189,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910190,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910191,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910192,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910193,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910194,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910195,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910196,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910197,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910198,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910199,
+      "context": "middle",
+      "delivered": false
+    },
+    {
+      "episode_id": 910200,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910201,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910202,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910203,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910204,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910205,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910206,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910207,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910208,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910209,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910210,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910211,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910212,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910213,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910214,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910215,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910216,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910217,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910218,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910219,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910220,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910221,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910222,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910223,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910224,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910225,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910226,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910227,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910228,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910229,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910230,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910231,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910232,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910233,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910234,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910235,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910236,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910237,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910238,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910239,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910240,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910241,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910242,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910243,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910244,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910245,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910246,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910247,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910248,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910249,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910250,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910251,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910252,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910253,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910254,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910255,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910256,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910257,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910258,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910259,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910260,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910261,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910262,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910263,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910264,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910265,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910266,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910267,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910268,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910269,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910270,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910271,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910272,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910273,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910274,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910275,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910276,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910277,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910278,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910279,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910280,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910281,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910282,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910283,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910284,
+      "context": "high",
+      "delivered": true
+    },
+    {
+      "episode_id": 910285,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910286,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910287,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910288,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910289,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910290,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910291,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910292,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910293,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910294,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910295,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910296,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910297,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910298,
+      "context": "high",
+      "delivered": false
+    },
+    {
+      "episode_id": 910299,
+      "context": "high",
+      "delivered": false
+    }
+  ],
+  "scripted_mean_task_value": {
+    "adaptive_script": 4.033333333333333,
+    "always_commit": 0.7,
+    "always_defer": 2.933333333333333,
+    "always_fallback": 2.0
+  },
+  "covered_endpoints": [
+    "compatible_bilateral_commitment",
+    "coordinated_defer",
+    "graceful_fallback",
+    "incompatible_or_unilateral_commitment"
+  ],
+  "evidence_boundary": "This zero-training audit establishes interface, information-boundary, endpoint, and non-dominance contracts. It does not establish neural-policy learnability, calibration, or method advantage.",
+  "training_started": false,
+  "training_environment_steps": 0,
+  "diagnostic_physics_steps": 19200,
+  "ppo_updates": 0
+}
