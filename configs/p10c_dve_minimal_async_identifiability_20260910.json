@@ -1,0 +1,19 @@
+{
+  "protocol": "P10C-DVE-MINIMAL-ASYNC-IDENTIFIABILITY-V1",
+  "latency_ms": [20, 80],
+  "state_drift": [0.5, 1.5, 2.5, 3.5],
+  "task_relevant": [false, true],
+  "corridor_reserved": [false, true],
+  "validity_drift_limit": 2.0,
+  "hard_safety_drift_limit": 3.0,
+  "fixed_ttl_ms": 50,
+  "minimum_validity_fork_fraction": 0.2,
+  "policies": [
+    "naive_accept",
+    "always_fallback",
+    "fixed_ttl",
+    "current_state_safety_shield",
+    "dve_oracle"
+  ],
+  "training_authorized": false
+}

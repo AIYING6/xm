@@ -1,0 +1,48 @@
+{
+  "protocol": "P10C-DVE-MINIMAL-ASYNC-IDENTIFIABILITY-V1",
+  "verdict": "P10C_TASK_IDENTIFIABILITY_PASS",
+  "case_count": 32,
+  "same_latency_pair_count": 240,
+  "validity_fork_pair_count": 56,
+  "validity_fork_fraction": 0.23333333333333334,
+  "policy_summary": {
+    "naive_accept": {
+      "mean_team_value": -4.0,
+      "stale_accept_rate": 0.875,
+      "joint_conflict_rate": 0.5
+    },
+    "always_fallback": {
+      "mean_team_value": 4.0,
+      "stale_accept_rate": 0.0,
+      "joint_conflict_rate": 0.0
+    },
+    "fixed_ttl": {
+      "mean_team_value": 0.0,
+      "stale_accept_rate": 0.4375,
+      "joint_conflict_rate": 0.25
+    },
+    "current_state_safety_shield": {
+      "mean_team_value": 3.5,
+      "stale_accept_rate": 0.25,
+      "joint_conflict_rate": 0.0
+    },
+    "dve_oracle": {
+      "mean_team_value": 4.625,
+      "stale_accept_rate": 0.0,
+      "joint_conflict_rate": 0.0
+    }
+  },
+  "checks": {
+    "standard_env_interface_smoke": true,
+    "validity_fork_fraction_at_least_threshold": true,
+    "naive_async_not_global_collapse": true,
+    "always_fallback_not_optimal": true,
+    "dve_beats_fixed_ttl": true,
+    "dve_beats_safety_shield": true,
+    "dve_has_zero_stale_accepts": true,
+    "training_started": false
+  },
+  "scope": "task identifiability only; baseline learnability remains untested",
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
