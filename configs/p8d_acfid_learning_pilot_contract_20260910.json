@@ -1,6 +1,6 @@
 {
   "protocol": "P8D-ACFID-LEARNING-PILOT-CONTRACT-V1",
-  "status": "SHORT_PILOT_STOP_TRAIN_SUPPORT_CANNOT_IDENTIFY_COMPOSITIONAL_ADVANTAGE",
+  "status": "ACFID_CANDIDATE_STOP_NO_DECISION_RELEVANT_DEVELOPMENT_GAIN",
   "task": "two-level heterogeneous 6-UAV recovery: fixed role controllers plus a learned team-level recovery option policy",
   "primitive_fault_count": 6,
   "recovery_actions": ["continue", "role_reassign", "relay_reposition", "target_reassign", "safe_abort"],
@@ -38,5 +38,5 @@
     "held-out combinations in checkpoint selection", "pair identity lookup embeddings", "post-outcome fault features"
   ],
   "training_authorized": false,
-  "next_gate": "P8I_THREE_WAY_COMBINATION_SPLIT_FREEZE"
+  "next_gate": "REAL_TASK_DECISION_RELEVANT_COMPOUND_EFFECT_AUDIT_BEFORE_ANY_METHOD_REDESIGN"
 }
