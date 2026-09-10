@@ -1,6 +1,6 @@
 {
   "protocol": "P10-DECISION-VALIDITY-CONTRACT-TOPIC-GATE-V1",
-  "status": "DVE_NEAREST_NEIGHBOR_CONDITIONAL_PASS",
+  "status": "DVE_ANALYTIC_COUNTEREXAMPLES_PASS",
   "working_title": "Decision-Validity Envelopes for Multi-UAV Coordination under Stochastic Computation Latency",
   "scientific_object": "action-specific state-time validity under observation-computation-actuation mismatch",
   "primary_intervention": "runtime accept-or-fallback semantics based on a learned action validity set",
@@ -36,6 +36,14 @@
     "renamed_from": "Decision-Validity Contract",
     "renamed_to": "Decision-Validity Envelope"
   },
-  "next_gate": "P10B_ANALYTIC_COUNTEREXAMPLES_AND_ORACLES",
+  "p10b_result": {
+    "verdict": "PASS",
+    "same_delay_different_validity_gain": 4.0,
+    "task_validity_over_safety_shield_gain": 5.0,
+    "joint_compatibility_over_independent_admission_gain": 18.0,
+    "future_information_used": false,
+    "training_started": false
+  },
+  "next_gate": "P10C_MINIMAL_ASYNC_TASK_IDENTIFIABILITY",
   "training_authorized": false
 }
