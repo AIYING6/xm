@@ -1,0 +1,29 @@
+{
+  "protocol": "P11C-EMBODIED-REVELATION-IDENTIFIABILITY-V1",
+  "description": "Zero-training frozen factorial audit of physically executed noisy requirement revelation before scarce-specialist commitment.",
+  "current_task_value": [8.0, 12.0],
+  "future_task_value": [6.0, 10.0, 14.0],
+  "specialist_required_prior": [0.2, 0.5, 0.8],
+  "scout_to_current_distance": [1.0, 3.0],
+  "specialist_to_current_distance": [2.0, 4.0],
+  "specialist_to_future_distance": [3.0, 6.0],
+  "current_deadline": [5.0, 8.0],
+  "future_deadline": 10.0,
+  "scout_speed": 1.0,
+  "specialist_speed": 1.0,
+  "inspection_dwell": 0.5,
+  "inspection_accuracy": 0.85,
+  "inspection_energy_cost": 0.5,
+  "exogenous_revelation_delay": 3.0,
+  "staging_fractions": [0.0, 0.5, 1.0],
+  "gates": {
+    "minimum_active_optimal_fraction": 0.08,
+    "maximum_active_optimal_fraction": 0.65,
+    "minimum_mean_gain_over_best_nonactive": 0.20,
+    "minimum_case_fraction_beating_best_nonactive": 0.10,
+    "minimum_geometry_induced_action_fork_fraction": 0.05,
+    "minimum_noisy_signal_decision_flip_fraction": 0.05,
+    "maximum_fraction_infeasible_before_deadline": 0.70
+  },
+  "training_authorized": false
+}

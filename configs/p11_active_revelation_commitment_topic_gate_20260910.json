@@ -1,6 +1,6 @@
 {
   "protocol": "P11-ACTIVE-REVELATION-COMMITMENT-TOPIC-GATE-V1",
-  "status": "P11A_ANALYTIC_PASS_NOVELTY_AUDIT_REQUIRED",
+  "status": "P11_TOPIC_STOPPED_AT_P11C",
   "working_title": "Active Requirement Revelation before Coalition Commitment in Heterogeneous Multi-UAV Missions",
   "scientific_object": "joint information acquisition and scarce-capability commitment under latent task requirements",
   "primary_question": "when should a UAV team inspect an uncertain task before committing a scarce specialist whose use removes future mission options",
@@ -29,6 +29,30 @@
     "oracle_gain_over_best_constant": 1.386666666666665,
     "training_started": false
   },
-  "next_gate": "P11B_DIRECT_ISOMORPHIC_NEIGHBOR_AUDIT",
+  "p11b_result": {
+    "verdict": "CONDITIONAL_PASS",
+    "closest_neighbor": "AURA: Uncertainty-Aware Multi-Robot Task Allocation With Strongly Coupled Inter-Robot Rewards",
+    "covered_not_novel": [
+      "uncertain capability requirements",
+      "scarce specialist opportunity cost",
+      "delayed requirement confirmation",
+      "proactive specialist positioning",
+      "coupled mission-value optimization"
+    ],
+    "remaining_candidate_delta": "embodied active revelation is a selectable costly action that changes belief before coalition commitment",
+    "training_started": false
+  },
+  "p11c_result": {
+    "verdict": "STOP",
+    "case_count": 288,
+    "active_optimal_fraction": 0.0,
+    "mean_active_gain_over_best_nonactive": -0.9430555555555564,
+    "active_positive_gain_case_fraction": 0.0,
+    "geometry_induced_action_fork_fraction": 0.25,
+    "noisy_signal_decision_flip_fraction": 0.24305555555555555,
+    "reason": "embodied active revelation changes information and decisions but never improves value over the strongest non-active policy under the frozen audit",
+    "training_started": false
+  },
+  "next_gate": null,
   "training_authorized": false
 }

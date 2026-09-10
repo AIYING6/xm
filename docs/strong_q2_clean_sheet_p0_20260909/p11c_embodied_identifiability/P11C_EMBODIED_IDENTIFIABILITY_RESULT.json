@@ -1,0 +1,31 @@
+{
+  "protocol": "P11C-EMBODIED-REVELATION-IDENTIFIABILITY-V1",
+  "verdict": "P11C_EMBODIED_IDENTIFIABILITY_STOP",
+  "case_count": 288,
+  "best_policy_counts": {
+    "aura_style": 126,
+    "reserve": 156,
+    "commit": 6
+  },
+  "best_policy_fractions": {
+    "aura_style": 0.4375,
+    "reserve": 0.5416666666666666,
+    "commit": 0.020833333333333332
+  },
+  "mean_active_gain_over_best_nonactive": -0.9430555555555564,
+  "active_positive_gain_case_fraction": 0.0,
+  "geometry_induced_action_fork_fraction": 0.25,
+  "noisy_signal_decision_flip_fraction": 0.24305555555555555,
+  "active_deadline_infeasible_fraction": 0.375,
+  "checks": {
+    "active_has_nontrivial_optimal_region": false,
+    "active_mean_gain_over_nonactive": false,
+    "active_beats_nonactive_in_enough_cases": false,
+    "geometry_changes_optimal_action": true,
+    "noisy_observation_changes_commitment": true,
+    "active_not_mostly_deadline_infeasible": true
+  },
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
