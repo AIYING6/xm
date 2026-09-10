@@ -1,0 +1,39 @@
+{
+  "protocol": "P8H-ACFID-SHORT-LEARNING-PILOT-V1",
+  "status": "FROZEN_BEFORE_EXECUTION",
+  "seeds": [98611, 98612, 98613],
+  "train_pairs": [
+    ["sense_0", "relay_0"], ["sense_1", "relay_1"],
+    ["relay_0", "act_0"], ["relay_1", "act_1"],
+    ["sense_0", "act_1"], ["sense_1", "act_0"]
+  ],
+  "updates": 32,
+  "rollout_samples_per_update": 96,
+  "ppo_epochs": 2,
+  "learning_rate": 0.0003,
+  "clip_ratio": 0.2,
+  "value_coef": 0.5,
+  "entropy_coef": 0.01,
+  "gradient_norm_max": 1.0,
+  "validation_cases_per_fault_set": 8,
+  "methods": {
+    "direct_fault_aware": {"hidden": 100},
+    "additive": {"hidden": 81},
+    "acfid": {"hidden": 64}
+  },
+  "pass_rules": {
+    "minimum_seeds_with_regret_reduction_per_method": 2,
+    "minimum_relative_regret_reduction": 0.05,
+    "minimum_final_entropy": 0.15,
+    "minimum_acfid_interaction_gradient_norm": 1e-7,
+    "acfid_additive_noninferiority_margin": 0.05,
+    "minimum_acfid_noninferior_seeds": 2
+  },
+  "data_boundary": {
+    "training": "nominal + all singles + six frozen training pairs",
+    "validation": "same fault support with disjoint context/noise seeds",
+    "sealed_test": "all remaining pairs plus all triples and quadruples"
+  },
+  "decision_scope": "optimization qualification only; no held-out performance claim",
+  "full_1m_training_authorized": false
+}
