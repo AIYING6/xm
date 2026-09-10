@@ -1,0 +1,21 @@
+{
+  "protocol": "P8B-ACFID-SHARED-INTERACTION-GATE-V1",
+  "parent_protocol": "P8-ACFID-P0-INTERACTION-GATE-V1",
+  "seed": 98101,
+  "contexts": 240,
+  "noise_rollouts_per_action": 64,
+  "training_pairs": [
+    ["sense_0", "relay_0"], ["relay_0", "act_0"], ["sense_1", "act_1"],
+    ["sense_0", "relay_1"], ["relay_0", "act_1"], ["act_0", "sense_1"]
+  ],
+  "ridge": 0.001,
+  "thresholds": {
+    "heldout_pair_mae_gain_over_additive_min": 0.10,
+    "heldout_pair_regret_gain_over_additive_min": 0.10,
+    "heldout_pair_regret_gain_over_type_only_min": 0.03,
+    "higher_order_regret_ratio_max": 1.05
+  },
+  "prohibited_changes": ["environment", "fault sets", "train-test split", "P0 thresholds", "reward", "recovery actions"],
+  "diagnostic_only": true,
+  "training_authorized": false
+}

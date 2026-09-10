@@ -85,8 +85,24 @@ class ACFIDCompoundFaultEnv:
         return float(np.sum(weighted) + mission_bonus - timeout_penalty - cost)
 
     def q_values(self, context: RecoveryContext, faults: frozenset[str], noise_bank: np.ndarray) -> dict[str, float]:
-        return {action: float(np.mean([self.value(context, faults, action, noise) for noise in noise_bank]))
-                for action in ACTIONS}
+        output: dict[str, float] = {}
+        for action in ACTIONS:
+            if action == "safe_abort":
+                output[action] = 0.18 - 0.015 * len(faults)
+                continue
+            sensing, relay, act = self._degraded_capacities(faults); cost = 0.0
+            if action == "role_reassign":
+                sensing = np.minimum(1.0, sensing + context.reserve * max(sensing)); cost = 0.12
+            elif action == "relay_reposition":
+                relay = np.minimum(1.0, relay + context.cross_link * relay[::-1]); cost = 0.15
+            elif action == "target_reassign":
+                preliminary = np.minimum(np.minimum(sensing, relay), act) * np.asarray(context.urgency)
+                chosen = int(np.argmax(preliminary)); act[:] = 0.0; act[chosen] = min(1.0, 0.72 + context.reserve); cost = 0.10
+            delivered = np.clip(noise_bank * np.minimum(np.minimum(sensing, relay), act), 0.0, 1.0)
+            weighted = delivered * np.asarray(context.demand) * np.asarray(context.urgency)
+            values = np.sum(weighted, axis=1) + 0.42 * np.all(weighted >= 0.48, axis=1) - 0.18 * np.sum(weighted < 0.48, axis=1) - cost
+            output[action] = float(np.mean(values))
+        return output
 
     @classmethod
     def dependency_distance(cls, first: str, second: str) -> int:

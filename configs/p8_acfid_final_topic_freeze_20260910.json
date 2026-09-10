@@ -1,12 +1,12 @@
 {
   "protocol": "P8-ACFID-FINAL-TOPIC-FREEZE-V1",
-  "status": "P0_STOP_LOW_ORDER_ZERO_SHOT_GENERALIZATION_NOT_SUPPORTED",
+  "status": "P0B_SHARED_INTERACTION_PASS_STRESS_AUDIT_REQUIRED",
   "title_zh": "面向未见组合故障的异构多无人机零样本协同恢复：动作条件故障交互分解",
   "title_en": "Action-Conditioned Fault-Interaction Decomposition for Zero-Shot Cooperative Recovery under Unseen Compound Failures in Heterogeneous Multi-UAV Teams",
   "acronym": "ACFID",
   "target": "STRONG_Q2_WITH_Q1_UPSIDE",
   "core_question": "Can action-conditioned low-order fault interactions learned from nominal, single-fault, and selected pair-fault cases support zero-shot recovery decisions for held-out compound failures?",
-  "single_core_innovation": "factor recovery-action value by primitive-fault main effects and action-conditioned fault interactions, then use a preregistered task-dependency graph to regularize—not define—the interaction support",
+  "single_core_innovation": "predict recovery-action-conditioned fault interactions with parameters shared across fault types, task branches, and mission contexts; use a preregistered task-dependency graph to regularize—not define—the interaction support",
   "fault_observability": {
     "scope": "recovery_after_fault_detection",
     "decision_input": "causally available degraded subsystem indicators and local mission state",
@@ -75,5 +75,5 @@
   ],
   "supersedes_main_topic": "P7-TCARC",
   "training_authorized": false,
-  "next_action": "DO_NOT_START_9M_PILOT; ARCHIVE_AS_NEGATIVE_TOPIC_FEASIBILITY_RESULT"
+  "next_action": "RUN_MULTI_SPLIT_MULTI_CONTEXT_P0C_STRESS_AUDIT_BEFORE_ANY_RL"
 }
