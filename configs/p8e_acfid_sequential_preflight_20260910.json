@@ -1,0 +1,21 @@
+{
+  "protocol": "P8E-ACFID-SEQUENTIAL-RECOVERY-PREFLIGHT-V1",
+  "seed": 98301,
+  "contexts": 400,
+  "train_pairs": [
+    ["sense_0","relay_0"],["relay_0","act_0"],["sense_1","act_1"],
+    ["sense_0","relay_1"],["relay_0","act_1"],["sense_1","act_0"]
+  ],
+  "train_support": "nominal + all singles + listed pairs",
+  "validation_support": "same combination support as training with disjoint context seeds",
+  "test_support": "all unlisted pairs + all triples + all quadruples",
+  "thresholds": {
+    "minimum_optimal_action_fraction": 0.01,
+    "single_value_min": 0.35,
+    "single_value_max": 2.4,
+    "test_success_min": 0.05,
+    "test_success_max": 0.95,
+    "action_effect_min": 0.05
+  },
+  "training_authorized": false
+}
