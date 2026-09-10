@@ -1,0 +1,22 @@
+{
+  "protocol": "P8J-REAL-V31-COMPOUND-DECISION-RELEVANCE-AUDIT-V1",
+  "status": "FROZEN_BEFORE_EXECUTION",
+  "environment": "SustainedSupportTopologyV31UAVEnv",
+  "seeds": [98801, 98802, 98803],
+  "deadline_steps": 6,
+  "comm_dropout": 0.05,
+  "fault_transition": 2,
+  "primitive_edges": [
+    [0, 2], [0, 3], [1, 2], [1, 3],
+    [2, 4], [2, 5], [3, 4], [3, 5]
+  ],
+  "thresholds": {
+    "minimum_decision_relevant_pair_fraction": 0.20,
+    "minimum_median_additive_action_regret": 0.02,
+    "minimum_recoverable_pair_fraction": 0.10,
+    "maximum_recoverable_pair_fraction": 0.90,
+    "decision_relevant_regret": 0.02
+  },
+  "training_authorized": false,
+  "policy_training_started": false
+}
