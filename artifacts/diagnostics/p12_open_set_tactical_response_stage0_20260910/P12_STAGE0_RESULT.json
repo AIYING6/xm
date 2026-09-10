@@ -1,0 +1,49 @@
+{
+  "protocol": "P12-OPEN-SET-TACTICAL-RESPONSE-STAGE0-V1",
+  "verdict": "P12_STAGE0_STOP",
+  "case_count": 1536,
+  "best_by_tactic": {
+    "left_mass": {
+      "response": "split_screen",
+      "value": 0.5256410256410257,
+      "margin": 0.0
+    },
+    "right_mass": {
+      "response": "split_screen",
+      "value": 0.5256410256410257,
+      "margin": 0.0
+    },
+    "split_raid": {
+      "response": "split_screen",
+      "value": 0.8461538461538461,
+      "margin": 0.05341880341880345
+    },
+    "feint_switch": {
+      "response": "split_screen",
+      "value": 0.5256410256410257,
+      "margin": 0.0
+    }
+  },
+  "distinct_best_responses": 1,
+  "single_response_dominance": 1.0,
+  "oracle_mean": 0.6057692307692307,
+  "best_static_mean": 0.6057692307692307,
+  "oracle_gain": 0.0,
+  "static_response_values": {
+    "left_screen": 0.4743589743589744,
+    "right_screen": 0.4743589743589744,
+    "split_screen": 0.6057692307692307,
+    "mobile_reserve": 0.5924145299145299
+  },
+  "nonterminal_prefix_fraction": 1.0,
+  "checks": {
+    "response_library_complementary": false,
+    "no_universal_response": false,
+    "oracle_headroom_sufficient": false,
+    "best_response_margins_sufficient": false,
+    "decision_occurs_before_outcome": true
+  },
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}

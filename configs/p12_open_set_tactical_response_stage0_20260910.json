@@ -1,0 +1,41 @@
+{
+  "protocol": "P12-OPEN-SET-TACTICAL-RESPONSE-STAGE0-V1",
+  "status": "DEVELOPMENT_STAGE0_STOP_UNIVERSAL_SPLIT_SCREEN",
+  "working_title": "Behavior-Conditioned Tactical Response Selection for Open-Set Multi-UAV Adversarial Missions",
+  "task": "3v3 dual-objective defense and interception",
+  "scientific_scope": "team-level tactical response selection without test-time gradient updates",
+  "horizon_steps": 140,
+  "decision_step": 32,
+  "scenario_count": 96,
+  "red_tactics": ["left_mass", "right_mass", "split_raid", "feint_switch"],
+  "blue_responses": ["left_screen", "right_screen", "split_screen", "mobile_reserve"],
+  "shared_rules": {
+    "blue_speed": 0.021,
+    "red_speed": 0.017,
+    "intercept_radius": 0.052,
+    "objective_radius": 0.055,
+    "objective_value": 0.35,
+    "red_removal_value": 0.20,
+    "blue_survival_value": 0.10
+  },
+  "information_boundary": {
+    "visible": ["own_team_kinematics", "opponent_kinematics", "alive_masks", "objective_status", "time"],
+    "hidden": ["red_tactic_label", "future_red_actions", "counterfactual_outcomes"]
+  },
+  "gates": {
+    "minimum_distinct_best_responses": 3,
+    "maximum_single_response_dominance": 0.60,
+    "minimum_oracle_gain_over_best_static": 0.08,
+    "minimum_best_response_margin": 0.04,
+    "minimum_tactics_with_margin": 3,
+    "minimum_nonterminal_prefix_fraction": 0.95
+  },
+  "result": {
+    "verdict": "P12_STAGE0_STOP",
+    "distinct_best_responses": 1,
+    "single_response_dominance": 1.0,
+    "oracle_gain_over_best_static": 0.0,
+    "blocking_cause": "shared symmetric contact exchange makes split_screen universally optimal"
+  },
+  "training_authorized": false
+}
