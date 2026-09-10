@@ -1,0 +1,25 @@
+{
+  "protocol": "P8-ACFID-P0-INTERACTION-GATE-V1",
+  "seed": 98101,
+  "contexts": 240,
+  "noise_rollouts_per_action": 64,
+  "primitive_faults": ["sense_0", "sense_1", "relay_0", "relay_1", "act_0", "act_1"],
+  "training_pairs": [
+    ["sense_0", "relay_0"], ["relay_0", "act_0"], ["sense_1", "act_1"],
+    ["sense_0", "relay_1"], ["relay_0", "act_1"], ["act_0", "sense_1"]
+  ],
+  "heldout_pairs": "all remaining pairs",
+  "heldout_higher_order": "all triples and quadruples",
+  "thresholds": {
+    "G1_single_optimal_value_min": 0.35,
+    "G1_single_optimal_value_max": 2.4,
+    "G2_min_pairs": 3,
+    "G2_interaction_abs_min": 0.08,
+    "G3_min_pairs": 3,
+    "G4_relative_mae_reduction_min": 0.10,
+    "G5_relative_regret_reduction_min": 0.10,
+    "G6_same_branch_excess_min": 0.03
+  },
+  "diagnostic_only": true,
+  "training_authorized": false
+}
