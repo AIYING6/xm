@@ -1,0 +1,50 @@
+{
+  "protocol": "P8I-ACFID-THREE-WAY-COMPOSITIONAL-PILOT-V1",
+  "status": "FROZEN_BEFORE_EXECUTION",
+  "split_rule": "ascending SHA256 of P8I-20260910|<faults in registry order>; first four unseen pairs are development",
+  "split_salt": "P8I-20260910",
+  "training_pairs": [
+    ["sense_0", "relay_0"], ["sense_1", "relay_1"],
+    ["relay_0", "act_0"], ["relay_1", "act_1"],
+    ["sense_0", "act_1"], ["sense_1", "act_0"]
+  ],
+  "development_pairs": [
+    ["act_0", "act_1"], ["sense_0", "relay_1"],
+    ["relay_1", "act_0"], ["relay_0", "relay_1"]
+  ],
+  "sealed_pairs": [
+    ["sense_0", "sense_1"], ["sense_1", "act_1"],
+    ["sense_0", "act_0"], ["sense_1", "relay_0"],
+    ["relay_0", "act_1"]
+  ],
+  "sealed_higher_orders": [3, 4],
+  "seeds": [98711, 98712, 98713],
+  "updates": 64,
+  "rollout_samples_per_update": 128,
+  "ppo_epochs": 2,
+  "learning_rate": 0.0003,
+  "clip_ratio": 0.2,
+  "value_coef": 0.5,
+  "entropy_coef": 0.01,
+  "gradient_norm_max": 1.0,
+  "train_validation_cases_per_set": 8,
+  "development_cases_per_pair": 24,
+  "methods": {
+    "direct_fault_aware": {"hidden": 100},
+    "additive": {"hidden": 81},
+    "acfid": {"hidden": 64}
+  },
+  "pass_rules": {
+    "minimum_acfid_vs_additive_relative_regret_gain": 0.05,
+    "minimum_acfid_better_seed_count": 2,
+    "direct_noninferiority_absolute_regret_margin": 0.03,
+    "minimum_direct_noninferior_seed_count": 2,
+    "interaction_ablation_relative_regret_gain": 0.03,
+    "minimum_interaction_supported_seed_count": 2,
+    "train_support_noninferiority_margin": 0.05,
+    "minimum_train_support_noninferior_seed_count": 2,
+    "minimum_final_entropy": 0.15
+  },
+  "sealed_test_evaluation_budget": 0,
+  "full_training_authorized": false
+}
