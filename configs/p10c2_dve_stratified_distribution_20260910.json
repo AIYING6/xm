@@ -1,0 +1,45 @@
+{
+  "protocol": "P10C2-DVE-STRATIFIED-DISTRIBUTION-V1",
+  "generation_rule": "deterministic stratified state construction; no duplicated cases and no learned-method labels",
+  "fixed_ttl_ms": 50,
+  "strata": {
+    "valid_tracking": {
+      "count": 20,
+      "task_relevant": true,
+      "corridor_reserved": false,
+      "drift_range": [0.4, 1.9],
+      "interpretation": "the target relation remains current and the stale maneuver is still useful"
+    },
+    "task_obsolescence": {
+      "count": 8,
+      "task_relevant": false,
+      "corridor_reserved": false,
+      "drift_range": [0.5, 1.8],
+      "interpretation": "the maneuver remains physically safe but no longer advances the current task"
+    },
+    "team_contention": {
+      "count": 6,
+      "task_relevant": true,
+      "corridor_reserved": true,
+      "drift_range": [0.6, 1.8],
+      "interpretation": "the maneuver remains individually useful but conflicts with a completed teammate reservation"
+    },
+    "dynamic_divergence": {
+      "count": 6,
+      "task_relevant": true,
+      "corridor_reserved": false,
+      "drift_range": [2.4, 3.8],
+      "interpretation": "physical evolution has moved the system outside the stale maneuver validity region"
+    }
+  },
+  "latency_cycle_ms": [20, 40, 80, 120],
+  "gates": {
+    "valid_action_fraction": [0.35, 0.65],
+    "minimum_oracle_relative_gap_for_constant_policies": 0.15,
+    "minimum_validity_fork_pair_fraction": 0.2,
+    "naive_async_mean_must_be_positive": true,
+    "dve_must_beat_fixed_ttl": true,
+    "dve_must_beat_safety_shield": true
+  },
+  "training_authorized": false
+}
