@@ -1,0 +1,79 @@
+{
+  "protocol": "P8-ACFID-FINAL-TOPIC-FREEZE-V1",
+  "status": "TOPIC_LOCKED_P0_INTERACTION_GATE_ONLY",
+  "title_zh": "面向未见组合故障的异构多无人机零样本协同恢复：动作条件故障交互分解",
+  "title_en": "Action-Conditioned Fault-Interaction Decomposition for Zero-Shot Cooperative Recovery under Unseen Compound Failures in Heterogeneous Multi-UAV Teams",
+  "acronym": "ACFID",
+  "target": "STRONG_Q2_WITH_Q1_UPSIDE",
+  "core_question": "Can action-conditioned low-order fault interactions learned from nominal, single-fault, and selected pair-fault cases support zero-shot recovery decisions for held-out compound failures?",
+  "single_core_innovation": "factor recovery-action value by primitive-fault main effects and action-conditioned fault interactions, then use a preregistered task-dependency graph to regularize—not define—the interaction support",
+  "fault_observability": {
+    "scope": "recovery_after_fault_detection",
+    "decision_input": "causally available degraded subsystem indicators and local mission state",
+    "forbidden": [
+      "future information",
+      "ground-truth optimal action",
+      "held-out combination identity as a categorical training label",
+      "post-episode outcomes"
+    ],
+    "claim_boundary": "the study addresses recovery from previously unseen combinations of detected primitive degradation signatures, not zero-shot fault diagnosis"
+  },
+  "environment": {
+    "team": {"scout": 2, "relay": 2, "interceptor": 2},
+    "mission_chain": ["detect", "relay", "assign", "intercept_or_safe_abort"],
+    "dynamics": "shared 3DOF interface with role-dependent capabilities",
+    "primitive_fault_domains": ["sensing", "communication", "actuation"],
+    "recovery_actions": ["role_reassignment", "relay_reposition", "target_reassignment", "degraded_continuation", "safe_abort"],
+    "low_level_controller": "fixed and identical across methods"
+  },
+  "train_test_contract": {
+    "training_support": "nominal + all single faults + preregistered subset of pair faults",
+    "zero_shot_test": "disjoint held-out pairs, triples, and quadruples",
+    "no_leakage": "held-out combinations cannot appear in training, curriculum, model selection, normalization fitting, or hyperparameter selection",
+    "selection_split": "a separate validation subset of seen combinations is used for model selection"
+  },
+  "p0_gates": {
+    "G1_learnability": "nominal and single-fault oracle policies are learnable; fault cases are neither ceiling-saturated nor globally collapsed",
+    "G2_nonadditivity": "at least three preregistered pair faults show interaction magnitude larger than uncertainty/noise and practically relevant to return or success",
+    "G3_decision_relevance": "at least three pair faults change the optimal recovery-action ranking relative to the additive prediction",
+    "G4_additive_insufficiency": "an additive fault model has materially worse held-out action-regret or value prediction than a second-order model",
+    "G5_low_order_generalization": "the second-order model improves held-out-combination action-regret on a disjoint P0 test split without using RL training",
+    "G6_structural_alignment": "interaction magnitude or predictive utility is associated with preregistered task-dependency proximity under a permutation/null test"
+  },
+  "p0_measurement": {
+    "counterfactual_unit": "cloned decision state",
+    "interaction_definition": "I_ij(s,a)=Q(s,a,{i,j})-Q(s,a,{i})-Q(s,a,{j})+Q(s,a,empty)",
+    "primary_endpoint": "held-out compound-fault recovery-action regret",
+    "secondary_endpoints": ["mission_success", "timeout", "collision", "safe_abort_quality", "value_prediction_error"],
+    "uncertainty": "state-blocked bootstrap; cloned action evaluations are not treated as independent training seeds"
+  },
+  "pilot_after_p0_only": {
+    "methods": ["fault_aware_mappo", "additive_fault_value", "acfid_interaction_value"],
+    "budget": "3 seeds x 1M environment steps per method",
+    "authorization_rule": "all G1-G6 must pass before any learning pilot starts"
+  },
+  "formal_evidence_if_pilot_passes": [
+    "5-10 independent training seeds",
+    "held-out pair/triple/quadruple combinations",
+    "fault severity and timing shifts",
+    "6-to-8-or-10 UAV scale transfer",
+    "additive, unstructured-interaction, and task-graph-regularized ablations",
+    "runtime and memory overhead",
+    "seed-level uncertainty and paired analysis"
+  ],
+  "theory_claims": {
+    "safe_now": "a uniform action-value approximation error epsilon implies greedy-action regret at most 2 epsilon",
+    "research_target": "derive structural interaction sparsity or decay under explicit conditional-independence and finite-horizon assumptions",
+    "forbidden_until_proved": "claiming graph-distance decay, sample-complexity improvement, or exact zero interactions"
+  },
+  "stop_rules": [
+    "stop if G2 or G3 fails: the environment lacks decision-relevant fault interaction",
+    "stop if G5 fails: second-order compositionality is not supported",
+    "stop if G6 fails: remove the topology-structure claim and do not proceed as the proposed main topic",
+    "do not tune gates after observing failures",
+    "do not launch the 9M pilot before a signed P0 report"
+  ],
+  "supersedes_main_topic": "P7-TCARC",
+  "training_authorized": false,
+  "next_action": "IMPLEMENT_P0_ENVIRONMENT_AND_COUNTERFACTUAL_INTERACTION_AUDIT"
+}
