@@ -1,0 +1,29 @@
+{
+  "protocol": "P10-DECISION-VALIDITY-CONTRACT-TOPIC-GATE-V1",
+  "status": "DVC_PROVISIONAL_TOPIC_ONLY",
+  "working_title": "Decision-Validity Contracts for Multi-UAV Coordination under Stochastic Computation Latency",
+  "scientific_object": "action-specific state-time validity under observation-computation-actuation mismatch",
+  "primary_intervention": "runtime accept-or-fallback semantics based on a learned action validity set",
+  "hard_exclusions": [
+    "latency appended to observation only",
+    "fixed action delay compensation only",
+    "AoI minimization or computation offloading",
+    "generic safety shield",
+    "network pruning or faster inference as the sole contribution"
+  ],
+  "required_zero_training_gates": [
+    "nearest_neighbor_non_overlap",
+    "same_delay_different_validity_counterexample",
+    "asynchronous_joint_action_incompatibility_counterexample",
+    "no_future_information_leakage",
+    "capacity_matched_primary_control"
+  ],
+  "identifiability_thresholds": {
+    "minimum_decision_validity_fork_fraction": 0.2,
+    "zero_delay_baseline_must_be_learnable": true,
+    "naive_async_must_not_globally_collapse": true,
+    "always_fallback_must_not_be_near_optimal": true
+  },
+  "next_gate": "P10A_NEAREST_NEIGHBOR_NON_OVERLAP",
+  "training_authorized": false
+}
