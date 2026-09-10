@@ -1,0 +1,32 @@
+{
+  "protocol": "P10D2R-DVE-REALISTIC-FALLBACK-TIMING-AUDIT-V1",
+  "verdict": "P10D2R_REALISTIC_FALLBACK_STOP",
+  "case_count": 600,
+  "accept_optimal_fraction": 0.6016666666666667,
+  "replan_optimal_fraction": 0.3983333333333333,
+  "joint_compatibility_fork_fraction": 0.17,
+  "same_latency_pair_count": 44736,
+  "same_latency_validity_fork_fraction": 0.43805883404864093,
+  "mean_values": {
+    "always_accept": -3.921858316659563,
+    "always_replan": -2.630210948364187,
+    "oracle": -2.5050369800929926
+  },
+  "relative_gaps": {
+    "always_accept": 0.5655889904323786,
+    "always_replan": 0.049968910345805674
+  },
+  "checks": {
+    "oracle_uses_both_actions": true,
+    "same_latency_validity_forks_sufficient": true,
+    "joint_compatibility_forks_sufficient": true,
+    "always_accept_below_oracle": true,
+    "always_replan_below_oracle": false,
+    "future_information_used_by_accept": false,
+    "zero_latency_replan_used_as_fair_baseline": false,
+    "training_started": false
+  },
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}

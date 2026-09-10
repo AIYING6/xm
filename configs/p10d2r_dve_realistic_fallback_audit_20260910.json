@@ -1,0 +1,15 @@
+{
+  "protocol": "P10D2R-DVE-REALISTIC-FALLBACK-TIMING-AUDIT-V1",
+  "generator_seed": 102001,
+  "case_count": 600,
+  "latency_support_seconds": [0.05, 0.10, 0.20, 0.35],
+  "target_speed_range": [0.2, 1.0],
+  "target_maneuver_scale": 1.2,
+  "gates": {
+    "accept_optimal_fraction": [0.2, 0.8],
+    "same_latency_validity_fork_pair_fraction_min": 0.2,
+    "individually_safe_jointly_unsafe_fraction_min": 0.1,
+    "constant_policy_relative_gap_min": 0.1
+  },
+  "training_authorized": false
+}
