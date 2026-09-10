@@ -1,6 +1,6 @@
 {
   "protocol": "P10-DECISION-VALIDITY-CONTRACT-TOPIC-GATE-V1",
-  "status": "DVE_BASELINE_LEARNABLE_MINIMAL_TASK_SATURATED",
+  "status": "DVE_CONTINUOUS_TASK_STOP_FALLBACK_ORACLE",
   "working_title": "Decision-Validity Envelopes for Multi-UAV Coordination under Stochastic Computation Latency",
   "scientific_object": "action-specific state-time validity under observation-computation-actuation mismatch",
   "primary_intervention": "runtime accept-or-fallback semantics based on a learned action validity set",
@@ -83,6 +83,16 @@
     "candidate_implemented": false,
     "candidate_training_started": false
   },
-  "next_gate": "P10D2_EMBODIED_DYNAMIC_TASK_IDENTIFIABILITY",
+  "p10d2_result": {
+    "verdict": "STOP",
+    "valid_stale_fraction": 0.8,
+    "same_latency_validity_fork_fraction": 0.306285765379113,
+    "joint_compatibility_fork_fraction": 0.17,
+    "oracle_gain_over_best_constant": 0.05904312284083124,
+    "required_oracle_gain": 0.1,
+    "blocking_cause": "fallback performs zero-cost completion-time oracle replanning",
+    "training_started": false
+  },
+  "next_gate": "P10D2R_REALISTIC_FALLBACK_TIMING_AUDIT",
   "training_authorized": false
 }
