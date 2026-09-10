@@ -1,0 +1,40 @@
+{
+  "protocol": "P10D1-DVE-BASELINE-ONLY-LEARNABILITY-V1",
+  "verdict": "P10D1_BASELINE_LEARNABILITY_PASS",
+  "baseline": "generic_mlp_admission_only",
+  "best_constant_validation_value": 3.0,
+  "passing_seeds": 3,
+  "required_passing_seeds": 2,
+  "seed_results": [
+    {
+      "model_seed": 10111,
+      "validation_accuracy": 1.0,
+      "validation_accept_rate": 0.54296875,
+      "validation_mean_value": 5.71484375,
+      "gain_over_best_constant": 2.71484375,
+      "passed": true
+    },
+    {
+      "model_seed": 10112,
+      "validation_accuracy": 1.0,
+      "validation_accept_rate": 0.54296875,
+      "validation_mean_value": 5.71484375,
+      "gain_over_best_constant": 2.71484375,
+      "passed": true
+    },
+    {
+      "model_seed": 10113,
+      "validation_accuracy": 1.0,
+      "validation_accept_rate": 0.54296875,
+      "validation_mean_value": 5.71484375,
+      "gain_over_best_constant": 2.71484375,
+      "passed": true
+    }
+  ],
+  "sealed_test_commitment": "f53aafe2c7608c9dd716cb3556e23ad564b0db55997dc0ea9d16fb4b2dfaad0c",
+  "sealed_test_materialized": false,
+  "sealed_test_evaluated": false,
+  "candidate_method_implemented": false,
+  "candidate_training_started": false,
+  "scope": "admission baseline learnability only; no DVE performance claim"
+}
