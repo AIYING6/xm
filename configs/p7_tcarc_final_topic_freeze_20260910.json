@@ -1,6 +1,6 @@
 {
   "protocol": "P7-TCARC-FINAL-TOPIC-FREEZE-V1",
-  "status": "STAGE0_FEASIBILITY_PASS_RISK_CONTROL_PROTOTYPE_AUTHORIZED",
+  "status": "SHELVED_AS_AUXILIARY_DEPLOYMENT_LAYER_NOT_MAIN_TOPIC",
   "title_zh": "拓扑条件化共形风险控制：面向通信退化下多无人机强化学习策略的选择性部署",
   "title_en": "Topology-Conditional Conformal Risk Control for Selective Deployment of Multi-UAV Reinforcement Learning Policies under Communication Degradation",
   "acronym": "TC-CRC",
@@ -26,5 +26,5 @@
     "global_calibration_shows_topology_conditional_miscalibration": true
   },
   "training_authorized": false,
-  "next_action": "IMPLEMENT_PREREGISTERED_GLOBAL_GROUPWISE_AND_HIERARCHICAL_CONFORMAL_RISK_CONTROL_PROTOTYPE"
+  "next_action": "PRESERVE_STAGE0_STAGE1_EVIDENCE; DO_NOT_RUN_STAGE2_UNLESS_REAUTHORIZED"
 }
