@@ -1,0 +1,62 @@
+{
+  "protocol": "P9A-CRE-ANALYTIC-COUNTEREXAMPLE-V1",
+  "verdict": "P9A_ANALYTIC_COUNTEREXAMPLE_PASS",
+  "payoffs": {
+    "beta_1": {
+      "attack": 10.0,
+      "screen": 5.0,
+      "split": 7.0
+    },
+    "beta_2": {
+      "attack": 0.0,
+      "screen": 5.0,
+      "split": 3.0
+    }
+  },
+  "posterior": {
+    "beta_1": 0.8,
+    "beta_2": 0.2
+  },
+  "expected_values": {
+    "attack": 8.0,
+    "screen": 5.0,
+    "split": 6.200000000000001
+  },
+  "worst_values": {
+    "attack": 0.0,
+    "screen": 5.0,
+    "split": 3.0
+  },
+  "regrets": {
+    "beta_1": {
+      "attack": 0.0,
+      "screen": 5.0,
+      "split": 3.0
+    },
+    "beta_2": {
+      "attack": 5.0,
+      "screen": 0.0,
+      "split": 2.0
+    }
+  },
+  "worst_regrets": {
+    "attack": 5.0,
+    "screen": 5.0,
+    "split": 3.0
+  },
+  "decisions": {
+    "posterior_mean": "attack",
+    "maximin_value": "screen",
+    "minimax_regret": "split"
+  },
+  "checks": {
+    "opponents_observation_equivalent_before_decision": true,
+    "best_response_order_reverses": true,
+    "posterior_mean_has_strictly_higher_worst_regret": true,
+    "minimax_value_differs_from_minimax_regret": true,
+    "same_information_and_action_set": true
+  },
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
