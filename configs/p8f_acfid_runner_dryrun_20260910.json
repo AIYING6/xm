@@ -1,0 +1,23 @@
+{
+  "protocol": "P8F-ACFID-RUNNER-DRYRUN-AND-LEAKAGE-AUDIT-V1",
+  "seed": 98401,
+  "train_pairs": [
+    ["sense_0", "relay_0"], ["sense_1", "relay_1"],
+    ["relay_0", "act_0"], ["relay_1", "act_1"],
+    ["sense_0", "act_1"], ["sense_1", "act_0"]
+  ],
+  "rollout_samples": 192,
+  "ppo_epochs": 3,
+  "learning_rate": 0.0003,
+  "clip_ratio": 0.2,
+  "value_coef": 0.5,
+  "entropy_coef": 0.01,
+  "gradient_norm_max": 1.0,
+  "parameter_change_min": 1e-8,
+  "capacity_gap_max": 0.015,
+  "methods": {
+    "direct_fault_aware": {"hidden": 100},
+    "additive": {"hidden": 81},
+    "acfid": {"hidden": 64}
+  }
+}
