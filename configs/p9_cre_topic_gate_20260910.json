@@ -1,0 +1,28 @@
+{
+  "protocol": "P9-CRE-CLEAN-SHEET-TOPIC-GATE-V1",
+  "status": "CRE_PROVISIONAL_TOPIC_ONLY",
+  "working_title": "Counterfactual Response Envelope for Team Adversarial Decision-making",
+  "primary_intervention": "set-valued action-conditioned minimax-regret selection versus capacity-matched posterior-mean response selection",
+  "excluded_claims": [
+    "generic opponent modelling novelty",
+    "generic recurrent memory novelty",
+    "generic minimax or robust RL novelty",
+    "generic PSRO or population diversity novelty",
+    "DRTP or PLR style training exposure reweighting"
+  ],
+  "p9a_required_checks": {
+    "nearest_neighbor_non_overlap": true,
+    "strict_observation_equivalence_counterexample": true,
+    "strict_worst_regret_improvement": true,
+    "same_information_capacity_action_set_control": true,
+    "no_training": true
+  },
+  "stop_if": [
+    "the method reduces to an opponent embedding plus conservative head",
+    "the strict counterexample requires privileged opponent labels",
+    "posterior-mean and response-envelope decisions cannot be separated under matched information",
+    "a direct prior work already contains the same action-conditioned version-space regret object"
+  ],
+  "next_gate": "P9A_NEAREST_NEIGHBOR_AND_ANALYTIC_COUNTEREXAMPLE",
+  "training_authorized": false
+}
