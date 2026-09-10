@@ -1,0 +1,64 @@
+{
+  "protocol": "P10C2-DVE-STRATIFIED-DISTRIBUTION-V1",
+  "verdict": "P10C2_DISTRIBUTION_PASS",
+  "case_count": 40,
+  "stratum_counts": {
+    "valid_tracking": 20,
+    "task_obsolescence": 8,
+    "team_contention": 6,
+    "dynamic_divergence": 6
+  },
+  "valid_action_fraction": 0.5,
+  "same_latency_pair_count": 180,
+  "validity_fork_pair_count": 100,
+  "validity_fork_pair_fraction": 0.5555555555555556,
+  "policy_summary": {
+    "naive_accept": {
+      "mean_team_value": 2.5,
+      "accept_rate": 1.0,
+      "stale_accept_rate": 0.5
+    },
+    "always_fallback": {
+      "mean_team_value": 3.4,
+      "accept_rate": 0.0,
+      "stale_accept_rate": 0.0
+    },
+    "fixed_ttl": {
+      "mean_team_value": 2.7,
+      "accept_rate": 0.5,
+      "stale_accept_rate": 0.25
+    },
+    "current_state_safety_shield": {
+      "mean_team_value": 4.675,
+      "accept_rate": 0.775,
+      "stale_accept_rate": 0.275
+    },
+    "dve_oracle": {
+      "mean_team_value": 5.9,
+      "accept_rate": 0.5,
+      "stale_accept_rate": 0.0
+    }
+  },
+  "oracle_relative_gaps": {
+    "naive_accept": 0.576271186440678,
+    "always_fallback": 0.42372881355932207,
+    "fixed_ttl": 0.5423728813559322,
+    "current_state_safety_shield": 0.20762711864406788
+  },
+  "checks": {
+    "case_count_exact": true,
+    "cases_unique": true,
+    "valid_action_fraction_balanced": true,
+    "always_accept_gap_sufficient": true,
+    "always_fallback_gap_sufficient": true,
+    "validity_fork_fraction_sufficient": true,
+    "naive_async_mean_positive": true,
+    "dve_beats_fixed_ttl": true,
+    "dve_beats_safety_shield": true,
+    "dve_zero_stale_accept": true
+  },
+  "scope": "distribution identifiability only; no learned policy evaluated",
+  "training_started": false,
+  "environment_steps": 0,
+  "ppo_updates": 0
+}
