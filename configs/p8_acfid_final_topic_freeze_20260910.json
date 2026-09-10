@@ -1,6 +1,6 @@
 {
   "protocol": "P8-ACFID-FINAL-TOPIC-FREEZE-V1",
-  "status": "P0B_SHARED_INTERACTION_PASS_STRESS_AUDIT_REQUIRED",
+  "status": "P0C_STRESS_PASS_LEARNING_PILOT_IMPLEMENTATION_AUTHORIZED",
   "title_zh": "面向未见组合故障的异构多无人机零样本协同恢复：动作条件故障交互分解",
   "title_en": "Action-Conditioned Fault-Interaction Decomposition for Zero-Shot Cooperative Recovery under Unseen Compound Failures in Heterogeneous Multi-UAV Teams",
   "acronym": "ACFID",
@@ -75,5 +75,5 @@
   ],
   "supersedes_main_topic": "P7-TCARC",
   "training_authorized": false,
-  "next_action": "RUN_MULTI_SPLIT_MULTI_CONTEXT_P0C_STRESS_AUDIT_BEFORE_ANY_RL"
+  "next_action": "IMPLEMENT_AND_AUDIT_3_METHOD_X_3_SEED_X_1M_LEARNING_PILOT"
 }
