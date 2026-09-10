@@ -1,6 +1,6 @@
 {
   "protocol": "P10-DECISION-VALIDITY-CONTRACT-TOPIC-GATE-V1",
-  "status": "DVE_STRATIFIED_DISTRIBUTION_IDENTIFIABLE",
+  "status": "DVE_TWO_PHASE_INTERFACE_PASS",
   "working_title": "Decision-Validity Envelopes for Multi-UAV Coordination under Stochastic Computation Latency",
   "scientific_object": "action-specific state-time validity under observation-computation-actuation mismatch",
   "primary_intervention": "runtime accept-or-fallback semantics based on a learned action validity set",
@@ -64,6 +64,15 @@
     "safety_shield_relative_gap": 0.20762711864406788,
     "candidate_training_started": false
   },
-  "next_gate": "P10D0_BASELINE_ONLY_LEARNABILITY_AND_INTERFACE",
+  "p10d0_result": {
+    "verdict": "PASS",
+    "proposal_completion_information_separated": true,
+    "proposal_frozen_before_completion_observation": true,
+    "future_state_leakage": false,
+    "tests_passed": 5,
+    "candidate_training_started": false,
+    "baseline_training_started": false
+  },
+  "next_gate": "P10D1_BASELINE_ONLY_LEARNABILITY",
   "training_authorized": false
 }
