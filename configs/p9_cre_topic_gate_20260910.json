@@ -1,6 +1,6 @@
 {
   "protocol": "P9-CRE-CLEAN-SHEET-TOPIC-GATE-V1",
-  "status": "CRE_PROVISIONAL_TOPIC_ONLY",
+  "status": "CRE_TOPIC_CLOSED_NEAREST_NEIGHBOR_OVERLAP",
   "working_title": "Counterfactual Response Envelope for Team Adversarial Decision-making",
   "primary_intervention": "set-valued action-conditioned minimax-regret selection versus capacity-matched posterior-mean response selection",
   "excluded_claims": [
@@ -23,6 +23,11 @@
     "posterior-mean and response-envelope decisions cannot be separated under matched information",
     "a direct prior work already contains the same action-conditioned version-space regret object"
   ],
-  "next_gate": "P9A_NEAREST_NEIGHBOR_AND_ANALYTIC_COUNTEREXAMPLE",
+  "gate_results": {
+    "analytic_counterexample": "PASS",
+    "nearest_neighbor_non_overlap": "FAIL",
+    "blocking_neighbor": "Beyond Bayesian Nash: Learning Minimax-Regret Equilibria for Adversarial Team Games under Asymmetric Information (arXiv:2607.09993)"
+  },
+  "next_gate": "P10_PROBLEM_FIRST_LANDSCAPE",
   "training_authorized": false
 }
