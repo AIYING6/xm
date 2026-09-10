@@ -1,0 +1,26 @@
+{
+  "protocol": "P10D1-DVE-BASELINE-ONLY-LEARNABILITY-V1",
+  "train_seed": 101001,
+  "validation_seed": 101002,
+  "sealed_test_seed": 101003,
+  "model_seeds": [10111, 10112, 10113],
+  "train_samples": 1024,
+  "validation_samples": 512,
+  "sealed_test_samples": 1024,
+  "feature_schema": ["elapsed_time_normalized", "completion_relative_error", "corridor_reserved", "proposal_is_corridor_entry"],
+  "label": "completion_time_action_validity",
+  "model": {
+    "type": "generic_mlp_admission_baseline",
+    "hidden_dim": 16,
+    "epochs": 200,
+    "learning_rate": 0.01
+  },
+  "gates": {
+    "minimum_validation_accuracy": 0.85,
+    "minimum_validation_value_gain_over_best_constant": 0.5,
+    "accept_rate_range": [0.25, 0.75],
+    "minimum_passing_seeds": 2
+  },
+  "sealed_test_policy": "registry_only_do_not_materialize_or_evaluate",
+  "candidate_training_authorized": false
+}

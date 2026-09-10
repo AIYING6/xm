@@ -1,6 +1,6 @@
 {
   "protocol": "P10-DECISION-VALIDITY-CONTRACT-TOPIC-GATE-V1",
-  "status": "DVE_TWO_PHASE_INTERFACE_PASS",
+  "status": "DVE_BASELINE_LEARNABLE_MINIMAL_TASK_SATURATED",
   "working_title": "Decision-Validity Envelopes for Multi-UAV Coordination under Stochastic Computation Latency",
   "scientific_object": "action-specific state-time validity under observation-computation-actuation mismatch",
   "primary_intervention": "runtime accept-or-fallback semantics based on a learned action validity set",
@@ -73,6 +73,16 @@
     "candidate_training_started": false,
     "baseline_training_started": false
   },
-  "next_gate": "P10D1_BASELINE_ONLY_LEARNABILITY",
+  "p10d1_result": {
+    "verdict": "BASELINE_LEARNABLE_MINIMAL_TASK_SATURATED",
+    "passing_seeds": 3,
+    "required_passing_seeds": 2,
+    "validation_accuracy_all_seeds": 1.0,
+    "sealed_test_materialized": false,
+    "sealed_test_evaluated": false,
+    "candidate_implemented": false,
+    "candidate_training_started": false
+  },
+  "next_gate": "P10D2_EMBODIED_DYNAMIC_TASK_IDENTIFIABILITY",
   "training_authorized": false
 }
