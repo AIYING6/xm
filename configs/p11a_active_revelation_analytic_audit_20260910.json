@@ -1,0 +1,15 @@
+{
+  "protocol": "P11A-ACTIVE-REVELATION-ANALYTIC-AUDIT-V1",
+  "current_task_value": 10.0,
+  "belief_specialist_required": [0.1, 0.3, 0.5, 0.7, 0.9],
+  "future_specialist_opportunity_value": [3.0, 6.0, 9.0, 12.0],
+  "inspection_cost": [0.5, 2.0, 4.0],
+  "deadline_slack": [0.5, 1.5],
+  "inspection_duration": 1.0,
+  "gates": {
+    "minimum_fraction_per_optimal_action": 0.1,
+    "minimum_same_geometry_belief_fork_fraction": 0.2,
+    "minimum_oracle_gain_over_best_constant": 0.5
+  },
+  "training_authorized": false
+}

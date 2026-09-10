@@ -1,0 +1,34 @@
+{
+  "protocol": "P11-ACTIVE-REVELATION-COMMITMENT-TOPIC-GATE-V1",
+  "status": "P11A_ANALYTIC_PASS_NOVELTY_AUDIT_REQUIRED",
+  "working_title": "Active Requirement Revelation before Coalition Commitment in Heterogeneous Multi-UAV Missions",
+  "scientific_object": "joint information acquisition and scarce-capability commitment under latent task requirements",
+  "primary_question": "when should a UAV team inspect an uncertain task before committing a scarce specialist whose use removes future mission options",
+  "hard_exclusions": [
+    "generic dynamic task allocation",
+    "generic coalition formation",
+    "task-priority reward shaping",
+    "uncertainty appended to observations without an information action",
+    "renaming attention or graph encoding as the primary contribution"
+  ],
+  "required_zero_training_gates": [
+    "direct_isomorphic_neighbor_audit",
+    "three_action_optimality_regions",
+    "same_geometry_different_belief_decisions",
+    "information_action_has_positive_but_nonuniversal_value",
+    "myopic_and_always_inspect_baselines_both_have_headroom",
+    "baseline_learnability_before_candidate"
+  ],
+  "p11a_result": {
+    "verdict": "PASS",
+    "case_count": 120,
+    "commit_optimal_fraction": 0.5166666666666667,
+    "reserve_optimal_fraction": 0.175,
+    "inspect_optimal_fraction": 0.30833333333333335,
+    "same_geometry_belief_fork_fraction": 0.2,
+    "oracle_gain_over_best_constant": 1.386666666666665,
+    "training_started": false
+  },
+  "next_gate": "P11B_DIRECT_ISOMORPHIC_NEIGHBOR_AUDIT",
+  "training_authorized": false
+}
