@@ -1,0 +1,27 @@
+{
+  "protocol": "P8C-ACFID-SHARED-INTERACTION-STRESS-V1",
+  "context_seeds": [98101, 98102, 98103, 98104, 98105],
+  "contexts_per_seed": 120,
+  "noise_rollouts_per_action": 32,
+  "ridge": 0.001,
+  "pair_splits": [
+    [["sense_0","relay_0"],["relay_0","act_0"],["sense_0","act_0"],["sense_0","relay_1"],["relay_0","act_1"],["sense_0","act_1"]],
+    [["sense_1","relay_1"],["relay_1","act_1"],["sense_1","act_1"],["sense_1","relay_0"],["relay_1","act_0"],["sense_1","act_0"]],
+    [["sense_0","relay_0"],["relay_1","act_1"],["sense_0","act_0"],["sense_1","relay_0"],["relay_0","act_1"],["sense_1","act_0"]],
+    [["sense_1","relay_1"],["relay_0","act_0"],["sense_1","act_1"],["sense_0","relay_1"],["relay_1","act_0"],["sense_0","act_1"]],
+    [["sense_0","relay_0"],["relay_0","act_0"],["sense_1","act_1"],["sense_1","relay_0"],["relay_1","act_0"],["sense_0","act_1"]],
+    [["sense_1","relay_1"],["relay_1","act_1"],["sense_0","act_0"],["sense_0","relay_1"],["relay_0","act_1"],["sense_1","act_0"]],
+    [["sense_0","relay_0"],["relay_1","act_1"],["sense_1","act_1"],["sense_0","relay_1"],["relay_1","act_0"],["sense_1","act_0"]],
+    [["sense_1","relay_1"],["relay_0","act_0"],["sense_0","act_0"],["sense_1","relay_0"],["relay_0","act_1"],["sense_0","act_1"]]
+  ],
+  "thresholds": {
+    "cell_pair_regret_gain_min": 0.10,
+    "pair_regret_gain_pass_fraction_min": 0.80,
+    "structure_beats_type_only_fraction_min": 0.75,
+    "higher_order_noninferior_fraction_min": 0.80,
+    "median_pair_regret_gain_min": 0.20,
+    "minimum_seed_median_gain": 0.05
+  },
+  "diagnostic_only": true,
+  "training_authorized": false
+}
