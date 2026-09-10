@@ -1,0 +1,83 @@
+{
+  "protocol": "P19-TEAM-ATTITUDE-COUPLED-V2",
+  "status": "FROZEN_BEFORE_TRAINING",
+  "supersedes": "P19-TEAM-ATTITUDE-COUPLED-V1 (INVALIDATED_TASK_DESIGN_ERROR, see artifacts/diagnostics/p19_team_coupled_20260910/P19_ROUND1_INVALIDATED.md)",
+  "purpose": "Extend the single-agent attitude coupling (P16/P17/P18) to a 3-agent relay chain with partial observability and randomized geometry, and test whether the learned team policy (a) beats scripted coordination and (b) depends on the shared mission clock, i.e. whether synchronized timing is load-bearing.",
+  "upstream": "P18 (P18_PASS, single agent, fully observable, 34.33 vs best fixed 18.32, 0.89 of oracle)",
+  "task": "Bent relay chain S -> R -> K. S must see the target and hand fresh information to R; R must receive from S and forward to K; K must receive from R and point at the target. Every agent has ONE nose with a body-fixed radar half-FOV and a body-fixed directional link half-angle, so each agent faces a two-duty heading conflict.",
+  "v1_failure_and_fix": {
+    "v1_symptom": "every arm including all scripted baselines scored exactly 0.00 and no result file was written",
+    "cause_A_task_infeasible": "collinear S-R-K made R's two duties 180 deg apart; a 180 deg reversal costs 12 turns at 15 deg/step while the cache TTL was 6 steps, so the pipeline could never complete. No policy, including a clairvoyant optimum, could score.",
+    "cause_B_script_bug": "eval_schedule turned the wrong way for a positive bearing error, so the scripted reference itself diverged. Fixed.",
+    "cause_C_scoring_hole": "ratio-only gates let an all-zero run satisfy 0 >= 0 and print PASS. A vacuity guard G0 is now mandatory."
+  },
+  "environment": {
+    "agents": ["S", "R", "K"],
+    "chain_spacing": 2.0,
+    "chain_bend_deg": [100.0, 140.0],
+    "chain_bend_rationale": "Bending the chain at R makes R's two duties 40-80 deg apart, i.e. 3-6 turns, so forwarding inside the TTL is physically achievable while the attitude conflict stays real.",
+    "radar_half_fov_deg": 65.0,
+    "link_half_angle_deg": 45.0,
+    "turn_limit_deg_per_step": 15.0,
+    "cache_ttl_steps": 8,
+    "horizon_steps": 60,
+    "randomization": {
+      "chain_orientation_rad": "uniform [0, 2pi)",
+      "chain_bend_rad": "uniform [100 deg, 140 deg]",
+      "target_bearing_rad": "uniform [0, 2pi)",
+      "target_distance": "uniform [2.0, 5.0]",
+      "initial_heading_rad": "uniform [0, 2pi) per agent"
+    },
+    "observation_per_agent": [
+      "sin(rel bearing to duty A)",
+      "cos(rel bearing to duty A)",
+      "sin(rel bearing to duty B)",
+      "cos(rel bearing to duty B)",
+      "own freshness flag (1 if this agent's held cache is still fresh)",
+      "shared mission clock t/horizon (ABLATED in the no-clock arm)"
+    ],
+    "duties": {
+      "S": ["target", "R"],
+      "R": ["S", "K"],
+      "K": ["R", "target"]
+    },
+    "action": "discrete 3: turn -15 deg, hold, turn +15 deg",
+    "reward": "team reward: +1 for every step in which K holds fresh information (age_K <= ttl) AND K's nose is within the radar half-FOV of the target",
+    "episode_return_equals": "number of mission-scoring steps",
+    "known_residual_infeasibility": "S's two duties can be up to 180 deg apart for some sampled target bearings, which can exceed the TTL budget for S. Those geometries stay unsolvable on purpose: the task is feasible on a large but not total subset of geometries, so a competent policy must also exploit geometry."
+  },
+  "training": {
+    "algorithm": "PPO with parameter sharing across agents and a role one-hot input",
+    "seeds": [9201, 9202, 9203],
+    "parallel_envs": 12,
+    "updates": 400,
+    "rollout_steps": 60,
+    "hidden_dim": 128,
+    "lr": 0.0007,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_coef": 0.2,
+    "entropy_coef": 0.01,
+    "value_coef": 0.5,
+    "ppo_epochs": 4,
+    "minibatch": 512
+  },
+  "evaluation": {
+    "episodes_per_arm": 200,
+    "geometry_split": "first 100 sampled geometries are TRAIN-range, last 100 are HELD-OUT",
+    "metric": "mean mission-scoring steps over the horizon"
+  },
+  "baselines": {
+    "all_point_at_duty_A": "every agent points at its first duty",
+    "all_point_at_duty_B": "every agent points at its second duty",
+    "best_synchronized_schedule": "random search over a common period, duty length and per-agent phase offsets: a scripted team schedule"
+  },
+  "pre_registered_gates": {
+    "G0_not_vacuous": "learned mean > 0 AND best scripted schedule mean > 0. An all-zero run is INFEASIBLE_OR_VACUOUS and can never pass, no matter what the ratios say.",
+    "G1_beats_scripted_schedule_by_20pct": "learned mean >= 1.20 x best_synchronized_schedule mean",
+    "G2_clock_is_load_bearing": "learned-with-clock mean >= 1.20 x learned-without-clock mean (ablation on the shared clock input)",
+    "G3_holds_out": "held-out geometry mean >= 0.80 x train-range geometry mean"
+  },
+  "decision_rule": "G0 is a precondition; G1, G2 and G3 all evaluate only if G0 passes. If G0 fails the verdict is P19_INFEASIBLE_OR_VACUOUS and the round is voided for the project evidence ledger. Thresholds are frozen here and must not be edited after seeing results.",
+  "training_authorized": true
+}

@@ -1,0 +1,88 @@
+{
+  "protocol": "P20-MOVING-TEAM-ATTITUDE-COUPLED-V1",
+  "status": "FROZEN_BEFORE_TRAINING",
+  "supersedes": "P19-TEAM-ATTITUDE-COUPLED-V2 (valid round, P19_FAIL on G1 only: learning beat a searched periodic schedule by just 1.057x, see artifacts/diagnostics/p19_team_coupled_20260910/P19_FINDINGS.md)",
+  "purpose": "Fix the single reason P19 failed. In P19 every required heading was a FIXED bearing, so the optimal team policy was a time-periodic schedule and a searched timetable nearly matched learning. P20 makes the geometry policy dependent: the nose also drives the airframe, so pointing decisions move the bearings that must be pointed at. The same clock time then corresponds to different geometry depending on what the team did, which makes open-loop scheduling structurally insufficient. The agent count stays at three, which is the minimum that still contains a relay hop.",
+  "why_three_agents": {
+    "two_agents": "S and K only, no relay, therefore no hand-off structure to coordinate. Rejected.",
+    "three_agents": "S -> R -> K, one real relay hop, and R carries the two-duty nose conflict. Minimal and sufficient.",
+    "four_plus": "Only lengthens the chain and worsens credit assignment. Does not address the actual defect, which was task stationarity, not team size. Rejected."
+  },
+  "change_from_p19": {
+    "agent_speed": "0.0 -> 0.03 units/step (each agent translates along its own heading)",
+    "target_speed": "0.0 -> 0.02 units/step (target translates at a fixed random bearing)",
+    "link_range": "infinite -> 3.0 units (chain separation is 2.0, so drift can now break a link)",
+    "everything_else": "unchanged: bent chain 100-140 deg, TTL 8, turn 15 deg/step, radar half-FOV 65 deg, link half-angle 45 deg, horizon 60, same observation, same reward, same gates"
+  },
+  "task": "Bent relay chain S -> R -> K of moving aircraft. S must see the target and hand fresh information to R; R must receive from S and forward to K; K must receive from R and point at the target. Every agent has ONE nose carrying a body-fixed radar and a body-fixed directional link, so every agent faces a two-duty heading conflict, and now its nose also steers its own position.",
+  "environment": {
+    "agents": ["S", "R", "K"],
+    "chain_spacing": 2.0,
+    "chain_bend_min_deg": 100.0,
+    "chain_bend_max_deg": 140.0,
+    "radar_half_fov_deg": 65.0,
+    "link_half_angle_deg": 45.0,
+    "turn_limit_deg_per_step": 15.0,
+    "cache_ttl_steps": 8,
+    "horizon_steps": 60,
+    "agent_speed": 0.03,
+    "target_speed": 0.02,
+    "link_range": 3.0,
+    "randomization": {
+      "chain_orientation_rad": "uniform [0, 2pi)",
+      "chain_bend_rad": "uniform [100 deg, 140 deg]",
+      "target_bearing_rad": "uniform [0, 2pi)",
+      "target_distance": "uniform [2.0, 5.0]",
+      "target_velocity_bearing_rad": "uniform [0, 2pi)",
+      "initial_heading_rad": "uniform [0, 2pi) per agent"
+    },
+    "observation_per_agent": [
+      "sin(rel bearing to duty A)",
+      "cos(rel bearing to duty A)",
+      "sin(rel bearing to duty B)",
+      "cos(rel bearing to duty B)",
+      "own freshness flag (1 if this agent's held cache is still fresh)",
+      "shared mission clock t/horizon (ABLATED in the no-clock arm)"
+    ],
+    "duties": {
+      "S": ["target", "R"],
+      "R": ["S", "K"],
+      "K": ["R", "target"]
+    },
+    "action": "discrete 3: turn -15 deg, hold, turn +15 deg",
+    "reward": "team reward: +1 for every step in which K holds fresh information (age_K <= ttl) AND K's nose is within the radar half-FOV of the target",
+    "known_residual_infeasibility": "S's two duties can still be up to 180 deg apart for some sampled target bearings, and sustained drift can still break the chain. Those episodes stay unsolvable on purpose; a competent policy must cope by geometry and by not flying apart."
+  },
+  "training": {
+    "algorithm": "PPO with parameter sharing across agents and a role one-hot input",
+    "seeds": [9201, 9202, 9203],
+    "parallel_envs": 12,
+    "updates": 400,
+    "rollout_steps": 60,
+    "hidden_dim": 128,
+    "lr": 0.0007,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_coef": 0.2,
+    "entropy_coef": 0.01,
+    "value_coef": 0.5,
+    "ppo_epochs": 4,
+    "minibatch": 512
+  },
+  "evaluation": {
+    "episodes_per_arm": 200,
+    "geometry_split": "first 100 sampled geometries are TRAIN-range, last 100 are HELD-OUT",
+    "metric": "mean mission-scoring steps over the horizon"
+  },
+  "baselines": {
+    "best_synchronized_schedule": "random search over a common period, duty length and per-agent phase offsets, evaluated with live bearing readout: a strong scripted team schedule that adapts where to point but not when to switch"
+  },
+  "pre_registered_gates": {
+    "G0_not_vacuous": "learned mean > 0 AND best scripted schedule mean > 0, otherwise P20_INFEASIBLE_OR_VACUOUS",
+    "G1_beats_scripted_schedule_by_20pct": "learned mean >= 1.20 x best_synchronized_schedule mean. This is the gate P19 failed; if motion makes timing state dependent, a clock schedule should lose ground here.",
+    "G2_clock_is_load_bearing": "learned-with-clock mean >= 1.20 x learned-without-clock mean",
+    "G3_holds_out": "held-out geometry mean >= 0.80 x train-range geometry mean"
+  },
+  "decision_rule": "G0 is a precondition. A pass requires G1 AND G2 AND G3. If P20 fails G1 again, the honest conclusion is that this task family cannot support a learning-necessity claim and the multi-agent extension is dropped from the paper. Thresholds frozen here and must not be edited after seeing results.",
+  "training_authorized": true
+}

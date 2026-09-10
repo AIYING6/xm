@@ -1,0 +1,168 @@
+{
+  "diagnostic": "P21_TIMING_GAP",
+  "status": "EXPLORATORY_NOT_A_GATED_CLAIM",
+  "device": "cuda",
+  "focus_band_deg": [
+    110,
+    120,
+    130,
+    140
+  ],
+  "structural_budget": {
+    "110": {
+      "swing_steps": 0,
+      "ttl": 8,
+      "feasible_swing": true
+    },
+    "120": {
+      "swing_steps": 2,
+      "ttl": 8,
+      "feasible_swing": true
+    },
+    "130": {
+      "swing_steps": 4,
+      "ttl": 8,
+      "feasible_swing": true
+    },
+    "140": {
+      "swing_steps": 6,
+      "ttl": 8,
+      "feasible_swing": true
+    }
+  },
+  "oracle_band": {
+    "110": 42,
+    "120": 34,
+    "130": 20,
+    "140": 9
+  },
+  "oracle_band_mean": 26.25,
+  "variants": {
+    "base_h64_u600": {
+      "band": {
+        "110": 9.0,
+        "120": 6.0,
+        "130": 4.0,
+        "140": 1.5
+      },
+      "band_mean": 5.125,
+      "traces": {
+        "110": {
+          "learned": {
+            "BOTH": 0,
+            "TGT_ONLY": 13,
+            "LNK_ONLY": 47,
+            "NEITHER": 0
+          },
+          "oracle": {
+            "BOTH": 0,
+            "TGT_ONLY": 18,
+            "LNK_ONLY": 42,
+            "NEITHER": 0
+          },
+          "oracle_delivered": 42
+        },
+        "120": {
+          "learned": {
+            "BOTH": 0,
+            "TGT_ONLY": 13,
+            "LNK_ONLY": 45,
+            "NEITHER": 2
+          },
+          "oracle": {
+            "BOTH": 0,
+            "TGT_ONLY": 17,
+            "LNK_ONLY": 34,
+            "NEITHER": 9
+          },
+          "oracle_delivered": 34
+        },
+        "130": {
+          "learned": {
+            "BOTH": 0,
+            "TGT_ONLY": 13,
+            "LNK_ONLY": 43,
+            "NEITHER": 4
+          },
+          "oracle": {
+            "BOTH": 0,
+            "TGT_ONLY": 19,
+            "LNK_ONLY": 20,
+            "NEITHER": 21
+          },
+          "oracle_delivered": 20
+        },
+        "140": {
+          "learned": {
+            "BOTH": 0,
+            "TGT_ONLY": 13,
+            "LNK_ONLY": 41,
+            "NEITHER": 6
+          },
+          "oracle": {
+            "BOTH": 0,
+            "TGT_ONLY": 26,
+            "LNK_ONLY": 9,
+            "NEITHER": 25
+          },
+          "oracle_delivered": 9
+        }
+      }
+    },
+    "wide_h256_u600": {
+      "band": {
+        "110": 19.5,
+        "120": 3.0,
+        "130": 1.5,
+        "140": 0.0
+      },
+      "band_mean": 6.0
+    },
+    "long_h64_u2400": {
+      "band": {
+        "110": 20.5,
+        "120": 4.5,
+        "130": 2.0,
+        "140": 1.0
+      },
+      "band_mean": 7.0
+    },
+    "easy_only": {
+      "band": {
+        "110": 25.5,
+        "120": 2.5,
+        "130": 0.0,
+        "140": 0.0
+      },
+      "band_mean": 7.0
+    },
+    "curriculum": {
+      "band": {
+        "110": 6.0,
+        "120": 6.0,
+        "130": 4.0,
+        "140": 2.0
+      },
+      "band_mean": 4.5
+    }
+  },
+  "trace_patch": {
+    "reason": "oracle_trace replayed with the full-horizon value table at every step",
+    "effect": "oracle fingerprints read TGT_ONLY=60 / delivered=0, contradicting the DP column",
+    "fix": "keep every intermediate value table V_k and replay step t against V[horizon-1-t]",
+    "verified": "trace delivered == DP delivered for 110/120/130/140",
+    "recomputed_fields": [
+      "variants.base_h64_u600.traces[*].oracle",
+      "*.oracle_delivered"
+    ],
+    "untouched_fields": [
+      "variants.base_h64_u600.traces[*].learned (independent env rollout)"
+    ],
+    "patched_separations": [
+      "110",
+      "120",
+      "130",
+      "140"
+    ]
+  }
+}

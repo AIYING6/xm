@@ -1,0 +1,28 @@
+{
+  "protocol": "P20-MOVING-TEAM-ATTITUDE-COUPLED-V1",
+  "verdict": "P20_FAIL",
+  "gates_evaluated": true,
+  "device": "cuda",
+  "learned_mean": 16.798333333333332,
+  "learned_train_mean": 16.923333333333332,
+  "learned_holdout_mean": 16.673333333333336,
+  "no_clock_mean": 14.768333333333333,
+  "scripted_best": {
+    "mean": 20.13,
+    "period": 17,
+    "duty": 8,
+    "phases": [
+      10,
+      2,
+      12
+    ]
+  },
+  "scripted_baseline_default_mean": 9.71,
+  "checks": {
+    "G0_not_vacuous": true,
+    "G1_beats_scripted_schedule_by_20pct": false,
+    "G2_clock_is_load_bearing": false,
+    "G3_holds_out": true
+  },
+  "environment_steps": 1728000
+}

@@ -1,0 +1,28 @@
+{
+  "protocol": "P19-TEAM-ATTITUDE-COUPLED-V2",
+  "verdict": "P19_FAIL",
+  "gates_evaluated": true,
+  "device": "cuda",
+  "learned_mean": 37.92166666666667,
+  "learned_train_mean": 38.94,
+  "learned_holdout_mean": 36.903333333333336,
+  "no_clock_mean": 29.255,
+  "scripted_best": {
+    "mean": 35.86,
+    "period": 16,
+    "duty": 7,
+    "phases": [
+      3,
+      10,
+      6
+    ]
+  },
+  "scripted_baseline_default_mean": 28.07,
+  "checks": {
+    "G0_not_vacuous": true,
+    "G1_beats_scripted_schedule_by_20pct": false,
+    "G2_clock_is_load_bearing": true,
+    "G3_holds_out": true
+  },
+  "environment_steps": 1728000
+}
