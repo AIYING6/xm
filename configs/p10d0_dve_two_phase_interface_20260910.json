@@ -1,0 +1,21 @@
+{
+  "protocol": "P10D0-DVE-TWO-PHASE-INTERFACE-V1",
+  "proposal_phase": {
+    "actor": "slow capacity-matched recurrent policy",
+    "legal_inputs": ["snapshot_local_state", "snapshot_task_state", "latency_profile"],
+    "forbidden_inputs": ["realized_completion_state", "future_state", "hidden_teammate_state", "realized_latency_before_completion"]
+  },
+  "admission_phase": {
+    "component": "bounded lightweight gate shared by all compared methods",
+    "legal_inputs": ["realized_elapsed_time", "current_local_state", "proposal_metadata", "signed_team_reservation_summary"],
+    "outputs": ["accept", "fallback"]
+  },
+  "main_comparison": {
+    "fixed_ttl": "same proposal and admission inputs; fixed elapsed-time threshold",
+    "safety_shield": "same proposal and admission inputs; hard-safety predicate only",
+    "dve": "same proposal and admission inputs; action-specific task-and-team validity envelope"
+  },
+  "candidate_training_authorized": false,
+  "baseline_training_authorized": false,
+  "next_gate": "P10D1_BASELINE_ONLY_LEARNABILITY"
+}
