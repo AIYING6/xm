@@ -1,0 +1,128 @@
+{
+  "protocol": "P22-SWING-OPTION-V1",
+  "verdict": "P22_FAIL",
+  "device": "cuda",
+  "provenance": {
+    "budget_target_env_steps": 288000,
+    "options_env_steps_per_seed": [
+      288000,
+      288000,
+      288000
+    ],
+    "options_env_steps_mean": 288000,
+    "primitives_updates_used": 600,
+    "primitives_env_steps_equivalent": 288000,
+    "budget_deviation_pct": 0.0
+  },
+  "focus_band_deg": [
+    110,
+    120,
+    130,
+    140
+  ],
+  "band": {
+    "options": 17.083333333333336,
+    "primitives": 4.249999999999999,
+    "oracle": 26.25,
+    "ratio_options_over_primitives": 4.019607843137257
+  },
+  "easy_region": {
+    "options": 56.24242424242424,
+    "primitives": 55.181818181818194
+  },
+  "whole_grid": {
+    "options": 36.1578947368421,
+    "primitives": 32.8421052631579
+  },
+  "grid_deg": [
+    0,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+    110,
+    120,
+    130,
+    140,
+    150,
+    160,
+    170,
+    180
+  ],
+  "curve_options": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    59.0,
+    57.333333333333336,
+    54.333333333333336,
+    52.333333333333336,
+    49.0,
+    46.666666666666664,
+    39.333333333333336,
+    20.0,
+    6.0,
+    3.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "curve_primitives": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    59.333333333333336,
+    57.333333333333336,
+    54.333333333333336,
+    52.333333333333336,
+    43.333333333333336,
+    40.333333333333336,
+    15.666666666666666,
+    1.0,
+    0.3333333333333333,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "curve_oracle": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    58.0,
+    56.0,
+    54.0,
+    52.0,
+    50.0,
+    42.0,
+    34.0,
+    20.0,
+    9.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "checks": {
+    "G0_not_vacuous": true,
+    "G1_band_gain": true,
+    "G2_reaches_oracle": false,
+    "G3_no_easy_region_regression": true,
+    "G4_whole_grid_no_regression": true
+  }
+}

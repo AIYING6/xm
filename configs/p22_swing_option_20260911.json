@@ -1,0 +1,75 @@
+{
+  "protocol": "P22-SWING-OPTION-V1",
+  "status": "FROZEN_BEFORE_TRAINING",
+  "date": "2026-09-11",
+  "upstream": "P18 (P18_PASS, primitive actions, gap at 110-140 deg) and P21 (diagnostic: the gap is a timing-phase problem, not capacity and not exploration)",
+  "diagnosis_being_addressed": {
+    "finding": "Above 110 deg separation the two duties are jointly infeasible, so the optimal policy must time-share. The learned primitive policy DOES alternate with roughly the oracle's duty split (TGT_ONLY 13 / LNK_ONLY 43-47 vs oracle 18 / 42), but it arrives at the delivery pose with a mean cache age of 7.8-8.6 against a TTL of 8, while the oracle arrives with 4.4-6.0. It delivers on only 10 of 45 link-up steps at 110 deg (oracle 42 of 42).",
+    "ruled_out": {
+      "capacity": "4x wider net: band mean 6.00 vs base 5.12 (oracle 26.25)",
+      "optimisation_budget": "4x longer run: band mean 7.00",
+      "exploration_or_curriculum": "two-stage easy-then-hard curriculum: band mean 4.50, BELOW base"
+    },
+    "conclusion": "The needed information is already in the observation (cache age, clock, and the two relative bearings from which separation is derivable). The failure is temporal abstraction: 'start the swing' is not a decision in a +/-5 deg per-step action space, it is six consecutive micro-decisions."
+  },
+  "mechanism": {
+    "name": "Goal-driven non-interruptible swing options",
+    "options": ["SERVE_TARGET", "SERVE_RELAY"],
+    "controller": "Given an option, the primitive action at every step is 'turn toward that option's goal at the full turn limit'. The policy itself is only queried at decision epochs, i.e. when no option is active.",
+    "termination": "SERVE_TARGET terminates as soon as the target is within the radar half-FOV (cache refreshed). SERVE_RELAY terminates as soon as the relay is within the link half-angle (link up). Both also terminate after max_option_steps.",
+    "abort_policy": "NONE. An invoked option cannot be abandoned mid-swing. This is the deliberate design choice: it is what makes 'when to start the swing' a single decision. Abortable options were rejected because they degenerate toward the primitive action set.",
+    "why_this_is_not_feature_engineering": "No new input feature and no new observation is added. Only the action space changes: from per-step micro-turns to committed goal-directed maneuvers."
+  },
+  "environment": {
+    "note": "identical to P18, unchanged",
+    "radar_half_fov_deg": 65.0,
+    "link_half_angle_deg": 45.0,
+    "turn_limit_deg_per_step": 5.0,
+    "cache_ttl_steps": 8,
+    "horizon_steps": 60,
+    "separation_range_deg": [10.0, 180.0],
+    "initial_heading_deg": 0.0,
+    "observation_dim": 4,
+    "reward": "+1 per step where the cache is fresh AND the relay is within the link half-angle"
+  },
+  "arms": {
+    "A_primitives": "P18 primitive policy: action = {turn -5, hold, turn +5}. Retrained here with the same environment-step budget so the comparison is like for like.",
+    "B_options": "P22 option policy: action = {SERVE_TARGET, SERVE_RELAY}, executed by the deterministic controller above."
+  },
+  "training": {
+    "algorithm": "PPO over decision epochs (semi-MDP). Returns and GAE are discounted by gamma^duration, where duration is the number of primitive steps consumed by the option.",
+    "hidden_dim": 64,
+    "seeds": [9101, 9102, 9103],
+    "parallel_envs": 8,
+    "env_steps_per_seed": 288000,
+    "updates": 600,
+    "rollout_steps": 60,
+    "max_option_steps": 15,
+    "lr": 0.0007,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_coef": 0.2,
+    "entropy_coef": 0.01,
+    "value_coef": 0.5,
+    "ppo_epochs": 4,
+    "minibatch": 512
+  },
+  "budget_equality_rule": "Both arms consume exactly 600 updates x 8 envs x 60 env steps = 288,000 ENVIRONMENT steps per seed. Equating environment steps rather than decisions is required because options consume several environment steps per decision.",
+  "evaluation": {
+    "grid_deg": "0 to 180 in steps of 10",
+    "focus_band_deg": [110, 120, 130, 140],
+    "easy_region_deg": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+    "metric": "delivered messages over a 60 step episode, greedy policy",
+    "oracle": "time-indexed backward DP, identical to the corrected P21 oracle trace"
+  },
+  "pre_registered_gates": {
+    "G0_not_vacuous": "options band mean > 0 AND primitives band mean > 0, otherwise P22_INFEASIBLE_OR_VACUOUS",
+    "G1_band_gain": "options band mean >= 1.20 x primitives band mean on 110-140 deg. This is the gate that isolates the mechanism.",
+    "G2_reaches_oracle": "options band mean >= 0.80 x oracle band mean on 110-140 deg",
+    "G3_no_easy_region_regression": "options easy-region mean >= 0.90 x primitives easy-region mean on 0-100 deg",
+    "G4_whole_grid_no_regression": "options whole-grid mean >= 0.90 x primitives whole-grid mean"
+  },
+  "decision_rule": "G0 is a precondition; a pass requires G1 AND G2 AND G3 AND G4. If G1 fails while G3 and G4 pass, the honest reading is that temporal abstraction does not fix the phase problem and the option mechanism is dropped. If G1 passes but G2 fails, the mechanism is real but insufficient and must be reported as partial. Thresholds are frozen here and must never be edited after seeing results.",
+  "provenance_requirement": "The runner must print the bound environment kwargs and the arm budgets, so a reviewer can verify that the two arms were trained on equal environment steps.",
+  "training_authorized": true
+}
