@@ -1,0 +1,13 @@
+{
+  "protocol": "P8G-ACFID-FIXED-ENDPOINT-EVALUATOR-AUDIT-V1",
+  "seed": 98501,
+  "cases_per_fault_set": 3,
+  "train_pairs": [
+    ["sense_0", "relay_0"], ["sense_1", "relay_1"],
+    ["relay_0", "act_0"], ["relay_1", "act_1"],
+    ["sense_0", "act_1"], ["sense_1", "act_0"]
+  ],
+  "fixed_endpoint": 1000000,
+  "selection_data": "training-support validation contexts only",
+  "test_data_role": "reporting only after endpoint freeze"
+}

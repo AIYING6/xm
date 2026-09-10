@@ -1,6 +1,6 @@
 {
   "protocol": "P8D-ACFID-LEARNING-PILOT-CONTRACT-V1",
-  "status": "SEQUENTIAL_PREFLIGHT_PASS_RUNNER_IMPLEMENTATION_AUTHORIZED",
+  "status": "RUNNER_AND_FIXED_ENDPOINT_EVALUATOR_AUDITS_PASS",
   "task": "two-level heterogeneous 6-UAV recovery: fixed role controllers plus a learned team-level recovery option policy",
   "primitive_fault_count": 6,
   "recovery_actions": ["continue", "role_reassign", "relay_reposition", "target_reassign", "safe_abort"],
@@ -38,5 +38,5 @@
     "held-out combinations in checkpoint selection", "pair identity lookup embeddings", "post-outcome fault features"
   ],
   "training_authorized": false,
-  "next_gate": "TRAINING_RUNNER_DRY_RUN_AND_LEAKAGE_AUDIT"
+  "next_gate": "P8H_SHORT_LEARNING_PILOT_CONTRACT_FREEZE"
 }
