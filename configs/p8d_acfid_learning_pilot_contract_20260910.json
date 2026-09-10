@@ -1,0 +1,42 @@
+{
+  "protocol": "P8D-ACFID-LEARNING-PILOT-CONTRACT-V1",
+  "status": "ARCHITECTURE_IMPLEMENTED_STATIC_AUDIT_ONLY",
+  "task": "two-level heterogeneous 6-UAV recovery: fixed role controllers plus a learned team-level recovery option policy",
+  "primitive_fault_count": 6,
+  "recovery_actions": ["continue", "role_reassign", "relay_reposition", "target_reassign", "safe_abort"],
+  "methods": {
+    "direct_fault_aware": "non-compositional MLP over context and the fixed primitive-fault registry",
+    "additive": "shared primitive-fault main effects with no pair interaction",
+    "acfid": "additive effects plus shared action-conditioned pair effects using causal task-relation descriptors"
+  },
+  "capacity_match": {
+    "direct_fault_aware_hidden": 100,
+    "additive_hidden": 81,
+    "acfid_hidden": 64,
+    "trainable_parameters": {"direct_fault_aware": 15005, "additive": 15157, "acfid": 15119},
+    "maximum_relative_gap": 0.0101
+  },
+  "fixed_across_methods": [
+    "low-level role controllers", "task dynamics", "reward", "fault detector output", "training combinations",
+    "validation combinations", "optimizer", "training steps", "recovery action set", "evaluation tape"
+  ],
+  "training_seeds": [98211, 98212, 98213],
+  "budget_per_method_per_seed": 1000000,
+  "training_support": "nominal + all singles + one frozen balanced subset of pairs",
+  "validation_support": "disjoint seen-order pairs used only for checkpoint-independent diagnostics",
+  "test_support": "held-out pairs + all frozen triples + frozen quadruples",
+  "primary_endpoints": ["heldout_recovery_action_regret", "heldout_mission_success"],
+  "secondary_endpoints": ["timeout", "collision", "safe_abort_quality", "nominal_return", "inference_latency"],
+  "pilot_pass_rule": {
+    "seed_direction": "ACFID improves held-out action regret and mission success over additive in at least 2 of 3 seeds",
+    "direct_baseline": "ACFID is non-inferior to direct fault-aware policy on success and better on at least one compositional endpoint",
+    "nominal_guard": "no material nominal success degradation",
+    "mechanism": "removing pair interactions reduces held-out-combination performance"
+  },
+  "leakage_prohibitions": [
+    "held-out combinations in training rollouts", "held-out combinations in normalization fitting",
+    "held-out combinations in checkpoint selection", "pair identity lookup embeddings", "post-outcome fault features"
+  ],
+  "training_authorized": false,
+  "next_gate": "SEQUENTIAL_ENVIRONMENT_LEARNABILITY_AND_CAPACITY_MATCH_PREFLIGHT"
+}
