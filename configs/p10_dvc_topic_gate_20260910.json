@@ -1,6 +1,6 @@
 {
   "protocol": "P10-DECISION-VALIDITY-CONTRACT-TOPIC-GATE-V1",
-  "status": "DVE_ANALYTIC_COUNTEREXAMPLES_PASS",
+  "status": "DVE_TASK_IDENTIFIABLE_DISTRIBUTION_NOT_FROZEN",
   "working_title": "Decision-Validity Envelopes for Multi-UAV Coordination under Stochastic Computation Latency",
   "scientific_object": "action-specific state-time validity under observation-computation-actuation mismatch",
   "primary_intervention": "runtime accept-or-fallback semantics based on a learned action validity set",
@@ -44,6 +44,15 @@
     "future_information_used": false,
     "training_started": false
   },
-  "next_gate": "P10C_MINIMAL_ASYNC_TASK_IDENTIFIABILITY",
+  "p10c_result": {
+    "task_identifiability": "PASS",
+    "validity_fork_pair_fraction": 0.23333333333333334,
+    "dve_oracle_mean_value": 4.625,
+    "always_fallback_mean_value": 4.0,
+    "naive_accept_mean_value": -4.0,
+    "distribution_balance": "FAIL_NOT_READY_FOR_LEARNING",
+    "reason": "valid stale actions occupy only 12.5 percent of the uniform factorial grid"
+  },
+  "next_gate": "P10C2_DISTRIBUTION_AND_REWARD_IDENTIFIABILITY",
   "training_authorized": false
 }
