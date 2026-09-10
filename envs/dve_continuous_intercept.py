@@ -44,6 +44,47 @@ class ContinuousInterceptAudit:
         goals = self.completion_target[None, :] + offsets
         return self.speed * unit(goals - self.completion_agents)
 
+    def delayed_replan_rollout(self, replan_latency: float | None = None) -> dict:
+        """Hold safely while a fresh proposal is computed, then execute it.
+
+        The fresh proposal is not available at the first completion event.  The
+        agents therefore hold their completion positions while the target keeps
+        moving.  Only after a second slow-policy latency may the new maneuver be
+        formed from the then-current state and executed for the remaining task
+        horizon.
+        """
+        delay = self.case.latency if replan_latency is None else replan_latency
+        delay = min(max(float(delay), 0.0), self.horizon)
+        agents = self.completion_agents.copy()
+        target_velocity = (
+            self.case.target_velocity
+            + 2.0 * self.case.target_maneuver * self.case.latency
+        )
+        target = self.completion_target + target_velocity * delay
+        min_separation = float(np.linalg.norm(agents[0] - agents[1]))
+
+        offsets = np.asarray([[0.0, -0.8], [0.0, 0.8]])
+        fresh_actions = self.speed * unit(target[None, :] + offsets - agents)
+        remaining_steps = round(max(self.horizon - delay, 0.0) / self.dt)
+        for _ in range(remaining_steps):
+            agents += fresh_actions * self.dt
+            target += target_velocity * self.dt
+            min_separation = min(
+                min_separation, float(np.linalg.norm(agents[0] - agents[1]))
+            )
+
+        mean_distance = float(np.linalg.norm(agents - target[None, :], axis=1).mean())
+        safe = min_separation >= self.collision_radius
+        value = -mean_distance - (8.0 if not safe else 0.0)
+        return {
+            "value": value,
+            "mean_distance": mean_distance,
+            "min_separation": min_separation,
+            "safe": safe,
+            "hold_duration": delay,
+            "execution_duration": remaining_steps * self.dt,
+        }
+
     def rollout(self, actions: np.ndarray) -> dict:
         agents = self.completion_agents.copy()
         target = self.completion_target.copy()

@@ -37,3 +37,12 @@ def test_evaluation_is_finite_and_reports_validity_fields() -> None:
         assert np.isfinite(rollout["mean_distance"])
         assert np.isfinite(rollout["min_separation"])
         assert isinstance(rollout["safe"], (bool, np.bool_))
+
+
+def test_delayed_replan_holds_before_executing_fresh_action() -> None:
+    audit = ContinuousInterceptAudit(make_case(latency=0.2))
+    result = audit.delayed_replan_rollout()
+
+    assert result["hold_duration"] == 0.2
+    assert np.isclose(result["execution_duration"], audit.horizon - 0.2)
+    assert np.isfinite(result["value"])
