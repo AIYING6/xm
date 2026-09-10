@@ -1,0 +1,99 @@
+{
+  "protocol": "P10B-DVE-ANALYTIC-COUNTEREXAMPLES-V1",
+  "verdict": "P10B_DVE_ANALYTIC_PASS",
+  "scenarios": [
+    {
+      "name": "same_delay_different_state_validity",
+      "cases": [
+        {
+          "case": "small_state_drift",
+          "latency_ms": 80,
+          "current_drift": 1.0,
+          "accept_value": 8.0,
+          "fallback_value": 4.0
+        },
+        {
+          "case": "large_state_drift",
+          "latency_ms": 80,
+          "current_drift": 3.5,
+          "accept_value": -6.0,
+          "fallback_value": 3.0
+        }
+      ],
+      "values": {
+        "always_accept": 2.0,
+        "always_fallback": 7.0,
+        "fixed_ttl_accept": 2.0,
+        "fixed_ttl_reject": 7.0,
+        "dve_oracle": 11.0
+      },
+      "best_fixed_ttl": 7.0,
+      "strict_dve_gain": 4.0
+    },
+    {
+      "name": "same_safety_different_task_validity",
+      "cases": [
+        {
+          "case": "safe_and_task_relevant",
+          "hard_safe": true,
+          "task_relevant": true,
+          "accept_value": 8.0,
+          "fallback_value": 4.0
+        },
+        {
+          "case": "safe_but_task_obsolete",
+          "hard_safe": true,
+          "task_relevant": false,
+          "accept_value": 1.0,
+          "fallback_value": 6.0
+        }
+      ],
+      "values": {
+        "always_accept": 9.0,
+        "always_fallback": 10.0,
+        "current_state_safety_shield": 9.0,
+        "dve_oracle": 14.0
+      },
+      "strict_dve_gain": 5.0
+    },
+    {
+      "name": "individually_valid_jointly_incompatible",
+      "completion_order": [
+        "uav_1",
+        "uav_2"
+      ],
+      "individual_action_validity": {
+        "uav_1": true,
+        "uav_2": true
+      },
+      "team_constraint": "at_most_one_agent_enters_shared_corridor",
+      "available_at_admission": [
+        "own_completion_time",
+        "current_local_state",
+        "signed_shared_corridor_reservation"
+      ],
+      "values": {
+        "independent_validity_admission": -10.0,
+        "always_fallback": 2.0,
+        "dve_oracle": 8.0
+      },
+      "strict_dve_gain": 18.0
+    }
+  ],
+  "checks": {
+    "same_delay_different_validity_constructed": true,
+    "dve_strictly_beats_best_fixed_ttl": true,
+    "safe_but_task_obsolete_constructed": true,
+    "dve_strictly_beats_current_state_safety_shield": true,
+    "individually_valid_jointly_incompatible_constructed": true,
+    "dve_strictly_beats_independent_admission": true,
+    "always_fallback_strictly_suboptimal": true,
+    "no_future_information": true
+  },
+  "provenance": {
+    "training_started": false,
+    "environment_steps": 0,
+    "ppo_updates": 0,
+    "future_state_or_hidden_truth_used": false
+  }
+}

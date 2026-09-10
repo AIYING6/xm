@@ -1,0 +1,26 @@
+{
+  "protocol": "P10B-DVE-ANALYTIC-COUNTEREXAMPLE-GATE-V1",
+  "parent": "P10-DECISION-VALIDITY-CONTRACT-TOPIC-GATE-V1",
+  "training_authorized": false,
+  "scenarios": [
+    "same_delay_different_state_validity",
+    "same_safety_different_task_validity",
+    "individually_valid_jointly_incompatible"
+  ],
+  "comparators": [
+    "always_accept",
+    "always_fallback",
+    "fixed_ttl",
+    "current_state_safety_shield",
+    "independent_validity_admission",
+    "dve_oracle"
+  ],
+  "pass_conditions": {
+    "all_dve_decisions_match_oracle": true,
+    "strictly_better_than_fixed_ttl_in_scenario_1": true,
+    "strictly_better_than_safety_shield_in_scenario_2": true,
+    "strictly_better_than_independent_admission_in_scenario_3": true,
+    "always_fallback_strictly_suboptimal": true,
+    "no_future_information": true
+  }
+}
