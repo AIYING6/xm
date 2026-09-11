@@ -1,0 +1,56 @@
+{
+  "protocol": "P41-V2-UTR-LEARNABILITY-FREEZE-V1",
+  "status": "CONTRACT_ONLY_NO_TRAINING",
+  "purpose": "Test whether a uniform-training baseline can learn the P41 v2 task in a non-saturated, non-collapsed band before any proposed method exists.",
+  "task_source": "envs/recoverable_service_chain_v2_env.py",
+  "method": {
+    "name": "UTR-P41-reference",
+    "intervention": "uniform sampling over the frozen training scenario tape only",
+    "prohibited": ["DRTP", "PLR", "curriculum", "adaptive sampling", "auxiliary module", "reward tuning after launch", "checkpoint selection"]
+  },
+  "training": {
+    "seeds": [95101, 95102, 95103],
+    "updates": 512,
+    "parallel_envs": 16,
+    "rollout_horizon": 9,
+    "endpoint_only": true,
+    "early_stopping": false,
+    "seed_replacement": false
+  },
+  "scenario_tapes": {
+    "training": {
+      "seed": 951000,
+      "episodes": 960,
+      "contains": ["commit_now_like", "defer_for_value_like", "reroute_before_outage_like"],
+      "sampling": "balanced by scenario family and forecast-reliability band"
+    },
+    "validation": {
+      "seed": 951100,
+      "episodes": 240,
+      "access": "evaluation only; never used in an optimizer step or sampling decision"
+    },
+    "final": {
+      "seed": 951200,
+      "episodes": 360,
+      "access": "sealed until all three endpoint checkpoints exist",
+      "reporting": "training seed is the independent unit"
+    }
+  },
+  "baselines": {
+    "random_legal": "samples only legal action indices without future realization access",
+    "rules": ["static", "value", "deadline", "topology"],
+    "oracle": "audit-only upper comparator; not a fair policy baseline"
+  },
+  "primary_endpoints": ["completed_service_value", "completion_rate", "commit_abort_rate", "expired_or_unserved_rate", "relay_reconfiguration_rate"],
+  "secondary_endpoints": ["confirmation_rate", "confirmation_to_commit_latency", "valid_chain_fraction"],
+  "T4_gate": {
+    "nominal_learning": "At least two of three UTR seeds exceed the matched random-legal mean completed-service value on the final tape.",
+    "noncollapse": "At least two of three UTR seeds obtain nonzero completed-service value in each pressure family; no pressure family has all UTR and rule policies at zero.",
+    "nonsaturation": "At least one pressure family remains below the audit oracle mean completed-service value for every UTR seed.",
+    "behavioral_use": "Across final-tape episodes, each passing UTR seed uses both service sites and at least one relay reconfiguration in a legal trajectory.",
+    "decision": "Pass only if every criterion holds. Otherwise emit P41_V2_T4_STOP and prohibit method design."
+  },
+  "claim_boundary": "A pass establishes only baseline learnability and task-band suitability. It does not establish a MARL contribution, robustness claim, or method innovation.",
+  "automatic_training": false,
+  "automatic_method_design": false
+}
