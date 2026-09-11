@@ -1,0 +1,43 @@
+{
+  "protocol": "C1-BC3-IDENTIFIABILITY-PILOT-V1",
+  "purpose": "Short prospective identifiability pilot for posterior-conditioned cooperative commitment; not a formal performance experiment.",
+  "environment": {
+    "base_benchmark": "lbforaging==2.0.0",
+    "players": 2,
+    "field_size": [5, 5],
+    "foods": 2,
+    "episode_horizon": 16,
+    "teammate_level_visible_to_actor": false,
+    "centralized_critic_has_training_only_state": true,
+    "public_joint_load_receipt": "One-step delayed public Boolean that both actors requested LOAD. It never exposes either actor's level, critic state, tape, oracle action, or future task truth."
+  },
+  "arms": {
+    "ff_mappo": "Matched feed-forward MAPPO with current legal observation only.",
+    "recurrent_mappo": "Matched recurrent MAPPO with legal observation-action-reward history.",
+    "bc3_mappo": "Recurrent MAPPO supplied with a posterior derived only from legal history and public receipts.",
+    "shuffled_bc3_mappo": "Same capacity and training path as BC3, with posterior values deterministically permuted across parallel environments."
+  },
+  "fixed_across_arms": [
+    "environment dynamics", "reward", "action masks", "actor access to teammate truth", "centralized critic information", "network width", "optimizer", "PPO budget", "training seeds", "endpoint tape"
+  ],
+  "training": {
+    "seeds": [91111, 91112, 91113],
+    "updates": 128,
+    "parallel_envs": 16,
+    "rollout_steps": 24,
+    "ppo_epochs": 4,
+    "endpoint_episodes": 256
+  },
+  "required_information_checks": [
+    "actor tensors contain no teammate level", "posterior update uses no critic state", "posterior update uses no evaluation tape or oracle label", "public receipt is identical for both actors and records only a joint LOAD request"
+  ],
+  "identifiability_gate": {
+    "minimum": [
+      "BC3 action selection changes after a legal failed joint-load receipt in the prespecified diagnostic slice",
+      "BC3 differs from recurrent MAPPO on at least one prespecified posterior-sensitive endpoint without using privileged input",
+      "posterior shuffling removes the corresponding behavior signature"
+    ],
+    "stop_rule": "If any minimum condition fails, do not extend budget, modify reward, replace seeds, or claim a posterior mechanism."
+  },
+  "not_authorized": ["formal 10M training", "UAV transfer claim", "paper result claim", "DRTP integration", "reward or task tuning after outcomes"]
+}
