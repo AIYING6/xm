@@ -1,0 +1,35 @@
+{
+  "protocol": "P35-DECISION-RELEVANT-BELIEF-HANDOFF-STAGE0-V1",
+  "status": "GATES_PRE_REGISTERED_BEFORE_EXECUTION",
+  "purpose": "Analytically test whether confirmation evidence can change a bounded responder's optimal target decision before building a continuous UAV environment. This is not a learned-policy or performance experiment.",
+  "events": 2,
+  "roles": ["wide_area_detector", "close_range_verifier", "capacity_limited_responder"],
+  "belief_model": {
+    "base_priors": [0.2, 0.5, 0.8],
+    "detector_likelihood_ratios": [0.4, 1.0, 2.5],
+    "evidence_ages": [0, 2, 4],
+    "age_retention_per_step": 0.72,
+    "posterior_match_bin_width": 0.1,
+    "confirmation_sensitivity": 0.86,
+    "confirmation_specificity": 0.86
+  },
+  "task_utility": {
+    "true_response_value": 10.0,
+    "false_response_cost": 8.0,
+    "confirmation_time_steps": 1,
+    "remaining_windows": [1, 3, 5],
+    "response_value_decay_per_elapsed_step": 0.12,
+    "response_capacity": 1
+  },
+  "qualification_gates": {
+    "B1_decision_relevant_information_value": "At least 0.20 of states have a confirmation outcome that changes the optimal response event relative to direct response.",
+    "B2_non_dominant_confirmation_policy": "Direct response to event 0, direct response to event 1, confirmation of event 0, and confirmation of event 1 must each be uniquely optimal in at least 0.08 of feasible states; no action family may exceed 0.55.",
+    "B3_evidence_age_material": "For at least 0.10 of matched posterior-bin/window states with two or more evidence ages represented, changing evidence age changes the uniquely optimal action family.",
+    "B4_role_complementarity": "Confirmation must create a positive expected value over the best direct-only choice in at least 0.10 of states, while direct-only response remains uniquely best in at least 0.10 of states.",
+    "B5_no_reward_shortcut": "All utility derives only from latent event validity, response timeliness, confirmation likelihood, and a false-response cost; no probe bonus, action label reward, or scripted priority is included."
+  },
+  "stop_rule": "If any B1-B5 gate fails, close P35. Do not tune priors, likelihoods, response values, costs, age retention, or windows after observing the outcome.",
+  "training_authorized": false,
+  "environment_authorized": false,
+  "method_authorized": false
+}
