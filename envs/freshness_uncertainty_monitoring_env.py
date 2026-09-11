@@ -205,6 +205,7 @@ class FreshnessUncertaintyMonitoringEnv:
                 self.energy[agent] -= 0.35
 
         self._duplicate_sensing += len(sensed_this_step) - len(set(sensed_this_step))
+        duplicate_this_step = len(sensed_this_step) - len(set(sensed_this_step))
         error_before = float(np.mean((self.posterior_mean - self._truth) ** 2))
         self._advance_truth()
         error_after = float(np.mean((self.posterior_mean - self._truth) ** 2))
@@ -212,7 +213,18 @@ class FreshnessUncertaintyMonitoringEnv:
         self.done = self.step_count >= self.horizon or bool(np.all(self.energy < 0.35))
         # Reward uses the same public belief components available to every arm.
         # Ground-truth error is logged for evaluation only and is not rewarded.
-        reward = information_gain + freshness_gain - 0.01 * self._distance / max(1, self.step_count)
+        # Monitoring is a team objective: repeatedly measuring one already
+        # covered region must not dominate a policy that maintains useful
+        # information over the whole field.  Both terms below are public
+        # belief-state quantities and are therefore identical for every arm.
+        global_staleness_risk = float(np.sum(self.age * np.asarray(self.scenario.urgency_rate, dtype=np.float32)))
+        reward = (
+            information_gain
+            + freshness_gain
+            - 0.02 * self._distance / max(1, self.step_count)
+            - 0.10 * global_staleness_risk
+            - 0.15 * float(duplicate_this_step)
+        )
         rewards = np.full((self.num_agents, 1), reward, dtype=np.float32)
         dones = np.full((self.num_agents, 1), self.done, dtype=np.float32)
         info = {
@@ -222,6 +234,8 @@ class FreshnessUncertaintyMonitoringEnv:
             "evaluation_mse_after": error_after,
             "max_information_age": float(np.max(self.age)),
             "duplicate_sensing": int(self._duplicate_sensing),
+            "duplicate_sensing_this_step": int(duplicate_this_step),
+            "global_staleness_risk": global_staleness_risk,
             "distance": float(self._distance),
             "truth_exposed_to_actor": False,
         }
