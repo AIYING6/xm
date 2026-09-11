@@ -1,0 +1,40 @@
+{
+  "protocol": "P6R-RESPONSE-INDUCED-OPEN-TEAM-N0-V1",
+  "status": "ZERO_TRAINING_TASK_QUALIFICATION_ONLY",
+  "task": "nonweaponized_two_lane_service_escort_competition",
+  "scope": "A deliberately small analytical precursor. It tests whether the proposed decision structure exists before a continuous UAV implementation is authorized.",
+  "information_boundary": {
+    "visible_before_commit": ["two symmetric service corridors", "friendly allocation", "common neutral opponent staging motion", "time"],
+    "hidden_before_commit": ["opponent response rule", "future opponent allocation"],
+    "prohibited": ["opponent identity label", "policy label", "response-specific reward", "response-specific transition"]
+  },
+  "friendly_responses": {
+    "left_commit": {"allocation": [2, 0], "switch_cost": 0.0},
+    "right_commit": {"allocation": [0, 2], "switch_cost": 0.0},
+    "balanced_cover": {"allocation": [1, 1], "switch_cost": 0.0},
+    "left_feint_then_right": {"allocation": [2, 0], "switch_cost": 0.35}
+  },
+  "opponent_response_rules": {
+    "mirror_pressure": "After observing allocation, allocate both blockers to the most defended corridor; ties resolve left.",
+    "weak_side_denial": "After observing allocation, allocate both blockers to the least defended corridor; ties resolve right.",
+    "commitment_exploiter": "After observing a sustained commitment, protect the initially uncommitted corridor; against a feint, retain the initial block and incur a repositioning lag."
+  },
+  "dynamics": {
+    "friendly_capacity": 1.0,
+    "opponent_capacity": 0.9,
+    "service_value_per_corridor": 1.0,
+    "uncovered_corridor_cost": 0.22,
+    "repositioning_lag_penalty": 0.45,
+    "staging_steps": 2,
+    "commit_steps": 1
+  },
+  "qualification_gates": {
+    "minimum_distinct_unique_best_responses": 3,
+    "minimum_best_response_margin": 0.08,
+    "minimum_response_induced_opponent_change_fraction": 0.66,
+    "require_identical_passive_prefix": true,
+    "require_no_universal_response": true
+  },
+  "hard_stop": "A pass is only structural qualification. It cannot authorize method naming or PPO training until the same choices arise from a continuous, non-scripted UAV dynamics implementation under a separate N0.4 audit.",
+  "training_authorized": false
+}
