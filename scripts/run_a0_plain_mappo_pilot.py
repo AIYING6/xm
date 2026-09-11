@@ -20,7 +20,7 @@ from envs.active_perception_tracking_env import ActivePerceptionTrackingEnv
 # Deliberately distinct from the earlier plain-MAPPO learnability pilot: this
 # runner uses agent-wise PPO log-probabilities so that all method arms can be
 # compared under the same credit-assignment interface.
-PROTOCOL = "A0-OC-MAPPO-METHOD-SMOKE-V1"
+PROTOCOL = "A0-OC-MAPPO-METHOD-PILOT-V1"
 MARGINAL_WEIGHT = 0.25
 ARMS = ("plain", "oc", "shuffled_oc", "zero_oc")
 
