@@ -1,0 +1,23 @@
+{
+  "protocol": "P39-ASYNC-ROLE-TRACKING-STAGE0-V2",
+  "supersedes_invalid_audit": "V1 reported fresh_coverage before setting any cache entry fresh; no environment or gate parameter was changed in V2.",
+  "status": "GATES_PRE_REGISTERED_BEFORE_EXECUTION",
+  "seeds": [39011, 39012, 39013],
+  "environment": {
+    "num_uavs": 3,
+    "num_events": 2,
+    "max_steps": 40,
+    "cache_valid_steps": 3,
+    "reassignment_blackout_steps": 1
+  },
+  "gates": {
+    "E1_non_saturated_baseline": "The static split policy mean coverage is strictly between 0.10 and 0.90.",
+    "E2_age_changes_oracle_choice": "At least one matched-geometry cache-age counterfactual changes the one-step oracle's unique joint assignment.",
+    "E3_switching_has_cost_and_value": "The one-step oracle switches in at least 0.05 and at most 0.80 of decisions, and disabling blackout changes its mean coverage by at least 0.02.",
+    "E4_native_actor_visible_staleness": "Matched geometry with fresh versus expired local cache produces different coverage while positions and assignments are equal.",
+    "E5_distinguishable_reference_ladder": "The oracle exceeds the best non-oracle rule by at least 0.03 mean coverage, and the best non-oracle rule is above 0.10."
+  },
+  "stop_rule": "If any E1-E5 gate fails, close P39. Do not tune ranges, speeds, cache duration, blackout duration, seeds, rewards, or thresholds after observing the output.",
+  "training_authorized": false,
+  "method_authorized": false
+}
