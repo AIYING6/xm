@@ -16,3 +16,6 @@ from .active_diagnosis_trainable_uav_env import (
     HARD_TERMINAL_COMM_FAILURE,
     TRAINABLE_FAILURE_HYPOTHESES,
 )
+from .freshness_uncertainty_monitoring_env import FreshnessUncertaintyMonitoringEnv, M1_SCENARIOS
+
+__all__ = ["FreshnessUncertaintyMonitoringEnv", "M1_SCENARIOS"]
