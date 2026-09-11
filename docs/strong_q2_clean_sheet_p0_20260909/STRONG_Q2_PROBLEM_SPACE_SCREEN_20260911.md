@@ -24,6 +24,7 @@
 | 不可逆承诺/异步宏动作协同 | Xiao et al., IJRR 2025；Farjadnasab & Sirouspour, RAS 2025 | **排除** | 仅以“行动限制后续可行集”或异步宏动作作为新机制 |
 | 持续多智能体协同/防遗忘 | MACPro, TNNLS 2025；RPG, IJCAI 2025；MEAL, ICML 2026 | **排除为主线** | 仅加 replay、蒸馏、关系表示或任务上下文以防遗忘 |
 | 竞争策略漏洞覆盖 / 低复杂度 exploiter 防御 | Guo et al., ICML 2021；P-PSRO, NeurIPS 2020；UDM-PSRO, NeurIPS 2022 | **排除** | 将 adversarial retraining 或 population-response diversity 改写为状态条件覆盖 |
+| 未见队友下的零样本协作 / 协作惯例泛化 | Other-Play, ICML 2020；ZSC-Eval, NeurIPS 2024；CEC, ICML 2025 | **排除** | 将伙伴泛化、约定适配或跨任务协作改写为 UAV ad hoc teaming |
 
 ## 由矩阵导出的积极约束
 
