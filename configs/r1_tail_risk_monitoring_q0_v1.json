@@ -1,0 +1,19 @@
+{
+  "protocol": "R1-TAIL-RISK-PERSISTENT-MONITORING-Q0-V1",
+  "horizon": 24,
+  "scenario_families": {
+    "steady_critical": {"critical_windows": [[0, 24, 2.5]], "ordinary_windows": [[0, 24, 1.0]]},
+    "late_critical_surge": {"critical_windows": [[0, 10, 0.8], [10, 24, 4.0]], "ordinary_windows": [[0, 24, 1.4]]},
+    "distributed_ordinary_pressure": {"critical_windows": [[0, 24, 1.3]], "ordinary_windows": [[0, 24, 2.6]]}
+  },
+  "rules": ["age", "tail", "reserve"],
+  "gates": {
+    "critical_failure_nontrivial_min": 0.01,
+    "critical_failure_nontrivial_max": 0.95,
+    "distinct_best_rule_count_min": 2,
+    "oracle_gain_min": 0.25,
+    "oracle_nonzero_failure_family_count_min": 1
+  },
+  "training_started": false,
+  "evaluation_started": false
+}
