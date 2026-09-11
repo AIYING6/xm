@@ -1,0 +1,37 @@
+{
+  "protocol": "A0-OC-MAPPO-METHOD-PILOT-V1",
+  "purpose": "implementation-and-effect-direction gate; not a confirmatory performance experiment",
+  "training_arms": ["plain", "oc", "shuffled_oc"],
+  "implementation_check_arm": "zero_oc",
+  "training_seeds": [99511, 99512, 99513],
+  "updates": 128,
+  "parallel_envs": 12,
+  "evaluation_episodes": 64,
+  "marginal_weight": 0.25,
+  "fixed_items": [
+    "environment dynamics and public belief interface",
+    "actor and critic architecture",
+    "PPO objective and optimizer",
+    "team reward",
+    "actor and critic observations",
+    "action space and legality mask",
+    "training update budget",
+    "evaluation protocol"
+  ],
+  "only_training_difference": "per-agent centered marginal-observability term in the actor advantage",
+  "primary_endpoints": [
+    "mean_return",
+    "mean_estimation_error",
+    "mean_final_logdet",
+    "mean_near_collision_steps",
+    "mean_distance",
+    "mean_measurement_count"
+  ],
+  "telemetry_required": [
+    "credit_mean",
+    "credit_std",
+    "credit_positive_fraction",
+    "credit_actor_adv_correlation"
+  ],
+  "publication_status": "development_only"
+}
