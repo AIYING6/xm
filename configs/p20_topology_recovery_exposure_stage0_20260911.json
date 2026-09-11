@@ -1,0 +1,77 @@
+{
+  "protocol": "P20-TOPOLOGY-RECOVERY-EXPOSURE-STAGE0-V1",
+  "status": "CONTRACT_FROZEN_IMPLEMENTATION_PENDING",
+  "working_title": "Topology-Conditioned Recovery Options with Exposure Shaping for Heterogeneous UAV Coordination",
+  "research_question": "When a communication-support path degrades during an ongoing heterogeneous UAV mission, can a team select a topology-conditioned recovery option from legal local observations and benefit from training exposure shaping?",
+  "scope": {
+    "team": ["scout", "relay", "terminal"],
+    "mission": "two sequential objectives requiring fresh, legally delivered task support",
+    "event": "a topology degradation occurs after initial task progress but before both objectives are complete",
+    "not_this_work": [
+      "static fault-group sampling alone",
+      "fault-label lookup or global graph access at execution",
+      "macro fault-to-action regression over a scripted payoff table",
+      "a retrospective upgrade of completed DRTP evidence"
+    ]
+  },
+  "recovery_options": {
+    "continue": "retain assignments and nominal relay position",
+    "relay_reposition": "move the relay to a legal bridging location, temporarily sacrificing forwarding capacity",
+    "role_reassign": "transfer a sensing/forwarding responsibility to a surviving platform, incurring service interruption",
+    "safe_fallback": "complete the currently supportable objective and abandon the unsupported objective before timeout"
+  },
+  "execution_information": {
+    "permitted": [
+      "own and directly observed teammate kinematics",
+      "incident link availability",
+      "received message age and acknowledgement history",
+      "locally observed objective progress and action masks",
+      "time remaining"
+    ],
+    "prohibited": [
+      "fault type label",
+      "global adjacency matrix outside local incident links",
+      "future trajectory or future link state",
+      "counterfactual option values",
+      "evaluator-side recovery labels"
+    ]
+  },
+  "fixed_across_formal_methods": [
+    "3DOF dynamics", "observation and action interface", "PPO objective", "reward terms", "training budget",
+    "nominal exposure", "fault support", "evaluation tapes", "model capacity and checkpoint rule"
+  ],
+  "formal_2x2": {
+    "UTR_direct": "uniform topology exposure and no explicit recovery-option layer",
+    "DRTP_direct": "DRTP exposure and no explicit recovery-option layer",
+    "UTR_recovery": "uniform exposure with the recovery-option layer",
+    "DRTP_recovery": "full method: recovery-option layer plus DRTP exposure"
+  },
+  "stage0_gates": {
+    "fault_injected_after_progress": "at least 90% of designated fault episodes have nonzero pre-fault progress and a recorded degradation before terminal completion",
+    "nontrivial_option_regions": "at least three recovery options are uniquely optimal in at least 10% of a frozen physical-context grid",
+    "no_universal_option": "no option is optimal in more than 65% of frozen contexts",
+    "option_headroom": "per-context recovery oracle exceeds the best fixed option by at least 0.08 normalized mission value",
+    "legal_information_sufficiency": "the permitted observation set predicts no more than an action-relevant uncertainty bound fixed before inspection; no forbidden feature may be used",
+    "endpoint_dynamic_range": "nominal and degraded cases are both non-ceiling and non-global-failure under scripted feasibility witnesses",
+    "dense_natural_progress": "objective-progress and delivered-support signals vary before terminal outcome; no recovery-specific bonus reward is allowed"
+  },
+  "stage1_gate": {
+    "baseline_learnability": "at least 2 of 3 UTR-direct seeds achieve the frozen nominal and degraded learnability ranges without ceiling saturation",
+    "no_candidate_training_before_pass": true
+  },
+  "primary_endpoints": [
+    "mission_continuity_value",
+    "post-degradation objective completion",
+    "recovery_latency",
+    "timeout"
+  ],
+  "safety_endpoints": ["collision", "constraint_violation", "safe_fallback_quality"],
+  "mechanism_endpoints": [
+    "option_selection_by_context",
+    "post-fault support-restoration latency",
+    "message-age trajectory",
+    "role-switch and relay-position trajectory"
+  ],
+  "stop_rule": "If any Stage-0 gate fails, close P20 without algorithm training. If Stage-1 baseline learnability fails or saturates, redesign the task before candidate training; do not tune the method to rescue the task.",
+  "training_authorized": false
+}
