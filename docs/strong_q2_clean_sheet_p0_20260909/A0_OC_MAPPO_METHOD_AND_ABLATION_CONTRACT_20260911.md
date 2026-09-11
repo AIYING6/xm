@@ -31,7 +31,7 @@ OC-MAPPO 保留普通 MAPPO 的 actor、critic、PPO clip 目标、环境回报�
 \widetilde{A}_{i,t}=A^{\mathrm{team}}_t+\lambda\left(m_{i,t}-\frac{1}{N}\sum_jm_{j,t}\right),
 \]
 
-其中 \(\lambda\) 在训练前冻结。中心化项确保只重分配同一时刻的协作学习信号，而不向所有 actor 同时增加同方向的额外团队奖励。
+其中 \(\lambda=0.25\) 在训练前冻结。中心化项确保只重分配同一时刻的协作学习信号，而不向所有 actor 同时增加同方向的额外团队奖励。
 
 该式是待检验的算法干预，不应预先写成“正确机制”或“理论保证”。
 

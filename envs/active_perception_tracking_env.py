@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as np
 
-from envs.observability_active_perception import log_determinant
+from envs.observability_active_perception import log_determinant, marginal_bearing_contributions
 
 
 HOLD, EAST, WEST, NORTH, SOUTH = range(5)
@@ -158,6 +158,17 @@ class ActivePerceptionTrackingEnv:
             self.uav_positions[index] = candidate
         self._advance_target()
         self._predict_belief()
+        # This is a public-belief geometric quantity computed after the joint
+        # movement decision but before assimilating noisy measurements.  It is
+        # logged for training-time credit assignment only; actor observations
+        # remain unchanged.
+        marginal_contributions = marginal_bearing_contributions(
+            self.belief_covariance,
+            self.belief_mean,
+            self.uav_positions,
+            [item.sensing_range for item in self.uav_types],
+            [item.bearing_variance for item in self.uav_types],
+        )
         measurements = self._assimilate_bearings()
         posterior_logdet = log_determinant(self.belief_covariance)
         unsafe = self._safety_violation()
@@ -176,6 +187,7 @@ class ActivePerceptionTrackingEnv:
             "near_collision": float(unsafe),
             "target_truth_exposed_to_actor": False,
             "evaluation_estimation_error": estimation_error,
+            "marginal_observability_contributions": marginal_contributions.astype(np.float32),
         }
         return self.actor_observation(), self.critic_observation(), self.graph_observation(), rewards, dones, info
 

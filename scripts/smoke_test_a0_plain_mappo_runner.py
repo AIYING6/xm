@@ -13,7 +13,7 @@ from scripts.run_a0_plain_mappo_pilot import train
 def main() -> None:
     root = Path(tempfile.mkdtemp(prefix="a0_plain_mappo_"))
     try:
-        train(seed=301, updates=1, parallel_envs=3, out=root)
+        train(seed=301, updates=1, parallel_envs=3, out=root, arm="oc")
         assert (root / "endpoint.pt").is_file()
         assert (root / "train_log.csv").is_file()
     finally:
