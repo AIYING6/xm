@@ -19,10 +19,17 @@ from envs.forecast_commitment_escort_env import (
     COMMIT_RIGHT,
     M2_COMMITMENT_SCENARIOS,
     ForecastCommitmentEscortEnv,
+    ForecastCommitmentEscortV2Env,
+    ForecastCommitmentEscortV3Env,
 )
 
 
 PROTOCOL = "M2-PLAIN-MAPPO-BASELINE-V1"
+TASKS = {
+    "v1": ForecastCommitmentEscortEnv,
+    "v2": ForecastCommitmentEscortV2Env,
+    "v3": ForecastCommitmentEscortV3Env,
+}
 
 
 def seed_all(seed: int) -> torch.Generator:
@@ -35,14 +42,15 @@ def seed_all(seed: int) -> torch.Generator:
 
 
 class ScenarioCursor:
-    def __init__(self, seed: int):
+    def __init__(self, seed: int, env_class=ForecastCommitmentEscortEnv):
         self.rng = np.random.default_rng(seed)
         self.index = 0
+        self.env_class = env_class
 
     def next(self) -> ForecastCommitmentEscortEnv:
         scenario = M2_COMMITMENT_SCENARIOS[self.index % len(M2_COMMITMENT_SCENARIOS)]
         self.index += 1
-        return ForecastCommitmentEscortEnv(scenario, seed=int(self.rng.integers(0, 2**31 - 1)))
+        return self.env_class(scenario, seed=int(self.rng.integers(0, 2**31 - 1)))
 
 
 def stack_envs(envs: list[ForecastCommitmentEscortEnv]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -60,12 +68,12 @@ def deterministic_action(agent: M2PlainMAPPO, env: ForecastCommitmentEscortEnv) 
         return torch.argmax(agent.action_distribution(obs, masks).logits, dim=-1).squeeze(0).numpy().astype(np.int64)
 
 
-def evaluate(agent: M2PlainMAPPO, seed: int, *, repeats: int = 96) -> tuple[list[dict[str, Any]], dict[str, float]]:
+def evaluate(agent: M2PlainMAPPO, seed: int, *, repeats: int = 96, env_class=ForecastCommitmentEscortEnv) -> tuple[list[dict[str, Any]], dict[str, float]]:
     rng = np.random.default_rng(seed)
     rows: list[dict[str, Any]] = []
     for scenario in M2_COMMITMENT_SCENARIOS:
         for repeat in range(repeats):
-            env = ForecastCommitmentEscortEnv(scenario, seed=int(rng.integers(0, 2**31 - 1)))
+            env = env_class(scenario, seed=int(rng.integers(0, 2**31 - 1)))
             env.reset()
             total = 0.0
             early_actions: np.ndarray | None = None
@@ -100,11 +108,12 @@ def evaluate(agent: M2PlainMAPPO, seed: int, *, repeats: int = 96) -> tuple[list
     return rows, summary
 
 
-def train(seed: int, updates: int, parallel_envs: int, out: Path) -> None:
+def train(seed: int, updates: int, parallel_envs: int, out: Path, *, task_version: str = "v1") -> None:
+    env_class = TASKS[task_version]
     generator = seed_all(seed)
     agent = M2PlainMAPPO()
     optimizer = torch.optim.Adam(agent.parameters(), lr=3e-4)
-    cursor = ScenarioCursor(seed + 41)
+    cursor = ScenarioCursor(seed + 41, env_class=env_class)
     envs = [cursor.next() for _ in range(parallel_envs)]
     gamma, gae_lambda, clip, epochs, rollout_steps = 0.99, 0.95, 0.2, 4, 14
     fields = ("update", "train_reward", "policy_loss", "value_loss", "reliable_return", "ambiguous_return", "reliable_early_right", "ambiguous_early_directional", "ambiguous_reveal_correct")
@@ -165,7 +174,7 @@ def train(seed: int, updates: int, parallel_envs: int, out: Path) -> None:
                 optimizer.step()
                 policy_loss, value_loss = float(policy_loss_t.detach()), float(value_loss_t.detach())
             if update % 32 == 0 or update == updates:
-                _, validation = evaluate(agent, seed + update, repeats=24)
+                _, validation = evaluate(agent, seed + update, repeats=24, env_class=env_class)
             else:
                 validation = {}
             writer.writerow({
@@ -180,7 +189,7 @@ def train(seed: int, updates: int, parallel_envs: int, out: Path) -> None:
                 "ambiguous_reveal_correct": validation.get("ambiguous_forecast_reveal_correct_direction", ""),
             })
             handle.flush()
-    torch.save({"protocol": PROTOCOL, "seed": seed, "state_dict": agent.state_dict()}, out / "endpoint.pt")
+    torch.save({"protocol": PROTOCOL, "task_version": task_version, "seed": seed, "state_dict": agent.state_dict()}, out / "endpoint.pt")
 
 
 def main() -> None:
@@ -189,6 +198,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--updates", type=int, default=256)
     parser.add_argument("--parallel-envs", type=int, default=16)
+    parser.add_argument("--task-version", choices=tuple(TASKS), default="v1")
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
@@ -199,16 +209,18 @@ def main() -> None:
         raise FileExistsError(f"refusing to overwrite {args.output_root}")
     args.output_root.mkdir(parents=True)
     if args.mode == "train":
-        train(args.seed, args.updates, args.parallel_envs, args.output_root)
+        train(args.seed, args.updates, args.parallel_envs, args.output_root, task_version=args.task_version)
         return
     if args.checkpoint is None:
         raise ValueError("evaluate requires --checkpoint")
     payload = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
     if payload.get("protocol") != PROTOCOL:
         raise ValueError("unexpected checkpoint protocol")
+    if payload.get("task_version", "v1") != args.task_version:
+        raise ValueError("checkpoint and evaluation task versions differ")
     agent = M2PlainMAPPO()
     agent.load_state_dict(payload["state_dict"])
-    rows, summary = evaluate(agent, args.seed)
+    rows, summary = evaluate(agent, args.seed, env_class=TASKS[args.task_version])
     with (args.output_root / "episode_metrics.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=rows[0].keys())
         writer.writeheader()

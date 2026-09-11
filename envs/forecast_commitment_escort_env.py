@@ -176,3 +176,65 @@ class ForecastCommitmentEscortEnv:
             "central_fallback_steps": int(self._central_fallback_steps),
             "wrong_corridor_steps": int(self._wrong_corridor_steps),
         }
+
+
+class ForecastCommitmentEscortV2Env(ForecastCommitmentEscortEnv):
+    """A commitment-sensitive variant with an explicit redeployment cost.
+
+    Version 1 allowed a UAV that had already entered a branch corridor to
+    reverse course after the late cue at the same cost as an uncommitted UAV
+    leaving the central holding corridor.  That made an early, incorrect
+    commitment cheaply reversible and erased the intended distinction between
+    acting on a reliable forecast and waiting for information.
+
+    In this version, first dispatch from the central holding corridor retains
+    the two-step setup delay, whereas moving an already deployed UAV to a
+    different corridor incurs a longer redeployment delay.  The distinction is
+    an environment property, not an observation or training-side advantage:
+    all policies observe the same public forecast and late cue.
+    """
+
+    initial_dispatch_lag = 2
+    redeployment_lag = 6
+
+    def _apply_actions(self, actions: np.ndarray) -> None:
+        for agent, action in enumerate(actions):
+            if self._lag_remaining[agent] > 0:
+                self._lag_remaining[agent] -= 1
+                if self._lag_remaining[agent] == 0:
+                    self._corridors[agent] = self._pending_corridors[agent]
+                continue
+
+            current = int(self._corridors[agent])
+            requested = self._action_to_corridor(int(action), current)
+            if requested == current:
+                continue
+
+            self._pending_corridors[agent] = requested
+            # A UAV staged in the holding corridor can be dispatched quickly.
+            # Any subsequent corridor change represents redeployment from an
+            # active support position and therefore costs more time.
+            lag = self.initial_dispatch_lag if current == CENTER else self.redeployment_lag
+            self._lag_remaining[agent] = lag
+            self._reconfigurations += 1
+
+
+class ForecastCommitmentEscortV3Env(ForecastCommitmentEscortV2Env):
+    """Commitment-v2 with a one-step forecast decision window.
+
+    The initial forecast is a time-stamped dispatch advisory, rather than a
+    continuously refreshed signal.  It is public at reset only; during the
+    holding interval the policy receives an uninformative value until the
+    near-fork cue arrives.  This prevents a policy from postponing the same
+    forecast-based commitment until immediately before the cue while preserving
+    identical information for every compared policy.
+    """
+
+    def _visible_right_probability(self) -> float:
+        if self.step_count == 0:
+            return self.scenario.early_right_probability
+        if self.step_count < self.reveal_step:
+            return 0.5
+        if self.step_count < self.fork_step:
+            return 0.97 if self._branch else 0.03
+        return float(self._branch)
