@@ -13,7 +13,10 @@ from pathlib import Path
 
 
 ACTIVE_TOP_LEVEL = {"algorithms", "envs", "configs", "scripts", "tests"}
-TEMP_MARKERS = (".tmp", "__pycache__", ".audit_", "_qa_", "rendered", "pdf_pages")
+# ``.audit_*`` directories may contain the only retained provenance for a
+# frozen experiment.  They are deliberately *not* treated as disposable;
+# provenance, not the directory name, decides their eventual disposition.
+TEMP_MARKERS = (".tmp", "__pycache__", "_qa_", "rendered", "pdf_pages")
 ACTIVE_DOCUMENT_MARKERS = ("drtp", "canonical", "reproducib", "claim_evidence", "submission", "retention")
 
 
