@@ -21,6 +21,8 @@
 | 个体随机观测延迟补偿 | *Rainbow Delay Compensation*, NeurIPS 2025 | **排除** | 仅把消息时延或异步观察引入 UAV 环境 |
 | 任意通信等级下的缺失观测填补 | Santos et al., *Artificial Intelligence* 2025, DOI: 10.1016/j.artint.2025.104404 | **排除** | 预测队友观测、掩码重建或链路故障补偿 |
 | 不确定任务需求/能力的近端资源预留 | Rossano et al., IROS 2026, arXiv:2509.22469 | **排除** | 将能力不确定改为任务不确定、等待或资源预留 |
+| 不可逆承诺/异步宏动作协同 | Xiao et al., IJRR 2025；Farjadnasab & Sirouspour, RAS 2025 | **排除** | 仅以“行动限制后续可行集”或异步宏动作作为新机制 |
+| 持续多智能体协同/防遗忘 | MACPro, TNNLS 2025；RPG, IJCAI 2025；MEAL, ICML 2026 | **排除为主线** | 仅加 replay、蒸馏、关系表示或任务上下文以防遗忘 |
 
 ## 由矩阵导出的积极约束
 
@@ -32,6 +34,7 @@
 2. 不再从自建 UAV 环境逆向寻找机制。
 3. 下一轮工作先选择一个公开基准中的**明确可检验现象**，再由现象决定方法；不得先命名算法。
 4. 在找到同时满足五项标准的候选前，不启动任何长期训练。
+5. 协作 MARL 中“能力推断、一般 belief、延迟、宏动作、持续学习”五个最直观方向均已出现直接方法占位；下一轮检索须转向竞争/博弈任务或非协作单一机制无法自然覆盖的公开问题类，而不是在这五类内继续微调。
 
 ## 参考入口
 
@@ -41,3 +44,6 @@
 - Hybrid execution / imputation, 2025: https://www.sciencedirect.com/science/article/pii/S0004370225001237
 - Uncertain capability allocation, 2025/2026: https://arxiv.org/abs/2509.22469
 - Public MARL benchmark infrastructure: https://jmlr.org/papers/v25/23-1612.html
+- Asynchronous macro-action MARL: https://journals.sagepub.com/doi/10.1177/02783649241306124
+- Continual coordination relation patterns: https://www.ijcai.org/proceedings/2025/759
+- MEAL continual-MARL benchmark: https://arxiv.org/abs/2506.14990
