@@ -180,7 +180,7 @@ def train(seed: int, updates: int, parallel_envs: int, out: Path, *, arm: str = 
 
 def main() -> None:
     parser = argparse.ArgumentParser(); parser.add_argument("mode", choices=("train", "evaluate", "random-evaluate", "hold-evaluate")); parser.add_argument("--seed", type=int, required=True)
-    parser.add_argument("--updates", type=int, default=256); parser.add_argument("--parallel-envs", type=int, default=12); parser.add_argument("--checkpoint", type=Path); parser.add_argument("--arm", choices=ARMS, default="plain")
+    parser.add_argument("--updates", type=int, default=256); parser.add_argument("--parallel-envs", type=int, default=12); parser.add_argument("--episodes", type=int, default=32); parser.add_argument("--checkpoint", type=Path); parser.add_argument("--arm", choices=ARMS, default="plain")
     parser.add_argument("--output-root", type=Path, required=True); parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute: raise SystemExit("refusing to run without --execute")
@@ -188,16 +188,16 @@ def main() -> None:
     args.output_root.mkdir(parents=True)
     if args.mode == "train": train(args.seed, args.updates, args.parallel_envs, args.output_root, arm=args.arm); return
     if args.mode == "random-evaluate":
-        rows, summary = evaluate_reference(args.seed, mode="random")
+        rows, summary = evaluate_reference(args.seed, mode="random", repeats=args.episodes)
     elif args.mode == "hold-evaluate":
-        rows, summary = evaluate_reference(args.seed, mode="hold")
+        rows, summary = evaluate_reference(args.seed, mode="hold", repeats=args.episodes)
     else:
         if args.checkpoint is None: raise ValueError("evaluate requires --checkpoint")
         payload = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
         if payload.get("protocol") != PROTOCOL: raise ValueError("unexpected checkpoint protocol")
         if payload.get("arm", "plain") != args.arm: raise ValueError("checkpoint and requested arm differ")
         agent = M2PlainMAPPO(obs_dim=10, critic_dim=13, hidden_dim=96, action_dim=5); agent.load_state_dict(payload["state_dict"])
-        rows, summary = evaluate(agent, args.seed)
+        rows, summary = evaluate(agent, args.seed, repeats=args.episodes)
     with (args.output_root / "episode_metrics.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=rows[0].keys()); writer.writeheader(); writer.writerows(rows)
     (args.output_root / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
