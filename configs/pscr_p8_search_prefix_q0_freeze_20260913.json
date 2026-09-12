@@ -1,0 +1,28 @@
+{
+  "protocol": "PSCR-P8-SEARCH-PREFIX-Q0",
+  "status": "TASK_IDENTIFIABILITY_PASS_ENVIRONMENT_IMPLEMENTATION_AUTHORIZED",
+  "physical_dynamics": "envs/uav_intercept_3d_env.py unchanged 3DOF plant and communication graph",
+  "public_decision": {
+    "commit_step": 36,
+    "future_arrival_step": 84,
+    "forecast_reliability_bands": [0.1, 0.9],
+    "actor_future_truth_before_arrival": false
+  },
+  "geometry": {
+    "primary_position": [10000.0, -3000.0, 5000.0],
+    "forecast_position": [11000.0, 5000.0, 5000.0],
+    "opposite_sector_y_shift": -10000.0,
+    "future_x_offsets": [-750.0, 0.0, 750.0],
+    "localization_radius": 4000.0
+  },
+  "task_endpoints": ["primary_completion", "future_completion", "localization", "timeout", "collision_or_constraint", "energy_used"],
+  "q0_gate": {
+    "states_per_reliability": 4,
+    "margin": 0.05,
+    "high_reliability_stage_preferred": true,
+    "low_reliability_maintain_preferred": true,
+    "high_state_support": 4,
+    "low_state_support": 4
+  },
+  "boundary": "Q0 establishes only a physical, public-belief action trade-off. It is not learning, ablation, generalization, or method evidence."
+}
