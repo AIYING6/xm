@@ -1,0 +1,17 @@
+{
+  "protocol": "PSCR-RC-COMMITMENT-RELEASE-MAPPO-M1-V1",
+  "purpose": "Matched development pilot testing reliable commitment--release against capacity-matched controls.",
+  "training_seeds": [99901, 99902, 99903],
+  "updates": 256,
+  "parallel_envs": 8,
+  "arms": {
+    "full": "correct public reliability plus action-conditioned opportunity alignment",
+    "phase_control": "same capacity and Q fitting, but no opportunity-to-actor alignment",
+    "permuted_reliability": "same capacity and alignment, with the two public reliability bands swapped only inside the planning context"
+  },
+  "fixed": ["P4 geometry", "3DOF dynamics", "five-intent interface", "actor execution information", "reward", "PPO", "optimizer", "training budget", "reliability-stratified endpoint"],
+  "primary_endpoint": "per-seed weighted_service_value, primary_completed and future_completed separately in r0.90 and r0.25 bands",
+  "mechanism_endpoint": "pre-arrival forecast versus contingency fractions and post-arrival future-service release fraction",
+  "decision_rule": "Advance only if the full arm exceeds at least one matched control on the primary endpoint in two of three seeds and its action pattern is directionally compatible with the public-reliability hypothesis, without a material primary-service or energy collapse.",
+  "interpretation_boundary": "M1 is development only. It selects whether the frozen mechanism earns formal cohort evaluation; it is not pooled with a future formal cohort."
+}
