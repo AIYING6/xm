@@ -1,0 +1,28 @@
+{
+  "protocol": "PSCR-P8-PBRC-DEVELOPMENT-V1",
+  "purpose": "development mechanism-identifiability gate; not formal paper evidence",
+  "task_freeze": "configs/pscr_p8_search_prefix_q0_freeze_20260913.json",
+  "arms": ["plain", "plan_no_reliability", "permuted_pbrc", "pbrc"],
+  "training_seeds": [97211, 97212, 97213],
+  "updates_per_seed": 256,
+  "parallel_envs": 8,
+  "evaluation_reliability_bands": [0.1, 0.9],
+  "evaluation_repeats_per_band": 64,
+  "controls": {
+    "capacity": "All arms instantiate the same PBRC network including the plan head.",
+    "plain": "Uses the individual role-intent head at all policy-active steps.",
+    "plan_no_reliability": "Uses the team plan head with public reliability replaced by 0.5.",
+    "permuted_pbrc": "Uses the team plan head with 0.1 and 0.9 public reliability semantics exchanged.",
+    "pbrc": "Uses the team plan head with the correct public reliability value."
+  },
+  "fixed_items": ["P8 environment", "3DOF plant", "observation dimensions", "rewards", "PPO settings", "training budget", "evaluation seeds and bands"],
+  "development_gate": {
+    "all_arms_all_seeds_complete": true,
+    "pbrc_minimum_seeds_with_high_minus_low_stage_rate_at_least": 2,
+    "pbrc_high_minus_low_stage_rate_threshold": 0.15,
+    "pbrc_future_completion_cohort_lower": 0.05,
+    "pbrc_future_completion_cohort_upper": 0.95,
+    "report_all_service_safety_and_energy_endpoints": true
+  },
+  "boundary": "The gate tests whether the specified mechanism changes pre-arrival public-plan behavior without global task collapse. It does not establish method superiority, causality, generalization, or publication readiness."
+}
