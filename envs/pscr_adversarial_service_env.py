@@ -36,6 +36,10 @@ class PSCRConfig:
     future_forward_distance: float = 11_000.0
     future_lateral_distance: float = 11_000.0
     contingency_forward_distance: float = 10_000.0
+    # P7 role-commitment task parameters.  Defaults leave all prior PSCR
+    # protocols unchanged; they are consumed only by the P7 interface.
+    commitment_start_step: int = 60
+    commitment_lock_steps: int = 18
     adversary_profile: str = "bounded_mixture"  # bounded_mixture | urgent_opposite | routine_aligned
     seed: int = 0
 
