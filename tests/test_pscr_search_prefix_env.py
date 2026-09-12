@@ -9,6 +9,8 @@ def test_p8_actor_hides_future_truth_before_arrival():
     obs, critic, graph = env.reset()
     assert obs.shape[0] == env.num_agents
     assert critic.ndim == 1
+    assert graph["team_public_context"].shape == (5,)
+    assert graph["team_public_context"][0] == env.public_forecast_reliability
     assert graph["action_masks"][:, 2].sum() == 0
     for _ in range(env.config.future_arrival_step - 1):
         obs, critic, graph, rewards, dones, info = env.step(np.full(env.num_agents, PRIMARY_SERVICE, dtype=np.int64))

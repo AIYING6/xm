@@ -96,6 +96,30 @@ class PSCRSearchPrefixEnv(PSCRRoleCommitmentEnv):
         base = super().critic_observation()
         return np.concatenate((base, np.asarray((float(getattr(self, "future_localized", False)) if self.future_active else 0.0,), dtype=np.float32)))
 
+    def public_commitment_context(self) -> np.ndarray:
+        """Return the common, pre-arrival information legal for a team plan.
+
+        This deliberately excludes the sampled future position, realized
+        sector and urgency before request activation.  It is included in the
+        graph payload so a structured policy need not reconstruct common
+        public facts from role-specific local observations.
+        """
+        return np.asarray(
+            (
+                self.public_forecast_reliability,
+                float(self.forecast_sector),
+                max(0, self.config.future_arrival_step - self.step_count) / self.config.horizon,
+                float(self._commitment_active()),
+                float(self._request_active("primary")),
+            ),
+            dtype=np.float32,
+        )
+
+    def graph_observation(self) -> dict[str, np.ndarray]:
+        graph = super().graph_observation()
+        graph["team_public_context"] = self.public_commitment_context()
+        return graph
+
     def step(self, actions: np.ndarray | list[int]):
         if self.done:
             raise RuntimeError("reset required after a terminal P8 episode")
