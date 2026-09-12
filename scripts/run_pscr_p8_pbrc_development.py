@@ -76,16 +76,21 @@ def choose(agent: PSCRPBRCRoleCommitmentMAPPO, obs: np.ndarray, masks: np.ndarra
 
 
 def evaluate(agent: PSCRPBRCRoleCommitmentMAPPO, arm: str, seed: int, repeats: int = 64) -> tuple[list[dict[str, Any]], dict[str, float]]:
-    rng = np.random.default_rng(seed); rows: list[dict[str, Any]] = []
+    rng = np.random.default_rng(seed)
+    # Reuse the same initial episode seeds under both reliability values.
+    # Otherwise a high--low plan-frequency difference could be explained by
+    # different sampled initial geometries rather than public reliability.
+    episode_seeds = [int(rng.integers(0, 2**31 - 1)) for _ in range(repeats)]
+    rows: list[dict[str, Any]] = []
     for reliability in RELIABILITIES:
-        for episode in range(repeats):
-            env = make_env(int(rng.integers(0, 2**31 - 1)), reliability); env.reset(); total = 0.0; commitment_plan = -1
+        for episode, episode_seed in enumerate(episode_seeds):
+            env = make_env(episode_seed, reliability); env.reset(); total = 0.0; commitment_plan = -1
             while not env.done:
                 obs, _, masks, context, due, locked = stack([env])
                 actions, _, plans, _ = choose(agent, obs, masks, context, due, locked, [env], arm, generator=None)
                 if plans[0] >= 0: commitment_plan = int(plans[0])
                 _, _, _, reward, _, _ = env.step(actions[0]); total += float(reward.mean())
-            rows.append({"reliability": reliability, "episode": episode, "return": total, "commit_stage_plan": float(commitment_plan == 1), **env.terminal_summary()})
+            rows.append({"reliability": reliability, "episode": episode, "episode_seed": episode_seed, "return": total, "commit_stage_plan": float(commitment_plan == 1), **env.terminal_summary()})
     summary: dict[str, float] = {"episodes": float(len(rows))}
     for reliability in RELIABILITIES:
         subset = [row for row in rows if float(row["reliability"]) == reliability]
