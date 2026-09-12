@@ -27,6 +27,12 @@ class PSCRConfig:
     forecast_reliability: float = 0.75
     geometry_scale: float = 1.0
     service_quality_reward_weight: float = 0.01
+    # Public task geometry. Defaults preserve the completed PSCR P1--P3
+    # interface exactly; P4 calibration may vary these only in a new root.
+    primary_forward_distance: float = 8_500.0
+    future_forward_distance: float = 11_000.0
+    future_lateral_distance: float = 11_000.0
+    contingency_forward_distance: float = 10_000.0
     adversary_profile: str = "bounded_mixture"  # bounded_mixture | urgent_opposite | routine_aligned
     seed: int = 0
 
@@ -77,14 +83,14 @@ class PredictiveServiceChainReconfigurationEnv:
         self.step_count = 0
         self.done = False
         centroid = self.base.blue_pos.mean(axis=0)
-        canonical_primary = np.asarray((8_500.0, 0.0, 5_000.0), dtype=np.float32)
+        canonical_primary = np.asarray((self.config.primary_forward_distance, 0.0, 5_000.0), dtype=np.float32)
         self.primary_position = centroid + self.config.geometry_scale * (canonical_primary - centroid)
         self.forecast_sector = 1 if self.rng.random() < 0.5 else -1
         actual_sector, self.future_urgent = self._sample_future_profile(self.forecast_sector)
         # A request remains inside the announced sector but its exact geometry
         # is unavailable until arrival.
         canonical_future = np.asarray(
-            (11_000.0 + float(self.rng.uniform(-1_000.0, 1_000.0)), actual_sector * 11_000.0, 5_000.0),
+            (self.config.future_forward_distance + float(self.rng.uniform(-1_000.0, 1_000.0)), actual_sector * self.config.future_lateral_distance, 5_000.0),
             dtype=np.float32,
         )
         self.future_position = centroid + self.config.geometry_scale * (canonical_future - centroid)

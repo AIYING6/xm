@@ -26,7 +26,7 @@ class PSCRContingencyServiceEnv(PSCRServiceReconfigurationEnv):
         # This hub lies between the known primary site and both possible
         # future sectors.  It is derived from the frozen geometry only, not
         # from the sampled future location, sector realization, or urgency.
-        canonical_hub = np.asarray((10_000.0, 0.0, 5_000.0), dtype=np.float32)
+        canonical_hub = np.asarray((self.config.contingency_forward_distance, 0.0, 5_000.0), dtype=np.float32)
         self._contingency_position = centroid + self.config.geometry_scale * (canonical_hub - centroid)
         return result
 

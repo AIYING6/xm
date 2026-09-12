@@ -29,7 +29,7 @@ class PSCRServiceReconfigurationEnv(PredictiveServiceChainReconfigurationEnv):
         centroid = self.base.blue_pos.mean(axis=0)
         # This is the public forecast-sector centre, not the sampled future
         # request coordinate.  It can therefore be used before arrival.
-        forecast_canonical = np.asarray((11_000.0, float(self.forecast_sector) * 11_000.0, 5_000.0), dtype=np.float32)
+        forecast_canonical = np.asarray((self.config.future_forward_distance, float(self.forecast_sector) * self.config.future_lateral_distance, 5_000.0), dtype=np.float32)
         self._forecast_position = centroid + self.config.geometry_scale * (forecast_canonical - centroid)
         self._last_macro_actions = np.full(self.num_agents, SAFE_HOLD, dtype=np.int64)
         return result
