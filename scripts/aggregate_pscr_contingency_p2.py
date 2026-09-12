@@ -22,6 +22,7 @@ def main() -> None:
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--seeds", type=int, nargs="+", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--label", default="PSCR_P2", help="artifact prefix, e.g. PSCR_P3")
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"refusing to overwrite {args.output}")
@@ -64,12 +65,12 @@ def main() -> None:
                 paired.append({"candidate": "robust", "control": control, "training_seed": seed, "profile": profile, **{f"delta_{metric}": float(full[metric]) - float(base[metric]) for metric in METRICS}})
 
     args.output.mkdir(parents=True)
-    for name, rows in (("PSCR_P2_PER_SEED_ENDPOINTS.csv", per_seed), ("PSCR_P2_PROFILE_SUMMARY.csv", summaries), ("PSCR_P2_PAIRED_DELTAS.csv", paired)):
+    for name, rows in ((f"{args.label}_PER_SEED_ENDPOINTS.csv", per_seed), (f"{args.label}_PROFILE_SUMMARY.csv", summaries), (f"{args.label}_PAIRED_DELTAS.csv", paired)):
         with (args.output / name).open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
             writer.writeheader(); writer.writerows(rows)
     manifest = {
-        "protocol": "PSCR-CONTINGENCY-P2-PILOT-AGGREGATION-V1",
+        "protocol": f"{args.label}-PILOT-AGGREGATION-V1",
         "independent_unit": "training_seed",
         "training_seeds": args.seeds,
         "episodes_per_seed_profile": 24,
@@ -77,7 +78,7 @@ def main() -> None:
         "profiles": list(PROFILES),
         "interpretation_boundary": "Development pilot; episode rows estimate each trained policy, while only seed summaries are independent repetitions.",
     }
-    (args.output / "PSCR_P2_ENDPOINT_MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (args.output / f"{args.label}_ENDPOINT_MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
