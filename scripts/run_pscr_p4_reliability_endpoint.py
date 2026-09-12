@@ -85,6 +85,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, required=True, help="Training seed of the checkpoint.")
     parser.add_argument("--checkpoint", type=Path, required=True)
+    parser.add_argument("--checkpoint-protocol", default=PROTOCOL)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--repeats", type=int, default=48)
     parser.add_argument("--execute", action="store_true")
@@ -95,7 +96,7 @@ def main() -> None:
         raise FileExistsError(f"refusing to overwrite {args.output_root}")
 
     payload = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
-    if payload.get("protocol") != PROTOCOL:
+    if payload.get("protocol") != args.checkpoint_protocol:
         raise ValueError("unexpected checkpoint protocol")
     if payload.get("seed") != args.seed:
         raise ValueError("checkpoint training seed does not match --seed")
@@ -110,7 +111,7 @@ def main() -> None:
         writer.writerows(rows)
     manifest = {
         "protocol": "PSCR-P4-RELIABILITY-ENDPOINT-V1",
-        "checkpoint_protocol": PROTOCOL,
+        "checkpoint_protocol": args.checkpoint_protocol,
         "training_seed": args.seed,
         "reliability_bands": list(RELIABILITY_BANDS),
         "episodes_per_training_seed_band": args.repeats,

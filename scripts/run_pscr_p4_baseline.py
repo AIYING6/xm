@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+import argparse
 import sys
 from pathlib import Path
 
@@ -32,5 +33,21 @@ train = base.train
 evaluate = base.evaluate
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Run a P4 arm with an explicit checkpoint protocol label.
+
+    The default preserves the completed G0 protocol.  Later registered arms
+    must pass their frozen protocol on the command line, so a checkpoint never
+    inherits a development-stage identifier merely because it reuses this
+    capacity-matched runner.
+    """
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--run-protocol", default=PROTOCOL)
+    known, remaining = parser.parse_known_args()
+    base.PROTOCOL = known.run_protocol
+    sys.argv = [sys.argv[0], *remaining]
     base.main()
+
+
+if __name__ == "__main__":
+    main()
