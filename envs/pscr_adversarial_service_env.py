@@ -25,6 +25,9 @@ class PSCRConfig:
     future_deadline_routine_step: int = 202
     chain_hold_steps: int = 5
     forecast_reliability: float = 0.75
+    # Optional public reliability band sampled independently at each reset.
+    # Empty preserves the single-reliability protocols used before P4.
+    forecast_reliability_choices: tuple[float, ...] = ()
     geometry_scale: float = 1.0
     service_quality_reward_weight: float = 0.01
     # Public task geometry. Defaults preserve the completed PSCR P1--P3
@@ -73,7 +76,7 @@ class PredictiveServiceChainReconfigurationEnv:
             return -forecast_sector, True
         if self.config.adversary_profile == "routine_aligned":
             return forecast_sector, False
-        aligned = self.rng.random() < self.config.forecast_reliability
+        aligned = self.rng.random() < self.public_forecast_reliability
         urgent = bool(self.rng.random() < 0.55)
         return (forecast_sector if aligned else -forecast_sector), urgent
 
@@ -85,6 +88,8 @@ class PredictiveServiceChainReconfigurationEnv:
         centroid = self.base.blue_pos.mean(axis=0)
         canonical_primary = np.asarray((self.config.primary_forward_distance, 0.0, 5_000.0), dtype=np.float32)
         self.primary_position = centroid + self.config.geometry_scale * (canonical_primary - centroid)
+        choices = self.config.forecast_reliability_choices
+        self.public_forecast_reliability = float(self.rng.choice(choices)) if choices else self.config.forecast_reliability
         self.forecast_sector = 1 if self.rng.random() < 0.5 else -1
         actual_sector, self.future_urgent = self._sample_future_profile(self.forecast_sector)
         # A request remains inside the announced sector but its exact geometry
@@ -190,7 +195,7 @@ class PredictiveServiceChainReconfigurationEnv:
             [
                 float(self._request_active("primary")), float(self.primary_completed),
                 *primary_rel.tolist(),
-                self.config.forecast_reliability, float(self.forecast_sector),
+                self.public_forecast_reliability, float(self.forecast_sector),
                 max(0, self.config.future_arrival_step - self.step_count) / self.config.horizon,
                 float(self.future_active), float(self.future_urgent) if self.future_active else 0.0,
                 *future_rel.tolist(),

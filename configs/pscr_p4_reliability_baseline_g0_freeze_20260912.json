@@ -1,0 +1,13 @@
+{
+  "protocol": "PSCR-P4-RELIABILITY-CONDITIONED-PLAIN-MAPPO-G0",
+  "purpose": "verify learnability on the single transparent-geometry cell that passed the reliability-conditioned commitment-value gate",
+  "training_seeds": [99701, 99702, 99703],
+  "updates": 256,
+  "parallel_envs": 8,
+  "geometry": {"primary_forward_distance": 4500, "future_forward_distance": 12000, "future_lateral_distance": 13000, "contingency_forward_distance": 11000, "future_arrival_step": 84, "future_deadline_urgent_step": 117, "commitment_step_for_q0": 66},
+  "public_forecast_reliability_band": [0.90, 0.25],
+  "fixed": ["3DOF dynamics", "five-intent interface", "actor/critic information boundary", "future truth hidden before arrival", "reward", "PPO", "parameter capacity", "training budget"],
+  "endpoint_requirement": "Report high- and low-reliability evaluation bands separately, with primary and future completion, energy, collision and constraint endpoints.",
+  "decision_rule": "Proceed to PSCR method design only if at least two training seeds show nonzero service at the terminal pilot validation; this establishes learnability only, not information-use or method superiority.",
+  "interpretation_boundary": "Development calibration. The preceding transparent Q0 supports physical decision relevance but does not establish learned-policy behavior."
+}

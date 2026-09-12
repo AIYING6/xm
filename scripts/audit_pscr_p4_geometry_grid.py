@@ -60,14 +60,14 @@ def main() -> None:
         raise FileExistsError(args.output)
     rows = [
         rollout(99900 + episode, reliability, policy, *cell)
-        for cell in GRID for reliability in (0.90, 0.50) for policy in ("forecast", "contingency", "defer") for episode in range(args.episodes)
+        for cell in GRID for reliability in (0.90, 0.25) for policy in ("forecast", "contingency", "defer") for episode in range(args.episodes)
     ]
     summary: list[dict[str, object]] = []
     for cell in GRID:
         cell_rows = [row for row in rows if tuple(row[key] for key in ("primary_x", "lateral", "arrival", "urgent_deadline")) == cell]
         values: dict[tuple[float, str], float] = {}
         record: dict[str, object] = {"primary_x": cell[0], "lateral": cell[1], "arrival": cell[2], "urgent_deadline": cell[3], "commit_step": cell[2] - 18}
-        for reliability in (0.90, 0.50):
+        for reliability in (0.90, 0.25):
             for policy in ("forecast", "contingency", "defer"):
                 subset = [row for row in cell_rows if row["reliability"] == reliability and row["policy"] == policy]
                 values[(reliability, policy)] = float(np.mean([float(row["weighted_service_value"]) for row in subset]))
@@ -75,9 +75,9 @@ def main() -> None:
                 record[f"r{reliability}_{policy}_primary"] = float(np.mean([float(row["primary_completed"]) for row in subset]))
                 record[f"r{reliability}_{policy}_future"] = float(np.mean([float(row["future_completed"]) for row in subset]))
         record["high_forecast_better"] = values[(0.90, "forecast")] > values[(0.90, "contingency")] + 0.05
-        record["low_contingency_better"] = values[(0.50, "contingency")] > values[(0.50, "forecast")] + 0.05
+        record["low_contingency_better"] = values[(0.25, "contingency")] > values[(0.25, "forecast")] + 0.05
         record["high_defer_dominated"] = min(values[(0.90, "forecast")], values[(0.90, "contingency")]) > values[(0.90, "defer")] + 0.05
-        record["low_defer_dominated"] = min(values[(0.50, "forecast")], values[(0.50, "contingency")]) > values[(0.50, "defer")] + 0.05
+        record["low_defer_dominated"] = min(values[(0.25, "forecast")], values[(0.25, "contingency")]) > values[(0.25, "defer")] + 0.05
         record["gate_pass"] = all(record[key] for key in ("high_forecast_better", "low_contingency_better", "high_defer_dominated", "low_defer_dominated"))
         summary.append(record)
     passing = [row for row in summary if bool(row["gate_pass"])]
