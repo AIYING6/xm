@@ -25,6 +25,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--checkpoint", type=Path, required=True)
+    parser.add_argument("--agent-kind", choices=("plain", "rc"), default="plain")
+    parser.add_argument("--arm", choices=("full", "phase_control", "permuted_reliability"))
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--episodes", type=int, default=24)
     parser.add_argument("--execute", action="store_true")
@@ -35,7 +37,16 @@ def main() -> None:
         raise FileExistsError(f"refusing to overwrite {args.output_root}")
 
     payload = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
-    agent = PSCRContingencyMAPPO(); agent.load_state_dict(payload["state_dict"])
+    if args.agent_kind == "plain":
+        agent = PSCRContingencyMAPPO()
+    else:
+        from algorithms.pscr_reliability_commitment_mappo import PSCRReliabilityCommitmentMAPPO
+        if args.arm is None:
+            raise ValueError("--arm is required for --agent-kind rc")
+        if payload.get("arm") != args.arm:
+            raise ValueError("checkpoint arm does not match --arm")
+        agent = PSCRReliabilityCommitmentMAPPO(mode=args.arm)
+    agent.load_state_dict(payload["state_dict"])
     rng = np.random.default_rng(args.seed + 91_000)
     rows: list[dict[str, object]] = []
     for reliability in RELIABILITY_BANDS:

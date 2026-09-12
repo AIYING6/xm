@@ -26,12 +26,21 @@ foreach ($arm in $arms) {
     foreach ($seed in $seeds) {
         $checkpoint = Join-Path $Root "$arm/seed$seed/endpoint.pt"
         if (-not (Test-Path $checkpoint)) { throw "missing trained checkpoint: $checkpoint" }
-        & $Python scripts/run_pscr_rc_mappo.py evaluate --arm $arm --seed $seed --checkpoint $checkpoint --output-root (Join-Path $Root "$arm/evaluation_seed$seed") --execute
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        & $Python scripts/audit_pscr_p4_baseline_actions.py --seed $seed --checkpoint $checkpoint --output-root (Join-Path $Root "$arm/action_audit_seed$seed") --execute
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        $evaluation = Join-Path $Root "$arm/evaluation_seed$seed"
+        if (-not (Test-Path (Join-Path $evaluation 'episode_metrics.csv'))) {
+            & $Python scripts/run_pscr_rc_mappo.py evaluate --arm $arm --seed $seed --checkpoint $checkpoint --output-root $evaluation --execute
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
+        $audit = Join-Path $Root "$arm/action_audit_seed$seed"
+        if (-not (Test-Path (Join-Path $audit 'action_fractions.csv'))) {
+            & $Python scripts/audit_pscr_p4_baseline_actions.py --seed $seed --checkpoint $checkpoint --agent-kind rc --arm $arm --output-root $audit --execute
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
     }
 }
 
-& $Python scripts/aggregate_pscr_rc_m1.py --root $Root --seeds $seeds --output (Join-Path $Root 'diagnostics/m1_endpoint')
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$aggregate = Join-Path $Root 'diagnostics/m1_endpoint'
+if (-not (Test-Path (Join-Path $aggregate 'PSCR_RC_M1_SUMMARY.csv'))) {
+    & $Python scripts/aggregate_pscr_rc_m1.py --root $Root --seeds $seeds --output $aggregate
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
