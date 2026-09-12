@@ -1,0 +1,16 @@
+{
+  "protocol": "PSCR-PHASE-RELEASE-P3-PILOT-V1",
+  "purpose": "test whether a public arrival-triggered release plan restores future service after uncertainty-aware contingency staging",
+  "training_seeds": [99601, 99602, 99603],
+  "updates": 256,
+  "parallel_envs": 8,
+  "arms": {
+    "direct": "phase-specific plan using announced sector before arrival",
+    "robust": "phase-specific plan using announced/opposite public hypotheses before arrival and common release plan after arrival",
+    "masked": "phase-specific plan with pre-arrival sector identity removed"
+  },
+  "fixed_across_arms": ["five-intent interface", "3DOF dynamics", "future deadline=100", "post-arrival plan architecture", "reward", "actor/critic information", "PPO", "parameter widths", "budget", "endpoint evaluation"],
+  "primary_endpoint": "urgent_opposite future service completion and weighted service value, jointly constrained by primary completion and energy",
+  "decision_rule": "Expand only if robust exceeds direct and masked on the urgent-opposite primary endpoint in at least two of three seeds, while preserving the post-arrival future-service action fraction and primary reliability.",
+  "interpretation_boundary": "Development-only. The release event and all pre-arrival planning inputs are public; hidden future position and urgency are unavailable before arrival."
+}
