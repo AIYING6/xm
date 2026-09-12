@@ -1,0 +1,27 @@
+{
+  "protocol": "PSCR-P4-RELIABILITY-CONDITIONED-PLAIN-MAPPO-G1",
+  "purpose": "Establish a full-budget, capacity-matched P4 baseline before RC-PSCR-MAPPO is trained.",
+  "supersedes_for_budget_only": "PSCR-P4-RELIABILITY-CONDITIONED-PLAIN-MAPPO-G0",
+  "training_seeds": [99801, 99802, 99803],
+  "updates": 1024,
+  "parallel_envs": 8,
+  "environment_steps_per_seed": 524288,
+  "geometry": {
+    "primary_forward_distance": 4500,
+    "future_forward_distance": 12000,
+    "future_lateral_distance": 13000,
+    "contingency_forward_distance": 11000,
+    "future_arrival_step": 84,
+    "future_deadline_urgent_step": 117
+  },
+  "public_forecast_reliability_band": [0.9, 0.25],
+  "fixed": ["3DOF dynamics", "five-intent interface", "actor/critic information boundary", "future truth hidden before arrival", "reward", "PPO", "parameter capacity", "endpoint evaluator"],
+  "endpoint": {
+    "episodes_per_seed_reliability_band": 48,
+    "report": ["weighted_service_value", "primary_completed", "future_completed", "primary_expired", "future_expired", "energy_used", "reconfiguration_events"],
+    "independent_unit": "training_seed"
+  },
+  "decision_rule": "G1 passes if at least two independently trained seeds achieve nonzero primary and future completion across the reliability-stratified endpoint. This is a learnability gate only; it does not establish reliability use or RC-PSCR-MAPPO superiority.",
+  "next_authorized_action_if_pass": "Implement the pre-registered RC-PSCR-MAPPO and its phase-aware and reliability-permuted controls for M1.",
+  "interpretation_boundary": "G1 is a fresh development calibration. It will not be pooled with any future formal method cohort."
+}
