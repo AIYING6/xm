@@ -84,14 +84,13 @@ def localizes(env: PSCRRoleCommitmentEnv, target: np.ndarray) -> bool:
     )
 
 
-def rollout(seed: int, mode: str, sector: int, urgent: bool, x_offset: float) -> dict[str, float]:
+def rollout(seed: int, mode: str, sector: int, urgent: bool, x_offset: float, urgent_deadline: int) -> dict[str, float]:
     env = make_env(seed)
     target = FORECAST_POSITION + np.asarray((x_offset, 0.0 if sector > 0 else -10_000.0, 0.0), dtype=np.float32)
     primary_hold = future_hold = 0
     primary_done = future_done = localized = False
     localization_step = -1
     failed = False
-    urgent_deadline = ARRIVAL + 36
     routine_deadline = ARRIVAL + 66
     while env.step_count < HORIZON and not failed:
         future_active = env.step_count >= ARRIVAL
@@ -115,14 +114,14 @@ def rollout(seed: int, mode: str, sector: int, urgent: bool, x_offset: float) ->
     return {"value": value, "primary_complete": float(primary_done), "future_complete": float(future_done), "localized": float(localized), "localization_step": float(localization_step), "failed_constraint_or_collision": float(failed), "energy_used": float(np.maximum(0.0, env._energy_at_reset - env.base.blue_energy).sum())}
 
 
-def posterior(seed: int, mode: str, reliability: float) -> tuple[float, dict[str, float]]:
+def posterior(seed: int, mode: str, reliability: float, urgent_deadline: int) -> tuple[float, dict[str, float]]:
     weighted: dict[str, float] = {"value": 0.0, "primary_complete": 0.0, "future_complete": 0.0, "localized": 0.0, "failed_constraint_or_collision": 0.0, "energy_used": 0.0}
     for aligned, sector_probability in ((True, reliability), (False, 1.0 - reliability)):
         sector = 1 if aligned else -1
         for urgent, urgency_probability in ((True, URGENT_PROBABILITY), (False, 1.0 - URGENT_PROBABILITY)):
             for offset in X_OFFSETS:
                 probability = sector_probability * urgency_probability / len(X_OFFSETS)
-                outcome = rollout(seed, mode, sector, urgent, offset)
+                outcome = rollout(seed, mode, sector, urgent, offset, urgent_deadline)
                 for key in weighted:
                     weighted[key] += probability * outcome[key]
     return weighted["value"], weighted
@@ -132,6 +131,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--states", type=int, default=4)
+    parser.add_argument("--urgent-deadline", type=int, default=120)
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute:
@@ -146,14 +146,14 @@ def main() -> None:
             seed = 98_000 + offset
             per_mode = {}
             for mode in ("maintain", "stage"):
-                value, metrics = posterior(seed, mode, reliability)
+                value, metrics = posterior(seed, mode, reliability, args.urgent_deadline)
                 values[(reliability, mode)].append(value)
                 per_mode[mode] = value
                 rows.append({"seed": seed, "reliability": reliability, "mode": mode, "public_posterior_value": value, **metrics})
             high_support += int(reliability == 0.9 and per_mode["stage"] > per_mode["maintain"] + MARGIN)
             low_support += int(reliability == 0.1 and per_mode["maintain"] > per_mode["stage"] + MARGIN)
     mean = {(r, m): float(np.mean(values[(r, m)])) for r in (0.9, 0.1) for m in ("maintain", "stage")}
-    report = {"protocol": "PSCR-P8-SEARCH-PREFIX-Q0", "diagnostic_only": True, "states_per_reliability": args.states, "physical_contract": {"primary_position": PRIMARY_POSITION.tolist(), "forecast_position": FORECAST_POSITION.tolist(), "commit_step": COMMIT, "arrival_step": ARRIVAL, "localization_radius": LOCALIZATION_RADIUS}, "high_reliability_stage_preferred": mean[(0.9, "stage")] > mean[(0.9, "maintain")] + MARGIN, "low_reliability_maintain_preferred": mean[(0.1, "maintain")] > mean[(0.1, "stage")] + MARGIN, "high_state_support": high_support, "low_state_support": low_support, "means": {f"r{r}_{m}": value for (r, m), value in mean.items()}, "verdict": "PSCR_P8_IDENTIFIABILITY_PASS" if high_support >= 3 and low_support >= 3 and mean[(0.9, "stage")] > mean[(0.9, "maintain")] + MARGIN and mean[(0.1, "maintain")] > mean[(0.1, "stage")] + MARGIN else "PSCR_P8_IDENTIFIABILITY_FAIL", "interpretation": "Pass establishes a physical public-belief allocation trade-off only; it does not establish a learned method."}
+    report = {"protocol": "PSCR-P8-SEARCH-PREFIX-Q0", "diagnostic_only": True, "states_per_reliability": args.states, "urgent_deadline": args.urgent_deadline, "physical_contract": {"primary_position": PRIMARY_POSITION.tolist(), "forecast_position": FORECAST_POSITION.tolist(), "commit_step": COMMIT, "arrival_step": ARRIVAL, "localization_radius": LOCALIZATION_RADIUS}, "high_reliability_stage_preferred": mean[(0.9, "stage")] > mean[(0.9, "maintain")] + MARGIN, "low_reliability_maintain_preferred": mean[(0.1, "maintain")] > mean[(0.1, "stage")] + MARGIN, "high_state_support": high_support, "low_state_support": low_support, "means": {f"r{r}_{m}": value for (r, m), value in mean.items()}, "verdict": "PSCR_P8_IDENTIFIABILITY_PASS" if high_support >= 3 and low_support >= 3 and mean[(0.9, "stage")] > mean[(0.9, "maintain")] + MARGIN and mean[(0.1, "maintain")] > mean[(0.1, "stage")] + MARGIN else "PSCR_P8_IDENTIFIABILITY_FAIL", "interpretation": "Pass establishes a physical public-belief allocation trade-off only; it does not establish a learned method."}
     args.output.mkdir(parents=True)
     with (args.output / "PSCR_P8_ROWS.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))

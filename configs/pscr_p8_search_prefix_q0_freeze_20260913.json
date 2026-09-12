@@ -5,6 +5,7 @@
   "public_decision": {
     "commit_step": 36,
     "future_arrival_step": 84,
+    "future_deadline_urgent_step": 116,
     "forecast_reliability_bands": [0.1, 0.9],
     "actor_future_truth_before_arrival": false
   },

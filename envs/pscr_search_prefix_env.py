@@ -26,7 +26,7 @@ class P8SearchPrefixConfig(PSCRConfig):
     horizon: int = 160
     future_arrival_step: int = 84
     primary_deadline_step: int = 116
-    future_deadline_urgent_step: int = 120
+    future_deadline_urgent_step: int = 116
     future_deadline_routine_step: int = 150
     commitment_start_step: int = 36
     commitment_lock_steps: int = 48
@@ -79,8 +79,9 @@ class PSCRSearchPrefixEnv(PSCRRoleCommitmentEnv):
     def actor_observation(self) -> np.ndarray:
         base = super().actor_observation()
         # These are public runtime facts: the commitment phase and the
-        # localization event after request arrival.  No future truth is added
-        # before arrival.
+        # localization event after request arrival.  Exact future geometry is
+        # deliberately absent before arrival and becomes a normal public task
+        # request only after activation.
         public = np.asarray(
             (
                 float(self._commitment_active()),
@@ -150,7 +151,8 @@ class PSCRSearchPrefixEnv(PSCRRoleCommitmentEnv):
             "primary_expired": float(self.primary_expired),
             "future_expired": float(self.future_expired),
             "future_request_active": float(self.future_active),
-            "future_request_truth_exposed_to_actor": False,
+            "future_request_truth_exposed_before_arrival": False,
+            "future_request_geometry_public_after_arrival": float(self.future_active),
             "future_localized": float(self.future_localized),
             "future_localization_step": self.future_localization_step,
             "search_prefix_ready_steps": self.search_prefix_ready_steps,

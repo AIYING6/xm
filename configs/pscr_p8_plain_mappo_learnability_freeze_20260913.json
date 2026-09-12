@@ -1,0 +1,28 @@
+{
+  "protocol": "PSCR-P8-PLAIN-MAPPO-LEARNABILITY-V1",
+  "purpose": "development task learnability gate; not method or paper evidence",
+  "task_freeze": "configs/pscr_p8_search_prefix_q0_freeze_20260913.json",
+  "training_seeds": [97111, 97112, 97113],
+  "updates_per_seed": 256,
+  "parallel_envs": 8,
+  "training_reliability_bands": [0.1, 0.9],
+  "evaluation_repeats_per_band": 64,
+  "fixed_items": [
+    "PSCRSearchPrefixEnv",
+    "public actor observations",
+    "non-privileged centralized critic observation",
+    "five-action role-intent interface",
+    "3DOF plant and communication graph",
+    "PPO hyperparameters"
+  ],
+  "gate": {
+    "all_three_endpoints_required": true,
+    "primary_completion_minimum": 0.5,
+    "minimum_seeds_with_primary_completion_in_both_bands": 2,
+    "future_completion_nonzero_threshold": 0.0,
+    "minimum_seeds_with_future_completion": 2,
+    "cohort_mean_future_completion_lower": 0.05,
+    "cohort_mean_future_completion_upper": 0.95
+  },
+  "interpretation_boundary": "Passing establishes only that the frozen P8 task has a non-saturated learnable baseline. It does not establish the value of a proposed method, a reliability-conditioned policy switch, generalization, or publication readiness."
+}
