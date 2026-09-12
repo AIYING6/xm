@@ -1,0 +1,14 @@
+{
+  "protocol": "PSCR-G1-PLAIN-BASELINE-V1.1",
+  "supersedes": "PSCR-G1-PLAIN-BASELINE-V1",
+  "invalidated_prior_run_reason": "future request could be skipped by an early primary-completion termination condition",
+  "environment_fixes": [
+    "episode remains active until the scheduled future request is resolved or expires",
+    "reward includes change in measurable physical service-chain quality before full chain completion"
+  ],
+  "unchanged": ["3DOF dynamics", "roles", "actions", "actor information boundary", "request profiles", "completion definition", "energy and safety terms", "MAPPO architecture"],
+  "training_seeds": [98401, 98402, 98403],
+  "updates": 256,
+  "parallel_envs": 8,
+  "status": "running_g1_baseline_only"
+}

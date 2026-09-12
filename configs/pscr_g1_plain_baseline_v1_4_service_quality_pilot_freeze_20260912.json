@@ -1,0 +1,19 @@
+{
+  "protocol": "PSCR-G1-PLAIN-BASELINE-V1.4-SERVICE-QUALITY-PILOT",
+  "purpose": "verify that the physically grounded service-quality signal supports learnability before another full baseline budget",
+  "training_seeds": [98701, 98702, 98703],
+  "updates": 256,
+  "parallel_envs": 8,
+  "changes_from_v1_3": {
+    "persistent_service_quality": "active physical service quality receives a bounded per-step utility",
+    "continuous_relay_quality": "relay quality is derived from its two physical link distances, while service completion remains binary and hold-time constrained",
+    "unchanged": ["actor self-attitude", "future-request information boundary", "flight dynamics", "completion rule", "curriculum", "policy capacity", "PPO objective"]
+  },
+  "curriculum": [
+    {"fraction": "0.00-0.25", "geometry_scale": 0.45, "future_arrival_step": 105},
+    {"fraction": "0.25-0.50", "geometry_scale": 0.65, "future_arrival_step": 78},
+    {"fraction": "0.50-1.00", "geometry_scale": 1.0, "future_arrival_step": 58}
+  ],
+  "decision_rule": "Run a full 1024-update baseline only if the terminal pilot validation contains non-zero bounded service value in at least two training seeds. Otherwise inspect the action interface before expanding budget.",
+  "interpretation_boundary": "Development-only learnability calibration; not formal evidence and not a proposed-method result."
+}

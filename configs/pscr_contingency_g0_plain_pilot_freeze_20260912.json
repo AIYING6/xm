@@ -1,0 +1,19 @@
+{
+  "protocol": "PSCR-CONTINGENCY-G0-PLAIN-MAPPO-PILOT-V1",
+  "purpose": "establish learnability of uncertainty-aware service reconfiguration under a decision-relevant urgent deadline",
+  "training_seeds": [99401, 99402, 99403],
+  "updates": 256,
+  "parallel_envs": 8,
+  "only_task_change_from_service_interface_g1": {
+    "future_deadline_urgent_step": 100,
+    "new_public_intent": "contingency_stage at a fixed neutral hub derived from frozen geometry",
+    "unchanged": ["future arrival", "future information boundary", "service completion", "3DOF dynamics", "reward", "shared controller", "curriculum"]
+  },
+  "preflight": {
+    "transparent_urgent_opposite_primary_service_value": 1.27,
+    "transparent_urgent_opposite_contingency_stage_value": 1.54,
+    "interpretation": "The transparent policies establish a non-saturated, decision-relevant feasibility gap; they are not learning baselines."
+  },
+  "decision_rule": "Expand to the full baseline budget only if at least two training seeds yield non-zero bounded service value at the terminal pilot validation.",
+  "interpretation_boundary": "Development-only task calibration, not a formal PSCR method result."
+}

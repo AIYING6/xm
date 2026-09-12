@@ -1,0 +1,20 @@
+{
+  "protocol": "PSCR-SERVICE-INTERFACE-G0-PLAIN-MAPPO-PILOT-V1",
+  "purpose": "establish learnability of predictive service-chain reconfiguration after separating high-level service intent from shared 3DOF execution",
+  "training_seeds": [98901, 98902, 98903],
+  "updates": 256,
+  "parallel_envs": 8,
+  "policy_interface": {
+    "actions": ["primary_service", "forecast_stage", "future_service_after_public_arrival", "safe_hold"],
+    "shared_execution": "deterministic role-conditioned controller maps only public waypoints and own state to the unchanged 27 primitive 3DOF actions",
+    "forbidden_information": ["future exact location before arrival", "future urgency before arrival"]
+  },
+  "curriculum": [
+    {"fraction": "0.00-0.25", "geometry_scale": 0.45, "future_arrival_step": 105},
+    {"fraction": "0.25-0.50", "geometry_scale": 0.65, "future_arrival_step": 78},
+    {"fraction": "0.50-1.00", "geometry_scale": 1.0, "future_arrival_step": 58}
+  ],
+  "endpoint": {"geometry_scale": 1.0, "future_arrival_step": 58, "profiles": ["bounded_mixture", "urgent_opposite", "routine_aligned"]},
+  "decision_rule": "If at least two seeds obtain non-zero bounded service value at the terminal pilot validation, expand the same plain-MAPPO interface to the full baseline budget before adding PSCR-specific learning mechanisms.",
+  "interpretation_boundary": "Development-only task-interface calibration; it is not a formal method comparison."
+}

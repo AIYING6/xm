@@ -1,0 +1,13 @@
+{
+  "protocol": "PSCR-G1-PLAIN-BASELINE-V1",
+  "environment": "PredictiveServiceChainReconfigurationEnv",
+  "training_profile": "bounded_mixture",
+  "evaluation_profiles": ["bounded_mixture", "urgent_opposite", "routine_aligned"],
+  "training_seeds": [98301, 98302, 98303],
+  "updates": 128,
+  "parallel_envs": 8,
+  "algorithm": "PSCRPlainMAPPO",
+  "primary_endpoints": ["weighted_service_value", "primary_completed", "future_completed", "future_expired"],
+  "secondary_endpoints": ["energy_used", "reconfiguration_events"],
+  "interpretation_boundary": "G1 establishes only baseline learnability and non-saturation. It is not a method comparison or confirmation cohort."
+}

@@ -1,0 +1,17 @@
+{
+  "protocol": "PSCR-SERVICE-INTERFACE-G1-PLAIN-MAPPO-V1",
+  "purpose": "establish a full-budget, capacity-matched learnable baseline for subsequent PSCR method comparison",
+  "precondition": "G0 pilot produced non-zero bounded service value in two of three independent training seeds",
+  "training_seeds": [99001, 99002, 99003, 99004, 99005],
+  "updates": 1024,
+  "parallel_envs": 8,
+  "interface": "public role-conditioned service intents with a deterministic shared 3DOF execution controller",
+  "fixed_across_all_future_arms": ["policy capacity", "PPO objective", "actor information", "critic information", "shared controller", "3DOF dynamics", "service completion rule", "reward", "curriculum", "training budget", "endpoint evaluation"],
+  "curriculum": [
+    {"fraction": "0.00-0.25", "geometry_scale": 0.45, "future_arrival_step": 105},
+    {"fraction": "0.25-0.50", "geometry_scale": 0.65, "future_arrival_step": 78},
+    {"fraction": "0.50-1.00", "geometry_scale": 1.0, "future_arrival_step": 58}
+  ],
+  "endpoint": {"geometry_scale": 1.0, "future_arrival_step": 58, "profiles": ["bounded_mixture", "urgent_opposite", "routine_aligned"], "episodes_per_training_seed_profile": 24},
+  "interpretation_boundary": "This is the matched plain-MAPPO baseline for task calibration. It does not establish the efficacy of a PSCR-specific mechanism."
+}

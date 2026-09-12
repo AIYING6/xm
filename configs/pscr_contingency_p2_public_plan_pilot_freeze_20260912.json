@@ -1,0 +1,16 @@
+{
+  "protocol": "PSCR-CONTINGENCY-PUBLIC-PLAN-P2-PILOT-V1",
+  "purpose": "identify whether uncertainty-aware public planning improves the decision-relevant urgent-opposite profile without future-truth leakage",
+  "training_seeds": [99501, 99502, 99503],
+  "updates": 256,
+  "parallel_envs": 8,
+  "arms": {
+    "direct": "single announced-sector public plan",
+    "robust": "equal public counterfactual ensemble over announced and opposite sectors",
+    "masked": "same public-plan architecture with forecast-sector identity removed"
+  },
+  "fixed_across_arms": ["five-intent public interface", "3DOF dynamics", "deadline=100", "reward", "actor and critic information boundaries", "PPO optimizer", "network widths", "training budget", "endpoint evaluation"],
+  "primary_endpoint": "urgent_opposite weighted service value and future completion, reported jointly with primary completion and energy",
+  "decision_rule": "Expand only if robust exceeds both direct and masked on the primary endpoint in at least two of three training seeds without erasing primary service reliability.",
+  "interpretation_boundary": "Development pilot. Counterfactual sectors are public hypotheses, never the hidden future request realization."
+}

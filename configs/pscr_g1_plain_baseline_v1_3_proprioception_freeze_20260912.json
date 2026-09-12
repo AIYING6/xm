@@ -1,0 +1,24 @@
+{
+  "protocol": "PSCR-G1-PLAIN-BASELINE-V1.3-PROPRIOCEPTION",
+  "purpose": "controlled learnability calibration after closing the aircraft control state with legal self-attitude observations",
+  "supersedes_for_learnability": "PSCR-G1-PLAIN-BASELINE-V1.2",
+  "training_seeds": [98601, 98602, 98603],
+  "updates": 1024,
+  "parallel_envs": 8,
+  "only_change_from_v1_2": {
+    "actor": ["own heading sine", "own heading cosine", "own flight-path-angle sine", "own flight-path-angle cosine"],
+    "critic": "matching joint self-attitude state",
+    "forbidden": ["future exact request location before arrival", "future urgency before arrival", "oracle service-chain labels"]
+  },
+  "curriculum": [
+    {"fraction": "0.00-0.25", "geometry_scale": 0.45, "future_arrival_step": 105},
+    {"fraction": "0.25-0.50", "geometry_scale": 0.65, "future_arrival_step": 78},
+    {"fraction": "0.50-1.00", "geometry_scale": 1.0, "future_arrival_step": 58}
+  ],
+  "endpoint": {
+    "geometry_scale": 1.0,
+    "future_arrival_step": 58,
+    "profiles": ["bounded_mixture", "urgent_opposite", "routine_aligned"]
+  },
+  "interpretation_boundary": "This calibration determines whether a state-closed, capacity-matched MAPPO baseline can learn the frozen PSCR task. It is not a comparison of a proposed PSCR method."
+}

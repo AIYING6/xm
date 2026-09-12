@@ -1,0 +1,16 @@
+{
+  "protocol": "PSCR-G1-PLAIN-BASELINE-V1.2",
+  "supersedes": "PSCR-G1-PLAIN-BASELINE-V1.1",
+  "purpose": "establish whether capacity-matched MAPPO can learn service-chain formation before the full PSCR method comparison",
+  "training_seeds": [98501, 98502, 98503],
+  "updates": 1024,
+  "parallel_envs": 8,
+  "curriculum": [
+    {"fraction": "0.00-0.25", "geometry_scale": 0.45, "future_arrival_step": 105},
+    {"fraction": "0.25-0.50", "geometry_scale": 0.65, "future_arrival_step": 78},
+    {"fraction": "0.50-1.00", "geometry_scale": 1.0, "future_arrival_step": 58}
+  ],
+  "endpoint": {"geometry_scale": 1.0, "future_arrival_step": 58, "profiles": ["bounded_mixture", "urgent_opposite", "routine_aligned"]},
+  "fixed_across_future_arms": ["curriculum", "actor information", "actions", "reward", "3DOF dynamics", "request generator", "endpoint evaluation"],
+  "interpretation_boundary": "This is baseline learnability calibration only; curriculum is a shared training protocol, not the proposed method."
+}

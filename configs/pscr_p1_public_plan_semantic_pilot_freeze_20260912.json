@@ -1,0 +1,16 @@
+{
+  "protocol": "PSCR-P1-PUBLIC-PLAN-SEMANTIC-PILOT-V1",
+  "purpose": "test whether forecast-conditioned public planning improves the matched service-intent baseline before formal-scale training",
+  "training_seeds": [99201, 99202, 99203],
+  "updates": 256,
+  "parallel_envs": 8,
+  "arms": {
+    "plain_mappo": "capacity-standard shared MAPPO on the same service-intent interface",
+    "pscr_public_plan": "public-plan MAPPO with training-only opportunity head",
+    "pscr_shuffled_forecast": "identical PSCR architecture with only the forecast-sector relation inverted inside the public planning channel"
+  },
+  "fixed_across_arms": ["3DOF dynamics", "service completion rule", "shared deterministic controller", "actor information boundary", "critic information boundary", "reward", "curriculum", "PPO optimizer", "training budget", "endpoint evaluation"],
+  "primary_endpoint": "urgent_opposite weighted service value, with all profiles and reliability metrics reported jointly",
+  "decision_rule": "Expand only when the full PSCR arm exceeds both controls on the primary endpoint in at least two of three training seeds, without a materially worse safety or energy tradeoff.",
+  "interpretation_boundary": "Development pilot only; training seed is the independent unit and episode rows are within-policy estimates."
+}
