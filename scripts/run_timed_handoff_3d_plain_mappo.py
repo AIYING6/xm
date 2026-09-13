@@ -47,9 +47,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
+def build_config(args: argparse.Namespace, *, env_name: str = "timed_handoff_3d") -> RIGMAPPOConfig:
     return RIGMAPPOConfig(
-        env_name="timed_handoff_3d",
+        env_name=env_name,
         seed=args.seed,
         num_envs=args.num_envs,
         rollout_steps=args.rollout_steps,

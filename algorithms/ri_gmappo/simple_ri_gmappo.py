@@ -37,6 +37,7 @@ from envs import (
 )
 from envs.uav_intercept_3d_env import ACTION3D_TABLE
 from envs.timed_handoff_intercept_3d_env import HANDOFF_CONTEXTS, TimedHandoffIntercept3DConfig, TimedHandoffIntercept3DEnv
+from envs.commitment_handoff_intercept_3d_env import CommitmentHandoffIntercept3DEnv
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
 from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
 from algorithms.ri_gmappo.drtp_topology_sampler import (
@@ -1275,7 +1276,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 target_break_turn_amp_rad=cfg.target_break_turn_amp_rad,
             )
         )
-    if cfg.env_name == "timed_handoff_3d":
+    if cfg.env_name in {"timed_handoff_3d", "commitment_handoff_3d"}:
         if cfg.timed_handoff_context_mode == "balanced":
             handoff_context = HANDOFF_CONTEXTS[int(seed) % len(HANDOFF_CONTEXTS)]
         elif cfg.timed_handoff_context_mode in HANDOFF_CONTEXTS:
@@ -1285,7 +1286,8 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 "timed_handoff_context_mode must be 'balanced', "
                 f"or one of {HANDOFF_CONTEXTS}; got {cfg.timed_handoff_context_mode!r}"
             )
-        return TimedHandoffIntercept3DEnv(
+        env_class = CommitmentHandoffIntercept3DEnv if cfg.env_name == "commitment_handoff_3d" else TimedHandoffIntercept3DEnv
+        return env_class(
             TimedHandoffIntercept3DConfig(
                 seed=seed,
                 handoff_context=handoff_context,

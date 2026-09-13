@@ -24,6 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--episodes-per-context", type=int, default=40)
     parser.add_argument("--hidden-dim", type=int, default=64)
+    parser.add_argument("--env-name", choices=("timed_handoff_3d", "commitment_handoff_3d"), default="timed_handoff_3d")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out-file", type=Path, required=True)
     return parser.parse_args()
@@ -44,7 +45,7 @@ def main() -> None:
     args.selection_eval_episodes = 1
     args.endpoint_eval_episodes = args.episodes_per_context
     args.out_dir = args.out_file.parent
-    cfg = build_config(args)
+    cfg = build_config(args, env_name=args.env_name)
     cfg.timed_handoff_context_mode = "balanced"
     agent = load_agent(cfg, args.checkpoint)
     device = torch.device(cfg.device)
@@ -54,7 +55,7 @@ def main() -> None:
         for context_index, context in enumerate(HANDOFF_CONTEXTS):
             for episode in range(args.episodes_per_context):
                 env_seed = 750_000 + context_index * 10_000 + episode
-                env_cfg = build_config(args)
+                env_cfg = build_config(args, env_name=args.env_name)
                 env_cfg.timed_handoff_context_mode = context
                 env = make_env(env_cfg, env_seed, training=False)
                 obs, share_obs, graph = env.reset()
@@ -90,7 +91,7 @@ def main() -> None:
             "collision_rate": float(np.mean([row["collision"] for row in cell])),
             "mean_terminal_service_progress": float(np.mean([row["handoff_service_progress"] for row in cell])),
         }
-    report = {"protocol": "TIMED-HANDOFF-3D-CONTEXT-STRATIFIED-READONLY-EVALUATION-V1", "checkpoint": str(args.checkpoint), "seed": args.seed, "summary": summary}
+    report = {"protocol": "TIMED-HANDOFF-3D-CONTEXT-STRATIFIED-READONLY-EVALUATION-V1", "env_name": args.env_name, "checkpoint": str(args.checkpoint), "seed": args.seed, "summary": summary}
     args.out_file.with_suffix(".json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
 
