@@ -1,0 +1,41 @@
+{
+  "protocol": "FORECAST-BRANCH-INTERCEPT-G0-CONTRACT-V1",
+  "status": "IMPLEMENTATION_AUTHORIZED_NO_TRAINING",
+  "base_platform": "envs/uav_intercept_3d_env.py",
+  "research_object": "forecast-conditioned physical interception commitment under delayed target manoeuvre",
+  "fixed_physical_items": [
+    "three heterogeneous blue UAV 3DOF plant",
+    "discrete turn-climb-acceleration action table",
+    "collision and flight-envelope constraints",
+    "target sensing, communication, and MAPPO interface"
+  ],
+  "new_task_semantics": {
+    "public_dispatch_advisory": "At reset, every actor receives the same probability that the target will execute a rightward branch manoeuvre.",
+    "truth_boundary": "The sampled branch identity is not emitted before the physical branch step. Before that step both target trajectories are identical.",
+    "memory_boundary": "The advisory is emitted for the initial decision slot only; later actors receive an uninformative advisory until the physical manoeuvre begins.",
+    "commitment": "Early lateral 3DOF motion may improve future interception geometry but makes a later reversal physically costly. No macro action, route label, or privileged controller state is added.",
+    "target_branch": "After the fixed branch step the target executes a bounded left or right heading change through the existing target kinematics."
+  },
+  "g0_required_contexts": [
+    "reliable_right_advisory",
+    "ambiguous_advisory",
+    "reliable_left_advisory"
+  ],
+  "g0_required_evidence": [
+    "A legal history-dependent controller can use the initial public advisory without reading environment state.",
+    "For at least one reliable context, advisory-aligned early physical positioning improves terminal intercept feasibility relative to waiting.",
+    "For the ambiguous context, waiting or a neutral positioning policy is not dominated by the same early directional commitment.",
+    "The target branch is physically absent from all actor observations before the fixed branch step.",
+    "No context has universal success or universal failure under the legal controller family."
+  ],
+  "prohibited_shortcuts": [
+    "actor access to sampled branch identity before branch step",
+    "route-selection or commitment macro actions",
+    "reward for matching the hidden future branch",
+    "controller reads of red_pos, red_heading, or other environment state not present in actor history",
+    "post-hoc adjustment of geometry after G0 results"
+  ],
+  "future_comparison_boundary": "No method is named or trained by this contract. Any future method must keep actor observations, action interface, reward, dynamics, budget and endpoint tapes matched against a plain recurrent MAPPO baseline.",
+  "training_started": false,
+  "canonical_data_used": false
+}
