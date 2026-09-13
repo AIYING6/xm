@@ -26,13 +26,19 @@ def main() -> None:
         raise FileExistsError(f"refusing to overwrite {args.out_dir}")
     args.out_dir.mkdir(parents=True)
     cfg = build_config(args, env_name="commitment_handoff_3d")
+    macro_decision_steps = args.updates * args.num_envs * args.rollout_steps
+    physical_environment_steps = macro_decision_steps * cfg.handoff_commitment_action_repeat
     manifest = {
         "protocol": PROTOCOL,
         "artifact_class": "DEVELOPMENT_ONLY_G2_LEARNABILITY_PILOT",
         "paper_evidence": False,
         "purpose": "test whether a capacity-controlled plain MAPPO learns the two legal relay commitments without saturation",
         "seed": args.seed,
-        "environment_steps": args.updates * args.num_envs * args.rollout_steps,
+        "macro_decision_steps": macro_decision_steps,
+        "physical_environment_steps": physical_environment_steps,
+        # Keep the generic field physically meaningful for downstream budget
+        # comparisons; macro decisions remain separately auditable above.
+        "environment_steps": physical_environment_steps,
         "task_context_schedule": "balanced deterministic parity across environment seeds",
         "fixed_task": {
             "plant": "original 3DOF UAV dynamics and 27 primitive controls under a fixed legal low-level controller",
