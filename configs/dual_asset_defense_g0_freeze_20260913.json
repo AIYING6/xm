@@ -1,0 +1,25 @@
+{
+  "protocol": "DUAL-ASSET-DEFENSE-G0-V1",
+  "status": "ZERO_TRAINING_ONLY",
+  "environment": "envs.dual_asset_defense_env.DualAssetDefenseEnv",
+  "task": "Three heterogeneous blue UAVs defend two spatially separated assets against one red attacker that selects the less-covered route after realised blue deployment.",
+  "fixed_items": {
+    "blue_agents": 3,
+    "action_interface": "existing_27_action_3DOF_turn_climb_acceleration",
+    "actor_and_critic_future_route_leakage": false,
+    "base_sensing_communication_attack_chain": "reused without modification",
+    "horizon": 190,
+    "branch_step": 28
+  },
+  "terminal_events": {
+    "blue_success": "existing legal attack/sensing/communication chain closes before strike",
+    "red_success": "red reaches selected physical asset strike radius",
+    "separate_reliability_endpoints": ["timeout", "collision", "constraint_violation"]
+  },
+  "gates": {
+    "G0": "reset/step interface, no future route label before branch, asset breach and defense success are mutually exclusive terminal events",
+    "G1": "transparent concentrated, split-defense and delayed-response controllers must exhibit non-degenerate terminal trade-offs",
+    "G2": "plain MAPPO must learn a non-saturated baseline before any method proposal"
+  },
+  "non_goals": ["no_method", "no_training", "no_paper_claim", "not_a_pscr_or_drtp_result"]
+}
