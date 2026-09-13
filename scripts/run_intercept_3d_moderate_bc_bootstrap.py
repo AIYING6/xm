@@ -38,6 +38,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dagger-episodes-per-round", type=int, default=12)
     parser.add_argument("--dagger-epochs", type=int, default=10)
     parser.add_argument("--eval-episodes", type=int, default=60)
+    parser.add_argument(
+        "--graph-encoder",
+        choices=("no_graph", "local_relation"),
+        default="no_graph",
+        help="Actor representation; local_relation rebuilds its graph solely from focal local observations.",
+    )
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "results" / "development" / "intercept_3d_moderate_bc_bootstrap" / "seed5102")
     parser.add_argument("--execute", action="store_true")
@@ -46,7 +52,7 @@ def parse_args() -> argparse.Namespace:
 
 def config(args: argparse.Namespace) -> RIGMAPPOConfig:
     return RIGMAPPOConfig(
-        env_name="3d_intercept", seed=args.seed, hidden_dim=64, graph_encoder="no_graph", role_gate_mode="none",
+        env_name="3d_intercept", seed=args.seed, hidden_dim=64, graph_encoder=args.graph_encoder, role_gate_mode="none",
         intent_coef=0.0, chain_aux_coef=0.0, strict_target_sensing=False, agent_target_info_bottleneck=False,
         relay_dependent_task=False, eval_episodes=args.eval_episodes, device=args.device, **CONDITION,
     )
@@ -59,7 +65,7 @@ def build_agent(cfg: RIGMAPPOConfig) -> RIGMAPPOAgent:
         obs_dim=env.obs_dim, node_feat_dim=graph["node_feat"].shape[-1], edge_feat_dim=graph["edge_feat"].shape[-1],
         share_obs_dim=share.shape[-1], action_dim=env.action_dim, num_agents=env.num_agents,
         num_roles=max(4, int(np.max(graph["role"])) + 1), hidden_dim=cfg.hidden_dim, role_dim=cfg.role_dim,
-        intent_dim=cfg.intent_dim, graph_encoder="no_graph", role_gate_mode="none", use_intent_context=False,
+        intent_dim=cfg.intent_dim, graph_encoder=cfg.graph_encoder, role_gate_mode="none", use_intent_context=False,
     ).to(cfg.device)
 
 
@@ -160,7 +166,8 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=("protocol", "seed", "teacher_episodes", "teacher_samples", *endpoint)); writer.writeheader()
         writer.writerow({"protocol": PROTOCOL, "seed": args.seed, "teacher_episodes": args.episodes, "teacher_samples": len(obs), **endpoint})
     manifest = {"protocol": PROTOCOL, "artifact_class": "DEVELOPMENT_ONLY_LOCAL_OBSERVATION_BC_BOOTSTRAP", "paper_evidence": False,
-                "teacher": "legal_actions(local_emitted_observation_only)", "condition": CONDITION, "seed": args.seed,
+                "teacher": "legal_actions(local_emitted_observation_only)", "graph_encoder": args.graph_encoder,
+                "condition": CONDITION, "seed": args.seed,
                 "teacher_episodes": args.episodes, "teacher_samples": int(len(obs)), "bc_epochs": args.epochs,
                 "dagger_rounds": args.dagger_rounds, "dagger_episodes_per_round": args.dagger_episodes_per_round,
                 "dagger_epochs": args.dagger_epochs, "final_dataset_agent_states": int(len(x) * 3),
