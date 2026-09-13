@@ -36,6 +36,7 @@ from envs import (
     UAVPursuitEnv,
 )
 from envs.uav_intercept_3d_env import ACTION3D_TABLE
+from envs.timed_handoff_intercept_3d_env import HANDOFF_CONTEXTS, TimedHandoffIntercept3DConfig, TimedHandoffIntercept3DEnv
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
 from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
 from algorithms.ri_gmappo.drtp_topology_sampler import (
@@ -54,6 +55,7 @@ from algorithms.ri_gmappo.drtp_topology_sampler import (
 )
 from algorithms.ri_gmappo.snr_topology_sampler import StaticNonuniformTopologySampler
 from algorithms.ri_gmappo.drtp_topology_sampler import AnchoredEGTRTopologySampler, EGTRTopologySampler
+from algorithms.ri_gmappo.plr_topology_sampler import PLRTopologySampler
 from algorithms.ri_gmappo.rng_streams import RNGStreams
 from algorithms.ri_gmappo.tcr_topology_sampler import FixedStratifiedTopologySampler
 from algorithms.ri_gmappo.failure_aware_telemetry import FailureAwareTelemetryWriter
@@ -184,6 +186,19 @@ class RIGMAPPOConfig:
     strict_target_sensing: bool = False
     agent_target_info_bottleneck: bool = False
     relay_dependent_task: bool = False
+    # Timed-handoff task switches.  They are inert unless
+    # ``env_name='timed_handoff_3d'``; existing 2D/3D experiment paths retain
+    # their original environment construction exactly.
+    timed_handoff_context_mode: str = "balanced"
+    handoff_authorization_start_step: int = 12
+    handoff_authorization_deadline: int = 28
+    handoff_branch_step: int = 40
+    handoff_authorization_hold_steps: int = 8
+    handoff_refresh_hold_steps: int = 8
+    handoff_corridor_radius: float = 900.0
+    handoff_future_corridor_lateral_offset: float = 1_500.0
+    handoff_prebranch_target_policy: str = "weaving_mild"
+    handoff_postbranch_target_policy: str = "weaving_mild"
     business_grounded_geometry: bool = False
     target_prior_position: tuple[float, float, float] = (10_000.0, 0.0, 5_000.0)
     max_target_message_age_steps: int = 80
@@ -1259,6 +1274,41 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 target_break_turn_amp_rad=cfg.target_break_turn_amp_rad,
             )
         )
+    if cfg.env_name == "timed_handoff_3d":
+        if cfg.timed_handoff_context_mode == "balanced":
+            handoff_context = HANDOFF_CONTEXTS[int(seed) % len(HANDOFF_CONTEXTS)]
+        elif cfg.timed_handoff_context_mode in HANDOFF_CONTEXTS:
+            handoff_context = cfg.timed_handoff_context_mode
+        else:
+            raise ValueError(
+                "timed_handoff_context_mode must be 'balanced', "
+                f"or one of {HANDOFF_CONTEXTS}; got {cfg.timed_handoff_context_mode!r}"
+            )
+        return TimedHandoffIntercept3DEnv(
+            TimedHandoffIntercept3DConfig(
+                seed=seed,
+                handoff_context=handoff_context,
+                authorization_start_step=cfg.handoff_authorization_start_step,
+                authorization_deadline=cfg.handoff_authorization_deadline,
+                branch_step=cfg.handoff_branch_step,
+                authorization_hold_steps=cfg.handoff_authorization_hold_steps,
+                refresh_hold_steps=cfg.handoff_refresh_hold_steps,
+                handoff_corridor_radius=cfg.handoff_corridor_radius,
+                future_corridor_lateral_offset=cfg.handoff_future_corridor_lateral_offset,
+                prebranch_target_policy=cfg.handoff_prebranch_target_policy,
+                postbranch_target_policy=cfg.handoff_postbranch_target_policy,
+                target_policy=cfg.target_policy,
+                communication_range_scale=cfg.communication_range_scale,
+                communication_dropout_prob=cfg.communication_dropout_prob,
+                message_delay_steps=cfg.message_delay_steps,
+                radar_dropout_prob=cfg.radar_dropout_prob,
+                max_target_message_age_steps=cfg.max_target_message_age_steps,
+                min_target_confidence=cfg.min_target_confidence,
+                target_init_range_scale=cfg.target_init_range_scale,
+                target_init_bearing_offset_deg=cfg.target_init_bearing_offset_deg,
+                max_steps=260,
+            )
+        )
     raise ValueError(f"Unsupported env_name: {cfg.env_name}")
 
 
@@ -1950,7 +2000,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.updates,
     )
     drtp_mode = str(cfg.drtp_sampler_mode).lower()
-    if drtp_mode not in {"none", "utr", "snr", "drtp", "pp_drtp", "r_drtp", "egtr", "anchored_egtr", "drtp_tr", "conservative_drtp"}:
+    if drtp_mode not in {"none", "utr", "snr", "drtp", "pp_drtp", "r_drtp", "egtr", "anchored_egtr", "drtp_tr", "conservative_drtp", "plr"}:
         raise ValueError("unsupported drtp_sampler_mode")
     if drtp_mode == "anchored_egtr" and (
         not math.isfinite(float(cfg.drtp_sampler_anchor_alpha))
@@ -2062,7 +2112,9 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     )
     sampler_seed = cfg.drtp_sampler_seed if cfg.drtp_sampler_seed is not None else cfg.seed
     sampler_updates = cfg.drtp_sampler_total_updates if cfg.drtp_sampler_total_updates is not None else cfg.updates
-    if drtp_mode == "egtr":
+    if drtp_mode == "plr":
+        drtp_sampler = PLRTopologySampler(sampler_seed, sampler_updates)
+    elif drtp_mode == "egtr":
         drtp_sampler = EGTRTopologySampler(
             sampler_seed,
             sampler_updates,
@@ -2122,6 +2174,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
             if cfg.fixed_stratified_topology_sampler
             else "snr_static_nonuniform_topology_sampler_manifest.json"
             if drtp_mode == "snr"
+            else "plr_topology_sampler_manifest.json"
+            if drtp_mode == "plr"
             else "drtp_topology_sampler_manifest.json"
         )
         (out_dir / sampler_name).write_text(
@@ -2182,10 +2236,13 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     sample_env = envs[0]
     sample_graph = graph_list[0]
     agent = RIGMAPPOAgent(
-        obs_dim=sample_env.obs_dim,
+        # Mission wrappers may append legal task context to the base plant's
+        # observation.  Build from the actual reset tensors rather than the
+        # base environment's storage allocation.
+        obs_dim=obs.shape[-1],
         node_feat_dim=sample_graph["node_feat"].shape[-1],
         edge_feat_dim=sample_graph["edge_feat"].shape[-1],
-        share_obs_dim=sample_env.share_obs_dim,
+        share_obs_dim=share_obs.shape[-1],
         action_dim=sample_env.action_dim,
         num_agents=sample_env.num_agents,
         hidden_dim=cfg.hidden_dim,
@@ -2301,6 +2358,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         if cfg.fixed_stratified_topology_sampler
         else "snr_static_nonuniform_topology_sampler_log.csv"
         if drtp_mode == "snr"
+        else "plr_topology_sampler_log.csv"
+        if drtp_mode == "plr"
         else "drtp_topology_sampler_log.csv"
     )
     pp_probe_log_path = out_dir / "pp_drtp_probe_log.csv"
@@ -2591,6 +2650,14 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
                 telemetry_writer=telemetry_writer,
             )
             obs, share_obs, graph_obs = batch["next_obs"], batch["next_share_obs"], batch["next_graph_obs"]
+            if isinstance(drtp_sampler, PLRTopologySampler):
+                # PLR reads raw rollout GAE only after collection.  It remains
+                # outside all actor/critic inputs, rewards, and PPO losses.
+                drtp_rows.append(
+                    drtp_sampler.record_rollout_scores(
+                        batch["advantages"], batch["condition_group"]
+                    )
+                )
             if isinstance(drtp_sampler, PairedProbeTopologySampler) and update % ADAPT_INTERVAL == 0 and update > WARMUP_UPDATES:
                 records = run_pp_drtp_probe_rollouts(
                     agent,
