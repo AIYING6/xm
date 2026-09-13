@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-envs", type=int, default=4)
     parser.add_argument("--rollout-steps", type=int, default=64)
     parser.add_argument("--eval-episodes", type=int, default=40)
+    parser.add_argument("--selection-eval-episodes", type=int, default=20)
     parser.add_argument("--init-checkpoint", type=Path, default=None)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument(
@@ -77,7 +78,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         relay_dependent_task=False,
         evaluation_enabled=True,
         eval_interval=max(1, min(16, args.updates)),
-        eval_episodes=min(10, args.eval_episodes),
+        eval_episodes=args.selection_eval_episodes,
         eval_base_seed=610_000,
         save_interval=max(1, min(16, args.updates)),
         save_snapshots=True,
@@ -114,8 +115,8 @@ def main() -> None:
     args = parse_args()
     if not args.execute:
         raise SystemExit("This runner changes state; pass --execute.")
-    if args.updates <= 0 or args.num_envs <= 0 or args.rollout_steps <= 0:
-        raise ValueError("updates, num-envs, and rollout-steps must be positive")
+    if args.updates <= 0 or args.num_envs <= 0 or args.rollout_steps <= 0 or args.selection_eval_episodes <= 0:
+        raise ValueError("updates, num-envs, rollout-steps, and selection-eval-episodes must be positive")
     if args.out_dir.exists() and any(args.out_dir.iterdir()):
         raise FileExistsError(f"refusing to overwrite existing run: {args.out_dir}")
     args.out_dir.mkdir(parents=True, exist_ok=False)
@@ -127,6 +128,8 @@ def main() -> None:
         "paper_evidence": False,
         "seed": args.seed,
         "environment_steps": args.updates * args.num_envs * args.rollout_steps,
+        "selection_eval_episodes": args.selection_eval_episodes,
+        "endpoint_eval_episodes": args.eval_episodes,
         "condition": CONDITION,
         "fixed_items": ["environment_interface", "PPO", "reward", "observation", "action", "training_budget"],
         "method": {"name": "plain_mappo", "graph_encoder": "no_graph", "sampler": "uniform_fixed_condition"},
