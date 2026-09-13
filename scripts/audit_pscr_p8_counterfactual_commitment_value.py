@@ -20,6 +20,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from envs.pscr_search_prefix_env import P8SearchPrefixConfig, PSCRSearchPrefixEnv
+from envs.pscr_full_team_commitment_env import PSCRFullTeamCommitmentEnv
 from envs.pscr_service_reconfiguration_env import FORECAST_STAGE, FUTURE_SERVICE, PRIMARY_SERVICE
 
 
@@ -29,24 +30,27 @@ PLANS = ("maintain_primary", "stage_forecast")
 MARGIN = 0.05
 
 
-def actions_for(env: PSCRSearchPrefixEnv, plan: str) -> np.ndarray:
+def actions_for(env: PSCRSearchPrefixEnv, plan: str, stage_mode: str) -> np.ndarray:
     """Return a fixed legal plan without inspecting unrealized future truth."""
     if env.future_active:
         return np.full(env.num_agents, FUTURE_SERVICE, dtype=np.int64)
     if env._commitment_active() and plan == "stage_forecast":
+        if stage_mode == "full_team":
+            return np.full(env.num_agents, FORECAST_STAGE, dtype=np.int64)
         return np.asarray((FORECAST_STAGE, FORECAST_STAGE, PRIMARY_SERVICE), dtype=np.int64)
     return np.full(env.num_agents, PRIMARY_SERVICE, dtype=np.int64)
 
 
-def rollout(seed: int, reliability: float, plan: str) -> dict[str, Any]:
-    env = PSCRSearchPrefixEnv(P8SearchPrefixConfig(seed=seed, forecast_reliability_choices=(reliability,)))
+def rollout(seed: int, reliability: float, plan: str, stage_mode: str, full_team_contract: bool) -> dict[str, Any]:
+    env_class = PSCRFullTeamCommitmentEnv if full_team_contract else PSCRSearchPrefixEnv
+    env = env_class(P8SearchPrefixConfig(seed=seed, forecast_reliability_choices=(reliability,)))
     env.reset()
     initial_public_context = env.public_commitment_context().tolist()
     total_return = 0.0
     timeout = collision_or_constraint = 0.0
     commitment_actions: list[int] | None = None
     while not env.done:
-        action = actions_for(env, plan)
+        action = actions_for(env, plan, stage_mode)
         if env._commitment_active() and commitment_actions is None:
             commitment_actions = action.tolist()
         _, _, _, rewards, _, info = env.step(action)
@@ -88,12 +92,16 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--episodes", type=int, default=64)
+    parser.add_argument("--stage-mode", choices=("scout_relay", "full_team"), default="scout_relay")
+    parser.add_argument("--full-team-contract", action="store_true", help="use the distinct P9 full-team commitment environment; required for --stage-mode full_team")
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute:
         raise SystemExit("refusing without --execute")
     if args.episodes <= 0:
         raise ValueError("episodes must be positive")
+    if args.stage_mode == "full_team" and not args.full_team_contract:
+        raise ValueError("full_team stage mode requires --full-team-contract; P8 preserves executor primary service by design")
     if args.output_root.exists():
         raise FileExistsError(f"refusing to overwrite {args.output_root}")
 
@@ -107,7 +115,7 @@ def main() -> None:
     for band_index, reliability in enumerate(RELIABILITIES):
         for episode_index in range(args.episodes):
             seed = 981_000 + 1_000 * band_index + episode_index
-            branch = {plan: rollout(seed, reliability, plan) for plan in PLANS}
+            branch = {plan: rollout(seed, reliability, plan, args.stage_mode, args.full_team_contract) for plan in PLANS}
             rows.extend(branch.values())
             maintain, stage = branch["maintain_primary"], branch["stage_forecast"]
             paired_exact = paired_exact and all(maintain[field] == stage[field] for field in realization_fields)
@@ -150,6 +158,8 @@ def main() -> None:
         "protocol": PROTOCOL,
         "diagnostic_only": True,
         "episodes_per_reliability": args.episodes,
+        "stage_mode": args.stage_mode,
+        "task_contract": "P9_full_team_commitment" if args.full_team_contract else "P8_role_preserving_commitment",
         "plans": list(PLANS),
         "checks": checks,
         "summary_by_reliability": summaries,

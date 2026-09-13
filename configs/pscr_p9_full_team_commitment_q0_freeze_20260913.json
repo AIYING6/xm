@@ -1,0 +1,12 @@
+{
+  "protocol": "PSCR-P9-FULL-TEAM-COMMITMENT-Q0-V1",
+  "purpose": "zero-training identifiability check for a physically exclusive full-team forecast commitment",
+  "environment": "envs/pscr_full_team_commitment_env.py:PSCRFullTeamCommitmentEnv",
+  "decision": {
+    "maintain_primary": "all three roles remain on the primary service chain",
+    "stage_full_team": "all three roles commit to the public forecast sector; primary service is consequently not maintained during the lock"
+  },
+  "fixed": ["P8 3DOF plant", "reward", "observation truth boundary", "future arrival", "public reliability bands", "post-arrival response"],
+  "identifiability_requirement": "Under matched exogenous branches, high reliability must favor full-team staging and low reliability must favor maintaining the primary chain with direction support and no global collapse.",
+  "boundary": "This is a new task contract, not a re-interpretation of P8. It is only eligible for learning after the paired Q0 check passes."
+}
