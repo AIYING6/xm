@@ -16,12 +16,19 @@ from envs.commitment_handoff_intercept_3d_env import RECONSTRUCT_FUTURE, RETAIN_
 from envs.timed_handoff_intercept_3d_env import HANDOFF_CONTEXTS, TimedHandoffIntercept3DConfig
 
 
-PROTOCOL = "COMMITMENT-HANDOFF-INTERCEPT-3D-G0-V2-OPTION"
+PROTOCOL = "COMMITMENT-HANDOFF-INTERCEPT-3D-G0-V3-OPTION-H16"
 SEEDS = (72201, 72202, 72203, 72204, 72205, 72206)
 MODES = ("retain_current", "reconstruct_future")
 
 
-def run_episode(seed: int, context: str, mode: str) -> dict[str, object]:
+def run_episode(
+    seed: int,
+    context: str,
+    mode: str,
+    future_offset: float,
+    authorization_hold: int,
+    refresh_hold: int,
+) -> dict[str, object]:
     env = CommitmentHandoffIntercept3DEnv(
         TimedHandoffIntercept3DConfig(
             seed=seed,
@@ -29,10 +36,10 @@ def run_episode(seed: int, context: str, mode: str) -> dict[str, object]:
             authorization_start_step=12,
             authorization_deadline=28,
             branch_step=40,
-            authorization_hold_steps=8,
-            refresh_hold_steps=8,
+            authorization_hold_steps=authorization_hold,
+            refresh_hold_steps=refresh_hold,
             handoff_corridor_radius=900.0,
-            future_corridor_lateral_offset=1_500.0,
+            future_corridor_lateral_offset=future_offset,
             communication_dropout_prob=0.0,
             radar_dropout_prob=0.0,
             message_delay_steps=0,
@@ -65,13 +72,23 @@ def run_episode(seed: int, context: str, mode: str) -> dict[str, object]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir", type=Path, required=True)
+    parser.add_argument("--future-offset", type=float, default=1_500.0)
+    parser.add_argument("--authorization-hold", type=int, default=8)
+    parser.add_argument("--refresh-hold", type=int, default=16)
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute:
         raise SystemExit("pass --execute")
     if args.out_dir.exists():
         raise FileExistsError(f"refusing to overwrite {args.out_dir}")
-    rows = [run_episode(seed, context, mode) for context in HANDOFF_CONTEXTS for seed in SEEDS for mode in MODES]
+    if args.future_offset <= 0.0 or args.authorization_hold <= 0 or args.refresh_hold <= 0:
+        raise ValueError("future-offset and hold lengths must be positive")
+    rows = [
+        run_episode(seed, context, mode, args.future_offset, args.authorization_hold, args.refresh_hold)
+        for context in HANDOFF_CONTEXTS
+        for seed in SEEDS
+        for mode in MODES
+    ]
     args.out_dir.mkdir(parents=True)
     with (args.out_dir / "commitment_handoff_g0_rows.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
@@ -93,6 +110,9 @@ def main() -> None:
         "contexts": list(HANDOFF_CONTEXTS),
         "relay_commitment_actions": list(MODES),
         "commitment_action_repeat": 8,
+        "future_corridor_lateral_offset": args.future_offset,
+        "authorization_hold_steps": args.authorization_hold,
+        "refresh_hold_steps": args.refresh_hold,
         "summary": summary,
         "decision_preference_reversal_observed": passed,
         "verdict": "G0_COMMITMENT_DECISION_SWITCH_PASS" if passed else "G0_COMMITMENT_DECISION_SWITCH_NOT_YET_ESTABLISHED",

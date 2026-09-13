@@ -13,7 +13,7 @@ from algorithms.ri_gmappo.simple_ri_gmappo import eval_policy, train_ri_gmappo
 from scripts.run_timed_handoff_3d_plain_mappo import build_config, load_agent, parse_args
 
 
-PROTOCOL = "COMMITMENT-HANDOFF-3D-PLAIN-MAPPO-G2-DEVELOPMENT-V2-OPTION"
+PROTOCOL = "COMMITMENT-HANDOFF-3D-PLAIN-MAPPO-G2-DEVELOPMENT-V3-OPTION-H16"
 
 
 def main() -> None:
@@ -46,6 +46,7 @@ def main() -> None:
             "commitment_action_repeat": 8,
             "authorization_window": [12, 28],
             "branch_step": 40,
+            "refresh_hold_steps": 16,
             "legacy_intercept_reward_weight": 0.0,
             "service_progress_reward_weight": 1.0,
         },
