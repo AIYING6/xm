@@ -24,7 +24,7 @@ from scripts.audit_intercept_3d_legal_baseline import legal_actions
 
 PROTOCOL = "INTERCEPT-3D-HANDOFF-VALUE-G0-V1"
 SEEDS = (71101, 71102, 71103, 71104, 71105, 71106)
-MODES = ("relay_hold_current_bridge", "relay_follow_delivered_track")
+MODES = ("relay_hold_current_bridge", "relay_preposition_future_corridor")
 CONTEXTS = {
     # At 0.70 the initial scout--relay--attacker bridge remains physically
     # reachable, but relay departure can break the attacker-facing hop.  This
@@ -34,11 +34,13 @@ CONTEXTS = {
         "max_target_message_age_steps": 24,
         "target_policy": "weaving_mild",
         "communication_range_scale": 0.70,
+        "target_init_bearing_offset_deg": 0.0,
     },
     "refresh_sensitive_track": {
         "max_target_message_age_steps": 6,
         "target_policy": "break_turn_param",
         "communication_range_scale": 1.00,
+        "target_init_bearing_offset_deg": 22.0,
     },
 }
 
@@ -48,12 +50,19 @@ def forward_action() -> int:
     return int(np.flatnonzero(np.all(np.isclose(ACTION3D_TABLE, (0.0, 0.0, 1.0)), axis=1))[0])
 
 
+def preposition_action() -> int:
+    """Turn the relay toward the declared future corridor using a primitive action."""
+    return int(np.flatnonzero(np.all(np.isclose(ACTION3D_TABLE, (1.0, 0.0, 1.0)), axis=1))[0])
+
+
 def actions(obs: np.ndarray, mode: str) -> np.ndarray:
     """Return only primitive actions derived from each agent's emitted observation."""
     choice = legal_actions(obs)
     if mode == "relay_hold_current_bridge":
         choice[1] = forward_action()
-    elif mode != "relay_follow_delivered_track":
+    elif mode == "relay_preposition_future_corridor":
+        choice[1] = preposition_action()
+    else:
         raise ValueError(f"unsupported mode: {mode}")
     return choice
 
@@ -72,6 +81,7 @@ def run_episode(seed: int, context: str, mode: str) -> dict[str, object]:
             radar_dropout_prob=0.0,
             message_delay_steps=2,
             communication_range_scale=float(knobs["communication_range_scale"]),
+            target_init_bearing_offset_deg=float(knobs["target_init_bearing_offset_deg"]),
             max_target_message_age_steps=int(knobs["max_target_message_age_steps"]),
             min_target_confidence=0.2,
             max_steps=260,
