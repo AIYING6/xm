@@ -1,0 +1,19 @@
+{
+  "protocol": "PSCR-P8-V2-PHYSICAL-CALIBRATION-V1",
+  "purpose": "zero-training selection of one P8-v2 task contract with a nontrivial, reliability-dependent commitment trade-off before method training",
+  "fixed_items": ["3DOF plant", "role-resolved macro interface", "primary and forecast geometry", "reward", "future arrival", "public forecast bands", "post-arrival response template"],
+  "varied_physical_contract_terms": {
+    "commitment_start_step": [24, 36],
+    "future_deadline_urgent_step": [104, 112],
+    "localization_radius": [3000.0, 4000.0]
+  },
+  "selection_criteria": {
+    "high_reliability_stage_mean_advantage_gt": 0.15,
+    "low_reliability_maintain_mean_advantage_gt": 0.15,
+    "direction_support_fraction_gte": 0.4,
+    "high_reliability_stage_future_completion_gte": 0.2,
+    "paired_realizations_exact": true
+  },
+  "budget": {"screening_episode_pairs_per_band": 16, "selected_contract_confirmation_pairs_per_band": 64},
+  "boundary": "This calibration chooses a task contract, not a method. It may not be used as learned-method, formal-performance, or paper evidence."
+}
