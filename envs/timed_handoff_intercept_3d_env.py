@@ -18,6 +18,12 @@ from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv, v
 
 
 HANDOFF_CONTEXTS = ("current_authorization", "postbranch_refresh")
+SERVICE_ENVELOPE_PROFILES = (
+    "current_compact",
+    "current_delayed",
+    "future_fresh",
+    "future_durable",
+)
 BASE_OBS_DIM = 34
 HANDOFF_CONTEXT_SLICE = slice(34, 37)
 HANDOFF_SERVICE_BEACON_SLICE = slice(37, 43)
@@ -55,6 +61,11 @@ class TimedHandoffIntercept3DConfig(UAVIntercept3DConfig):
     service_progress_reward_weight: float = 1.0
     prebranch_target_policy: str = "weaving_mild"
     postbranch_target_policy: str = "break_turn_param"
+    # V5 is opt-in.  It replaces the public context-class one-hot with two
+    # public service envelopes whose relation determines the required route.
+    # Legacy staged-handoff experiments keep the default untouched.
+    service_envelope_mode: str = "legacy"
+    service_envelope_profile: str = "current_compact"
 
 
 class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
@@ -64,6 +75,13 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         staged = copy.deepcopy(config or TimedHandoffIntercept3DConfig())
         if staged.handoff_context not in HANDOFF_CONTEXTS:
             raise ValueError(f"unsupported handoff_context: {staged.handoff_context}")
+        if staged.service_envelope_mode not in {"legacy", "compositional_v5"}:
+            raise ValueError("service_envelope_mode must be legacy or compositional_v5")
+        if (
+            staged.service_envelope_mode == "compositional_v5"
+            and staged.service_envelope_profile not in SERVICE_ENVELOPE_PROFILES
+        ):
+            raise ValueError("unsupported compositional service-envelope profile")
         if not (0 <= staged.authorization_start_step < staged.authorization_deadline < staged.branch_step):
             raise ValueError("require 0 <= authorization_start_step < authorization_deadline < branch_step")
         if staged.authorization_hold_steps <= 0 or staged.refresh_hold_steps <= 0:
@@ -141,6 +159,12 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             self.config.target_policy = policy
 
     def _context_vector(self) -> np.ndarray:
+        if self.handoff_config.service_envelope_mode == "compositional_v5":
+            # [remaining-validity, delivered-message-age, required-hold] for
+            # current and future routes.  These are public mission-message
+            # fields, not target truth or an encoded profile identity.
+            current, future = self._service_envelopes()
+            return np.asarray((*current, *future), dtype=np.float32)
         # Mission service class is public before the decision; target branch
         # direction is deliberately not included.
         return np.asarray(
@@ -151,6 +175,40 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             ],
             dtype=np.float32,
         )
+
+    def _service_envelopes(self) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
+        """Return normalized public current/future service envelopes for V5.
+
+        The route requirement is the argmax of a documented value functional
+        over these fields; the profile label is never exposed to the actor.
+        Values are normalized only by the fixed mission horizon.
+        """
+        profiles = {
+            "current_compact": ((36.0, 2.0, 8.0), (60.0, 20.0, 16.0)),
+            "current_delayed": ((52.0, 17.0, 8.0), (42.0, 3.0, 16.0)),
+            "future_fresh": ((38.0, 19.0, 8.0), (72.0, 1.0, 16.0)),
+            "future_durable": ((60.0, 29.0, 8.0), (90.0, 7.0, 16.0)),
+        }
+        current, future = profiles[self.handoff_config.service_envelope_profile]
+        scale = float(self.config.max_steps)
+        return (
+            tuple(float(value / scale) for value in current),
+            tuple(float(value / scale) for value in future),
+        )
+
+    def _future_service_required(self) -> bool:
+        if self.handoff_config.service_envelope_mode != "compositional_v5":
+            return self.handoff_config.handoff_context == "postbranch_refresh"
+        current, future = self._service_envelopes()
+        # Undo display normalization.  The fixed value subtracts message age,
+        # required legal-hold cost, and the known additional future-route
+        # reconfiguration cost. No unobserved environment state enters it.
+        scale = float(self.config.max_steps)
+        c_tau, c_age, c_hold = (value * scale for value in current)
+        f_tau, f_age, f_hold = (value * scale for value in future)
+        current_value = c_tau - c_age - 2.0 * c_hold
+        future_value = f_tau - f_age - 2.0 * f_hold - 20.0
+        return bool(future_value > current_value)
 
     def _service_waypoint(self, future: bool) -> np.ndarray:
         """Return the publicly planned moving service waypoint.
@@ -232,7 +290,7 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             self.postbranch_refresh_streak = 0
 
     def _mission_requirement_met(self) -> bool:
-        if self.handoff_config.handoff_context == "current_authorization":
+        if not self._future_service_required():
             return self.authorization_handoff_observed
         return self.postbranch_refresh_observed
 
@@ -243,7 +301,7 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         service route plus legal relay-mediated delivery state.  It neither
         reveals target truth nor depends on a candidate representation.
         """
-        future = self.handoff_config.handoff_context == "postbranch_refresh"
+        future = self._future_service_required()
         corridor_error = self._relay_corridor_error(future=future)
         corridor_score = float(
             np.clip(1.0 - corridor_error / (2.0 * self.handoff_config.handoff_corridor_radius), 0.0, 1.0)
@@ -266,7 +324,7 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         service_progress = self._service_progress()
         active_streak = (
             self.authorization_handoff_streak
-            if self.handoff_config.handoff_context == "current_authorization"
+            if not self._future_service_required()
             else self.postbranch_refresh_streak
         )
         # Do not pay a per-timestep occupancy rent: a failed controller could
@@ -305,6 +363,8 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             {
                 "handoff_context_current_authorization": float(self.handoff_config.handoff_context == "current_authorization"),
                 "handoff_context_postbranch_refresh": float(self.handoff_config.handoff_context == "postbranch_refresh"),
+                "service_envelope_mode_v5": float(self.handoff_config.service_envelope_mode == "compositional_v5"),
+                "service_envelope_future_required": float(self._future_service_required()),
                 "handoff_branch_active": float(self.handoff_branch_active),
                 "authorization_handoff_observed": float(self.authorization_handoff_observed),
                 "postbranch_refresh_observed": float(self.postbranch_refresh_observed),

@@ -202,6 +202,8 @@ class RIGMAPPOConfig:
     handoff_legacy_intercept_reward_weight: float = 0.0
     handoff_prebranch_target_policy: str = "weaving_mild"
     handoff_postbranch_target_policy: str = "weaving_mild"
+    handoff_service_envelope_mode: str = "legacy"
+    handoff_service_envelope_profile: str = "current_compact"
     business_grounded_geometry: bool = False
     target_prior_position: tuple[float, float, float] = (10_000.0, 0.0, 5_000.0)
     max_target_message_age_steps: int = 80
@@ -1312,6 +1314,8 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 legacy_intercept_reward_weight=cfg.handoff_legacy_intercept_reward_weight,
                 prebranch_target_policy=cfg.handoff_prebranch_target_policy,
                 postbranch_target_policy=cfg.handoff_postbranch_target_policy,
+                service_envelope_mode=cfg.handoff_service_envelope_mode,
+                service_envelope_profile=cfg.handoff_service_envelope_profile,
                 target_policy=cfg.target_policy,
                 communication_range_scale=cfg.communication_range_scale,
                 communication_dropout_prob=cfg.communication_dropout_prob,
