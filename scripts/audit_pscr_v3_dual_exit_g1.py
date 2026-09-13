@@ -20,6 +20,12 @@ from envs.pscr_v3_dual_exit_interception_env import PSCRV3Config, PSCRV3DualExit
 
 
 POLICIES = ("concentrate", "split", "defer")
+CONTEXTS = {
+    "C0_centered": {},
+    "C1_negative_approach": {"initial_red_y": -2600.0, "blue_init_rotation_deg": -18.0},
+    "C2_positive_approach": {"initial_red_y": 2600.0, "blue_init_rotation_deg": 18.0},
+    "C3_wide_formation": {"blue_init_spacing_scale": 1.25, "egress_lateral": 9500.0},
+}
 
 
 def waypoint_action(env: PSCRV3DualExitInterceptionEnv, agent: int, waypoint: np.ndarray) -> int:
@@ -53,8 +59,8 @@ def primitive_policy(env: PSCRV3DualExitInterceptionEnv, name: str) -> np.ndarra
     return np.asarray([waypoint_action(env, i, np.asarray(goal, dtype=np.float32)) for i, goal in enumerate(goals)], dtype=np.int64)
 
 
-def run_one(seed: int, policy: str) -> dict[str, object]:
-    env = PSCRV3DualExitInterceptionEnv(PSCRV3Config(seed=seed))
+def run_one(seed: int, context: str, policy: str) -> dict[str, object]:
+    env = PSCRV3DualExitInterceptionEnv(PSCRV3Config(seed=seed, **CONTEXTS[context]))
     env.reset()
     total_return = 0.0
     info: dict[str, object] = {}
@@ -65,6 +71,7 @@ def run_one(seed: int, policy: str) -> dict[str, object]:
             break
     return {
         "seed": seed,
+        "context": context,
         "policy": policy,
         "return": total_return,
         "steps": env.base.step_count,
@@ -91,38 +98,50 @@ def main() -> None:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite {output}")
     output.mkdir(parents=True)
-    rows = [run_one(args.seed_start + offset, policy) for offset in range(args.seeds) for policy in POLICIES]
+    rows = [
+        run_one(args.seed_start + offset, context, policy)
+        for offset in range(args.seeds)
+        for context in CONTEXTS
+        for policy in POLICIES
+    ]
     with (output / "PSCR_V3_G1_CONTROLLER_ROWS.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
-    winners: dict[int, list[str]] = {}
+    winners: dict[tuple[int, str], list[str]] = {}
+    # The physical terminal objective ranks above shaped return.  An escaping
+    # evader must never be declared the better controller merely because it
+    # accumulated dense pursuit shaping for longer.  Return is only a tie-break
+    # among identical terminal outcomes.
+    def rank(row: dict[str, object]) -> tuple[int, int, float]:
+        return (int(row["success"]), -int(row["escape"]), float(row["return"]))
     for seed in range(args.seed_start, args.seed_start + args.seeds):
-        subset = [row for row in rows if row["seed"] == seed]
-        # The physical terminal objective ranks above shaped return.  An
-        # escaping evader must never be declared the better controller merely
-        # because it accumulated dense pursuit shaping for longer.  Return is
-        # only a tie-breaker among identical terminal outcomes.
-        def rank(row: dict[str, object]) -> tuple[int, int, float]:
-            return (int(row["success"]), -int(row["escape"]), float(row["return"]))
-        best_rank = max(rank(row) for row in subset)
-        winners[seed] = [str(row["policy"]) for row in subset if rank(row) == best_rank]
-    win_counts = {policy: sum(policy in winners[seed] for seed in winners) for policy in POLICIES}
+        for context in CONTEXTS:
+            subset = [row for row in rows if row["seed"] == seed and row["context"] == context]
+            best_rank = max(rank(row) for row in subset)
+            winners[(seed, context)] = [str(row["policy"]) for row in subset if rank(row) == best_rank]
+    win_counts = {policy: sum(policy in winners[cell] for cell in winners) for policy in POLICIES}
     # A pass requires at least two controllers to win at least one realisation
     # and neither universal success nor universal escape.  It is an
     # identifiability screen, not an estimate of a learning algorithm's value.
     success_total = sum(int(row["success"]) for row in rows)
     escape_total = sum(int(row["escape"]) for row in rows)
-    verdict = "PSCR_V3_G1_NONDEGENERATE_SIGNAL" if sum(count > 0 for count in win_counts.values()) >= 2 and 0 < success_total < len(rows) and 0 < escape_total < len(rows) else "PSCR_V3_G1_SIGNAL_NOT_ESTABLISHED"
+    unique_wins = {
+        policy: sum(winners[cell] == [policy] for cell in winners)
+        for policy in POLICIES
+    }
+    verdict = "PSCR_V3_G1_NONDEGENERATE_SIGNAL" if sum(count > 0 for count in unique_wins.values()) >= 2 and max(unique_wins.values()) < len(winners) and 0 < success_total < len(rows) and 0 < escape_total < len(rows) else "PSCR_V3_G1_SIGNAL_NOT_ESTABLISHED"
     report = {
-        "protocol": "PSCR-V3-DUAL-EXIT-G1-V1",
+        "protocol": "PSCR-V3-DUAL-EXIT-G1-CONTEXT-LATTICE-V1",
         "verdict": verdict,
         "diagnostic_only": True,
         "training_started": False,
         "evaluation_started": False,
         "seeds": list(range(args.seed_start, args.seed_start + args.seeds)),
         "controllers": list(POLICIES),
+        "contexts": list(CONTEXTS),
         "controller_win_counts": win_counts,
+        "unique_terminal_objective_win_counts": unique_wins,
         "success_rows": success_total,
         "escape_rows": escape_total,
         "interpretation": "Transparent controllers establish only whether physical action choices are non-degenerate; they do not validate a method or provide paper performance evidence.",

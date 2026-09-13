@@ -1,0 +1,20 @@
+{
+  "protocol": "PSCR-V3-DUAL-EXIT-G1-CONTEXT-LATTICE-V1",
+  "status": "ZERO_TRAINING_ONLY",
+  "shared_contract": {
+    "agents": 3,
+    "action_interface": "existing_27_action_3DOF_turn_climb_acceleration",
+    "horizon": 180,
+    "branch_step": 32,
+    "post_branch_speed": 255.0,
+    "actor_and_critic_future_exit_leakage": false
+  },
+  "contexts": {
+    "C0_centered": {"initial_red_y": 0.0, "blue_init_rotation_deg": 0.0, "blue_init_spacing_scale": 1.0, "egress_lateral": 8000.0},
+    "C1_negative_approach": {"initial_red_y": -2600.0, "blue_init_rotation_deg": -18.0, "blue_init_spacing_scale": 1.0, "egress_lateral": 8000.0},
+    "C2_positive_approach": {"initial_red_y": 2600.0, "blue_init_rotation_deg": 18.0, "blue_init_spacing_scale": 1.0, "egress_lateral": 8000.0},
+    "C3_wide_formation": {"initial_red_y": 0.0, "blue_init_rotation_deg": 0.0, "blue_init_spacing_scale": 1.25, "egress_lateral": 9500.0}
+  },
+  "registered_gate": "At least two transparent primitive-flight controllers must each be uniquely terminal-objective optimal in one or more contexts; no controller may win all context-seed cells. Otherwise no learner is authorised.",
+  "non_goals": ["no_algorithm_training", "no_reward_change", "no_macro_action_interface", "not_paper_evidence"]
+}

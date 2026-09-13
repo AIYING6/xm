@@ -38,6 +38,9 @@ class PSCRV3Config:
     egress_radius: float = 1_300.0
     decision_zone_x: float = 1_200.0
     post_branch_speed: float = 255.0
+    initial_red_y: float = 0.0
+    blue_init_rotation_deg: float = 0.0
+    blue_init_spacing_scale: float = 1.0
     seed: int = 0
 
 
@@ -64,6 +67,8 @@ class PSCRV3DualExitInterceptionEnv:
                 agent_target_info_bottleneck=True,
                 relay_dependent_task=True,
                 target_policy="straight",
+                blue_init_rotation_deg=self.config.blue_init_rotation_deg,
+                blue_init_spacing_scale=self.config.blue_init_spacing_scale,
                 seed=self.config.seed,
             )
         )
@@ -80,7 +85,7 @@ class PSCRV3DualExitInterceptionEnv:
         self.base.reset()
         # A common public approach trajectory.  No future exit is sampled at
         # reset: it is selected only from realised blue coverage at branch time.
-        self.base.red_pos[0] = np.asarray((11_000.0, 0.0, 5_000.0), dtype=np.float32)
+        self.base.red_pos[0] = np.asarray((11_000.0, self.config.initial_red_y, 5_000.0), dtype=np.float32)
         self.base.red_heading[0] = math.pi
         self.base.red_gamma[0] = 0.0
         self.base.red_speed[0] = 205.0
