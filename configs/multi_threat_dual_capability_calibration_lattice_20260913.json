@@ -1,0 +1,12 @@
+{
+  "protocol": "MULTI-THREAT-DUAL-CAPABILITY-CALIBRATION-V2",
+  "purpose": "zero-training phase-map calibration only; no method selection or performance claim",
+  "axes": {
+    "branch_step": [12, 20, 28],
+    "red_initial_lateral": [2400.0, 5500.0, 8500.0],
+    "asset_lateral": [7500.0, 10500.0, 13500.0]
+  },
+  "fixed": {"red_start_x": 11000.0, "approach_speed": 220.0, "post_branch_speed": 255.0, "asset_x": -6500.0, "red_attackers": 2, "assets": 2, "primitive_action_interface": "3dof_27_discrete"},
+  "selection_rule": "Candidate cells require non-saturated terminal outcomes and a prespecified terminal-outcome advantage for parallel_suppress_intercept over kinetic_first; otherwise no cell is frozen.",
+  "prohibitions": ["no_training", "no_reward_tuning", "no post-hoc cell cherry-picking", "no paper result"]
+}

@@ -1,0 +1,7 @@
+{
+  "protocol": "MULTI-THREAT-DUAL-CAPABILITY-CALIBRATION-LOCAL-V3",
+  "purpose": "pre-registered local refinement around the sole v2 mechanism-sensitive boundary",
+  "axes": {"branch_step": [10, 12, 14], "red_initial_lateral": [7500.0, 8500.0, 9500.0], "asset_lateral": [12000.0, 13500.0, 15000.0]},
+  "selection_rule": "parallel_suppress_intercept succeeds in 2–5 of 6 initialisations, exceeds kinetic_first by at least 2/6, and at least one comparator both succeeds and fails across the local lattice.",
+  "prohibitions": ["no_training", "no algorithm tuning", "no out-of-lattice expansion before reporting this complete map"]
+}

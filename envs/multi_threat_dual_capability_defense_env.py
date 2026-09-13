@@ -85,8 +85,7 @@ class MultiThreatDualCapabilityDefenseEnv(MultiThreatAssetDefenseEnv):
         for threat in range(2):
             if not self.blue_destroyed[threat]:
                 self._move_red(threat)
-                if self._attack_window(threat):
-                    self.blue_destroyed[threat] = True
+                self._update_kinetic_hold(threat)
         self._sync_base_target(0)
         self.base._update_sensing_and_comm()
         breach = False

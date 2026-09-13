@@ -23,6 +23,10 @@ class MultiThreatAssetDefenseConfig:
     red_initial_lateral: float = 2_400.0
     red_center_y: float = 0.0
     mirror_y: bool = False
+    red_start_x: float = 11_000.0
+    approach_speed: float = 220.0
+    post_branch_speed: float = 255.0
+    blue_init_spacing_scale: float = 1.0
     seed: int = 0
 
 
@@ -44,7 +48,8 @@ class MultiThreatAssetDefenseEnv:
         self.base = UAVIntercept3DEnv(UAVIntercept3DConfig(
             max_steps=self.config.horizon, strict_target_sensing=True,
             agent_target_info_bottleneck=True, relay_dependent_task=True,
-            target_policy="straight", seed=self.config.seed,
+            target_policy="straight", blue_init_spacing_scale=self.config.blue_init_spacing_scale,
+            seed=self.config.seed,
         ))
         self.reset()
 
@@ -66,12 +71,13 @@ class MultiThreatAssetDefenseEnv:
         self.base.step_count = 0
         self.base.done = False
         self.blue_destroyed = np.zeros(2, dtype=bool)
+        self.kinetic_hold = np.zeros(2, dtype=np.int64)
         self.asset_integrity = {-1: 1.0, 1: 1.0}
         self.route_assignment: tuple[int, int] | None = None
-        self.red_pos = np.asarray(((11_000.0, self.config.red_center_y - self.config.red_initial_lateral, 5_000.0), (11_000.0, self.config.red_center_y + self.config.red_initial_lateral, 5_000.0)), dtype=np.float32)
+        self.red_pos = np.asarray(((self.config.red_start_x, self.config.red_center_y - self.config.red_initial_lateral, 5_000.0), (self.config.red_start_x, self.config.red_center_y + self.config.red_initial_lateral, 5_000.0)), dtype=np.float32)
         self.red_heading = np.asarray((math.pi, math.pi), dtype=np.float32)
         self.red_gamma = np.zeros(2, dtype=np.float32)
-        self.red_speed = np.asarray((220.0, 220.0), dtype=np.float32)
+        self.red_speed = np.asarray((self.config.approach_speed, self.config.approach_speed), dtype=np.float32)
         self._sync_base_target(0)
         self.base._update_sensing_and_comm()
         return self._obs(), self._share_obs(), self._graph()
@@ -109,7 +115,7 @@ class MultiThreatAssetDefenseEnv:
             self.route_assignment = (-1, 1)
         else:
             self.route_assignment = (1, -1)
-        self.red_speed[:] = self.base.config.target_type.max_speed
+        self.red_speed[:] = self.config.post_branch_speed
 
     def _move_red(self, threat: int) -> None:
         if self.route_assignment is None:
@@ -139,6 +145,18 @@ class MultiThreatAssetDefenseEnv:
         red_vel = velocity_from_state(float(self.red_speed[threat]), float(self.red_heading[threat]), float(self.red_gamma[threat]))
         return float(np.dot(blue_vel - red_vel, unit(rel))) > -30.0 and any(self._visible(i, threat) for i in range(self.num_agents))
 
+    def _update_kinetic_hold(self, threat: int) -> bool:
+        """Apply the inherited continuous attack-window requirement per threat.
+
+        Entering a valid window is not instantaneous neutralisation.  Each red
+        attacker needs its own uninterrupted hold, matching the base 3DOF
+        task's physical attack-chain semantics.
+        """
+        self.kinetic_hold[threat] = self.kinetic_hold[threat] + 1 if self._attack_window(threat) else 0
+        if self.kinetic_hold[threat] >= self.base.config.attack_hold_steps:
+            self.blue_destroyed[threat] = True
+        return bool(self.blue_destroyed[threat])
+
     def step(self, actions: np.ndarray | list[int]):
         if self.base.done:
             raise RuntimeError("Call reset() before stepping a finished episode.")
@@ -150,8 +168,7 @@ class MultiThreatAssetDefenseEnv:
         for threat in range(2):
             if not self.blue_destroyed[threat]:
                 self._move_red(threat)
-                if self._attack_window(threat):
-                    self.blue_destroyed[threat] = True
+                self._update_kinetic_hold(threat)
         self._sync_base_target(0)
         self.base._update_sensing_and_comm()
         breach = False
