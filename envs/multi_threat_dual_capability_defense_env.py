@@ -80,7 +80,7 @@ class MultiThreatDualCapabilityDefenseEnv(MultiThreatAssetDefenseEnv):
         self._sync_base_target(0)
         self.base._update_sensing_and_comm()
         self._update_suppression()
-        if self.route_assignment is None and self.base.step_count >= self.config.branch_step:
+        if self.route_assignment is None and self.base.step_count >= self.episode_branch_step:
             self._assign_routes()
         for threat in range(2):
             if not self.blue_destroyed[threat]:

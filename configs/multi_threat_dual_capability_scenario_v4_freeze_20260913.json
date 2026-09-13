@@ -1,0 +1,13 @@
+{
+  "protocol": "MULTI-THREAT-DUAL-CAPABILITY-SCENARIO-V4",
+  "status": "ZERO_TRAINING_ONLY",
+  "base_boundary_cells": [
+    {"branch_step": 10, "red_initial_lateral": 9500.0, "asset_lateral": 15000.0},
+    {"branch_step": 12, "red_initial_lateral": 8500.0, "asset_lateral": 13500.0},
+    {"branch_step": 12, "red_initial_lateral": 8500.0, "asset_lateral": 15000.0}
+  ],
+  "scenario_distribution": {"red_center_y_jitter": 1000.0, "approach_speed_jitter": 12.0, "branch_step_jitter": 2},
+  "invariants": ["same 27-action 3DOF interface", "same terminal definitions", "same kinetic-hold requirement", "same focused suppression constraints", "no future-route label"],
+  "selection_rule": "A cell requires parallel_suppress_intercept success in 2–5 of 6 independent scenarios and at least 2/6 more successes than kinetic_first; selected cell then proceeds to independent G1 only.",
+  "prohibitions": ["no training", "no method implementation", "no post-hoc distribution change"]
+}

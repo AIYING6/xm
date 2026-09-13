@@ -27,6 +27,9 @@ class MultiThreatAssetDefenseConfig:
     approach_speed: float = 220.0
     post_branch_speed: float = 255.0
     blue_init_spacing_scale: float = 1.0
+    red_center_y_jitter: float = 0.0
+    approach_speed_jitter: float = 0.0
+    branch_step_jitter: int = 0
     seed: int = 0
 
 
@@ -69,15 +72,18 @@ class MultiThreatAssetDefenseEnv:
             self.base.blue_pos[:, 1] *= -1.0
             self.base.blue_heading[:] = -self.base.blue_heading
         self.base.step_count = 0
+        self.episode_branch_step = int(self.config.branch_step + self.rng.integers(-self.config.branch_step_jitter, self.config.branch_step_jitter + 1)) if self.config.branch_step_jitter else self.config.branch_step
+        self.episode_red_center_y = float(self.config.red_center_y + self.rng.uniform(-self.config.red_center_y_jitter, self.config.red_center_y_jitter))
+        self.episode_approach_speed = float(self.config.approach_speed + self.rng.uniform(-self.config.approach_speed_jitter, self.config.approach_speed_jitter))
         self.base.done = False
         self.blue_destroyed = np.zeros(2, dtype=bool)
         self.kinetic_hold = np.zeros(2, dtype=np.int64)
         self.asset_integrity = {-1: 1.0, 1: 1.0}
         self.route_assignment: tuple[int, int] | None = None
-        self.red_pos = np.asarray(((self.config.red_start_x, self.config.red_center_y - self.config.red_initial_lateral, 5_000.0), (self.config.red_start_x, self.config.red_center_y + self.config.red_initial_lateral, 5_000.0)), dtype=np.float32)
+        self.red_pos = np.asarray(((self.config.red_start_x, self.episode_red_center_y - self.config.red_initial_lateral, 5_000.0), (self.config.red_start_x, self.episode_red_center_y + self.config.red_initial_lateral, 5_000.0)), dtype=np.float32)
         self.red_heading = np.asarray((math.pi, math.pi), dtype=np.float32)
         self.red_gamma = np.zeros(2, dtype=np.float32)
-        self.red_speed = np.asarray((self.config.approach_speed, self.config.approach_speed), dtype=np.float32)
+        self.red_speed = np.asarray((self.episode_approach_speed, self.episode_approach_speed), dtype=np.float32)
         self._sync_base_target(0)
         self.base._update_sensing_and_comm()
         return self._obs(), self._share_obs(), self._graph()
@@ -119,7 +125,7 @@ class MultiThreatAssetDefenseEnv:
 
     def _move_red(self, threat: int) -> None:
         if self.route_assignment is None:
-            target = np.asarray((4_000.0, self.config.red_center_y + (-1 if threat == 0 else 1) * self.config.red_initial_lateral, 5_000.0), dtype=np.float32)
+            target = np.asarray((4_000.0, self.episode_red_center_y + (-1 if threat == 0 else 1) * self.config.red_initial_lateral, 5_000.0), dtype=np.float32)
         else:
             target = self._asset(self.route_assignment[threat])
         delta = target - self.red_pos[threat]
@@ -163,7 +169,7 @@ class MultiThreatAssetDefenseEnv:
         actions = np.asarray(actions, dtype=np.int64).reshape(self.num_agents)
         self.base.step_count += 1
         self.base._move_blue(np.clip(actions, 0, self.action_dim - 1))
-        if self.route_assignment is None and self.base.step_count >= self.config.branch_step:
+        if self.route_assignment is None and self.base.step_count >= self.episode_branch_step:
             self._assign_routes()
         for threat in range(2):
             if not self.blue_destroyed[threat]:
