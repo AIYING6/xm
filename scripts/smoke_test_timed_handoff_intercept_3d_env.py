@@ -16,13 +16,16 @@ def main() -> None:
     for context in HANDOFF_CONTEXTS:
         env = TimedHandoffIntercept3DEnv(TimedHandoffIntercept3DConfig(seed=91, handoff_context=context))
         obs, share, graph = env.reset()
-        assert obs.shape == (3, 36), obs.shape
-        assert share.shape[0] == 3 and share.shape[1] == env.share_obs_dim + 2, share.shape
+        assert obs.shape == (3, 45), obs.shape
+        assert share.shape[0] == 3 and share.shape[1] == env.share_obs_dim + 3, share.shape
         assert graph["node_feat"].shape[0] == 4
         expected = (1.0, 0.0) if context == "current_authorization" else (0.0, 1.0)
-        assert tuple(obs[0, -2:]) == expected and np.all(obs[:, -2:] == obs[0, -2:])
+        assert tuple(obs[0, 34:36]) == expected and np.all(obs[:, 34:36] == obs[0, 34:36])
+        assert obs[0, 36] > 0.0 and np.all(obs[:, 36] == obs[0, 36])
+        midpoint = 0.5 * (env.blue_pos[0] + env.blue_pos[2])
+        assert np.allclose(env.blue_pos[1], midpoint), (env.blue_pos[1], midpoint)
         # The branch direction is not appended to any actor observation.
-        assert obs.shape[-1] == 36
+        assert obs.shape[-1] == 45
         _, _, _, _, dones, info = env.step(np.full(3, 13, dtype=np.int64))
         assert dones.shape == (3, 1)
         assert "handoff_success" in info and "authorization_handoff_observed" in info

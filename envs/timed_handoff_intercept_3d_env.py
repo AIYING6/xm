@@ -18,6 +18,9 @@ from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv
 
 
 HANDOFF_CONTEXTS = ("current_authorization", "postbranch_refresh")
+BASE_OBS_DIM = 34
+HANDOFF_CONTEXT_SLICE = slice(34, 37)
+HANDOFF_BEACON_SLICE = slice(37, 45)
 
 
 @dataclass
@@ -26,15 +29,20 @@ class TimedHandoffIntercept3DConfig(UAVIntercept3DConfig):
 
     ``current_authorization`` requires a legal relay-mediated track to reach
     the attacker before ``authorization_deadline``.  ``postbranch_refresh``
-    requires a relay-mediated track generated after ``branch_step``.  Both
+    requires a relay-mediated track delivered after ``branch_step``.  Both
     contexts still require legal attacker information and physical terminal
     attack geometry; no message or target truth is inserted into the actor
     observation.
     """
 
     handoff_context: str = "current_authorization"
+    authorization_start_step: int = 20
     authorization_deadline: int = 88
     branch_step: int = 108
+    authorization_hold_steps: int = 8
+    refresh_hold_steps: int = 8
+    handoff_corridor_radius: float = 1_400.0
+    future_corridor_lateral_offset: float = 3_000.0
     prebranch_target_policy: str = "weaving_mild"
     postbranch_target_policy: str = "break_turn_param"
 
@@ -46,8 +54,12 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         staged = copy.deepcopy(config or TimedHandoffIntercept3DConfig())
         if staged.handoff_context not in HANDOFF_CONTEXTS:
             raise ValueError(f"unsupported handoff_context: {staged.handoff_context}")
-        if staged.authorization_deadline <= 0 or staged.branch_step <= staged.authorization_deadline:
-            raise ValueError("require 0 < authorization_deadline < branch_step")
+        if not (0 <= staged.authorization_start_step < staged.authorization_deadline < staged.branch_step):
+            raise ValueError("require 0 <= authorization_start_step < authorization_deadline < branch_step")
+        if staged.authorization_hold_steps <= 0 or staged.refresh_hold_steps <= 0:
+            raise ValueError("handoff hold lengths must be positive")
+        if staged.handoff_corridor_radius <= 0.0 or staged.future_corridor_lateral_offset <= 0.0:
+            raise ValueError("handoff corridor geometry must be positive")
         # The base environment must not independently terminate on its legacy
         # chain-closed condition.  Its physics, information propagation and
         # safety termination remain intact; this layer owns mission success.
@@ -62,8 +74,25 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
 
     def reset(self) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray]]:
         obs, share, graph = super().reset()
+        # The staged objective is a *choice* between retaining the current
+        # bridge and relocating for a later bridge.  Initialise the relay at
+        # the current legal service midpoint so that retaining the bridge is
+        # physically feasible; the legacy plant starts it 2 km behind that
+        # midpoint, which made the current-corridor milestone unattainable
+        # regardless of the selected relay behaviour.
+        current_midpoint = 0.5 * (self.blue_pos[0] + self.blue_pos[2])
+        self.blue_pos[1] = current_midpoint.astype(np.float32)
+        self.blue_speed[1] = float(0.5 * (self.blue_speed[0] + self.blue_speed[2]))
+        self.blue_heading[1] = float(0.5 * (self.blue_heading[0] + self.blue_heading[2]))
+        self.blue_gamma[1] = float(0.5 * (self.blue_gamma[0] + self.blue_gamma[2]))
+        # Moving a vehicle after the base reset invalidates the derived legal
+        # link/cache state.  Recompute it before exposing any observation.
+        self._update_sensing_and_comm()
+        obs, share, graph = self._get_obs(), self._get_share_obs(), self._get_graph_obs()
         self.authorization_handoff_observed = False
         self.postbranch_refresh_observed = False
+        self.authorization_handoff_streak = 0
+        self.postbranch_refresh_streak = 0
         self.handoff_success = False
         self.handoff_branch_active = False
         return self._augment_obs(obs), self._augment_share(share), graph
@@ -89,12 +118,27 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             [
                 float(self.handoff_config.handoff_context == "current_authorization"),
                 float(self.handoff_config.handoff_context == "postbranch_refresh"),
+                float(self.handoff_config.future_corridor_lateral_offset / self.config.world_radius),
             ],
             dtype=np.float32,
         )
 
     def _augment_obs(self, obs: np.ndarray) -> np.ndarray:
-        return np.concatenate([obs, np.tile(self._context_vector(), (self.num_agents, 1))], axis=-1).astype(np.float32)
+        # A radio neighbour beacon carries relative position only across an
+        # active direct link.  It is not a global formation state: a broken or
+        # delayed link contributes zeros and its availability flag is zero.
+        beacons = np.zeros((self.num_agents, (self.num_agents - 1) * 4), dtype=np.float32)
+        for ego in range(self.num_agents):
+            offset = 0
+            for peer in range(self.num_agents):
+                if peer == ego:
+                    continue
+                linked = float(self.comm_adj[ego, peer] > 0.5)
+                if linked:
+                    beacons[ego, offset: offset + 3] = (self.blue_pos[peer] - self.blue_pos[ego]) / self.config.world_radius
+                beacons[ego, offset + 3] = linked
+                offset += 4
+        return np.concatenate([obs, np.tile(self._context_vector(), (self.num_agents, 1)), beacons], axis=-1).astype(np.float32)
 
     def _augment_share(self, share: np.ndarray) -> np.ndarray:
         return np.concatenate([share, np.tile(self._context_vector(), (self.num_agents, 1))], axis=-1).astype(np.float32)
@@ -104,13 +148,37 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         path = list(self.target_cache_path[attacker])
         return bool(self._has_fresh_target_cache(attacker) and 1 in path)
 
+    def _relay_corridor_error(self, future: bool) -> float:
+        """Distance to a physical relay-service corridor defined by team geometry."""
+        midpoint = 0.5 * (self.blue_pos[0] + self.blue_pos[2])
+        if future:
+            midpoint = midpoint + np.asarray((0.0, self.handoff_config.future_corridor_lateral_offset, 0.0), dtype=np.float32)
+        return float(np.linalg.norm(self.blue_pos[1] - midpoint))
+
     def _update_handoff_milestones(self) -> None:
-        if self._relay_mediated_fresh_attacker_track():
-            generation_step = int(self.target_cache_generation_step[2])
-            if self.step_count <= self.handoff_config.authorization_deadline:
+        relay_track = self._relay_mediated_fresh_attacker_track()
+        if relay_track:
+            delivery_step = int(self.target_cache_delivery_step[2])
+            in_authorization_window = (
+                self.handoff_config.authorization_start_step <= self.step_count <= self.handoff_config.authorization_deadline
+            )
+            current_corridor = self._relay_corridor_error(future=False) <= self.handoff_config.handoff_corridor_radius
+            self.authorization_handoff_streak = self.authorization_handoff_streak + 1 if (in_authorization_window and current_corridor) else 0
+            if self.authorization_handoff_streak >= self.handoff_config.authorization_hold_steps:
                 self.authorization_handoff_observed = True
-            if self.step_count >= self.handoff_config.branch_step and generation_step >= self.handoff_config.branch_step:
-                self.postbranch_refresh_observed = True
+            future_corridor = self._relay_corridor_error(future=True) <= self.handoff_config.handoff_corridor_radius
+            # A post-stage refresh is a new relay-mediated delivery to the
+            # attacker.  Requiring a brand-new scout detection here would
+            # confound the handoff choice with incidental sensing coverage.
+            if self.step_count >= self.handoff_config.branch_step and delivery_step >= self.handoff_config.branch_step and future_corridor:
+                self.postbranch_refresh_streak += 1
+                if self.postbranch_refresh_streak >= self.handoff_config.refresh_hold_steps:
+                    self.postbranch_refresh_observed = True
+            else:
+                self.postbranch_refresh_streak = 0
+        else:
+            self.authorization_handoff_streak = 0
+            self.postbranch_refresh_streak = 0
 
     def _mission_requirement_met(self) -> bool:
         if self.handoff_config.handoff_context == "current_authorization":
@@ -136,6 +204,12 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
                 "handoff_branch_active": float(self.handoff_branch_active),
                 "authorization_handoff_observed": float(self.authorization_handoff_observed),
                 "postbranch_refresh_observed": float(self.postbranch_refresh_observed),
+                "authorization_handoff_streak": float(self.authorization_handoff_streak),
+                "postbranch_refresh_streak": float(self.postbranch_refresh_streak),
+                "relay_current_corridor_error": self._relay_corridor_error(future=False),
+                "relay_future_corridor_error": self._relay_corridor_error(future=True),
+                "relay_in_current_corridor": float(self._relay_corridor_error(future=False) <= self.handoff_config.handoff_corridor_radius),
+                "relay_in_future_corridor": float(self._relay_corridor_error(future=True) <= self.handoff_config.handoff_corridor_radius),
                 "handoff_success": float(self.handoff_success),
                 "legacy_success_disabled": 1.0,
             }
