@@ -44,7 +44,12 @@ class TimedHandoffIntercept3DConfig(UAVIntercept3DConfig):
     refresh_hold_steps: int = 8
     handoff_corridor_radius: float = 1_400.0
     future_corridor_lateral_offset: float = 3_000.0
-    service_progress_reward_weight: float = 0.20
+    # This derived task is about legal relay service, not legacy target
+    # pursuit.  The legacy reward can be retained for a diagnostic comparison,
+    # but is disabled in the canonical staged-task contract because it rewards
+    # routes that can oppose a required relay reconstruction.
+    legacy_intercept_reward_weight: float = 0.0
+    service_progress_reward_weight: float = 1.0
     prebranch_target_policy: str = "weaving_mild"
     postbranch_target_policy: str = "break_turn_param"
 
@@ -64,6 +69,8 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             raise ValueError("handoff corridor geometry must be positive")
         if staged.service_progress_reward_weight < 0.0:
             raise ValueError("service_progress_reward_weight must be non-negative")
+        if staged.legacy_intercept_reward_weight < 0.0:
+            raise ValueError("legacy_intercept_reward_weight must be non-negative")
         # The base environment must not independently terminate on its legacy
         # chain-closed condition.  Its physics, information propagation and
         # safety termination remain intact; this layer owns mission success.
@@ -107,6 +114,11 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         self.postbranch_refresh_streak = 0
         self.handoff_success = False
         self.handoff_branch_active = False
+        # Potential and streak state for non-exploitable staged-task credit.
+        # Resetting both values makes the first genuine service improvement
+        # observable without rewarding time spent idling near a route.
+        self._previous_service_progress = 0.0
+        self._previous_service_streak = 0
         return self._augment_obs(obs), self._augment_share(share), graph
 
     def _move_red(self) -> None:
@@ -247,8 +259,32 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         obs, share, graph, rewards, dones, info = super().step(actions)
         self._update_handoff_milestones()
         service_progress = self._service_progress()
-        shaping = self.handoff_config.service_progress_reward_weight * service_progress
-        rewards = rewards + shaping
+        active_streak = (
+            self.authorization_handoff_streak
+            if self.handoff_config.handoff_context == "current_authorization"
+            else self.postbranch_refresh_streak
+        )
+        # Do not pay a per-timestep occupancy rent: a failed controller could
+        # otherwise accrue more return simply by timing out near a route.  The
+        # route term is a positive potential increase and the streak term
+        # rewards only steps that advance the exact legal hold requirement.
+        progress_gain = max(0.0, service_progress - self._previous_service_progress)
+        streak_gain = max(0, active_streak - self._previous_service_streak)
+        shaping = self.handoff_config.service_progress_reward_weight * (progress_gain + 0.25 * streak_gain)
+        self._previous_service_progress = service_progress
+        self._previous_service_streak = active_streak
+        # This is a distinct staged-service task.  The inherited interception
+        # reward includes range-closing and attack-window terms that may favour
+        # a relay remaining on the obsolete bridge; the credit-path audit
+        # verifies this can rank a failed route above the legal successful
+        # route.  Retain only an explicitly requested diagnostic fraction of
+        # that legacy reward and use the public-route/legal-delivery objective
+        # as the common team learning signal for every compared method.
+        rewards = self.handoff_config.legacy_intercept_reward_weight * rewards + shaping
+        if bool(info.get("collision", 0.0)):
+            rewards = rewards - 2.0
+        if bool(info.get("constraint_violation", 0.0)):
+            rewards = rewards - 1.5
         # This layer's terminal is timely, legal targeting-service completion.
         # Physical attack-window occupancy remains a separately logged
         # downstream metric.  Requiring both at one instant would turn the
@@ -277,7 +313,10 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
                 "handoff_terminal_attack_window": float(self.attack_window[2] > 0.5),
                 "handoff_terminal_attacker_has_information": float(self._has_target_information(2)),
                 "handoff_service_progress": service_progress,
+                "handoff_service_progress_gain": progress_gain,
+                "handoff_service_streak_gain": float(streak_gain),
                 "handoff_service_shaping_reward": shaping,
+                "handoff_legacy_intercept_reward_weight": self.handoff_config.legacy_intercept_reward_weight,
                 "legacy_success_disabled": 1.0,
             }
         )
