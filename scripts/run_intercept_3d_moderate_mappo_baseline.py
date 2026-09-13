@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-envs", type=int, default=4)
     parser.add_argument("--rollout-steps", type=int, default=64)
     parser.add_argument("--eval-episodes", type=int, default=40)
+    parser.add_argument("--init-checkpoint", type=Path, default=None)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument(
         "--out-dir",
@@ -82,6 +83,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         save_snapshots=True,
         out_dir=str(args.out_dir),
         device=args.device,
+        init_checkpoint=None if args.init_checkpoint is None else str(args.init_checkpoint),
     )
 
 
@@ -128,6 +130,7 @@ def main() -> None:
         "condition": CONDITION,
         "fixed_items": ["environment_interface", "PPO", "reward", "observation", "action", "training_budget"],
         "method": {"name": "plain_mappo", "graph_encoder": "no_graph", "sampler": "uniform_fixed_condition"},
+        "initialization": "random" if args.init_checkpoint is None else str(args.init_checkpoint),
         "status": "running",
     }
     (args.out_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
