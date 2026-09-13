@@ -1,0 +1,7 @@
+{
+  "protocol": "MULTI-THREAT-CAPACITY-SHAPED-DEFENSE-G0-V1",
+  "scope": "Baseline learnability repair only; not a proposed algorithmic component.",
+  "unchanged": ["state transition", "observations", "shared state", "27-action 3DOF interface", "two threat/asset geometry", "kinetic capacity", "suppression capacity", "terminal success"],
+  "reward_addition": "0.35 * (0.99 * Phi(s_next) - Phi(s)), where Phi is negative remaining asset-risk based on current legal task state.",
+  "prohibitions": ["no route label", "no action hint", "no policy-specific reward", "no change to transparent-controller G1 result"]
+}

@@ -15,6 +15,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from algorithms.m2_commitment_ppo import M2PlainMAPPO
 from envs.multi_threat_capacity_defense_env import MultiThreatCapacityDefenseConfig, MultiThreatCapacityDefenseEnv
+from envs.multi_threat_capacity_shaped_defense_env import MultiThreatCapacityShapedDefenseEnv
 
 PROTOCOL = "MULTI-THREAT-CAPACITY-DEFENSE-G2-PLAIN-MAPPO-V1"
 TASK_PARAMETERS = {
@@ -30,15 +31,17 @@ def seed_all(seed: int) -> torch.Generator:
     return generator
 
 
-def make_env(seed: int) -> MultiThreatCapacityDefenseEnv:
-    return MultiThreatCapacityDefenseEnv(MultiThreatCapacityDefenseConfig(seed=seed, **TASK_PARAMETERS))
+def make_env(seed: int, shaped: bool = False) -> MultiThreatCapacityDefenseEnv:
+    env_class = MultiThreatCapacityShapedDefenseEnv if shaped else MultiThreatCapacityDefenseEnv
+    return env_class(MultiThreatCapacityDefenseConfig(seed=seed, **TASK_PARAMETERS))
 
 
 class Cursor:
-    def __init__(self, seed: int):
+    def __init__(self, seed: int, shaped: bool = False):
         self.rng = np.random.default_rng(seed)
+        self.shaped = shaped
     def next(self) -> MultiThreatCapacityDefenseEnv:
-        return make_env(int(self.rng.integers(0, 2**31 - 1)))
+        return make_env(int(self.rng.integers(0, 2**31 - 1)), self.shaped)
 
 
 def stack(envs: list[MultiThreatCapacityDefenseEnv]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -56,18 +59,18 @@ def deterministic_action(agent: M2PlainMAPPO, env: MultiThreatCapacityDefenseEnv
     return torch.argmax(dist.logits, dim=-1).squeeze(0).cpu().numpy().astype(np.int64)
 
 
-def evaluate(agent: M2PlainMAPPO, seed: int, repeats: int, device: torch.device) -> tuple[list[dict[str, Any]], dict[str, float]]:
+def evaluate(agent: M2PlainMAPPO, seed: int, repeats: int, device: torch.device, shaped: bool = False) -> tuple[list[dict[str, Any]], dict[str, float]]:
     rng = np.random.default_rng(seed); rows=[]
     for episode in range(repeats):
-        env = make_env(int(rng.integers(0, 2**31 - 1))); env.reset(); total=0.0; info: dict[str, Any]={}
+        env = make_env(int(rng.integers(0, 2**31 - 1)), shaped); env.reset(); total=0.0; info: dict[str, Any]={}
         while not env.base.done:
             _, _, _, reward, _, info = env.step(deterministic_action(agent, env, device)); total += float(reward.mean())
         rows.append({"episode":episode,"return":total,"defense_success":float(info.get("defense_success",0.0)),"asset_breach":float(info.get("asset_breach",0.0)),"timeout":float(info.get("timeout",0.0)),"collision":float(info.get("collision",0.0)),"constraint_violation":float(info.get("constraint_violation",0.0)),"neutralized_threats":float(info.get("neutralized_threats",0.0))})
     return rows, {key:float(np.mean([row[key] for row in rows])) for key in rows[0] if key != "episode"}
 
 
-def train(seed: int, updates: int, parallel_envs: int, rollout_steps: int, eval_episodes: int, output: Path, device: torch.device) -> None:
-    generator=seed_all(seed); cursor=Cursor(seed+41); envs=[cursor.next() for _ in range(parallel_envs)]
+def train(seed: int, updates: int, parallel_envs: int, rollout_steps: int, eval_episodes: int, output: Path, device: torch.device, shaped: bool = False) -> None:
+    generator=seed_all(seed); cursor=Cursor(seed+41, shaped); envs=[cursor.next() for _ in range(parallel_envs)]
     probe_obs, probe_critic, probe_masks=stack(envs)
     agent=M2PlainMAPPO(obs_dim=probe_obs.shape[-1],critic_dim=probe_critic.shape[-1],hidden_dim=96,action_dim=probe_masks.shape[-1]).to(device)
     optimizer=torch.optim.Adam(agent.parameters(),lr=3e-4); gamma,lam,clip,epochs=0.99,0.95,0.2,4
@@ -97,21 +100,22 @@ def train(seed: int, updates: int, parallel_envs: int, rollout_steps: int, eval_
             for _ in range(epochs):
                 dist=agent.action_distribution(flat_obs,flat_masks);ratio=torch.exp(dist.log_prob(flat_actions).sum(dim=-1)-old_logp);policy_loss=-torch.minimum(ratio*adv,torch.clamp(ratio,1-clip,1+clip)*adv).mean();value_loss=torch.nn.functional.mse_loss(agent.value(flat_critic),target);loss=policy_loss+0.5*value_loss-0.01*dist.entropy().mean();optimizer.zero_grad();loss.backward();torch.nn.utils.clip_grad_norm_(agent.parameters(),0.5);optimizer.step()
             validation={}
-            if update%64==0 or update==updates:_,validation=evaluate(agent,seed+update,24,device)
+            if update%64==0 or update==updates:_,validation=evaluate(agent,seed+update,24,device,shaped)
             writer.writerow({"update":update,"environment_steps":update*parallel_envs*rollout_steps,"train_reward":float(np.mean([r[6].mean() for r in records])),"policy_loss":float(policy_loss.detach()),"value_loss":float(value_loss.detach()),"eval_return":validation.get("return",""),"eval_defense_success":validation.get("defense_success",""),"eval_asset_breach":validation.get("asset_breach","")});handle.flush()
-    torch.save({"protocol":PROTOCOL,"seed":seed,"task_parameters":TASK_PARAMETERS,"obs_dim":probe_obs.shape[-1],"critic_dim":probe_critic.shape[-1],"action_dim":probe_masks.shape[-1],"state_dict":agent.state_dict()},output/"endpoint.pt")
+    torch.save({"protocol":PROTOCOL,"seed":seed,"task_parameters":TASK_PARAMETERS,"reward_mode":"shaped" if shaped else "sparse","obs_dim":probe_obs.shape[-1],"critic_dim":probe_critic.shape[-1],"action_dim":probe_masks.shape[-1],"state_dict":agent.state_dict()},output/"endpoint.pt")
 
 
 def main() -> None:
-    p=argparse.ArgumentParser();p.add_argument("mode",choices=("train","evaluate"));p.add_argument("--seed",type=int,required=True);p.add_argument("--output-root",type=Path,required=True);p.add_argument("--updates",type=int,default=512);p.add_argument("--parallel-envs",type=int,default=12);p.add_argument("--rollout-steps",type=int,default=24);p.add_argument("--evaluation-episodes",type=int,default=96);p.add_argument("--checkpoint",type=Path);p.add_argument("--device",default="cpu");p.add_argument("--execute",action="store_true");a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument("mode",choices=("train","evaluate"));p.add_argument("--seed",type=int,required=True);p.add_argument("--output-root",type=Path,required=True);p.add_argument("--updates",type=int,default=512);p.add_argument("--parallel-envs",type=int,default=12);p.add_argument("--rollout-steps",type=int,default=24);p.add_argument("--evaluation-episodes",type=int,default=96);p.add_argument("--checkpoint",type=Path);p.add_argument("--device",default="cpu");p.add_argument("--reward-mode",choices=("sparse","shaped"),default="sparse");p.add_argument("--execute",action="store_true");a=p.parse_args()
     if not a.execute:raise SystemExit("pass --execute")
     if a.output_root.exists():raise FileExistsError(f"refusing to overwrite {a.output_root}")
     a.output_root.mkdir(parents=True);device=torch.device(a.device)
-    if a.mode=="train":train(a.seed,a.updates,a.parallel_envs,a.rollout_steps,a.evaluation_episodes,a.output_root,device);return
+    shaped=a.reward_mode=="shaped"
+    if a.mode=="train":train(a.seed,a.updates,a.parallel_envs,a.rollout_steps,a.evaluation_episodes,a.output_root,device,shaped);return
     if a.checkpoint is None:raise ValueError("evaluate requires --checkpoint")
     payload=torch.load(a.checkpoint,map_location=device,weights_only=True)
-    if payload.get("protocol")!=PROTOCOL or payload.get("task_parameters")!=TASK_PARAMETERS:raise ValueError("unexpected G2 checkpoint")
-    agent=M2PlainMAPPO(obs_dim=payload["obs_dim"],critic_dim=payload["critic_dim"],hidden_dim=96,action_dim=payload["action_dim"]).to(device);agent.load_state_dict(payload["state_dict"]);rows,summary=evaluate(agent,a.seed,a.evaluation_episodes,device)
+    if payload.get("protocol")!=PROTOCOL or payload.get("task_parameters")!=TASK_PARAMETERS or payload.get("reward_mode")!=a.reward_mode:raise ValueError("unexpected G2 checkpoint")
+    agent=M2PlainMAPPO(obs_dim=payload["obs_dim"],critic_dim=payload["critic_dim"],hidden_dim=96,action_dim=payload["action_dim"]).to(device);agent.load_state_dict(payload["state_dict"]);rows,summary=evaluate(agent,a.seed,a.evaluation_episodes,device,shaped)
     with (a.output_root/"episode_metrics.csv").open("w",newline="",encoding="utf-8") as f:w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
     (a.output_root/"summary.json").write_text(json.dumps(summary,indent=2),encoding="utf-8");print(json.dumps(summary,indent=2))
 
