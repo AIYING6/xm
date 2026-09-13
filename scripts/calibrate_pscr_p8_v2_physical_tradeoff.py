@@ -29,15 +29,17 @@ PLANS = ("maintain_primary", "stage_forecast")
 MARGIN = 0.05
 
 
-def candidate_configs() -> list[P8SearchPrefixConfig]:
+def candidate_configs(include_acquisition_dwell: bool = False) -> list[P8SearchPrefixConfig]:
     values: list[P8SearchPrefixConfig] = []
-    for start, deadline, radius in product((24, 36), (104, 112), (3000.0, 4000.0)):
+    hold_steps = (8, 12, 16) if include_acquisition_dwell else (5,)
+    for start, deadline, radius, hold in product((24, 36), (104, 112), (3000.0, 4000.0), hold_steps):
         arrival = 84
         values.append(P8SearchPrefixConfig(
             commitment_start_step=start,
             commitment_lock_steps=arrival - start,
             future_deadline_urgent_step=deadline,
             localization_radius=radius,
+            chain_hold_steps=hold,
         ))
     return values
 
@@ -130,6 +132,7 @@ def summarize(candidate_id: int, cfg: P8SearchPrefixConfig, pairs_per_band: int)
         "commitment_start_step": cfg.commitment_start_step,
         "future_deadline_urgent_step": cfg.future_deadline_urgent_step,
         "localization_radius": cfg.localization_radius,
+        "chain_hold_steps": cfg.chain_hold_steps,
         "screening_pairs_per_band": pairs_per_band,
         "high_mean_delta_stage_minus_maintain": high["mean_delta"],
         "low_mean_delta_stage_minus_maintain": low["mean_delta"],
@@ -146,6 +149,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--screening-pairs", type=int, default=16)
+    parser.add_argument("--include-acquisition-dwell", action="store_true", help="screen 8/12/16-step physical chain-acquisition dwell in addition to the v2 timing grid")
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute:
@@ -154,13 +158,14 @@ def main() -> None:
         raise FileExistsError(f"refusing to overwrite {args.output_root}")
     all_rows: list[dict[str, Any]] = []
     summaries: list[dict[str, Any]] = []
-    for candidate_id, cfg in enumerate(candidate_configs()):
+    for candidate_id, cfg in enumerate(candidate_configs(args.include_acquisition_dwell)):
         rows, summary = summarize(candidate_id, cfg, args.screening_pairs)
         all_rows.extend(rows); summaries.append(summary)
     ranked = sorted(summaries, key=lambda row: (bool(row["passes_all_screening_checks"]), float(row["screening_score"])), reverse=True)
     winner = ranked[0]
     report = {
-        "protocol": PROTOCOL, "diagnostic_only": True, "screening_pairs_per_band": args.screening_pairs,
+        "protocol": "PSCR-P8-V3-ACQUISITION-DWELL-CALIBRATION-V1" if args.include_acquisition_dwell else PROTOCOL,
+        "diagnostic_only": True, "screening_pairs_per_band": args.screening_pairs,
         "candidate_count": len(summaries), "selected_candidate": winner,
         "verdict": "PSCR_P8_V2_PHYSICAL_CONTRACT_SELECTED" if winner["passes_all_screening_checks"] else "PSCR_P8_V2_PHYSICAL_CONTRACT_NOT_SELECTED",
         "boundary": "Screening selects only a candidate task contract. A selected contract still requires a fresh 64-pair confirmation before any policy training, and does not establish a method claim.",

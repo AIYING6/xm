@@ -1,0 +1,14 @@
+{
+  "protocol": "PSCR-P8-V3-ACQUISITION-DWELL-CALIBRATION-V1",
+  "purpose": "test whether a physically interpreted multi-hop service-acquisition dwell, rather than an artificial plan bonus, restores a nontrivial public commitment trade-off",
+  "fixed_items": ["unchanged 3DOF plant", "P8 roles and geometry", "public reliability bands", "reward", "macro action interface", "post-arrival public future request"],
+  "varied_terms": {
+    "commitment_start_step": [24, 36],
+    "future_deadline_urgent_step": [104, 112],
+    "localization_radius": [3000.0, 4000.0],
+    "chain_hold_steps": [8, 12, 16]
+  },
+  "physical_rationale": "A task-service chain must remain continuously effective while sensing, relaying and execution are acquired. This dwell is the same for every plan and branch; pre-positioning changes only whether the physical chain is available early enough to satisfy it.",
+  "selection_rule": "Select no contract unless high-reliability staging and low-reliability maintenance both have a directionally supported paired advantage and the high-reliability staged branch remains noncollapsed.",
+  "boundary": "Calibration only; no policy is trained and no method claim is allowed."
+}
