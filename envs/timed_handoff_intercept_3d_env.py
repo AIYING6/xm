@@ -44,6 +44,7 @@ class TimedHandoffIntercept3DConfig(UAVIntercept3DConfig):
     refresh_hold_steps: int = 8
     handoff_corridor_radius: float = 1_400.0
     future_corridor_lateral_offset: float = 3_000.0
+    service_progress_reward_weight: float = 0.20
     prebranch_target_policy: str = "weaving_mild"
     postbranch_target_policy: str = "break_turn_param"
 
@@ -61,6 +62,8 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             raise ValueError("handoff hold lengths must be positive")
         if staged.handoff_corridor_radius <= 0.0 or staged.future_corridor_lateral_offset <= 0.0:
             raise ValueError("handoff corridor geometry must be positive")
+        if staged.service_progress_reward_weight < 0.0:
+            raise ValueError("service_progress_reward_weight must be non-negative")
         # The base environment must not independently terminate on its legacy
         # chain-closed condition.  Its physics, information propagation and
         # safety termination remain intact; this layer owns mission success.
@@ -216,9 +219,29 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             return self.authorization_handoff_observed
         return self.postbranch_refresh_observed
 
+    def _service_progress(self) -> float:
+        """Dense, task-level progress signal aligned with the staged endpoint.
+
+        It is common to every policy and is computed only from the public
+        service route plus legal relay-mediated delivery state.  It neither
+        reveals target truth nor depends on a candidate representation.
+        """
+        future = self.handoff_config.handoff_context == "postbranch_refresh"
+        corridor_error = self._relay_corridor_error(future=future)
+        corridor_score = float(
+            np.clip(1.0 - corridor_error / (2.0 * self.handoff_config.handoff_corridor_radius), 0.0, 1.0)
+        )
+        relay_track = float(self._relay_mediated_fresh_attacker_track())
+        # Delivery and route occupancy must co-occur, so route-only movement
+        # cannot substitute for the endpoint's legal information service.
+        return float(corridor_score * relay_track)
+
     def step(self, actions: np.ndarray | list[int]):
         obs, share, graph, rewards, dones, info = super().step(actions)
         self._update_handoff_milestones()
+        service_progress = self._service_progress()
+        shaping = self.handoff_config.service_progress_reward_weight * service_progress
+        rewards = rewards + shaping
         # This layer's terminal is timely, legal targeting-service completion.
         # Physical attack-window occupancy remains a separately logged
         # downstream metric.  Requiring both at one instant would turn the
@@ -246,6 +269,8 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
                 "handoff_success": float(self.handoff_success),
                 "handoff_terminal_attack_window": float(self.attack_window[2] > 0.5),
                 "handoff_terminal_attacker_has_information": float(self._has_target_information(2)),
+                "handoff_service_progress": service_progress,
+                "handoff_service_shaping_reward": shaping,
                 "legacy_success_disabled": 1.0,
             }
         )

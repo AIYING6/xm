@@ -132,6 +132,7 @@ def main() -> None:
             "branch_step": 40,
             "current_and_future_service_radius": 900.0,
             "future_lateral_offset": 1_500.0,
+            "service_progress_reward_weight": 0.20,
         },
         "method": "plain capacity-controlled MLP MAPPO; no graph, no sampler, no auxiliary loss",
         "status": "running",
