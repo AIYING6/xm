@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sys
+from argparse import Namespace
 from pathlib import Path
 
 import numpy as np
@@ -11,9 +12,27 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from algorithms.ri_gmappo.simple_ri_gmappo import RIGMAPPOAgent, RIGMAPPOConfig, make_env, stack_graphs
+from scripts.run_timed_handoff_3d_plain_mappo import build_config
 
 
 def main() -> None:
+    runner_cfg = build_config(
+        Namespace(
+            seed=173,
+            updates=1,
+            num_envs=1,
+            rollout_steps=1,
+            hidden_dim=48,
+            selection_eval_episodes=1,
+            endpoint_eval_episodes=1,
+            out_dir=Path("unused"),
+            device="cpu",
+        ),
+        env_name="commitment_handoff_3d",
+    )
+    # The learning runner and the zero-training G0 contract must not silently
+    # differ in the one physical setting that controls service reachability.
+    assert runner_cfg.target_init_range_scale == 0.65
     cfg = RIGMAPPOConfig(
         env_name="commitment_handoff_3d",
         seed=173,

@@ -40,10 +40,10 @@
 - `results/development/intercept_3d_local_role_graph_learnability_pilot/seed5203/ppo/endpoint_evaluation.csv` 证明局部图在现有 moderate 带可学习。
 - `results/development/intercept_3d_local_role_graph_capacity_matched_control/seed5203/ppo/endpoint_evaluation.csv` 表明容量匹配 MLP 也几乎饱和，因此不能支持现有局部图的结构性主张。
 
-短预算 plain-MAPPO 开发 run（每个 24,576 environment steps）尚未达到 G2：原始回报版本只学习到当前授权上下文；两次奖励修复版在固定短预算中仍为零。它们是任务诊断，绝不并入正式统计。
+短预算 plain-MAPPO 开发 run（每个 24,576 environment steps）尚未达到 G2：原始回报版本只学习到当前授权上下文；两次奖励修复版在固定短预算中仍为零。最近的承诺级 seed73301 run 也在两个上下文均为零；只读行为追踪显示其在后续刷新上下文会选择重构但仍无法完成服务。字段比对发现该 runner 使用了默认 `target_init_range_scale=1.0`，而 G0 使用经验证的 `0.65`，使训练物理初态与 G0 合同不一致。该 run 只能用于定位该合同偏差，绝不并入正式统计。
 
 这些结果只用于确定下一步设计，均不是正式论文证据。
 
 ## 6. 紧接着的执行动作
 
-G0 与 G1 已通过。当前唯一运行中的 G2 证据是 `seed73207` 的 384-update（98,304 environment steps）plain-MAPPO 长 pilot；其源码版本禁用了旧拦截回报，并采用无时长套利的服务增量信用。它完成后必须按两个上下文各 40 回合只读评估。只有两个上下文均进入预先规定的中等、非饱和带，才追加两个独立 seed 的同协议复验。G2 未通过前，不实现候选关系价值网络，也不启动任何正式长训练。
+G0 与 G1 已通过。G2 的下一条 run 必须使用与 G0 完全一致的 `target_init_range_scale=0.65`、服务半径、授权/分支时刻、目标策略和信息边界；运行前由 `scripts/smoke_test_commitment_handoff_mappo.py` 检查该不变量。完成一个新 seed 后，必须按两个上下文各 40 回合只读评估；只有两个上下文均进入预先规定的中等、非饱和带，才追加两个独立 seed 的同协议复验。G2 未通过前，不实现候选关系价值网络，也不启动任何正式长训练。

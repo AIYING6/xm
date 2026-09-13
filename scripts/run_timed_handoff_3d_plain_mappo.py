@@ -77,6 +77,11 @@ def build_config(args: argparse.Namespace, *, env_name: str = "timed_handoff_3d"
         handoff_legacy_intercept_reward_weight=0.0,
         handoff_prebranch_target_policy="weaving_mild",
         handoff_postbranch_target_policy="weaving_mild",
+        # Match the G0-verified physical contract.  The staged service
+        # decision is only useful if both public routes are reachable under
+        # the same target-initialisation geometry used by the scripted
+        # decision-switch controllers.
+        target_init_range_scale=0.65,
         evaluation_enabled=True,
         eval_interval=max(1, min(12, args.updates)),
         eval_episodes=args.selection_eval_episodes,
