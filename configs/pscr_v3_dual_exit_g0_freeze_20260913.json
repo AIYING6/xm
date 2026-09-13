@@ -1,0 +1,31 @@
+{
+  "protocol": "PSCR-V3-DUAL-EXIT-G0-V1",
+  "status": "ZERO_TRAINING_ONLY",
+  "environment": "envs.pscr_v3_dual_exit_interception_env.PSCRV3DualExitInterceptionEnv",
+  "interface": {
+    "agents": 3,
+    "action_space": "existing_27_action_3DOF_turn_climb_acceleration",
+    "actor_future_exit_leakage": false,
+    "critic_future_exit_leakage": false
+  },
+  "physical_contract": {
+    "horizon": 180,
+    "branch_step": 42,
+    "egress_x": -11500.0,
+    "egress_lateral": 8000.0,
+    "egress_radius": 1300.0,
+    "post_branch_speed": 255.0,
+    "red_rule": "at_branch_choose_lower_physical_blue_coverage_exit"
+  },
+  "gates": {
+    "G0": "smoke interface, pre-branch no exit label, post-branch physical choice and egress termination",
+    "G1": "zero-training controllers must show non-degenerate concentrate/split/defer outcome regions before learner design",
+    "G2": "plain MAPPO must learn without saturation before any proposed method is frozen"
+  },
+  "non_goals": [
+    "not_a_reactivation_of_P8_P9_P10",
+    "not_a_macro_intent_interface",
+    "not_an_algorithm_or_paper_claim",
+    "no_training_authorized_by_this_freeze"
+  ]
+}
