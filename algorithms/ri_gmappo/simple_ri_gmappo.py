@@ -23,6 +23,7 @@ from torch.distributions import Categorical
 
 from envs import (
     EDGE_FEAT_DIM,
+    EDGE3D_FEAT_DIM,
     NODE3D_ROLE_IDENTITY_SLICE,
     NUM_INTENTS,
     OBS3D_ROLE_IDENTITY_SLICE,
@@ -700,6 +701,99 @@ def local_intercept_teacher_actions(observations: torch.Tensor) -> torch.Tensor:
     return (commands.unsqueeze(-2).sub(table).square().sum(dim=-1)).argmin(dim=-1)
 
 
+def mask_unobserved_intercept_target(observations: torch.Tensor) -> torch.Tensor:
+    """Remove target kinematics when neither sensing nor a local cache supports them.
+
+    The 3DOF environment already emits local observations.  This additional
+    mask makes the actor-side information boundary explicit, and prevents a
+    future adapter from treating numerical placeholder values as target state.
+    """
+    if observations.shape[-1] < 32:
+        raise ValueError("3DOF local target masking requires the 34-field observation")
+    visible = (observations[..., 18] > 0.5) | (observations[..., 31] > 0.0)
+    out = observations.clone()
+    out[..., 8:18] = torch.where(visible.unsqueeze(-1), out[..., 8:18], torch.zeros_like(out[..., 8:18]))
+    return out
+
+
+def build_local_role_graph_from_observation(
+    observations: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Build one information-legal role graph for every actor observation.
+
+    Nodes are ego, scout, relay, attacker and target.  All dynamic values come
+    from the focal actor's emitted observation.  Other role nodes encode known
+    role metadata only; they never import another agent's state or a global
+    target node.  Relation matrices follow the repository convention
+    ``A[receiver, sender]``.
+    """
+    obs = mask_unobserved_intercept_target(observations)
+    if obs.ndim != 3 or obs.shape[-2] != 3 or obs.shape[-1] < 34:
+        raise ValueError("local role graph requires [batch, 3, 34] 3DOF observations")
+    batch, agents, _ = obs.shape
+    nodes = 5
+    flat = obs.reshape(batch * agents, obs.shape[-1])
+    dtype, device = flat.dtype, flat.device
+    node = torch.zeros((batch * agents, nodes, 20), dtype=dtype, device=device)
+    edge = torch.zeros((batch * agents, nodes, nodes, EDGE3D_FEAT_DIM), dtype=dtype, device=device)
+    relation = torch.zeros((batch * agents, 3, nodes, nodes), dtype=dtype, device=device)
+    adj = torch.eye(nodes, dtype=dtype, device=device).expand(batch * agents, -1, -1).clone()
+
+    role_flags = flat[:, 24:28]
+    owner_role = role_flags.argmax(dim=-1)
+    roles = torch.stack(
+        (
+            owner_role,
+            torch.full_like(owner_role, ROLE_SCOUT_ID),
+            torch.full_like(owner_role, ROLE_RELAY_ID),
+            torch.full_like(owner_role, ROLE_ATTACKER_ID),
+            torch.full_like(owner_role, ROLE_TARGET_ID),
+        ),
+        dim=-1,
+    )
+    role_one_hot = F.one_hot(roles.clamp(max=4), num_classes=5).to(dtype=dtype)
+    node[..., 11:16] = role_one_hot
+    node[:, 0, 0:11] = flat[:, 0:8].repeat(1, 2)[:, :11]
+    node[:, 0, 16] = flat[:, 18]
+    node[:, 0, 17] = flat[:, 19]
+    node[:, 0, 18] = flat[:, 20]
+    node[:, 0, 19] = 1.0
+
+    target_visible = (flat[:, 18] > 0.5) | (flat[:, 31] > 0.0)
+    node[:, 4, 0:3] = flat[:, 8:11]
+    node[:, 4, 8:11] = flat[:, 12:15]
+    node[:, 4, 16] = target_visible.to(dtype)
+    node[:, 4, 19] = 0.0
+
+    # Focal target observation: only observed or locally cached target values
+    # form a perception edge.  The graph has no edge when information is absent.
+    relation[:, RELATION_PERCEPTION, 0, 4] = target_visible.to(dtype)
+    edge[:, 0, 4, 0:3] = flat[:, 8:11]
+    edge[:, 0, 4, 3] = flat[:, 11]
+    edge[:, 0, 4, 7:10] = flat[:, 12:15]
+    edge[:, 0, 4, 11] = target_visible.to(dtype)
+    edge[:, 0, 4, 15] = flat[:, 30]
+    edge[:, 0, 4, 16] = flat[:, 31]
+
+    # A local aggregate inbound-link observation gates role support edges.  It
+    # is duplicated across known support roles as an inductive bias, not as a
+    # claim that the actor knows which individual link is currently active.
+    inbound = flat[:, 28].clamp(0.0, 1.0)
+    age = flat[:, 29].clamp(0.0, 1.0)
+    for sender in (1, 2, 3):
+        relation[:, RELATION_COMMUNICATION, 0, sender] = inbound
+        edge[:, 0, sender, 12] = inbound
+        edge[:, 0, sender, 15] = age
+        edge[:, 0, sender, 16] = (1.0 - age) * inbound
+    # Frozen role semantics: scout and relay can support the focal role;
+    # attacker feedback is represented only for a relay focal actor.
+    relation[:, RELATION_TASK_SUPPORT, 0, 1] = 1.0
+    relation[:, RELATION_TASK_SUPPORT, 0, 2] = 1.0
+    relation[:, RELATION_TASK_SUPPORT, 0, 3] = (owner_role == ROLE_RELAY_ID).to(dtype)
+    adj = torch.maximum(adj, relation.amax(dim=1))
+    return node, edge, relation, adj, roles
+
+
 class RIActor(nn.Module):
     def __init__(
         self,
@@ -721,7 +815,7 @@ class RIActor(nn.Module):
         role_gate_mode: str = "relation_conditioned",
     ):
         super().__init__()
-        if graph_encoder not in {"no_graph", "single", "edr", "rsg_tc", "multi_relation"}:
+        if graph_encoder not in {"no_graph", "single", "edr", "rsg_tc", "multi_relation", "local_relation"}:
             raise ValueError(f"Unsupported graph_encoder: {graph_encoder}")
         if graph_message_ablation not in {"none", "no_role_pair_gate"}:
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
@@ -755,8 +849,18 @@ class RIActor(nn.Module):
         elif graph_encoder == "rsg_tc":
             self.rsg_tc_gat1 = TopologyConditionedGraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
             self.rsg_tc_gat2 = TopologyConditionedGraphAttentionLayer(hidden_dim, hidden_dim, edge_dim=edge_feat_dim)
-        else:
+        elif graph_encoder == "multi_relation":
             self.multi_relation_graph = MultiRelationGraphEncoder(
+                hidden_dim,
+                edge_feat_dim,
+                num_roles,
+                use_role_pair_gate=graph_message_ablation != "no_role_pair_gate",
+                role_gate_prior_strength=role_gate_prior_strength,
+                global_residual_weight=multi_relation_global_residual_weight,
+                role_gate_mode=role_gate_mode,
+            )
+        else:
+            self.local_relation_graph = MultiRelationGraphEncoder(
                 hidden_dim,
                 edge_feat_dim,
                 num_roles,
@@ -801,6 +905,40 @@ class RIActor(nn.Module):
             obs = zero_feature_slice(obs, OBS_ROLE_IDENTITY_SLICE)
             node_feat = zero_feature_slice(node_feat, NODE_ROLE_IDENTITY_SLICE)
             role = torch.zeros_like(role)
+        if self.graph_encoder == "local_relation":
+            local_node, local_edge, local_relation, local_adj, local_role = build_local_role_graph_from_observation(obs)
+            flat_role_feat = self.role_emb(local_role.long())
+            local_x = self.input(torch.cat([local_node, flat_role_feat], dim=-1))
+            local_x, local_attn = self.local_relation_graph(
+                local_x, local_relation, local_edge, local_role, local_adj
+            )
+            batch, agents = obs.shape[:2]
+            graph_feat = local_x[:, 0].reshape(batch, agents, -1)
+            target_summary = local_x[:, 4].reshape(batch, agents, -1).mean(dim=1, keepdim=True)
+            intent_logits = self.intent_head(target_summary)
+            if not self.use_intent_context:
+                intent_context = torch.zeros(
+                    batch, agents, self.intent_emb.embedding_dim, dtype=graph_feat.dtype, device=graph_feat.device
+                )
+            elif oracle_intent:
+                if intent_label is None:
+                    raise ValueError("intent_label is required when oracle_intent=True")
+                intent_context = self.intent_emb(intent_label.long())
+                intent_context = intent_context.mean(dim=1).unsqueeze(1).expand(-1, agents, -1)
+            else:
+                intent_probs = torch.softmax(intent_logits, dim=-1)
+                if detach_intent:
+                    intent_probs = intent_probs.detach()
+                intent_context = intent_probs @ self.intent_emb.weight
+                intent_context = intent_context.mean(dim=1).unsqueeze(1).expand(-1, agents, -1)
+            legal_obs = mask_unobserved_intercept_target(obs)
+            logits = self.policy_head(torch.cat([self.obs_encoder(legal_obs), graph_feat, intent_context], dim=-1))
+            chain_aux_logits = self.chain_aux_head(graph_feat.mean(dim=1))
+            attn = local_attn.reshape(batch, agents, *local_attn.shape[1:]).mean(dim=1)
+            if return_chain_aux:
+                return logits, attn, intent_logits, chain_aux_logits
+            return logits, attn, intent_logits
+
         role_feat = self.role_emb(role.long())
         x = self.input(torch.cat([node_feat, role_feat], dim=-1))
         if self.graph_encoder == "no_graph":
