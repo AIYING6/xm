@@ -50,6 +50,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--critic-learning-rate", type=float, default=None)
     parser.add_argument("--target-kl", type=float, default=None)
     parser.add_argument("--policy-update-guard-mode", choices=("none", "post_step_actor_backtrack"), default="none")
+    parser.add_argument("--behavior-cloning-coef", type=float, default=0.0)
     parser.add_argument("--init-checkpoint", type=Path, default=None)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument(
@@ -73,6 +74,8 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         critic_lr=args.critic_learning_rate,
         target_kl=args.target_kl,
         policy_update_guard_mode=args.policy_update_guard_mode,
+        behavior_cloning_coef=args.behavior_cloning_coef,
+        behavior_cloning_teacher="local_3d_geometric" if args.behavior_cloning_coef > 0.0 else "none",
         graph_encoder="no_graph",
         role_gate_mode="none",
         intent_coef=0.0,
@@ -127,6 +130,8 @@ def main() -> None:
         raise ValueError("updates, num-envs, rollout-steps, and selection-eval-episodes must be positive")
     if args.policy_update_guard_mode != "none" and (args.target_kl is None or args.target_kl <= 0.0):
         raise ValueError("a positive --target-kl is required with a policy update guard")
+    if args.behavior_cloning_coef < 0.0:
+        raise ValueError("behavior-cloning-coef must be non-negative")
     if args.out_dir.exists() and any(args.out_dir.iterdir()):
         raise FileExistsError(f"refusing to overwrite existing run: {args.out_dir}")
     args.out_dir.mkdir(parents=True, exist_ok=False)
@@ -146,6 +151,7 @@ def main() -> None:
         "initialization": "random" if args.init_checkpoint is None else str(args.init_checkpoint),
         "optimization": {"actor_learning_rate": args.actor_learning_rate, "critic_learning_rate": args.critic_learning_rate,
                            "target_kl": args.target_kl, "policy_update_guard_mode": args.policy_update_guard_mode},
+        "behavior_cloning": {"coefficient": args.behavior_cloning_coef, "teacher": "local_3d_geometric" if args.behavior_cloning_coef > 0.0 else "none"},
         "status": "running",
     }
     (args.out_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

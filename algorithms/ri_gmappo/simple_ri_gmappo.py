@@ -34,6 +34,7 @@ from envs import (
     UAVPursuitConfig,
     UAVPursuitEnv,
 )
+from envs.uav_intercept_3d_env import ACTION3D_TABLE
 from algorithms.ri_gmappo.topology_curriculum import TopologyCurriculum
 from algorithms.ri_gmappo.fixed_condition_mixture import FixedConditionMixture
 from algorithms.ri_gmappo.drtp_topology_sampler import (
@@ -115,6 +116,10 @@ class RIGMAPPOConfig:
     intent_coef: float = 0.1
     chain_aux_coef: float = 0.0
     chain_aux_warmup_updates: int = 0
+    # Development-only local-observation imitation retention. Defaults leave
+    # established PPO paths unchanged.
+    behavior_cloning_coef: float = 0.0
+    behavior_cloning_teacher: str = "none"
     role_gate_prior_strength: float = 0.0
     multi_relation_global_residual_weight: float = 1.0
     intent_balanced_loss: bool = False
@@ -676,6 +681,23 @@ def zero_feature_slice(x: torch.Tensor, feature_slice: slice) -> torch.Tensor:
     out = x.clone()
     out[..., start:stop] = 0.0
     return out
+
+
+def local_intercept_teacher_actions(observations: torch.Tensor) -> torch.Tensor:
+    """Legal 3DOF geometric labels computed from emitted local observations."""
+    if observations.shape[-1] < 11 or observations.shape[-2] != 3:
+        raise ValueError("local 3DOF teacher requires [batch, 3, >=11] observations")
+    rel = observations[..., 8:11]
+    heading = torch.atan2(observations[..., 4], observations[..., 5])
+    desired_heading = torch.atan2(rel[..., 1], rel[..., 0])
+    heading_error = torch.remainder(desired_heading - heading + math.pi, 2.0 * math.pi) - math.pi
+    gamma = torch.atan2(observations[..., 6], observations[..., 7])
+    desired_gamma = torch.atan2(rel[..., 2], torch.hypot(rel[..., 0], rel[..., 1]) + 1e-6)
+    max_turn = observations.new_tensor((0.035, 0.030, 0.052))
+    max_climb = observations.new_tensor((0.26, 0.22, 0.31))
+    commands = torch.stack(((heading_error / max_turn).clamp(-1.0, 1.0), ((desired_gamma - gamma) / max_climb).clamp(-1.0, 1.0), torch.ones_like(heading_error)), dim=-1)
+    table = torch.as_tensor(ACTION3D_TABLE, dtype=observations.dtype, device=observations.device)
+    return (commands.unsqueeze(-2).sub(table).square().sum(dim=-1)).argmin(dim=-1)
 
 
 class RIActor(nn.Module):
@@ -1740,6 +1762,14 @@ def apply_sr_drtp_shadow_uniform_anchor(
 def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     if cfg.env_name == "3d_intercept" and cfg.oracle_intent:
         raise ValueError("oracle_intent is unavailable for 3d_intercept because it has no intent supervision")
+    if cfg.behavior_cloning_teacher not in {"none", "local_3d_geometric"}:
+        raise ValueError("unsupported behavior_cloning_teacher")
+    if not math.isfinite(float(cfg.behavior_cloning_coef)) or float(cfg.behavior_cloning_coef) < 0.0:
+        raise ValueError("behavior_cloning_coef must be finite and non-negative")
+    if cfg.behavior_cloning_teacher == "local_3d_geometric" and (
+        cfg.env_name != "3d_intercept" or float(cfg.behavior_cloning_coef) <= 0.0
+    ):
+        raise ValueError("local 3DOF teacher requires 3d_intercept and a positive coefficient")
     if cfg.runtime_state_resume and (cfg.resume or cfg.init_checkpoint):
         raise ValueError("runtime_state_resume is mutually exclusive with legacy resume/init_checkpoint")
     diagnostic_branch_mode = str(cfg.diagnostic_rng_branch_mode).lower()
@@ -2154,6 +2184,8 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "chain_aux_loss",
         "chain_aux_acc",
         "chain_aux_effective_coef",
+        "behavior_cloning_loss",
+        "behavior_cloning_coef",
         "approx_kl",
         "clip_fraction",
         "grad_norm",
@@ -3472,11 +3504,13 @@ def update_policy(
         raise ValueError("CV-DRTP requires an enabled counterfactual critic branch")
     chain_aux_coef = effective_chain_aux_coef(cfg, update)
     critic_warmup_active = update <= cfg.critic_warmup_updates
+    use_local_bc_teacher = cfg.behavior_cloning_teacher == "local_3d_geometric"
 
     losses, policy_losses, value_losses, entropies, intent_losses, intent_accs = [], [], [], [], [], []
     counterfactual_q_losses, counterfactual_advantage_stds, counterfactual_q_spreads = [], [], []
     counterfactual_critic_wall_seconds: list[float] = []
     chain_aux_losses, chain_aux_accs = [], []
+    behavior_cloning_losses: list[float] = []
     approx_kls, clip_fractions, grad_norms, explained_variances = [], [], [], []
     gate_grad_norms, gate_means, gate_stds, gate_mins, gate_maxs, gate_displacements = [], [], [], [], [], []
     policy_guard_mode = str(cfg.policy_update_guard_mode).lower()
@@ -3643,6 +3677,18 @@ def update_policy(
             else:
                 chain_aux_loss = torch.zeros((), device=device)
                 chain_aux_acc = torch.zeros((), device=device)
+            if use_local_bc_teacher:
+                teacher_actions = local_intercept_teacher_actions(obs[mb])
+                teacher_logits, _, _ = agent.actor(
+                    obs[mb], node_feat[mb], edge_feat[mb], role[mb], adj[mb], agent.num_agents,
+                    relation_adj=relation_adj[mb], intent_label=intent_label[mb],
+                    detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
+                )
+                behavior_cloning_loss = F.cross_entropy(
+                    teacher_logits.reshape(-1, agent.action_dim), teacher_actions.reshape(-1)
+                )
+            else:
+                behavior_cloning_loss = torch.zeros((), device=device)
             if critic_warmup_active:
                 loss = cfg.value_coef * (value_loss + counterfactual_q_loss)
             else:
@@ -3652,6 +3698,7 @@ def update_policy(
                     - cfg.entropy_coef * entropy_loss
                     + effective_intent_coef(cfg) * intent_loss
                     + chain_aux_coef * chain_aux_loss
+                    + float(cfg.behavior_cloning_coef) * behavior_cloning_loss
                 )
 
             optimizer.zero_grad()
@@ -3855,6 +3902,7 @@ def update_policy(
             intent_accs.append(float(intent_acc.detach().cpu()))
             chain_aux_losses.append(float(chain_aux_loss.detach().cpu()))
             chain_aux_accs.append(float(chain_aux_acc.detach().cpu()))
+            behavior_cloning_losses.append(float(behavior_cloning_loss.detach().cpu()))
             approx_kls.append(float(approx_kl.detach().cpu()))
             clip_fractions.append(float(clip_fraction.detach().cpu()))
             grad_norms.append(float(grad_norm.detach().cpu()))
@@ -3909,6 +3957,8 @@ def update_policy(
         "chain_aux_loss": float(np.mean(chain_aux_losses)),
         "chain_aux_acc": float(np.mean(chain_aux_accs)),
         "chain_aux_effective_coef": chain_aux_coef,
+        "behavior_cloning_loss": float(np.mean(behavior_cloning_losses)) if behavior_cloning_losses else 0.0,
+        "behavior_cloning_coef": float(cfg.behavior_cloning_coef),
         "approx_kl": float(np.mean(approx_kls)),
         "clip_fraction": float(np.mean(clip_fractions)),
         "grad_norm": float(np.mean(grad_norms)),
