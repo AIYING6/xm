@@ -46,6 +46,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rollout-steps", type=int, default=64)
     parser.add_argument("--eval-episodes", type=int, default=40)
     parser.add_argument("--selection-eval-episodes", type=int, default=20)
+    parser.add_argument("--actor-learning-rate", type=float, default=None)
+    parser.add_argument("--critic-learning-rate", type=float, default=None)
+    parser.add_argument("--target-kl", type=float, default=None)
+    parser.add_argument("--policy-update-guard-mode", choices=("none", "post_step_actor_backtrack"), default="none")
     parser.add_argument("--init-checkpoint", type=Path, default=None)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument(
@@ -65,6 +69,10 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         rollout_steps=args.rollout_steps,
         updates=args.updates,
         hidden_dim=64,
+        actor_lr=args.actor_learning_rate,
+        critic_lr=args.critic_learning_rate,
+        target_kl=args.target_kl,
+        policy_update_guard_mode=args.policy_update_guard_mode,
         graph_encoder="no_graph",
         role_gate_mode="none",
         intent_coef=0.0,
@@ -117,6 +125,8 @@ def main() -> None:
         raise SystemExit("This runner changes state; pass --execute.")
     if args.updates <= 0 or args.num_envs <= 0 or args.rollout_steps <= 0 or args.selection_eval_episodes <= 0:
         raise ValueError("updates, num-envs, rollout-steps, and selection-eval-episodes must be positive")
+    if args.policy_update_guard_mode != "none" and (args.target_kl is None or args.target_kl <= 0.0):
+        raise ValueError("a positive --target-kl is required with a policy update guard")
     if args.out_dir.exists() and any(args.out_dir.iterdir()):
         raise FileExistsError(f"refusing to overwrite existing run: {args.out_dir}")
     args.out_dir.mkdir(parents=True, exist_ok=False)
@@ -134,6 +144,8 @@ def main() -> None:
         "fixed_items": ["environment_interface", "PPO", "reward", "observation", "action", "training_budget"],
         "method": {"name": "plain_mappo", "graph_encoder": "no_graph", "sampler": "uniform_fixed_condition"},
         "initialization": "random" if args.init_checkpoint is None else str(args.init_checkpoint),
+        "optimization": {"actor_learning_rate": args.actor_learning_rate, "critic_learning_rate": args.critic_learning_rate,
+                           "target_kl": args.target_kl, "policy_update_guard_mode": args.policy_update_guard_mode},
         "status": "running",
     }
     (args.out_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
