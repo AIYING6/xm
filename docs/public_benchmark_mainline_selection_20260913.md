@@ -18,6 +18,9 @@
 - https://github.com/oxwhirl/smacv2
 - https://arxiv.org/abs/2212.07489
 
+本地零训练源码审计已固定官方仓库 `oxwhirl/smacv2` 的浅克隆提交
+`577ab5a2cff2391f8df582da5731ea9cd6adf3c6`（`third_party/smacv2/`，不作为本项目维护源码提交）。该版本提供 `reset`、`step`、`get_obs`、`get_state`、`get_avail_actions` 与 `get_env_info` 接口，因而可以在不改变 SMACv2 动力学或奖励语义的前提下接入本仓库 adapter。其运行依赖还包括 PySC2、StarCraft II 客户端和官方地图文件；当前 Python 依赖下载被本机 TLS 证书链错误阻塞，完整状态见 `docs/smacv2_admission_audit_20260913.md`。在这些依赖被验证前，不得报告基准运行或比较结果。
+
 接入 SMACv2 只授权回答三个工程—科学前提：
 
 1. 是否能在不改变基准语义的情况下映射到仓库的标准 `reset/step` 接口；
