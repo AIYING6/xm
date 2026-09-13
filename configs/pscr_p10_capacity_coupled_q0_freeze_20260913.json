@@ -1,0 +1,25 @@
+{
+  "protocol": "PSCR-P10-CAPACITY-COUPLED-Q0-V1",
+  "purpose": "zero-training physical choice-reversal check before any P10 learning implementation",
+  "task": "persistent primary workload competes with a future high-priority service workload under an exclusive three-role physical chain",
+  "plans": ["maintain_primary", "stage_full_team"],
+  "fixed_contract": {
+    "future_arrival_step": 84,
+    "future_deadline_step": 100,
+    "primary_backlog_growth": 0.03,
+    "primary_service_rate": 0.06,
+    "primary_backlog_loss_weight": 0.02,
+    "future_workload": 1.0,
+    "future_service_rate": 0.1,
+    "future_priority_value": 3.0,
+    "reliability_bands": [0.1, 0.9],
+    "paired_episodes_per_band": 64
+  },
+  "gate": {
+    "high_reliability_stage_direction_support": 0.6,
+    "low_reliability_maintain_direction_support": 0.6,
+    "utility_margin": 0.1,
+    "future_task_nonsaturated": true
+  },
+  "boundary": "No policy, critic, C3 module, gradient update, or method comparison may start before Q0 passes."
+}
