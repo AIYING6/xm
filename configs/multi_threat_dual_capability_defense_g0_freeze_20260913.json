@@ -1,0 +1,8 @@
+{
+  "protocol": "MULTI-THREAT-DUAL-CAPABILITY-DEFENSE-G0-V1",
+  "status": "ZERO_TRAINING_ONLY",
+  "task": "Three heterogeneous blue UAVs defend two assets from two red attackers using one kinetic interception capability and one focused non-kinetic disruption capability.",
+  "fixed": {"action_interface": "existing_27_action_3DOF", "kinetic_role": "attacker", "disruption_role": "scout", "communication_role": "relay", "focused_disruption_capacity": 1, "future_route_label_visible_before_branch": false},
+  "physical_disruption_preconditions": ["scout direct legal visibility", "scout-target distance within fixed range", "current communication path from scout to attacker", "continuous hold duration"],
+  "non_goals": ["no_method", "no_training", "no_paper_claim", "no_manual_disruption_action"]
+}
