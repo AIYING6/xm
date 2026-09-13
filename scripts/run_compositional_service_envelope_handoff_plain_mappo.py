@@ -34,6 +34,22 @@ PROTOCOL = "COMMITMENT-HANDOFF-3D-V5-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
 ENDPOINT_PROTOCOL = "COMMITMENT-HANDOFF-3D-V5-PROFILE-STRATIFIED-ENDPOINT-V1"
 
 
+def training_protocol(service_envelope_mode: str) -> str:
+    return (
+        "COMMITMENT-HANDOFF-3D-V6-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
+        if service_envelope_mode == "compositional_v6_staged"
+        else PROTOCOL
+    )
+
+
+def endpoint_protocol(service_envelope_mode: str) -> str:
+    return (
+        "COMMITMENT-HANDOFF-3D-V6-PROFILE-STRATIFIED-ENDPOINT-V1"
+        if service_envelope_mode == "compositional_v6_staged"
+        else ENDPOINT_PROTOCOL
+    )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, required=True)
@@ -44,6 +60,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--selection-eval-episodes", type=int, default=16)
     parser.add_argument("--endpoint-episodes-per-profile", type=int, default=60)
+    parser.add_argument("--service-envelope-mode", choices=("compositional_v5", "compositional_v6_staged"), default="compositional_v5")
+    parser.add_argument("--future-corridor-lateral-offset", type=float, default=1_500.0)
+    parser.add_argument("--branch-step", type=int, default=40)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
@@ -73,16 +92,16 @@ def build_config(args: argparse.Namespace, *, profile: str = "balanced_v5") -> R
         timed_handoff_context_mode="balanced",
         handoff_authorization_start_step=12,
         handoff_authorization_deadline=28,
-        handoff_branch_step=40,
+        handoff_branch_step=args.branch_step,
         handoff_authorization_hold_steps=8,
         handoff_refresh_hold_steps=16,
         handoff_corridor_radius=900.0,
-        handoff_future_corridor_lateral_offset=1_500.0,
+        handoff_future_corridor_lateral_offset=args.future_corridor_lateral_offset,
         handoff_commitment_action_repeat=8,
         handoff_legacy_intercept_reward_weight=0.0,
         handoff_prebranch_target_policy="weaving_mild",
         handoff_postbranch_target_policy="weaving_mild",
-        handoff_service_envelope_mode="compositional_v5",
+        handoff_service_envelope_mode=args.service_envelope_mode,
         handoff_service_envelope_profile=profile,
         target_init_range_scale=0.65,
         evaluation_enabled=True,
@@ -129,6 +148,8 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
                 env = make_env(cfg, 840_000 + profile_index * 10_000 + episode, training=False)
                 obs, share_obs, graph = env.reset()
                 relay_reconstruct: list[float] = []
+                prebranch_reconstruct: list[float] = []
+                postbranch_reconstruct: list[float] = []
                 info: dict[str, object] = {}
                 while True:
                     packed = stack_graphs([graph])
@@ -143,7 +164,9 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
                         deterministic=True,
                     )
                     macro = action.squeeze(0).cpu().numpy()
-                    relay_reconstruct.append(float(macro[1] == 1))
+                    reconstruct = float(macro[1] == 1)
+                    relay_reconstruct.append(reconstruct)
+                    (postbranch_reconstruct if env.step_count >= env.handoff_config.branch_step else prebranch_reconstruct).append(reconstruct)
                     obs, share_obs, graph, _, dones, info = env.step(macro)
                     if bool(np.all(dones)):
                         rows.append({
@@ -155,6 +178,8 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
                             "collision": float(info.get("collision", 0.0)),
                             "terminal_service_progress": float(info.get("handoff_service_progress", 0.0)),
                             "relay_reconstruct_fraction": float(np.mean(relay_reconstruct)),
+                            "prebranch_reconstruct_fraction": float(np.mean(prebranch_reconstruct)) if prebranch_reconstruct else 0.0,
+                            "postbranch_reconstruct_fraction": float(np.mean(postbranch_reconstruct)) if postbranch_reconstruct else 0.0,
                         })
                         break
     summary: dict[str, object] = {}
@@ -167,11 +192,13 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
             "timeout_rate": float(np.mean([row["timeout"] for row in cell])),
             "collision_rate": float(np.mean([row["collision"] for row in cell])),
             "mean_relay_reconstruct_fraction": float(np.mean([row["relay_reconstruct_fraction"] for row in cell])),
+            "mean_prebranch_reconstruct_fraction": float(np.mean([row["prebranch_reconstruct_fraction"] for row in cell])),
+            "mean_postbranch_reconstruct_fraction": float(np.mean([row["postbranch_reconstruct_fraction"] for row in cell])),
         }
     report = {
-        "protocol": ENDPOINT_PROTOCOL,
+        "protocol": endpoint_protocol(args.service_envelope_mode),
         "env_name": "commitment_handoff_3d",
-        "service_envelope_mode": "compositional_v5",
+        "service_envelope_mode": args.service_envelope_mode,
         "checkpoint": str(checkpoint),
         "seed": args.seed,
         "summary": summary,
@@ -190,16 +217,19 @@ def main() -> None:
     args.out_dir.mkdir(parents=True)
     macro_steps = args.updates * args.num_envs * args.rollout_steps
     manifest = {
-        "protocol": PROTOCOL,
+        "protocol": training_protocol(args.service_envelope_mode),
         "artifact_class": "DEVELOPMENT_ONLY_G2_LEARNABILITY_PILOT",
         "paper_evidence": False,
         "purpose": "test whether plain MLP MAPPO learns mixed public service envelopes without task saturation",
         "seed": args.seed,
         "macro_decision_steps": macro_steps,
         "physical_environment_steps": macro_steps * 8,
-        "profile_schedule": "balanced_v5 deterministic modulo assignment across worker seeds",
+        "profile_schedule": "balanced_v5 deterministic modulo assignment across worker slots",
         "profiles": list(SERVICE_ENVELOPE_PROFILES),
-        "fixed_task": {"commitment_action_repeat": 8, "service_envelope_mode": "compositional_v5"},
+        "fixed_task": {
+            "commitment_action_repeat": 8, "service_envelope_mode": args.service_envelope_mode,
+            "branch_step": args.branch_step, "future_corridor_lateral_offset": args.future_corridor_lateral_offset,
+        },
         "method": "plain capacity-controlled MLP MAPPO; no graph, relation-value head, sampler, or auxiliary loss",
         "actor_action_contract": {"mode": "relay_only", "actor_active_agents": ["relay"], "critic_observes_all_agents": True},
         "status": "running",

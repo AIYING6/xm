@@ -30,7 +30,20 @@ def main() -> None:
         assert obs.shape[-1] == 54 and share_obs.shape[-1] == 53
         route_choices.append(env._future_service_required())
     assert route_choices == [False, False, True, True]
-    print("PASS: V5 exposes public service envelopes and yields two legal current/future route requirements")
+    staged = RIGMAPPOConfig(
+        env_name="commitment_handoff_3d",
+        target_init_range_scale=0.65,
+        handoff_service_envelope_mode="compositional_v6_staged",
+        handoff_service_envelope_profile="future_fresh",
+    )
+    env = make_env(staged, staged.seed, training=False)
+    obs, share_obs, _ = env.reset()
+    assert env._future_service_required() and not env._active_service_future()
+    assert obs.shape[-1] == 55 and share_obs.shape[-1] == 54
+    while env.step_count < env.handoff_config.branch_step:
+        env.step([0, 0, 0])
+    assert env._active_service_future()
+    print("PASS: V5 public envelopes and V6 staged public service activation are auditable")
 
 
 if __name__ == "__main__":

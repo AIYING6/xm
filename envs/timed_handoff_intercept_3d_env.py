@@ -61,7 +61,7 @@ class TimedHandoffIntercept3DConfig(UAVIntercept3DConfig):
     service_progress_reward_weight: float = 1.0
     prebranch_target_policy: str = "weaving_mild"
     postbranch_target_policy: str = "break_turn_param"
-    # V5 is opt-in.  It replaces the public context-class one-hot with two
+    # V5/V6 are opt-in.  They replace the public context-class one-hot with two
     # public service envelopes whose relation determines the required route.
     # Legacy staged-handoff experiments keep the default untouched.
     service_envelope_mode: str = "legacy"
@@ -75,10 +75,10 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         staged = copy.deepcopy(config or TimedHandoffIntercept3DConfig())
         if staged.handoff_context not in HANDOFF_CONTEXTS:
             raise ValueError(f"unsupported handoff_context: {staged.handoff_context}")
-        if staged.service_envelope_mode not in {"legacy", "compositional_v5"}:
-            raise ValueError("service_envelope_mode must be legacy or compositional_v5")
+        if staged.service_envelope_mode not in {"legacy", "compositional_v5", "compositional_v6_staged"}:
+            raise ValueError("service_envelope_mode must be legacy, compositional_v5, or compositional_v6_staged")
         if (
-            staged.service_envelope_mode == "compositional_v5"
+            staged.service_envelope_mode in {"compositional_v5", "compositional_v6_staged"}
             and staged.service_envelope_profile not in SERVICE_ENVELOPE_PROFILES
         ):
             raise ValueError("unsupported compositional service-envelope profile")
@@ -165,6 +165,13 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             # fields, not target truth or an encoded profile identity.
             current, future = self._service_envelopes()
             return np.asarray((*current, *future), dtype=np.float32)
+        if self.handoff_config.service_envelope_mode == "compositional_v6_staged":
+            # The branch is a public mission event, rather than target truth.
+            # V6 must let a policy distinguish "preserve the early bridge" from
+            # "reconstruct the later bridge" without exposing a profile label.
+            current, future = self._service_envelopes()
+            branch_phase = min(1.0, float(self.step_count) / float(self.handoff_config.branch_step))
+            return np.asarray((*current, *future, branch_phase), dtype=np.float32)
         # Mission service class is public before the decision; target branch
         # direction is deliberately not included.
         return np.asarray(
@@ -197,7 +204,7 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         )
 
     def _future_service_required(self) -> bool:
-        if self.handoff_config.service_envelope_mode != "compositional_v5":
+        if self.handoff_config.service_envelope_mode not in {"compositional_v5", "compositional_v6_staged"}:
             return self.handoff_config.handoff_context == "postbranch_refresh"
         current, future = self._service_envelopes()
         # Undo display normalization.  The fixed value subtracts message age,
@@ -209,6 +216,19 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         current_value = c_tau - c_age - 2.0 * c_hold
         future_value = f_tau - f_age - 2.0 * f_hold - 20.0
         return bool(future_value > current_value)
+
+    def _active_service_future(self) -> bool:
+        """Return the route whose public service progress is active now.
+
+        V6 deliberately separates the route *eventually required* from the
+        route that carries valid credit before the public branch.  This fixes
+        V5's reward conflict, where a future service request rewarded early
+        relocation even though successful execution required preserving the
+        existing bridge until the branch.
+        """
+        if self.handoff_config.service_envelope_mode == "compositional_v6_staged":
+            return bool(self._future_service_required() and self.step_count >= self.handoff_config.branch_step)
+        return self._future_service_required()
 
     def _service_waypoint(self, future: bool) -> np.ndarray:
         """Return the publicly planned moving service waypoint.
@@ -292,6 +312,11 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
     def _mission_requirement_met(self) -> bool:
         if not self._future_service_required():
             return self.authorization_handoff_observed
+        if self.handoff_config.service_envelope_mode == "compositional_v6_staged":
+            # A later refresh is valuable only after the early, legally
+            # authorised service has been established.  It is not permitted to
+            # repair a missed early commitment retrospectively.
+            return self.authorization_handoff_observed and self.postbranch_refresh_observed
         return self.postbranch_refresh_observed
 
     def _service_progress(self) -> float:
@@ -301,7 +326,7 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         service route plus legal relay-mediated delivery state.  It neither
         reveals target truth nor depends on a candidate representation.
         """
-        future = self._future_service_required()
+        future = self._active_service_future()
         corridor_error = self._relay_corridor_error(future=future)
         corridor_score = float(
             np.clip(1.0 - corridor_error / (2.0 * self.handoff_config.handoff_corridor_radius), 0.0, 1.0)
@@ -364,7 +389,9 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
                 "handoff_context_current_authorization": float(self.handoff_config.handoff_context == "current_authorization"),
                 "handoff_context_postbranch_refresh": float(self.handoff_config.handoff_context == "postbranch_refresh"),
                 "service_envelope_mode_v5": float(self.handoff_config.service_envelope_mode == "compositional_v5"),
+                "service_envelope_mode_v6": float(self.handoff_config.service_envelope_mode == "compositional_v6_staged"),
                 "service_envelope_future_required": float(self._future_service_required()),
+                "service_progress_future_active": float(self._active_service_future()),
                 "handoff_branch_active": float(self.handoff_branch_active),
                 "authorization_handoff_observed": float(self.authorization_handoff_observed),
                 "postbranch_refresh_observed": float(self.postbranch_refresh_observed),

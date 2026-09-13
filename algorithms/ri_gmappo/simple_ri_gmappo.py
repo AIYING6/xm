@@ -1302,7 +1302,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 f"or one of {HANDOFF_CONTEXTS}; got {cfg.timed_handoff_context_mode!r}"
             )
         service_envelope_profile = cfg.handoff_service_envelope_profile
-        if cfg.handoff_service_envelope_mode == "compositional_v5":
+        if cfg.handoff_service_envelope_mode in {"compositional_v5", "compositional_v6_staged"}:
             from envs.timed_handoff_intercept_3d_env import SERVICE_ENVELOPE_PROFILES
 
             if service_envelope_profile == "balanced_v5":
@@ -1314,7 +1314,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
             elif service_envelope_profile not in SERVICE_ENVELOPE_PROFILES:
                 raise ValueError(
                     "handoff_service_envelope_profile must name a V5 profile "
-                    "or be 'balanced_v5' when compositional_v5 is active"
+                    "or be 'balanced_v5' when a compositional service-envelope mode is active"
                 )
         env_class = CommitmentHandoffIntercept3DEnv if cfg.env_name == "commitment_handoff_3d" else TimedHandoffIntercept3DEnv
         return env_class(
@@ -1355,7 +1355,7 @@ def make_envs(cfg: RIGMAPPOConfig, rng_streams: RNGStreams | None = None) -> Lis
         worker_cfg = cfg
         if (
             cfg.env_name in {"timed_handoff_3d", "commitment_handoff_3d"}
-            and cfg.handoff_service_envelope_mode == "compositional_v5"
+            and cfg.handoff_service_envelope_mode in {"compositional_v5", "compositional_v6_staged"}
             and cfg.handoff_service_envelope_profile == "balanced_v5"
         ):
             from envs.timed_handoff_intercept_3d_env import SERVICE_ENVELOPE_PROFILES
