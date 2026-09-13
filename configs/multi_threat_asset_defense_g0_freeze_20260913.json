@@ -2,7 +2,7 @@
   "protocol": "MULTI-THREAT-ASSET-DEFENSE-G0-V1",
   "status": "ZERO_TRAINING_ONLY",
   "task": "3 heterogeneous blue UAVs defend two separated assets from 2 red attackers that commit to distinct routes after public approach.",
-  "fixed": {"action_interface": "existing_27_action_3DOF", "blue_agents": 3, "red_attackers": 2, "assets": 2, "branch_step": 28, "future_route_label_visible_before_branch": false},
+  "fixed": {"action_interface": "existing_27_action_3DOF", "blue_agents": 3, "red_attackers": 2, "assets": 2, "branch_step": 28, "future_route_label_visible_before_branch": false, "context_variables": ["red_center_y", "red_initial_lateral", "asset_lateral", "mirror_y"]},
   "terminal_events": {"defense_success": "both attackers neutralized", "red_success": "either assigned asset reaches strike radius", "separate": ["timeout", "collision", "constraint_violation"]},
   "gates": {"G0": "two threats and two assets evolve correctly without route leakage", "G1": "transparent concentrated, split and delayed controllers show non-degenerate terminal trade-offs", "G2": "plain MAPPO learns but is non-saturated"},
   "non_goals": ["no_training", "no_method", "no_paper_claim", "not_a_drtp_or_pscr_result"]

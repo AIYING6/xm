@@ -21,6 +21,8 @@ class MultiThreatAssetDefenseConfig:
     asset_lateral: float = 7_500.0
     asset_strike_radius: float = 1_200.0
     red_initial_lateral: float = 2_400.0
+    red_center_y: float = 0.0
+    mirror_y: bool = False
     seed: int = 0
 
 
@@ -55,12 +57,18 @@ class MultiThreatAssetDefenseEnv:
     def reset(self):
         self.base.seed(int(self.rng.integers(0, 2**31 - 1)))
         self.base.reset()
+        if self.config.mirror_y:
+            # A complete geometric reflection preserves each vehicle's role
+            # and dynamics while removing the incidental lower/upper bias of
+            # the legacy initial formation and headings.
+            self.base.blue_pos[:, 1] *= -1.0
+            self.base.blue_heading[:] = -self.base.blue_heading
         self.base.step_count = 0
         self.base.done = False
         self.blue_destroyed = np.zeros(2, dtype=bool)
         self.asset_integrity = {-1: 1.0, 1: 1.0}
         self.route_assignment: tuple[int, int] | None = None
-        self.red_pos = np.asarray(((11_000.0, -self.config.red_initial_lateral, 5_000.0), (11_000.0, self.config.red_initial_lateral, 5_000.0)), dtype=np.float32)
+        self.red_pos = np.asarray(((11_000.0, self.config.red_center_y - self.config.red_initial_lateral, 5_000.0), (11_000.0, self.config.red_center_y + self.config.red_initial_lateral, 5_000.0)), dtype=np.float32)
         self.red_heading = np.asarray((math.pi, math.pi), dtype=np.float32)
         self.red_gamma = np.zeros(2, dtype=np.float32)
         self.red_speed = np.asarray((220.0, 220.0), dtype=np.float32)
@@ -105,7 +113,7 @@ class MultiThreatAssetDefenseEnv:
 
     def _move_red(self, threat: int) -> None:
         if self.route_assignment is None:
-            target = np.asarray((4_000.0, (-1 if threat == 0 else 1) * self.config.red_initial_lateral, 5_000.0), dtype=np.float32)
+            target = np.asarray((4_000.0, self.config.red_center_y + (-1 if threat == 0 else 1) * self.config.red_initial_lateral, 5_000.0), dtype=np.float32)
         else:
             target = self._asset(self.route_assignment[threat])
         delta = target - self.red_pos[threat]
