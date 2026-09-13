@@ -10,6 +10,7 @@ from .uav_intercept_3d_env import (
     UAVIntercept3DConfig,
     UAVIntercept3DEnv,
 )
+from .forecast_branch_intercept_3d_env import ForecastBranchIntercept3DConfig, ForecastBranchIntercept3DEnv
 from .active_diagnosis_trainable_uav_env import (
     ActiveDiagnosisTrainableConfig,
     ActiveDiagnosisTrainableUAVEnv,
