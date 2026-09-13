@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--episodes-per-context", type=int, default=20)
+    parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
