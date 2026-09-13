@@ -1,0 +1,19 @@
+{
+  "protocol": "MULTI-THREAT-TARGET-LOCK-DEFENSE-G1-V1",
+  "status": "ZERO_TRAINING_ONLY",
+  "scenario_cells": [
+    {"branch_step": 10, "red_initial_lateral": 9500.0, "asset_lateral": 15000.0},
+    {"branch_step": 12, "red_initial_lateral": 8500.0, "asset_lateral": 13500.0},
+    {"branch_step": 12, "red_initial_lateral": 8500.0, "asset_lateral": 15000.0}
+  ],
+  "scenario_distribution": {"red_center_y_jitter": 1000.0, "approach_speed_jitter": 12.0, "branch_step_jitter": 2},
+  "controllers": ["kinetic_first", "parallel_suppress_intercept", "cofocused_error"],
+  "independent_scenarios_per_cell": 12,
+  "candidate_rule": "A learnability candidate requires the parallel controller to beat kinetic_first by at least 3 defense-success cases over the 36 matched scenarios, while neither controller succeeds in every scenario and both terminal outcomes occur.",
+  "invariants": [
+    "same 27-action 3DOF interface",
+    "same two-red/two-asset geometry",
+    "target lock, rather than a speed multiplier, is the only suppression effect",
+    "no training or method implementation"
+  ]
+}
