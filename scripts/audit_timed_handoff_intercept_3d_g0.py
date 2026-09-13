@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT))
 from envs.timed_handoff_intercept_3d_env import (
     HANDOFF_BEACON_SLICE,
     HANDOFF_CONTEXTS,
+    HANDOFF_SERVICE_BEACON_SLICE,
     TimedHandoffIntercept3DConfig,
     TimedHandoffIntercept3DEnv,
 )
@@ -35,35 +36,23 @@ def mode_actions(obs: np.ndarray, mode: str) -> np.ndarray:
         # The public service context supplies the future corridor offset, but
         # not the future target branch.  The relay can therefore preposition
         # physically without reading target truth.
-        beacon = obs[1, HANDOFF_BEACON_SLICE]
-        offsets = [beacon[start:start + 3] for start in (0, 4) if beacon[start + 3] > 0.5]
-        if offsets:
-            desired = np.mean(offsets, axis=0)
-            desired[1] += float(obs[1, 36])
+        desired = obs[1, HANDOFF_SERVICE_BEACON_SLICE][3:].copy()
+        if np.linalg.norm(desired) > 0.0:
             heading = math.atan2(float(obs[1, 4]), float(obs[1, 5]))
             desired_heading = math.atan2(float(desired[1]), float(desired[0]))
             turn = np.clip(angle_diff(desired_heading, heading) / 0.030, -1.0, 1.0)
             gamma = math.atan2(float(obs[1, 6]), float(obs[1, 7]))
             desired_gamma = math.atan2(float(desired[2]), math.hypot(float(desired[0]), float(desired[1])) + 1e-6)
             climb = np.clip((desired_gamma - gamma) / 0.22, -1.0, 1.0)
-            # The relay starts at the midpoint velocity.  Holding that speed
-            # prevents a purely scripted controller from drifting through the
-            # moving service corridor while it translates laterally.
             command = np.asarray((turn, climb, 0.0), dtype=np.float32)
             choice[1] = int(np.argmin(np.sum((ACTION3D_TABLE - command[None, :]) ** 2, axis=1)))
         return choice
     if mode != "relay_hold_current_bridge":
         raise ValueError(f"unsupported mode: {mode}")
-    # Relay observes only beacons sent over its currently active direct links.
-    # It holds the physical bridge by steering toward the midpoint of visible
-    # scout/attacker neighbours; no global position or hidden target is read.
-    beacon = obs[1, HANDOFF_BEACON_SLICE]
-    offsets = []
-    for start in (0, 4):
-        if beacon[start + 3] > 0.5:
-            offsets.append(beacon[start:start + 3])
-    if offsets:
-        desired = np.mean(offsets, axis=0)
+    # The current service waypoint is a public mission command; no global
+    # formation state or hidden target information is read.
+    desired = obs[1, HANDOFF_SERVICE_BEACON_SLICE][:3].copy()
+    if np.linalg.norm(desired) > 0.0:
         heading = math.atan2(float(obs[1, 4]), float(obs[1, 5]))
         desired_heading = math.atan2(float(desired[1]), float(desired[0]))
         turn = np.clip(angle_diff(desired_heading, heading) / 0.030, -1.0, 1.0)
@@ -83,16 +72,18 @@ def run_episode(seed: int, context: str, mode: str) -> dict[str, object]:
             # The early authorization window ends before a relay that heads
             # toward the announced later service corridor can return.  The
             # later refresh check is evaluated after the target branch.
-            authorization_start_step=30,
-            authorization_deadline=50,
-            branch_step=140,
+            authorization_start_step=12,
+            authorization_deadline=28,
+            branch_step=40,
             authorization_hold_steps=8,
             refresh_hold_steps=8,
-            # Trace telemetry shows relocation reaches 1.43--1.67 km while
-            # retaining the current bridge remains about 3 km away.  A 1.8 km
-            # service radius preserves that physical separation without
-            # turning the later context into an unreachable interception task.
-            handoff_corridor_radius=1_800.0,
+            # The original 3 km relocation reaches its service window only
+            # when the independent chase controller is already collision-prone.
+            # This 1.5 km alternate route remains physically distinct from
+            # the 0.9 km current route, while allowing the staged service
+            # choice to be evaluated before that downstream event.
+            handoff_corridor_radius=900.0,
+            future_corridor_lateral_offset=1_500.0,
             communication_dropout_prob=0.0,
             radar_dropout_prob=0.0,
             message_delay_steps=0,

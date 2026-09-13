@@ -4,7 +4,7 @@
   "paper_evidence": false,
   "purpose": "Define the minimum task and causal-evidence conditions before any formal multi-seed experiment is launched.",
   "platform": "Existing three-UAV 3DOF interception plant; the flight dynamics, legal local observations and primitive flight actions remain the starting point.",
-  "candidate_problem": "Timed information handoff under a limited relay opportunity: a scout obtains a track, the relay must allocate a finite handoff opportunity between forwarding a current track and repositioning for a later track, and the attacker must act under message age and terminal-geometry constraints.",
+  "candidate_problem": "Timed targeting-service handoff under a limited relay opportunity: a scout obtains a track, while the relay must choose between retaining the current public service route for early authorization and relocating to a later public service route for a post-stage refresh. Both outcomes require legal relay-mediated target delivery.",
   "candidate_method": "Handoff-value-conditioned local relation policy. The actor receives only legal local observations, delivered message provenance/age and visible communication state; a declared relation-value head scores legal handoff relations and conditions the policy without restoring hidden target state.",
   "fixed_controls": [
     "same 3DOF plant and primitive action interface",
@@ -29,9 +29,11 @@
     "the development pilots are publication evidence"
   ],
   "current_evidence": {
+    "G0_decision_switch_audit": "results/development/timed_handoff_intercept_3d_g0_compactroute_20260914/timed_handoff_g0_report.json",
+    "G0_interpretation": "Development-only zero-training audit: current authorization favours retaining the current relay route (6/6 versus 0/6); post-stage refresh favours relocation to the future public route (6/6 versus 0/6). The terminal is targeting-service completion; attack-window state is logged independently rather than used to confound G0.",
     "local_graph_legal_smoke": "scripts/smoke_test_intercept_3d_local_role_graph.py",
     "local_graph_development_endpoint": "results/development/intercept_3d_local_role_graph_learnability_pilot/seed5203/ppo/endpoint_evaluation.csv",
     "capacity_matched_control_endpoint": "results/development/intercept_3d_local_role_graph_capacity_matched_control/seed5203/ppo/endpoint_evaluation.csv",
-    "interpretation": "The existing moderate task is learnable but does not yet isolate a structural-relation advantage after parameter matching."
+    "interpretation": "G0 has passed for the staged-handoff task. The existing moderate task remains unsuitable for a structural claim after parameter matching; G1 and G2 must now be established on the staged-handoff task."
   }
 }

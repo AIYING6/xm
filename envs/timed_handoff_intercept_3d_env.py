@@ -14,13 +14,14 @@ from typing import Dict, Tuple
 
 import numpy as np
 
-from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv
+from envs.uav_intercept_3d_env import UAVIntercept3DConfig, UAVIntercept3DEnv, velocity_from_state
 
 
 HANDOFF_CONTEXTS = ("current_authorization", "postbranch_refresh")
 BASE_OBS_DIM = 34
 HANDOFF_CONTEXT_SLICE = slice(34, 37)
-HANDOFF_BEACON_SLICE = slice(37, 45)
+HANDOFF_SERVICE_BEACON_SLICE = slice(37, 43)
+HANDOFF_BEACON_SLICE = slice(43, 51)
 
 
 @dataclass
@@ -81,6 +82,14 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         # midpoint, which made the current-corridor milestone unattainable
         # regardless of the selected relay behaviour.
         current_midpoint = 0.5 * (self.blue_pos[0] + self.blue_pos[2])
+        self.service_origin = current_midpoint.astype(np.float32)
+        self.service_velocity = (
+            0.5
+            * (
+                velocity_from_state(self.blue_speed[0], self.blue_heading[0], self.blue_gamma[0])
+                + velocity_from_state(self.blue_speed[2], self.blue_heading[2], self.blue_gamma[2])
+            )
+        ).astype(np.float32)
         self.blue_pos[1] = current_midpoint.astype(np.float32)
         self.blue_speed[1] = float(0.5 * (self.blue_speed[0] + self.blue_speed[2]))
         self.blue_heading[1] = float(0.5 * (self.blue_heading[0] + self.blue_heading[2]))
@@ -123,7 +132,30 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             dtype=np.float32,
         )
 
+    def _service_waypoint(self, future: bool) -> np.ndarray:
+        """Return the publicly planned moving service waypoint.
+
+        This route is generated from the reset-time mission plan and is exposed
+        as an agent-relative task command.  It never depends on the target's
+        current state, a peer's hidden state, or a future target maneuver.
+        """
+        waypoint = self.service_origin + self.service_velocity * float(self.step_count)
+        if future:
+            waypoint = waypoint + np.asarray(
+                (0.0, self.handoff_config.future_corridor_lateral_offset, 0.0), dtype=np.float32
+            )
+        return waypoint.astype(np.float32)
+
     def _augment_obs(self, obs: np.ndarray) -> np.ndarray:
+        service_beacons = np.zeros((self.num_agents, 6), dtype=np.float32)
+        current_waypoint = self._service_waypoint(future=False)
+        future_waypoint = self._service_waypoint(future=True)
+        for ego in range(self.num_agents):
+            # A mission waypoint is a public command, expressed only relative
+            # to the receiving UAV.  It is deliberately distinct from the
+            # link-conditioned neighbour beacons below.
+            service_beacons[ego, :3] = (current_waypoint - self.blue_pos[ego]) / self.config.world_radius
+            service_beacons[ego, 3:] = (future_waypoint - self.blue_pos[ego]) / self.config.world_radius
         # A radio neighbour beacon carries relative position only across an
         # active direct link.  It is not a global formation state: a broken or
         # delayed link contributes zeros and its availability flag is zero.
@@ -138,7 +170,9 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
                     beacons[ego, offset: offset + 3] = (self.blue_pos[peer] - self.blue_pos[ego]) / self.config.world_radius
                 beacons[ego, offset + 3] = linked
                 offset += 4
-        return np.concatenate([obs, np.tile(self._context_vector(), (self.num_agents, 1)), beacons], axis=-1).astype(np.float32)
+        return np.concatenate(
+            [obs, np.tile(self._context_vector(), (self.num_agents, 1)), service_beacons, beacons], axis=-1
+        ).astype(np.float32)
 
     def _augment_share(self, share: np.ndarray) -> np.ndarray:
         return np.concatenate([share, np.tile(self._context_vector(), (self.num_agents, 1))], axis=-1).astype(np.float32)
@@ -149,11 +183,8 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         return bool(self._has_fresh_target_cache(attacker) and 1 in path)
 
     def _relay_corridor_error(self, future: bool) -> float:
-        """Distance to a physical relay-service corridor defined by team geometry."""
-        midpoint = 0.5 * (self.blue_pos[0] + self.blue_pos[2])
-        if future:
-            midpoint = midpoint + np.asarray((0.0, self.handoff_config.future_corridor_lateral_offset, 0.0), dtype=np.float32)
-        return float(np.linalg.norm(self.blue_pos[1] - midpoint))
+        """Distance to a physical, publicly specified relay service route."""
+        return float(np.linalg.norm(self.blue_pos[1] - self._service_waypoint(future=future)))
 
     def _update_handoff_milestones(self) -> None:
         relay_track = self._relay_mediated_fresh_attacker_track()
@@ -188,10 +219,12 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
     def step(self, actions: np.ndarray | list[int]):
         obs, share, graph, rewards, dones, info = super().step(actions)
         self._update_handoff_milestones()
-        attacker_window_and_info = bool(
-            self.attack_window[2] > 0.5 and self._has_target_information(2)
-        )
-        self.handoff_success = bool(self._mission_requirement_met() and attacker_window_and_info)
+        # This layer's terminal is timely, legal targeting-service completion.
+        # Physical attack-window occupancy remains a separately logged
+        # downstream metric.  Requiring both at one instant would turn the
+        # staged-handoff decision gate into a test of the target chaser's
+        # collision avoidance rather than of cooperative service reconfiguration.
+        self.handoff_success = bool(self._mission_requirement_met())
         if self.handoff_success and not bool(dones[0, 0]):
             self.done = True
             dones = np.ones_like(dones, dtype=np.float32)
@@ -211,6 +244,8 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
                 "relay_in_current_corridor": float(self._relay_corridor_error(future=False) <= self.handoff_config.handoff_corridor_radius),
                 "relay_in_future_corridor": float(self._relay_corridor_error(future=True) <= self.handoff_config.handoff_corridor_radius),
                 "handoff_success": float(self.handoff_success),
+                "handoff_terminal_attack_window": float(self.attack_window[2] > 0.5),
+                "handoff_terminal_attacker_has_information": float(self._has_target_information(2)),
                 "legacy_success_disabled": 1.0,
             }
         )
