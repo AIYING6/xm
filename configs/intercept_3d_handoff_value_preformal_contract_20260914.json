@@ -1,0 +1,37 @@
+{
+  "protocol": "INTERCEPT-3D-HANDOFF-VALUE-PREFORMAL-CONTRACT-V1",
+  "artifact_class": "PRETRAINING_DESIGN_CONTRACT",
+  "paper_evidence": false,
+  "purpose": "Define the minimum task and causal-evidence conditions before any formal multi-seed experiment is launched.",
+  "platform": "Existing three-UAV 3DOF interception plant; the flight dynamics, legal local observations and primitive flight actions remain the starting point.",
+  "candidate_problem": "Timed information handoff under a limited relay opportunity: a scout obtains a track, the relay must allocate a finite handoff opportunity between forwarding a current track and repositioning for a later track, and the attacker must act under message age and terminal-geometry constraints.",
+  "candidate_method": "Handoff-value-conditioned local relation policy. The actor receives only legal local observations, delivered message provenance/age and visible communication state; a declared relation-value head scores legal handoff relations and conditions the policy without restoring hidden target state.",
+  "fixed_controls": [
+    "same 3DOF plant and primitive action interface",
+    "same reward, horizon, PPO objective and training budget within each comparison",
+    "same actor information boundary",
+    "capacity-matched unstructured MLP control",
+    "same handoff action availability for all compared methods",
+    "same training and endpoint seed tapes after formal freeze"
+  ],
+  "required_pretraining_gates": {
+    "G0_decision_switch": "A scripted legal controller must demonstrate at least two reachable contexts in which forward-now versus reposition-for-later reverses the preferred action and changes terminal mission outcome.",
+    "G1_information_boundary": "Changing hidden target state while holding every legal actor input fixed must not change actor logits; all handoff labels must be computable from legal state only.",
+    "G2_non_saturation": "A capacity-matched plain MAPPO pilot must be learnable but non-saturated on the main band; the target development range is 0.30-0.80 success, not a publication threshold.",
+    "G3_mechanism_signal": "A small paired pilot must show that the candidate differs from the capacity-matched MLP in handoff allocation and in at least one prespecified terminal or reliability endpoint.",
+    "G4_ablation_identifiability": "The same candidate network with shuffled legal handoff-relation labels must be executable and preserve parameter count, observations, actions, reward and budget."
+  },
+  "formal_experiment_entry_rule": "Formal training is permitted only if G0-G4 pass. A failed gate triggers a localized task/interface repair and a rerun of that gate, not retrospective relabelling of development output as paper evidence.",
+  "prohibited_claims_before_formal_entry": [
+    "the candidate method improves coordination",
+    "the relation head is necessary",
+    "the task establishes an OOD result",
+    "the development pilots are publication evidence"
+  ],
+  "current_evidence": {
+    "local_graph_legal_smoke": "scripts/smoke_test_intercept_3d_local_role_graph.py",
+    "local_graph_development_endpoint": "results/development/intercept_3d_local_role_graph_learnability_pilot/seed5203/ppo/endpoint_evaluation.csv",
+    "capacity_matched_control_endpoint": "results/development/intercept_3d_local_role_graph_capacity_matched_control/seed5203/ppo/endpoint_evaluation.csv",
+    "interpretation": "The existing moderate task is learnable but does not yet isolate a structural-relation advantage after parameter matching."
+  }
+}
