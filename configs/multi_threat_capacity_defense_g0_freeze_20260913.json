@@ -1,0 +1,13 @@
+{
+  "protocol": "MULTI-THREAT-CAPACITY-DEFENSE-G0-V1",
+  "status": "ZERO_TRAINING_ONLY",
+  "task_claim": "Two independently routed threats require complementary use of one kinetic engagement and one continuous focused disruption channel.",
+  "fixed_constraints": [
+    "same 27-action 3DOF blue interface",
+    "same observation and communication boundary as the multi-threat family",
+    "one kinetic engagement per episode",
+    "one focused suppression beam at a time",
+    "asset breach requires an uninterrupted target lock"
+  ],
+  "prohibitions": ["no learned macro action", "no future route label", "no reward-specific controller hint", "no training before G1"]
+}
