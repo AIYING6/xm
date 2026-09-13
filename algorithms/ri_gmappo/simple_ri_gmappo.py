@@ -203,6 +203,9 @@ class RIGMAPPOConfig:
     handoff_prebranch_target_policy: str = "weaving_mild"
     handoff_postbranch_target_policy: str = "weaving_mild"
     handoff_service_envelope_mode: str = "legacy"
+    # ``balanced_v5`` is resolved deterministically from the environment seed
+    # in ``make_env``.  It is intentionally not an environment profile: an
+    # individual episode always receives one concrete, auditable envelope.
     handoff_service_envelope_profile: str = "current_compact"
     business_grounded_geometry: bool = False
     target_prior_position: tuple[float, float, float] = (10_000.0, 0.0, 5_000.0)
@@ -1298,6 +1301,21 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 "timed_handoff_context_mode must be 'balanced', "
                 f"or one of {HANDOFF_CONTEXTS}; got {cfg.timed_handoff_context_mode!r}"
             )
+        service_envelope_profile = cfg.handoff_service_envelope_profile
+        if cfg.handoff_service_envelope_mode == "compositional_v5":
+            from envs.timed_handoff_intercept_3d_env import SERVICE_ENVELOPE_PROFILES
+
+            if service_envelope_profile == "balanced_v5":
+                # Training workers have deterministic, equal-probability
+                # profile assignment across consecutive seeds.  Keeping the
+                # concrete profile in the instantiated environment makes each
+                # episode's public inputs and result provenance inspectable.
+                service_envelope_profile = SERVICE_ENVELOPE_PROFILES[int(seed) % len(SERVICE_ENVELOPE_PROFILES)]
+            elif service_envelope_profile not in SERVICE_ENVELOPE_PROFILES:
+                raise ValueError(
+                    "handoff_service_envelope_profile must name a V5 profile "
+                    "or be 'balanced_v5' when compositional_v5 is active"
+                )
         env_class = CommitmentHandoffIntercept3DEnv if cfg.env_name == "commitment_handoff_3d" else TimedHandoffIntercept3DEnv
         return env_class(
             TimedHandoffIntercept3DConfig(
@@ -1315,7 +1333,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 prebranch_target_policy=cfg.handoff_prebranch_target_policy,
                 postbranch_target_policy=cfg.handoff_postbranch_target_policy,
                 service_envelope_mode=cfg.handoff_service_envelope_mode,
-                service_envelope_profile=cfg.handoff_service_envelope_profile,
+                service_envelope_profile=service_envelope_profile,
                 target_policy=cfg.target_policy,
                 communication_range_scale=cfg.communication_range_scale,
                 communication_dropout_prob=cfg.communication_dropout_prob,
@@ -1332,15 +1350,31 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
 
 
 def make_envs(cfg: RIGMAPPOConfig, rng_streams: RNGStreams | None = None) -> List[UAVPursuitEnv | UAVIntercept3DEnv]:
-    return [
-        make_env(
-            cfg,
-            cfg.seed + i if rng_streams is None else rng_streams.seed("env", i),
-            training=True,
-            rng=None if rng_streams is None else rng_streams.python_rng("env", i),
+    envs = []
+    for i in range(cfg.num_envs):
+        worker_cfg = cfg
+        if (
+            cfg.env_name in {"timed_handoff_3d", "commitment_handoff_3d"}
+            and cfg.handoff_service_envelope_mode == "compositional_v5"
+            and cfg.handoff_service_envelope_profile == "balanced_v5"
+        ):
+            from envs.timed_handoff_intercept_3d_env import SERVICE_ENVELOPE_PROFILES
+
+            # Do not rely on hashed RNG worker seeds for coverage.  A V5 G2
+            # run with four vector environments must expose each profile once
+            # per rollout, while individual environments still keep a concrete
+            # profile that can be audited from their instantiated config.
+            worker_cfg = copy.copy(cfg)
+            worker_cfg.handoff_service_envelope_profile = SERVICE_ENVELOPE_PROFILES[i % len(SERVICE_ENVELOPE_PROFILES)]
+        envs.append(
+            make_env(
+                worker_cfg,
+                cfg.seed + i if rng_streams is None else rng_streams.seed("env", i),
+                training=True,
+                rng=None if rng_streams is None else rng_streams.python_rng("env", i),
+            )
         )
-        for i in range(cfg.num_envs)
-    ]
+    return envs
 
 
 def sample_comm_radius(cfg: RIGMAPPOConfig, rng: random.Random | None = None) -> float:

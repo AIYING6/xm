@@ -36,6 +36,12 @@ G0 不是学习测试。对每个 profile、至少六个物理随机 seed，运�
 
 若任一 profile 无法形成方向相反的可达终局，先修复该 profile 的服务时限/走廊几何，不启动学习。
 
+### G0 实测结果（2026-09-14）
+
+使用六个物理随机 seed，对每一个 profile 分别执行固定 `retain_current` 与固定 `reconstruct_future` 中继控制。`current_compact` 与 `current_delayed` 中，保留路线成功率均为 1.00、重构路线为 0.00；`future_fresh` 与 `future_durable` 中，保留路线为 0.00、重构路线为 0.833。四个画像均形成非零且方向相反的控制差，因而零训练门禁得到 `V5_G0_COMPOSITIONAL_DECISION_SWITCH_PASS`。
+
+该检验仅证明任务中存在可达、可见且影响终局的选择反转；它不证明学习算法能从服务信封学习该选择，也不构成论文性能结果。
+
 ## V5 的 G2
 
 容量匹配、无图、无候选模块的 MLP MAPPO 在混合四 profile 训练分布上运行三个开发 seed。每个 seed 在每 profile 的固定 endpoint tape 上分别报告成功、超时、碰撞、两类承诺比例和信封字段。G2 的目标不是让基线失败，而是证明它可学习、但尚存在组合化决策余地：
@@ -46,6 +52,15 @@ G0 不是学习测试。对每个 profile、至少六个物理随机 seed，运�
 - 必须对 current-optimal 与 future-optimal profile 都产生非零成功。
 
 具体非饱和区间、种子和 endpoint tape 必须在 G0 通过后、首次 G2 训练前一次性冻结，不得看见 G2 结果后修改。
+
+### 已冻结的首次 G2 执行合同
+
+- 训练 seed：`82341, 82342, 82343`；每 seed 64 updates、4 个并行环境、每 rollout 64 个中继宏决策，合计每 seed 16,384 个宏决策 / 131,072 个物理步；
+- 训练画像：`balanced_v5`，四个并行环境按固定索引对四个具体 profile 一一、等频分配；每个实际 episode 均保留其具体 profile，不把“混合”作为不可审计类别；
+- 固定 endpoint：每 seed × profile 60 回合，使用未参与训练的固定 evaluation seed 带；输出成功、超时、碰撞、终局服务进度与中继 `reconstruct_future` 比例；
+- 通过条件：对每一个 profile，至少 2/3 训练 seed 的成功率落入 `[0.10, 0.90]`；同时 future-required profile 相对 current-required profile 的平均重构比例差至少为 `0.15`。该上限用于排除再次出现的近满分静态映射，下限用于排除不可学习任务。
+
+上述 G2 仅判断任务和普通对照是否进入可研究区间；它不构成候选方法证据，也不得在结果看到后回调阈值。
 
 ## G3--G4 候选机制
 
