@@ -13,7 +13,7 @@ from algorithms.ri_gmappo.simple_ri_gmappo import eval_policy, train_ri_gmappo
 from scripts.run_timed_handoff_3d_plain_mappo import build_config, load_agent, parse_args
 
 
-PROTOCOL = "COMMITMENT-HANDOFF-3D-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
+PROTOCOL = "COMMITMENT-HANDOFF-3D-PLAIN-MAPPO-G2-DEVELOPMENT-V2-OPTION"
 
 
 def main() -> None:
@@ -37,6 +37,7 @@ def main() -> None:
         "fixed_task": {
             "plant": "original 3DOF UAV dynamics and 27 primitive controls under a fixed legal low-level controller",
             "relay_macro_actions": ["retain_current", "reconstruct_future"],
+            "commitment_action_repeat": 8,
             "authorization_window": [12, 28],
             "branch_step": 40,
             "legacy_intercept_reward_weight": 0.0,

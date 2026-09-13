@@ -198,6 +198,7 @@ class RIGMAPPOConfig:
     handoff_refresh_hold_steps: int = 8
     handoff_corridor_radius: float = 900.0
     handoff_future_corridor_lateral_offset: float = 1_500.0
+    handoff_commitment_action_repeat: int = 8
     handoff_legacy_intercept_reward_weight: float = 0.0
     handoff_prebranch_target_policy: str = "weaving_mild"
     handoff_postbranch_target_policy: str = "weaving_mild"
@@ -1298,6 +1299,7 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 refresh_hold_steps=cfg.handoff_refresh_hold_steps,
                 handoff_corridor_radius=cfg.handoff_corridor_radius,
                 future_corridor_lateral_offset=cfg.handoff_future_corridor_lateral_offset,
+                commitment_action_repeat=cfg.handoff_commitment_action_repeat,
                 legacy_intercept_reward_weight=cfg.handoff_legacy_intercept_reward_weight,
                 prebranch_target_policy=cfg.handoff_prebranch_target_policy,
                 postbranch_target_policy=cfg.handoff_postbranch_target_policy,

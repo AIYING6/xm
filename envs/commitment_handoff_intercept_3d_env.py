@@ -5,8 +5,9 @@ are inherited unchanged from :mod:`timed_handoff_intercept_3d_env`.  This
 adapter deliberately fixes the low-level flight stabilisation problem and
 exposes the decision that the research task is meant to study: should the
 relay retain the current service route or reconstruct to the announced future
-route?  Both macro actions are executed by the same deterministic controller
-over the original 27 primitive 3DOF actions.
+route?  Each macro action is held over a fixed public option duration and is
+executed by the same deterministic controller over the original 27 primitive
+3DOF actions.
 
 This is a command-level UAV abstraction, not an additional information
 channel.  The controller uses only the same emitted local target observation
@@ -91,16 +92,31 @@ class CommitmentHandoffIntercept3DEnv(TimedHandoffIntercept3DEnv):
 
     def step(self, actions: np.ndarray | list[int]):
         macro = np.asarray(actions, dtype=np.int64).reshape(-1)
-        primitive = self._macro_to_primitive(macro)
-        # ``UAVIntercept3DEnv.step`` clips its input using ``self.action_dim``.
-        # Expose two actions to the actor but temporarily restore the
-        # primitive-table cardinality while delegating the physical step.
-        actor_action_dim = self.action_dim
-        self.action_dim = len(ACTION3D_TABLE)
-        try:
-            obs, share, graph, rewards, dones, info = super().step(primitive)
-        finally:
-            self.action_dim = actor_action_dim
+        # A high-level decision must not require eight consecutive random
+        # re-selections of the identical command before it produces any
+        # physically meaningful credit.  Holding the selected commitment for
+        # one option duration preserves every plant transition while making a
+        # single actor action correspond to an actual service commitment.
+        accumulated_rewards = None
+        info: dict = {}
+        for _ in range(int(self.handoff_config.commitment_action_repeat)):
+            # Recompute the primitive tracker within the option so the
+            # low-level controller remains closed-loop to the evolving plant.
+            primitive = self._macro_to_primitive(macro)
+            # ``UAVIntercept3DEnv.step`` clips its input using
+            # ``self.action_dim``.  Expose two actions to the actor but
+            # temporarily restore primitive-table cardinality while
+            # delegating a physical step.
+            actor_action_dim = self.action_dim
+            self.action_dim = len(ACTION3D_TABLE)
+            try:
+                obs, share, graph, rewards, dones, info = super().step(primitive)
+            finally:
+                self.action_dim = actor_action_dim
+            accumulated_rewards = rewards if accumulated_rewards is None else accumulated_rewards + rewards
+            if bool(np.all(dones)):
+                break
+        assert accumulated_rewards is not None
         info = dict(info)
         info.update(
             {
@@ -110,4 +126,4 @@ class CommitmentHandoffIntercept3DEnv(TimedHandoffIntercept3DEnv):
                 "commitment_relay_primitive_action": float(primitive[1]),
             }
         )
-        return obs, share, graph, rewards, dones, info
+        return obs, share, graph, accumulated_rewards, dones, info

@@ -74,6 +74,7 @@ def build_config(args: argparse.Namespace, *, env_name: str = "timed_handoff_3d"
         handoff_refresh_hold_steps=8,
         handoff_corridor_radius=900.0,
         handoff_future_corridor_lateral_offset=1_500.0,
+        handoff_commitment_action_repeat=8,
         handoff_legacy_intercept_reward_weight=0.0,
         handoff_prebranch_target_policy="weaving_mild",
         handoff_postbranch_target_policy="weaving_mild",

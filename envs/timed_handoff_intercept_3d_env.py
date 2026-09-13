@@ -44,6 +44,9 @@ class TimedHandoffIntercept3DConfig(UAVIntercept3DConfig):
     refresh_hold_steps: int = 8
     handoff_corridor_radius: float = 1_400.0
     future_corridor_lateral_offset: float = 3_000.0
+    # Consumed only by the commitment adapter.  One high-level service
+    # commitment is held for this many physical 3DOF integration steps.
+    commitment_action_repeat: int = 8
     # This derived task is about legal relay service, not legacy target
     # pursuit.  The legacy reward can be retained for a diagnostic comparison,
     # but is disabled in the canonical staged-task contract because it rewards
@@ -67,6 +70,8 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             raise ValueError("handoff hold lengths must be positive")
         if staged.handoff_corridor_radius <= 0.0 or staged.future_corridor_lateral_offset <= 0.0:
             raise ValueError("handoff corridor geometry must be positive")
+        if staged.commitment_action_repeat <= 0:
+            raise ValueError("commitment_action_repeat must be positive")
         if staged.service_progress_reward_weight < 0.0:
             raise ValueError("service_progress_reward_weight must be non-negative")
         if staged.legacy_intercept_reward_weight < 0.0:

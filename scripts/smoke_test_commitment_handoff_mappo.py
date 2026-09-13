@@ -33,6 +33,7 @@ def main() -> None:
     # The learning runner and the zero-training G0 contract must not silently
     # differ in the one physical setting that controls service reachability.
     assert runner_cfg.target_init_range_scale == 0.65
+    assert runner_cfg.handoff_commitment_action_repeat == 8
     cfg = RIGMAPPOConfig(
         env_name="commitment_handoff_3d",
         seed=173,

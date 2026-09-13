@@ -16,7 +16,7 @@ from envs.commitment_handoff_intercept_3d_env import RECONSTRUCT_FUTURE, RETAIN_
 from envs.timed_handoff_intercept_3d_env import HANDOFF_CONTEXTS, TimedHandoffIntercept3DConfig
 
 
-PROTOCOL = "COMMITMENT-HANDOFF-INTERCEPT-3D-G0-V1"
+PROTOCOL = "COMMITMENT-HANDOFF-INTERCEPT-3D-G0-V2-OPTION"
 SEEDS = (72201, 72202, 72203, 72204, 72205, 72206)
 MODES = ("retain_current", "reconstruct_future")
 
@@ -92,6 +92,7 @@ def main() -> None:
         "training_started": False,
         "contexts": list(HANDOFF_CONTEXTS),
         "relay_commitment_actions": list(MODES),
+        "commitment_action_repeat": 8,
         "summary": summary,
         "decision_preference_reversal_observed": passed,
         "verdict": "G0_COMMITMENT_DECISION_SWITCH_PASS" if passed else "G0_COMMITMENT_DECISION_SWITCH_NOT_YET_ESTABLISHED",

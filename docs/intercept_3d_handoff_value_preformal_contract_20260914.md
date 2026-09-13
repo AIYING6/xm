@@ -40,10 +40,10 @@
 - `results/development/intercept_3d_local_role_graph_learnability_pilot/seed5203/ppo/endpoint_evaluation.csv` 证明局部图在现有 moderate 带可学习。
 - `results/development/intercept_3d_local_role_graph_capacity_matched_control/seed5203/ppo/endpoint_evaluation.csv` 表明容量匹配 MLP 也几乎饱和，因此不能支持现有局部图的结构性主张。
 
-短预算 plain-MAPPO 开发 run（每个 24,576 environment steps）尚未达到 G2：原始回报版本只学习到当前授权上下文；两次奖励修复版在固定短预算中仍为零。最近的承诺级 seed73301 run 也在两个上下文均为零；只读行为追踪显示其在后续刷新上下文会选择重构但仍无法完成服务。字段比对发现该 runner 使用了默认 `target_init_range_scale=1.0`，而 G0 使用经验证的 `0.65`，使训练物理初态与 G0 合同不一致。该 run 只能用于定位该合同偏差，绝不并入正式统计。
+短预算 plain-MAPPO 开发 run（每个 24,576 environment steps）尚未达到 G2：原始回报版本只学习到当前授权上下文；两次奖励修复版在固定短预算中仍为零。最近的承诺级 seed73301 run 也在两个上下文均为零；只读行为追踪显示其在后续刷新上下文会选择重构但仍无法完成服务。字段比对发现该 runner 使用了默认 `target_init_range_scale=1.0`，而 G0 使用经验证的 `0.65`，使训练物理初态与 G0 合同不一致。对齐后的 seed73302 虽在后续刷新达到 100%，却在当前授权为 0%，且策略在所有阶段选择重构；单上下文 seed73303 也未稳定保留当前服务。审计表明当前高层动作仍被拆成连续八个重新选择，造成当前授权成功路径的探索信用过稀。上述 run 均属旧逐步动作接口诊断，绝不并入正式统计。
 
 这些结果只用于确定下一步设计，均不是正式论文证据。
 
 ## 6. 紧接着的执行动作
 
-G0 与 G1 已通过。G2 的下一条 run 必须使用与 G0 完全一致的 `target_init_range_scale=0.65`、服务半径、授权/分支时刻、目标策略和信息边界；运行前由 `scripts/smoke_test_commitment_handoff_mappo.py` 检查该不变量。完成一个新 seed 后，必须按两个上下文各 40 回合只读评估；只有两个上下文均进入预先规定的中等、非饱和带，才追加两个独立 seed 的同协议复验。G2 未通过前，不实现候选关系价值网络，也不启动任何正式长训练。
+G0 与 G1 已通过。下一版 G2 将使用 option 化承诺接口：一项高层中继选择被保持 8 个原始 3DOF 物理步，期间低层追踪仍逐步闭环。此修改不改变动力学、服务终点、观测、奖励或可用的两个承诺动作；它只使一次高层动作成为可执行的服务 option，而不要求策略在尚未获得信用前连续八次碰巧重复同一选择。协议升级为 `...V2-OPTION`，旧逐步接口的全部结果隔离保存。G2 的新 run 仍必须使用与 G0 完全一致的 `target_init_range_scale=0.65`、服务半径、授权/分支时刻、目标策略和信息边界；运行前由 `scripts/smoke_test_commitment_handoff_mappo.py` 检查该不变量。完成一个新 seed 后，必须按两个上下文各 40 回合只读评估；只有两个上下文均进入预先规定的中等、非饱和带，才追加两个独立 seed 的同协议复验。G2 未通过前，不实现候选关系价值网络，也不启动任何正式长训练。
