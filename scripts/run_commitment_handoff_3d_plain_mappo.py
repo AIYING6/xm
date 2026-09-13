@@ -13,7 +13,7 @@ from algorithms.ri_gmappo.simple_ri_gmappo import eval_policy, train_ri_gmappo
 from scripts.run_timed_handoff_3d_plain_mappo import build_config, load_agent, parse_args
 
 
-PROTOCOL = "COMMITMENT-HANDOFF-3D-PLAIN-MAPPO-G2-DEVELOPMENT-V3-OPTION-H16"
+PROTOCOL = "COMMITMENT-HANDOFF-3D-PLAIN-MAPPO-G2-DEVELOPMENT-V4-RELAY-ACTOR-MASK"
 
 
 def main() -> None:
@@ -51,6 +51,12 @@ def main() -> None:
             "service_progress_reward_weight": 1.0,
         },
         "method": "plain capacity-controlled MLP MAPPO; no graph, no sampler, no auxiliary loss",
+        "actor_action_contract": {
+            "mode": "relay_only",
+            "actor_active_agents": ["relay"],
+            "critic_observes_all_agents": True,
+            "reason": "only the relay macro commitment causally enters the physical controller",
+        },
         "status": "running",
     }
     (args.out_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

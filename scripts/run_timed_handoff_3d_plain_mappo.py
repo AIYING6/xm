@@ -57,6 +57,11 @@ def build_config(args: argparse.Namespace, *, env_name: str = "timed_handoff_3d"
         hidden_dim=args.hidden_dim,
         graph_encoder="no_graph",
         role_gate_mode="none",
+        # In this staged macro task only the relay commitment is wired into
+        # the physical controller.  The two other UAVs remain in the critic
+        # state, but their ignored macro placeholders must not enter PPO's
+        # actor likelihood or entropy objective.
+        actor_action_mask_mode=("relay_only" if env_name == "commitment_handoff_3d" else "all_agents"),
         intent_coef=0.0,
         chain_aux_coef=0.0,
         behavior_cloning_coef=0.0,

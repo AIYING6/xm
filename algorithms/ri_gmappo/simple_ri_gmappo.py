@@ -272,6 +272,15 @@ class RIGMAPPOConfig:
     fixed_stratified_topology_sampler_seed: int | None = None
     actor_gradient_mode: str = "standard"
     actor_gradient_logging: bool = False
+    # Most environments expose an action for every blue UAV, so the default
+    # preserves the historical all-agent PPO objective.  The staged
+    # commitment task is different: only the relay's macro commitment enters
+    # the physical controller, while scout/attacker macro placeholders are
+    # deliberately ignored.  ``relay_only`` removes those non-causal
+    # placeholders from actor likelihood and entropy terms without changing
+    # critic inputs, rewards, observations, action availability, or the
+    # environment transition.  It is intentionally opt-in.
+    actor_action_mask_mode: str = "all_agents"
     # Zero-training failure-mechanism diagnosis.  The writer is a read-only
     # sink and never enters actor/critic inputs or reward/sampler decisions.
     failure_aware_telemetry: bool = False
@@ -1964,6 +1973,11 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         cfg.env_name != "3d_intercept" or float(cfg.behavior_cloning_coef) <= 0.0
     ):
         raise ValueError("local 3DOF teacher requires 3d_intercept and a positive coefficient")
+    actor_action_mask_mode = str(cfg.actor_action_mask_mode).lower()
+    if actor_action_mask_mode not in {"all_agents", "relay_only"}:
+        raise ValueError("actor_action_mask_mode must be all_agents or relay_only")
+    if actor_action_mask_mode == "relay_only" and cfg.env_name != "commitment_handoff_3d":
+        raise ValueError("relay_only actor-action masking is reserved for commitment_handoff_3d")
     if cfg.runtime_state_resume and (cfg.resume or cfg.init_checkpoint):
         raise ValueError("runtime_state_resume is mutually exclusive with legacy resume/init_checkpoint")
     diagnostic_branch_mode = str(cfg.diagnostic_rng_branch_mode).lower()
@@ -2458,6 +2472,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         "policy_guard_cumulative_attempts",
         "policy_guard_cumulative_intervention_rate",
         "group_weighted_actor_enabled",
+        "actor_action_mask_active_count",
         "group_weight_active_count",
         "group_weight_min",
         "group_weight_max",
@@ -3667,6 +3682,33 @@ def _batch_sha256(batch: dict) -> str:
     return digest.hexdigest()
 
 
+def _actor_action_mask(
+    cfg: RIGMAPPOConfig,
+    num_graphs: int,
+    num_agents: int,
+    device: torch.device | str,
+) -> torch.Tensor:
+    """Return the causal-action mask for PPO actor terms.
+
+    This is not an observation mask and is never supplied to the policy.  It
+    only states which sampled high-level actions can causally change the
+    transition in a task-specific macro interface.  The all-agent default is
+    exactly equivalent to the historical reduction over agents.
+    """
+    mode = str(cfg.actor_action_mask_mode).lower()
+    if mode == "all_agents":
+        return torch.ones((num_graphs, num_agents), dtype=torch.float32, device=device)
+    if mode == "relay_only":
+        if cfg.env_name != "commitment_handoff_3d":
+            raise ValueError("relay_only actor-action masking is defined only for commitment_handoff_3d")
+        if num_agents <= ROLE_RELAY_ID:
+            raise ValueError("relay_only actor-action masking requires the relay agent index")
+        mask = torch.zeros((num_graphs, num_agents), dtype=torch.float32, device=device)
+        mask[:, ROLE_RELAY_ID] = 1.0
+        return mask
+    raise ValueError("actor_action_mask_mode must be all_agents or relay_only")
+
+
 def update_policy(
     agent: RIGMAPPOAgent,
     optimizer: optim.Optimizer,
@@ -3695,7 +3737,21 @@ def update_policy(
     old_logp = torch.as_tensor(batch["logp"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     advantages = torch.as_tensor(batch["advantages"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
-    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+    actor_action_mask = _actor_action_mask(cfg, num_graphs, num_agents, device)
+    actor_active_count = actor_action_mask.sum(dim=1).clamp_min(1.0)
+    relay_only_actor = str(cfg.actor_action_mask_mode).lower() == "relay_only"
+    # A team-level PPO advantage is formed over only actions that actually
+    # affect the macro transition.  For the default all-agent mask this is the
+    # same per-graph average used by the preceding per-agent implementation;
+    # it merely makes the reduction explicit.
+    if relay_only_actor:
+        actor_advantages = (advantages * actor_action_mask).sum(dim=1) / actor_active_count
+        actor_advantages = (actor_advantages - actor_advantages.mean()) / (actor_advantages.std() + 1e-8)
+    else:
+        # Preserve the historical all-agent PPO reduction bit-for-bit for
+        # every pre-existing environment and experiment path.
+        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+        actor_advantages = advantages
     group_weighting_enabled = bool(cfg.group_weighted_actor_enabled)
     group_weighting_observed = group_weighting_enabled or bool(cfg.group_weighted_actor_telemetry)
     lagged_group_scores = {
@@ -3777,7 +3833,12 @@ def update_policy(
                 relation_adj=relation_adj, action=actions, intent_label=intent_label,
                 detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
             )
-            current_log_ratio = current_logp - old_logp
+            if relay_only_actor:
+                current_log_ratio = (
+                    (current_logp - old_logp) * actor_action_mask
+                ).sum(dim=1) / actor_active_count
+            else:
+                current_log_ratio = current_logp - old_logp
             current_ratio = current_log_ratio.exp()
             current_kl = ((current_ratio - 1.0) - current_log_ratio).mean()
         return float(current_kl.detach().cpu())
@@ -3805,7 +3866,12 @@ def update_policy(
                 detach_intent=cfg.detach_intent,
                 oracle_intent=cfg.oracle_intent,
             )
-            log_ratio = new_logp - old_logp[mb]
+            mb_action_mask = actor_action_mask[mb]
+            mb_active_count = actor_active_count[mb]
+            if relay_only_actor:
+                log_ratio = ((new_logp - old_logp[mb]) * mb_action_mask).sum(dim=1) / mb_active_count
+            else:
+                log_ratio = new_logp - old_logp[mb]
             ratio = log_ratio.exp()
             if counterfactual_critic_enabled:
                 # The policy-weighted Q baseline is a critic-side control
@@ -3822,12 +3888,14 @@ def update_policy(
                         share_obs[mb], role[mb], actions[mb], torch.softmax(cf_logits, dim=-1),
                         return_q_spread=True,
                     )
-                    cf_advantages = (cf_advantages - cf_advantages.mean()) / (cf_advantages.std() + 1e-8)
+                if relay_only_actor:
+                    cf_advantages = (cf_advantages * mb_action_mask).sum(dim=1) / mb_active_count
+                cf_advantages = (cf_advantages - cf_advantages.mean()) / (cf_advantages.std() + 1e-8)
                 q_taken = agent.counterfactual_q(share_obs[mb], role[mb], actions[mb])
                 counterfactual_q_loss = 0.5 * (returns[mb] - q_taken).pow(2).mean()
                 counterfactual_wall_seconds = time.perf_counter() - counterfactual_start
             else:
-                cf_advantages = advantages[mb]
+                cf_advantages = actor_advantages[mb]
                 counterfactual_q_loss = torch.zeros((), device=device)
                 cf_q_spread = torch.zeros_like(cf_advantages)
                 counterfactual_wall_seconds = 0.0
@@ -3840,7 +3908,9 @@ def update_policy(
                 explained_variance = 1.0 - value_error_var / (returns_var + 1e-8)
             pg_loss1 = -cf_advantages * ratio
             pg_loss2 = -cf_advantages * torch.clamp(ratio, 1.0 - cfg.clip_coef, 1.0 + cfg.clip_coef)
-            policy_per_graph = torch.max(pg_loss1, pg_loss2).mean(dim=1)
+            policy_per_graph = torch.max(pg_loss1, pg_loss2)
+            if not relay_only_actor:
+                policy_per_graph = policy_per_graph.mean(dim=1)
             if group_weighting_enabled:
                 if condition_groups is None:
                     raise AssertionError("group weighting lost condition metadata")
@@ -3861,7 +3931,11 @@ def update_policy(
             else:
                 policy_loss = policy_per_graph.mean()
             value_loss = 0.5 * (returns[mb] - values).pow(2).mean()
-            entropy_loss = entropy.mean()
+            if relay_only_actor:
+                entropy_per_graph = (entropy * mb_action_mask).sum(dim=1) / mb_active_count
+                entropy_loss = entropy_per_graph.mean()
+            else:
+                entropy_loss = entropy.mean()
             if batch["has_intent_label"]:
                 flat_intent_label = intent_label[mb].reshape(-1)
                 intent_weight = None
@@ -4137,9 +4211,15 @@ def update_policy(
                 relation_adj=relation_adj, action=actions, intent_label=intent_label,
                 detach_intent=cfg.detach_intent, oracle_intent=cfg.oracle_intent,
             )
-            post_log_ratio = post_logp - old_logp
+            if relay_only_actor:
+                post_log_ratio = ((post_logp - old_logp) * actor_action_mask).sum(dim=1) / actor_active_count
+            else:
+                post_log_ratio = post_logp - old_logp
             post_ratio = post_log_ratio.exp()
-            post_surrogate = (post_ratio * advantages).mean(dim=1).detach().cpu().numpy()
+            if relay_only_actor:
+                post_surrogate = (post_ratio * actor_advantages).detach().cpu().numpy()
+            else:
+                post_surrogate = (post_ratio * actor_advantages).mean(dim=1).detach().cpu().numpy()
             post_kl = float(((post_ratio - 1.0) - post_log_ratio).mean().detach().cpu())
         post_surrogate_by_group = {
             group: (
@@ -4203,6 +4283,7 @@ def update_policy(
         "sr_drtp_shadow_actor_rollback_applied": float(sr_shadow_actor_rollback_applied),
         "intervention_utility_alarm_count": int(len(intervention_utility_events)),
         "group_weighted_actor_enabled": float(group_weighting_enabled),
+        "actor_action_mask_active_count": float(actor_action_mask[0].sum().detach().cpu()),
         "group_weight_active_count": int(sum(abs(final_weight_map[group] - 1.0) > 1e-12 for group in FAILURE_GROUPS)),
         "group_weight_min": float(min(final_weight_map.values())),
         "group_weight_max": float(max(final_weight_map.values())),

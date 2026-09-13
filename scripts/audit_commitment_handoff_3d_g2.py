@@ -13,7 +13,8 @@ import json
 from pathlib import Path
 
 
-PROTOCOL = "COMMITMENT-HANDOFF-3D-G2-LEARNABILITY-AUDIT-V1"
+PROTOCOL = "COMMITMENT-HANDOFF-3D-G2-LEARNABILITY-AUDIT-V2-RELAY-ACTOR-MASK"
+TRAINING_PROTOCOL = "COMMITMENT-HANDOFF-3D-PLAIN-MAPPO-G2-DEVELOPMENT-V4-RELAY-ACTOR-MASK"
 CONTEXTS = ("current_authorization", "postbranch_refresh")
 MIN_SUCCESS = 0.20
 MAX_SUCCESS = 0.80
@@ -47,7 +48,7 @@ def read_seed(seed_dir: Path) -> tuple[dict[str, object], list[dict[str, object]
     report = json.loads(context_path.read_text(encoding="utf-8"))
     if manifest.get("status") != "completed":
         raise ValueError(f"{seed_dir}: run is not completed")
-    if manifest.get("protocol") != "COMMITMENT-HANDOFF-3D-PLAIN-MAPPO-G2-DEVELOPMENT-V3-OPTION-H16":
+    if manifest.get("protocol") != TRAINING_PROTOCOL:
         raise ValueError(f"{seed_dir}: unexpected training protocol")
     if report.get("env_name") != "commitment_handoff_3d":
         raise ValueError(f"{seed_dir}: endpoint report is not for commitment_handoff_3d")
