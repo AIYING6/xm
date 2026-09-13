@@ -1,0 +1,24 @@
+{
+  "protocol": "PSCR-P8-COUNTERFACTUAL-COMMITMENT-VALUE-AUDIT-V1",
+  "purpose": "zero-training diagnostic of whether two legal public commitment plans have a stable, paired value difference in the standard P8 interface",
+  "task": "envs/pscr_search_prefix_env.py:P8SearchPrefixConfig",
+  "plans": {
+    "maintain_primary": "All agents retain PRIMARY_SERVICE during the public commitment window; after the request becomes public, all switch to FUTURE_SERVICE.",
+    "stage_forecast": "Scout and relay take FORECAST_STAGE while executor retains PRIMARY_SERVICE during the public commitment window; after the request becomes public, all switch to FUTURE_SERVICE."
+  },
+  "fixed_items": [
+    "3DOF plant", "P8 environment", "episode seed", "public forecast reliability",
+    "forecast sector", "future realization", "urgency", "future x-offset", "post-arrival response template"
+  ],
+  "paired_randomization": {
+    "reliability_bands": [0.1, 0.9],
+    "episode_seeds_per_band": 64,
+    "seed_formula": "981000 + 1000 * band_index + episode_index",
+    "pairing": "Each plan pair is reset with exactly the same seed and reliability; realized future variables are checked equal after rollout."
+  },
+  "primary_endpoints": [
+    "weighted_service_value", "return", "future_completed", "future_localized",
+    "primary_completed", "timeout", "collision_or_constraint", "energy_used"
+  ],
+  "interpretation": "This audit establishes only a simulator-level paired plan-value signal and its variability. It does not train a policy, demonstrate that PPO can learn the signal, establish a causal policy mechanism, or constitute paper evidence."
+}
