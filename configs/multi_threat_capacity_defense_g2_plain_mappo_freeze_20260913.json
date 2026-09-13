@@ -1,0 +1,12 @@
+{
+  "protocol": "MULTI-THREAT-CAPACITY-DEFENSE-G2-PLAIN-MAPPO-V1",
+  "purpose": "Baseline learnability only; no proposed method is trained at G2.",
+  "training_seeds": [102011, 102012, 102013],
+  "updates": 512,
+  "parallel_envs": 12,
+  "rollout_steps": 24,
+  "ppo": {"gamma": 0.99, "gae_lambda": 0.95, "clip": 0.2, "epochs": 4, "learning_rate": 0.0003, "hidden_dim": 96},
+  "evaluation_episodes": 96,
+  "task_contract": "MULTI-THREAT-CAPACITY-DEFENSE-FORMAL-CANDIDATE-G1-V1",
+  "gate": "At least two of three training seeds must exceed the fixed wrong-controller reference and show nonzero endpoint defense success. This is a learnability gate, not a method-performance claim."
+}
