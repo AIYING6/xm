@@ -52,6 +52,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--policy-update-guard-mode", choices=("none", "post_step_actor_backtrack"), default="none")
     parser.add_argument("--behavior-cloning-coef", type=float, default=0.0)
     parser.add_argument(
+        "--graph-encoder",
+        choices=("no_graph", "local_relation"),
+        default="no_graph",
+        help="Actor representation; local_relation reconstructs graphs only from each actor's legal local observation.",
+    )
+    parser.add_argument(
         "--endpoint-checkpoint",
         choices=("latest", "best"),
         default="latest",
@@ -82,7 +88,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         policy_update_guard_mode=args.policy_update_guard_mode,
         behavior_cloning_coef=args.behavior_cloning_coef,
         behavior_cloning_teacher="local_3d_geometric" if args.behavior_cloning_coef > 0.0 else "none",
-        graph_encoder="no_graph",
+        graph_encoder=args.graph_encoder,
         role_gate_mode="none",
         intent_coef=0.0,
         chain_aux_coef=0.0,
@@ -153,7 +159,7 @@ def main() -> None:
         "endpoint_eval_episodes": args.eval_episodes,
         "condition": CONDITION,
         "fixed_items": ["environment_interface", "PPO", "reward", "observation", "action", "training_budget"],
-        "method": {"name": "plain_mappo", "graph_encoder": "no_graph", "sampler": "uniform_fixed_condition"},
+        "method": {"name": "plain_mappo", "graph_encoder": args.graph_encoder, "sampler": "uniform_fixed_condition"},
         "initialization": "random" if args.init_checkpoint is None else str(args.init_checkpoint),
         "optimization": {"actor_learning_rate": args.actor_learning_rate, "critic_learning_rate": args.critic_learning_rate,
                            "target_kl": args.target_kl, "policy_update_guard_mode": args.policy_update_guard_mode},
