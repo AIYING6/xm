@@ -30,6 +30,12 @@ CONDITION = {"target_policy": "weaving_mild", "communication_dropout_prob": 0.25
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=5102)
+    parser.add_argument(
+        "--hidden-dim",
+        type=int,
+        default=64,
+        help="Shared actor/critic width. Use only for predeclared capacity-matched development controls.",
+    )
     parser.add_argument("--episodes", type=int, default=80)
     parser.add_argument("--epochs", type=int, default=40)
     parser.add_argument("--batch-size", type=int, default=1024)
@@ -52,7 +58,7 @@ def parse_args() -> argparse.Namespace:
 
 def config(args: argparse.Namespace) -> RIGMAPPOConfig:
     return RIGMAPPOConfig(
-        env_name="3d_intercept", seed=args.seed, hidden_dim=64, graph_encoder=args.graph_encoder, role_gate_mode="none",
+        env_name="3d_intercept", seed=args.seed, hidden_dim=args.hidden_dim, graph_encoder=args.graph_encoder, role_gate_mode="none",
         intent_coef=0.0, chain_aux_coef=0.0, strict_target_sensing=False, agent_target_info_bottleneck=False,
         relay_dependent_task=False, eval_episodes=args.eval_episodes, device=args.device, **CONDITION,
     )
@@ -167,6 +173,7 @@ def main() -> None:
         writer.writerow({"protocol": PROTOCOL, "seed": args.seed, "teacher_episodes": args.episodes, "teacher_samples": len(obs), **endpoint})
     manifest = {"protocol": PROTOCOL, "artifact_class": "DEVELOPMENT_ONLY_LOCAL_OBSERVATION_BC_BOOTSTRAP", "paper_evidence": False,
                 "teacher": "legal_actions(local_emitted_observation_only)", "graph_encoder": args.graph_encoder,
+                "hidden_dim": args.hidden_dim,
                 "condition": CONDITION, "seed": args.seed,
                 "teacher_episodes": args.episodes, "teacher_samples": int(len(obs)), "bc_epochs": args.epochs,
                 "dagger_rounds": args.dagger_rounds, "dagger_episodes_per_round": args.dagger_episodes_per_round,

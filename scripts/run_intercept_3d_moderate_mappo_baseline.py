@@ -41,6 +41,12 @@ CONDITION = {
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=5101)
+    parser.add_argument(
+        "--hidden-dim",
+        type=int,
+        default=64,
+        help="Shared actor/critic width. Use only for predeclared capacity-matched development controls.",
+    )
     parser.add_argument("--updates", type=int, default=64)
     parser.add_argument("--num-envs", type=int, default=4)
     parser.add_argument("--rollout-steps", type=int, default=64)
@@ -81,7 +87,7 @@ def build_config(args: argparse.Namespace) -> RIGMAPPOConfig:
         num_envs=args.num_envs,
         rollout_steps=args.rollout_steps,
         updates=args.updates,
-        hidden_dim=64,
+        hidden_dim=args.hidden_dim,
         actor_lr=args.actor_learning_rate,
         critic_lr=args.critic_learning_rate,
         target_kl=args.target_kl,
@@ -159,7 +165,8 @@ def main() -> None:
         "endpoint_eval_episodes": args.eval_episodes,
         "condition": CONDITION,
         "fixed_items": ["environment_interface", "PPO", "reward", "observation", "action", "training_budget"],
-        "method": {"name": "plain_mappo", "graph_encoder": args.graph_encoder, "sampler": "uniform_fixed_condition"},
+        "method": {"name": "plain_mappo", "graph_encoder": args.graph_encoder, "hidden_dim": args.hidden_dim,
+                   "sampler": "uniform_fixed_condition"},
         "initialization": "random" if args.init_checkpoint is None else str(args.init_checkpoint),
         "optimization": {"actor_learning_rate": args.actor_learning_rate, "critic_learning_rate": args.critic_learning_rate,
                            "target_kl": args.target_kl, "policy_update_guard_mode": args.policy_update_guard_mode},
