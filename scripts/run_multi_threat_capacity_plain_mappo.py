@@ -79,7 +79,9 @@ def train(seed: int, updates: int, parallel_envs: int, rollout_steps: int, eval_
             for _ in range(rollout_steps):
                 obs,critic,masks=stack(envs); obs_t=torch.as_tensor(obs,dtype=torch.float32,device=device); critic_t=torch.as_tensor(critic,dtype=torch.float32,device=device); masks_t=torch.as_tensor(masks,dtype=torch.float32,device=device)
                 with torch.no_grad():
-                    dist=agent.action_distribution(obs_t,masks_t); actions=torch.multinomial(dist.probs.reshape(-1,dist.probs.shape[-1]),1,generator=generator).reshape(dist.probs.shape[:-1]); logp=dist.log_prob(actions).sum(dim=-1); value=agent.value(critic_t)
+                    # Global Torch seeding above covers CUDA and CPU.  Passing
+                    # a CPU-only Generator to CUDA multinomial would fail.
+                    dist=agent.action_distribution(obs_t,masks_t); actions=dist.sample(); logp=dist.log_prob(actions).sum(dim=-1); value=agent.value(critic_t)
                 rewards=[];dones=[]
                 for index,env in enumerate(envs):
                     _,_,_,reward,done,_=env.step(actions[index].cpu().numpy());rewards.append(float(reward.mean()));dones.append(float(done[0,0]))
