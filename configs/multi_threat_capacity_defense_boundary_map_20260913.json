@@ -1,0 +1,8 @@
+{
+  "protocol": "MULTI-THREAT-CAPACITY-DEFENSE-BOUNDARY-MAP-V1",
+  "status": "ZERO_TRAINING_ONLY",
+  "rationale": "The coarse map established zero parallel success at 10 km and 11/12 success at 12 km. This one bounded calibration brackets the transition without changing task semantics.",
+  "grid": {"red_start_x": [13500.0, 14000.0], "suppression_range": [10500.0, 11000.0, 11500.0]},
+  "scenarios_per_cell": 12,
+  "candidate_rule": "A cell is selected only if parallel allocation succeeds in 4-10 of 12 scenarios and exceeds kinetic-first by at least four successes."
+}

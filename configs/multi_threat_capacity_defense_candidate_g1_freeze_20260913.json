@@ -1,0 +1,10 @@
+{
+  "protocol": "MULTI-THREAT-CAPACITY-DEFENSE-CANDIDATE-G1-V1",
+  "status": "ZERO_TRAINING_INDEPENDENT_REPLICATION",
+  "physical_parameters": {"red_start_x": 14000.0, "suppression_range": 12000.0, "branch_step": 12, "red_initial_lateral": 8500.0, "asset_lateral": 15000.0},
+  "scenario_distribution": {"red_center_y_jitter": 750.0, "approach_speed_jitter": 8.0, "branch_step_jitter": 1},
+  "independent_scenarios": 12,
+  "controllers": ["kinetic_first", "parallel_suppress_intercept", "cofocused_error"],
+  "candidate_rule": "The parallel controller must succeed in 4-10 of 12 independent scenarios and exceed kinetic-first by at least four successes. Neither controller may be saturated.",
+  "prohibitions": ["no parameter change after replication begins", "no training before replication passes"]
+}
