@@ -232,9 +232,16 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             np.clip(1.0 - corridor_error / (2.0 * self.handoff_config.handoff_corridor_radius), 0.0, 1.0)
         )
         relay_track = float(self._relay_mediated_fresh_attacker_track())
-        # Delivery and route occupancy must co-occur, so route-only movement
-        # cannot substitute for the endpoint's legal information service.
-        return float(corridor_score * relay_track)
+        # The publicly commanded route must provide a learning signal while a
+        # policy is still travelling toward a later relay position.  Gating
+        # *all* shaping by an already-complete relay path made the
+        # post-branch context a zero-credit trap: losing the old bridge while
+        # moving to the announced future corridor removed every intermediate
+        # reward.  Route occupancy is therefore rewarded continuously, while
+        # a legal relay-mediated delivery supplies an equal completion bonus.
+        # This does not relax the endpoint: success still requires both the
+        # fresh delivery and the corridor hold in ``_update_handoff_milestones``.
+        return float(0.5 * corridor_score * (1.0 + relay_track))
 
     def step(self, actions: np.ndarray | list[int]):
         obs, share, graph, rewards, dones, info = super().step(actions)
