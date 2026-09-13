@@ -51,6 +51,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-kl", type=float, default=None)
     parser.add_argument("--policy-update-guard-mode", choices=("none", "post_step_actor_backtrack"), default="none")
     parser.add_argument("--behavior-cloning-coef", type=float, default=0.0)
+    parser.add_argument(
+        "--endpoint-checkpoint",
+        choices=("latest", "best"),
+        default="latest",
+        help="Checkpoint evaluated on the held-out endpoint band; best is selected only by the configured selection band.",
+    )
     parser.add_argument("--init-checkpoint", type=Path, default=None)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument(
@@ -152,11 +158,12 @@ def main() -> None:
         "optimization": {"actor_learning_rate": args.actor_learning_rate, "critic_learning_rate": args.critic_learning_rate,
                            "target_kl": args.target_kl, "policy_update_guard_mode": args.policy_update_guard_mode},
         "behavior_cloning": {"coefficient": args.behavior_cloning_coef, "teacher": "local_3d_geometric" if args.behavior_cloning_coef > 0.0 else "none"},
+        "endpoint_checkpoint_rule": args.endpoint_checkpoint,
         "status": "running",
     }
     (args.out_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     train_ri_gmappo(cfg)
-    checkpoint = args.out_dir / "actor_critic_latest.pt"
+    checkpoint = args.out_dir / f"actor_critic_{args.endpoint_checkpoint}.pt"
     if not checkpoint.exists():
         raise FileNotFoundError(f"training completed without final checkpoint: {checkpoint}")
     endpoint_cfg = build_config(args)
