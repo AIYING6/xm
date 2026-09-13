@@ -1,0 +1,9 @@
+{
+  "protocol": "MULTI-THREAT-TARGET-LOCK-DEFENSE-G0-V1",
+  "status": "ZERO_TRAINING_ONLY",
+  "task_change": "Red asset damage requires a continuous target-lock hold while in physical strike geometry; focused legal disruption resets that hold.",
+  "invariants": ["same 27-action 3DOF interface", "same kinetic attack-hold semantics", "same scout visibility/range/communication/hold constraints for disruption", "no manual suppression action", "no future route label"],
+  "causal_roles": {"kinetic_interception": "permanently neutralizes one threat", "focused_disruption": "temporarily interrupts one threat's asset-lock chain"},
+  "gates": {"G0": "lock resets only under legal disruption and breach requires continuous non-disrupted hold", "G1": "parallel allocation has non-degenerate terminal advantage over kinetic-only and cofocused control", "G2": "plain MAPPO learns a non-saturated baseline"},
+  "prohibitions": ["no_training", "no_method", "no_reward-based breach rule"]
+}

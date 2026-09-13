@@ -70,6 +70,10 @@ class MultiThreatDualCapabilityDefenseEnv(MultiThreatAssetDefenseEnv):
         super()._move_red(threat)
         self.red_speed[threat] = original_speed
 
+    def _threat_breach(self, threat: int, asset_sign: int) -> bool:
+        """Default v1 endpoint: arrival at the asset causes immediate loss."""
+        return bool(np.linalg.norm(self.red_pos[threat] - self._asset(asset_sign)) <= self.config.asset_strike_radius)
+
     def step(self, actions: np.ndarray | list[int]):
         if self.base.done:
             raise RuntimeError("Call reset() before stepping a finished episode.")
@@ -91,7 +95,7 @@ class MultiThreatDualCapabilityDefenseEnv(MultiThreatAssetDefenseEnv):
         breach = False
         if self.route_assignment is not None:
             for threat, asset_sign in enumerate(self.route_assignment):
-                if not self.blue_destroyed[threat] and np.linalg.norm(self.red_pos[threat] - self._asset(asset_sign)) <= self.config.asset_strike_radius:
+                if not self.blue_destroyed[threat] and self._threat_breach(threat, asset_sign):
                     self.asset_integrity[asset_sign] = 0.0
                     breach = True
         defense_success = bool(self.blue_destroyed.all())
