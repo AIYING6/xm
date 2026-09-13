@@ -32,14 +32,18 @@
 
 ## 5. 已知证据与边界
 
-- `results/development/timed_handoff_intercept_3d_g0_compactroute_20260914/timed_handoff_g0_report.json` 为 G0 的 development-only 审计。在六个独立物理随机种子上，当前授权上下文中保持当前服务航路为 6/6 成功、迁移为 0/6；后续刷新上下文中保持为 0/6、迁移为 6/6。该结果只证明任务存在可达且方向相反的服务选择，**不证明任何学习方法有效**。
+- `results/development/timed_handoff_intercept_3d_g0_incremental_reward_20260914/timed_handoff_g0_report.json` 为当前冻结候选的 G0 development-only 审计。在六个独立物理随机种子上，当前授权上下文中保持当前服务航路为 6/6 成功、迁移为 0/6；后续刷新上下文中保持为 0/6、迁移为 6/6。该结果只证明任务存在可达且方向相反的服务选择，**不证明任何学习方法有效**。
+
+- `results/development/timed_handoff_3d_credit_path_incremental_reward_20260914/credit_path_report.json` 是不训练的信用路径审计。它显示在两个上下文中，成功控制器的累计阶段任务回报均高于对应失败控制器（当前授权约 4.99 对 0.55；后续刷新约 5.11 对 0.74）。此前的旧拦截回报会反向偏好失败路线，因而在当前派生任务中被禁用；保留碰撞与约束终止/惩罚。该审计证明训练目标与受控任务终点排序一致，不证明 PPO 已可学习。
 
 - `scripts/smoke_test_intercept_3d_local_role_graph.py` 已验证局部图对隐藏目标变化不敏感。
 - `results/development/intercept_3d_local_role_graph_learnability_pilot/seed5203/ppo/endpoint_evaluation.csv` 证明局部图在现有 moderate 带可学习。
 - `results/development/intercept_3d_local_role_graph_capacity_matched_control/seed5203/ppo/endpoint_evaluation.csv` 表明容量匹配 MLP 也几乎饱和，因此不能支持现有局部图的结构性主张。
 
+短预算 plain-MAPPO 开发 run（每个 24,576 environment steps）尚未达到 G2：原始回报版本只学习到当前授权上下文；两次奖励修复版在固定短预算中仍为零。它们是任务诊断，绝不并入正式统计。
+
 这些结果只用于确定下一步设计，均不是正式论文证据。
 
 ## 6. 紧接着的执行动作
 
-G0 已通过。下一步只做 G1/G2：先将阶段任务接入严格局部信息的普通、容量受控 MAPPO，完成字段审计与隐藏状态 logits 不变性测试；随后以少量开发 seed 检验该基线是否可学习且未饱和。G2 未通过前，不实现候选关系价值网络，也不启动任何正式长训练。
+G0 与 G1 已通过。当前唯一运行中的 G2 证据是 `seed73207` 的 384-update（98,304 environment steps）plain-MAPPO 长 pilot；其源码版本禁用了旧拦截回报，并采用无时长套利的服务增量信用。它完成后必须按两个上下文各 40 回合只读评估。只有两个上下文均进入预先规定的中等、非饱和带，才追加两个独立 seed 的同协议复验。G2 未通过前，不实现候选关系价值网络，也不启动任何正式长训练。

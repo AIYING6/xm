@@ -29,11 +29,14 @@
     "the development pilots are publication evidence"
   ],
   "current_evidence": {
-    "G0_decision_switch_audit": "results/development/timed_handoff_intercept_3d_g0_compactroute_20260914/timed_handoff_g0_report.json",
+    "G0_decision_switch_audit": "results/development/timed_handoff_intercept_3d_g0_incremental_reward_20260914/timed_handoff_g0_report.json",
     "G0_interpretation": "Development-only zero-training audit: current authorization favours retaining the current relay route (6/6 versus 0/6); post-stage refresh favours relocation to the future public route (6/6 versus 0/6). The terminal is targeting-service completion; attack-window state is logged independently rather than used to confound G0.",
+    "credit_alignment_audit": "results/development/timed_handoff_3d_credit_path_incremental_reward_20260914/credit_path_report.json",
+    "credit_alignment_interpretation": "Read-only legal-controller audit: increment-based staged-service reward ranks the successful controller above the failed controller in both contexts. It verifies objective alignment, not learned performance.",
     "local_graph_legal_smoke": "scripts/smoke_test_intercept_3d_local_role_graph.py",
     "local_graph_development_endpoint": "results/development/intercept_3d_local_role_graph_learnability_pilot/seed5203/ppo/endpoint_evaluation.csv",
     "capacity_matched_control_endpoint": "results/development/intercept_3d_local_role_graph_capacity_matched_control/seed5203/ppo/endpoint_evaluation.csv",
-    "interpretation": "G0 has passed for the staged-handoff task. The existing moderate task remains unsuitable for a structural claim after parameter matching; G1 and G2 must now be established on the staged-handoff task."
+    "G2_longpilot": "results/development/timed_handoff_3d_plain_mappo_g2_incremental_credit_longpilot/seed73207",
+    "interpretation": "G0 and G1 have passed for the staged-handoff task. Short development pilots did not establish G2. The running 98,304-step plain-MAPPO long pilot is development-only and requires context-stratified endpoint evaluation before any candidate-method work."
   }
 }
