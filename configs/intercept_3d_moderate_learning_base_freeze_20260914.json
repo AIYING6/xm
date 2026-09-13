@@ -1,0 +1,70 @@
+{
+  "protocol": "INTERCEPT-3D-MODERATE-LEARNING-BASE-FREEZE-V1",
+  "status": "development_learning_base_frozen",
+  "paper_evidence": false,
+  "purpose": "Freeze a reproducible, learnable 3DOF moderate-band training base before any controlled method comparison.",
+  "environment": {
+    "name": "3d_intercept",
+    "target_policy": "weaving_mild",
+    "communication_dropout_prob": 0.25,
+    "radar_dropout_prob": 0.15,
+    "message_delay_steps": 4,
+    "strict_target_sensing": false,
+    "agent_target_info_bottleneck": false,
+    "relay_dependent_task": false
+  },
+  "learning_pipeline": {
+    "initialization": "local-observation legal-controller behavior cloning plus five DAgger rounds",
+    "actor_learning_rate": 3e-05,
+    "critic_learning_rate": 0.0003,
+    "behavior_cloning_retention_coefficient": 0.1,
+    "updates": 128,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "selection_eval_episodes": 20,
+    "selection_base_seed": 610000,
+    "endpoint_checkpoint_rule": "best",
+    "endpoint_eval_episodes": 60,
+    "endpoint_base_seed": 620000
+  },
+  "fixed_comparison_items": [
+    "environment transition",
+    "reward",
+    "local observation interface",
+    "action interface",
+    "PPO optimizer and training budget",
+    "selection and endpoint evaluation bands"
+  ],
+  "development_endpoints": [
+    {
+      "seed": 5104,
+      "success": 1.0,
+      "timeout": 0.0,
+      "collision": 0.0,
+      "source": "results/development/intercept_3d_moderate_bc_regularized_ppo_replication/seed5104/endpoint_evaluation.csv"
+    },
+    {
+      "seed": 5105,
+      "success": 0.7,
+      "timeout": 0.3,
+      "collision": 0.0,
+      "source": "results/development/intercept_3d_moderate_bc_regularized_ppo_calibration/seed5105/read_only_best_endpoint_evaluation.csv"
+    },
+    {
+      "seed": 5106,
+      "success": 0.85,
+      "timeout": 0.15,
+      "collision": 0.0,
+      "source": "results/development/intercept_3d_moderate_bc_regularized_ppo_preformal/seed5106/ppo/endpoint_evaluation.csv"
+    }
+  ],
+  "interpretation": {
+    "supported": "The frozen development pipeline repeatedly learns the calibrated moderate condition across three development seeds.",
+    "not_supported": [
+      "a paper-level performance claim",
+      "a claim about a novel method",
+      "a general robustness claim beyond this calibrated condition"
+    ]
+  },
+  "next_authorized_work": "Define one controlled method intervention that holds every fixed comparison item above constant."
+}
