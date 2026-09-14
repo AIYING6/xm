@@ -34,7 +34,9 @@ PROTOCOL = "COMMITMENT-HANDOFF-3D-V5-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
 ENDPOINT_PROTOCOL = "COMMITMENT-HANDOFF-3D-V5-PROFILE-STRATIFIED-ENDPOINT-V1"
 
 
-def training_protocol(service_envelope_mode: str) -> str:
+def training_protocol(service_envelope_mode: str, entropy_coef: float = 0.01) -> str:
+    if service_envelope_mode == "compositional_v6_staged" and abs(float(entropy_coef) - 0.03) < 1e-12:
+        return "COMMITMENT-HANDOFF-3D-V6.1-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
     return (
         "COMMITMENT-HANDOFF-3D-V6-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
         if service_envelope_mode == "compositional_v6_staged"
@@ -224,7 +226,7 @@ def main() -> None:
     args.out_dir.mkdir(parents=True)
     macro_steps = args.updates * args.num_envs * args.rollout_steps
     manifest = {
-        "protocol": training_protocol(args.service_envelope_mode),
+        "protocol": training_protocol(args.service_envelope_mode, args.entropy_coef),
         "artifact_class": "DEVELOPMENT_ONLY_G2_LEARNABILITY_PILOT",
         "paper_evidence": False,
         "purpose": "test whether plain MLP MAPPO learns mixed public service envelopes without task saturation",

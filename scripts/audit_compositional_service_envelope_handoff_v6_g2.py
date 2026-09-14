@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -45,10 +46,31 @@ def read_seed(seed_dir: Path) -> tuple[dict[str, object], list[dict[str, str]]]:
         raise ValueError(f"{seed_dir}: incomplete V6 profile endpoint")
     with (seed_dir / "profile_stratified_endpoint.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
+    # The first V6.1 launch began before the runner itself had a distinct
+    # manifest label.  Its parent launch manifest was persisted before the
+    # child processes wrote their own manifests.  Verify every frozen command
+    # rather than retroactively overwriting the child metadata.
+    registered_protocol = str(manifest["protocol"])
+    parent_launch = seed_dir.parent / "launch_manifest.json"
+    if registered_protocol == TRAINING_PROTOCOL and parent_launch.exists():
+        entries = json.loads(parent_launch.read_text(encoding="utf-8-sig"))
+        matching = [entry for entry in entries if int(entry.get("seed", -1)) == int(manifest["seed"])]
+        if len(matching) == 1:
+            command = str(matching[0].get("command", ""))
+            tokens = {
+                "entropy": bool(re.search(r"(?:^|\\s)--entropy-coef\\s+0\\.03(?:\\s|$)", command)),
+                "mode": bool(re.search(r"(?:^|\\s)--service-envelope-mode\\s+compositional_v6_staged(?:\\s|$)", command)),
+                "updates": bool(re.search(r"(?:^|\\s)--updates\\s+64(?:\\s|$)", command)),
+                "num_envs": bool(re.search(r"(?:^|\\s)--num-envs\\s+4(?:\\s|$)", command)),
+                "rollout": bool(re.search(r"(?:^|\\s)--rollout-steps\\s+64(?:\\s|$)", command)),
+            }
+            if all(tokens.values()):
+                registered_protocol = "COMMITMENT-HANDOFF-3D-V6.1-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
     return {
         "seed": int(manifest["seed"]),
         "summary": endpoint["summary"],
-        "training_protocol": str(manifest["protocol"]),
+        "training_protocol": registered_protocol,
+        "manifest_protocol": str(manifest["protocol"]),
     }, rows
 
 
