@@ -1,0 +1,54 @@
+{
+  "protocol": "COMMITMENT-HANDOFF-3D-V7-PLAIN-MAPPO-G2-DEVELOPMENT-V1",
+  "artifact_class": "DEVELOPMENT_ONLY_TASK_LEARNABILITY_GATE",
+  "paper_evidence": false,
+  "purpose": "Test whether ordinary capacity-controlled MLP MAPPO learns two public, causally effective relay commitments before any candidate representation is designed.",
+  "frozen_task": {
+    "service_envelope_mode": "compositional_v6_staged",
+    "commitment_decision_mode": "staged_latched_v7",
+    "authorization_start_step": 0,
+    "authorization_deadline": 16,
+    "authorization_decision_step": 0,
+    "branch_step": 24,
+    "commitment_action_repeat": 8,
+    "future_corridor_lateral_offset": 900.0,
+    "handoff_safety_mode": "blue_team_only",
+    "handoff_corridor_radius": 900.0,
+    "authorization_hold_steps": 8,
+    "refresh_hold_steps": 16,
+    "max_steps": 260
+  },
+  "g0_basis": {
+    "script": "scripts/audit_compositional_service_envelope_handoff_v7_g0.py",
+    "required_verdict": "V7_G0_TWO_DECISION_PASS",
+    "required_controller_order": {
+      "current_profiles": "always_retain > always_reconstruct",
+      "future_profiles": "staged_public_rule > always_retain and always_reconstruct"
+    }
+  },
+  "plain_baseline": {
+    "algorithm": "MLP MAPPO",
+    "graph_encoder": "no_graph",
+    "hidden_dim": 64,
+    "actor_action_mask_mode": "relay_decision_only",
+    "only_causal_relay_actions": ["authorization", "branch"],
+    "no_candidate_representation": true,
+    "no_sampler": true,
+    "no_auxiliary_loss": true
+  },
+  "development_budget": {
+    "training_seeds": [83811, 83812, 83813],
+    "updates": 64,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "endpoint_episodes_per_profile": 60
+  },
+  "g2_pass_rule": {
+    "future_success_interval": [0.1, 0.9],
+    "future_profiles_need_at_least_two_of_three_moderate_seeds": true,
+    "current_profiles_need_positive_mean_success": true,
+    "future_profiles_need_early_retain_in_at_least_two_seeds": true,
+    "future_profiles_need_branch_reconstruct_in_at_least_two_seeds": true
+  },
+  "stop_rule": "If G2 fails, do not alter the frozen V7 task through a parameter sweep. Diagnose whether the remaining cause is an action-interface or credit-assignment defect before proposing one new structural repair."
+}

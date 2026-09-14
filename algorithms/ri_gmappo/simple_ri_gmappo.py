@@ -199,6 +199,9 @@ class RIGMAPPOConfig:
     handoff_corridor_radius: float = 900.0
     handoff_future_corridor_lateral_offset: float = 1_500.0
     handoff_commitment_action_repeat: int = 8
+    handoff_commitment_decision_mode: str = "continuous_v6"
+    handoff_commitment_authorization_decision_step: int = 16
+    handoff_safety_mode: str = "all_aircraft"
     handoff_legacy_intercept_reward_weight: float = 0.0
     handoff_prebranch_target_policy: str = "weaving_mild"
     handoff_postbranch_target_policy: str = "weaving_mild"
@@ -1333,6 +1336,9 @@ def make_env(cfg: RIGMAPPOConfig, seed: int, training: bool = True, rng: random.
                 handoff_corridor_radius=cfg.handoff_corridor_radius,
                 future_corridor_lateral_offset=cfg.handoff_future_corridor_lateral_offset,
                 commitment_action_repeat=cfg.handoff_commitment_action_repeat,
+                commitment_decision_mode=cfg.handoff_commitment_decision_mode,
+                commitment_authorization_decision_step=cfg.handoff_commitment_authorization_decision_step,
+                handoff_safety_mode=cfg.handoff_safety_mode,
                 legacy_intercept_reward_weight=cfg.handoff_legacy_intercept_reward_weight,
                 prebranch_target_policy=cfg.handoff_prebranch_target_policy,
                 postbranch_target_policy=cfg.handoff_postbranch_target_policy,
@@ -2016,10 +2022,12 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
     ):
         raise ValueError("local 3DOF teacher requires 3d_intercept and a positive coefficient")
     actor_action_mask_mode = str(cfg.actor_action_mask_mode).lower()
-    if actor_action_mask_mode not in {"all_agents", "relay_only"}:
-        raise ValueError("actor_action_mask_mode must be all_agents or relay_only")
-    if actor_action_mask_mode == "relay_only" and cfg.env_name != "commitment_handoff_3d":
-        raise ValueError("relay_only actor-action masking is reserved for commitment_handoff_3d")
+    if actor_action_mask_mode not in {"all_agents", "relay_only", "relay_decision_only"}:
+        raise ValueError("actor_action_mask_mode must be all_agents, relay_only, or relay_decision_only")
+    if actor_action_mask_mode in {"relay_only", "relay_decision_only"} and cfg.env_name != "commitment_handoff_3d":
+        raise ValueError("relay actor-action masking is reserved for commitment_handoff_3d")
+    if actor_action_mask_mode == "relay_decision_only" and cfg.handoff_commitment_decision_mode != "staged_latched_v7":
+        raise ValueError("relay_decision_only requires the V7 staged-latched commitment interface")
     if cfg.runtime_state_resume and (cfg.resume or cfg.init_checkpoint):
         raise ValueError("runtime_state_resume is mutually exclusive with legacy resume/init_checkpoint")
     diagnostic_branch_mode = str(cfg.diagnostic_rng_branch_mode).lower()
@@ -2992,6 +3000,7 @@ def collect_rollout(
     obs_buf, share_buf, node_buf, edge_buf, role_buf, adj_buf, intent_buf = [], [], [], [], [], [], []
     relation_adj_buf = []
     action_buf, logp_buf, reward_buf, done_buf, value_buf = [], [], [], [], []
+    actor_decision_mask_buf = []
     condition_nominal_buf, condition_group_buf = [], []
 
     for _ in range(cfg.rollout_steps):
@@ -3026,11 +3035,17 @@ def collect_rollout(
         entropy_np = entropy.mean(dim=1).cpu().numpy()
         values_np = values.cpu().numpy()
         logp_np = logp.cpu().numpy()
+        actor_decision_mask = np.ones_like(actions_np, dtype=np.float32)
         next_obs, next_share, next_graphs, rewards, dones = [], [], [], [], []
         for e, env in enumerate(envs):
             pre_step = int(getattr(env, "step_count", 0))
             graph_before = {key: value[e] for key, value in graph_obs.items()}
             o, s, g, r, d, info = env.step(actions_np[e])
+            if str(cfg.actor_action_mask_mode).lower() == "relay_decision_only":
+                actor_decision_mask[e] = 0.0
+                actor_decision_mask[e, ROLE_RELAY_ID] = float(
+                    info.get("commitment_relay_decision_active", 0.0)
+                )
             if telemetry_writer is not None:
                 telemetry_writer.record_step(
                     update=current_update,
@@ -3144,6 +3159,7 @@ def collect_rollout(
         relation_adj_buf.append(graph_obs["relation_adj"].copy())
         intent_buf.append(graph_obs["intent_label"].copy())
         action_buf.append(actions_np.copy())
+        actor_decision_mask_buf.append(actor_decision_mask)
         logp_buf.append(logp_np.copy())
         value_buf.append(values_np.copy())
         reward_buf.append(np.asarray(rewards, dtype=np.float32))
@@ -3179,6 +3195,9 @@ def collect_rollout(
         "intent_label": np.asarray(intent_buf, dtype=np.int64),
         "has_intent_label": bool(np.all(graph_obs["has_intent_label"])),
         "actions": np.asarray(action_buf, dtype=np.int64),
+        # Public task-clock indicator for V7's two causal commitment actions.
+        # It is a PPO loss mask, not actor/critic input or reward information.
+        "actor_decision_mask": np.asarray(actor_decision_mask_buf, dtype=np.float32),
         "logp": np.asarray(logp_buf, dtype=np.float32),
         "values": values_np,
         "rewards": rewards_np,
@@ -3739,6 +3758,7 @@ def _actor_action_mask(
     num_graphs: int,
     num_agents: int,
     device: torch.device | str,
+    decision_mask: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """Return the causal-action mask for PPO actor terms.
 
@@ -3750,15 +3770,19 @@ def _actor_action_mask(
     mode = str(cfg.actor_action_mask_mode).lower()
     if mode == "all_agents":
         return torch.ones((num_graphs, num_agents), dtype=torch.float32, device=device)
-    if mode == "relay_only":
+    if mode in {"relay_only", "relay_decision_only"}:
         if cfg.env_name != "commitment_handoff_3d":
-            raise ValueError("relay_only actor-action masking is defined only for commitment_handoff_3d")
+            raise ValueError("relay actor-action masking is defined only for commitment_handoff_3d")
         if num_agents <= ROLE_RELAY_ID:
-            raise ValueError("relay_only actor-action masking requires the relay agent index")
+            raise ValueError("relay actor-action masking requires the relay agent index")
         mask = torch.zeros((num_graphs, num_agents), dtype=torch.float32, device=device)
         mask[:, ROLE_RELAY_ID] = 1.0
+        if mode == "relay_decision_only":
+            if decision_mask is None or tuple(decision_mask.shape) != (num_graphs, num_agents):
+                raise ValueError("relay_decision_only requires a per-transition decision mask")
+            mask = mask * decision_mask.to(device=device, dtype=torch.float32)
         return mask
-    raise ValueError("actor_action_mask_mode must be all_agents or relay_only")
+    raise ValueError("actor_action_mask_mode must be all_agents, relay_only, or relay_decision_only")
 
 
 def update_policy(
@@ -3789,16 +3813,26 @@ def update_policy(
     old_logp = torch.as_tensor(batch["logp"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     advantages = torch.as_tensor(batch["advantages"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
     returns = torch.as_tensor(batch["returns"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device)
-    actor_action_mask = _actor_action_mask(cfg, num_graphs, num_agents, device)
+    decision_mask = torch.as_tensor(
+        batch["actor_decision_mask"].reshape(num_graphs, num_agents), dtype=torch.float32, device=device
+    )
+    actor_action_mask = _actor_action_mask(cfg, num_graphs, num_agents, device, decision_mask=decision_mask)
     actor_active_count = actor_action_mask.sum(dim=1).clamp_min(1.0)
-    relay_only_actor = str(cfg.actor_action_mask_mode).lower() == "relay_only"
+    relay_only_actor = str(cfg.actor_action_mask_mode).lower() in {"relay_only", "relay_decision_only"}
     # A team-level PPO advantage is formed over only actions that actually
     # affect the macro transition.  For the default all-agent mask this is the
     # same per-graph average used by the preceding per-agent implementation;
     # it merely makes the reduction explicit.
     if relay_only_actor:
         actor_advantages = (advantages * actor_action_mask).sum(dim=1) / actor_active_count
-        actor_advantages = (actor_advantages - actor_advantages.mean()) / (actor_advantages.std() + 1e-8)
+        active_graphs = actor_action_mask.sum(dim=1) > 0.0
+        if not bool(active_graphs.any()):
+            raise RuntimeError("relay actor mask selected no causal actions in the rollout")
+        active_advantages = actor_advantages[active_graphs]
+        actor_advantages = torch.zeros_like(actor_advantages)
+        actor_advantages[active_graphs] = (active_advantages - active_advantages.mean()) / (
+            active_advantages.std() + 1e-8
+        )
     else:
         # Preserve the historical all-agent PPO reduction bit-for-bit for
         # every pre-existing environment and experiment path.
@@ -3889,6 +3923,7 @@ def update_policy(
                 current_log_ratio = (
                     (current_logp - old_logp) * actor_action_mask
                 ).sum(dim=1) / actor_active_count
+                current_log_ratio = current_log_ratio[actor_action_mask.sum(dim=1) > 0.0]
             else:
                 current_log_ratio = current_logp - old_logp
             current_ratio = current_log_ratio.exp()
@@ -3920,6 +3955,7 @@ def update_policy(
             )
             mb_action_mask = actor_action_mask[mb]
             mb_active_count = actor_active_count[mb]
+            mb_active_graphs = mb_action_mask.sum(dim=1) > 0.0
             if relay_only_actor:
                 log_ratio = ((new_logp - old_logp[mb]) * mb_action_mask).sum(dim=1) / mb_active_count
             else:
@@ -3952,8 +3988,12 @@ def update_policy(
                 cf_q_spread = torch.zeros_like(cf_advantages)
                 counterfactual_wall_seconds = 0.0
             with torch.no_grad():
-                approx_kl = ((ratio - 1.0) - log_ratio).mean()
-                clip_fraction = ((ratio - 1.0).abs() > cfg.clip_coef).float().mean()
+                if relay_only_actor:
+                    approx_kl = ((ratio[mb_active_graphs] - 1.0) - log_ratio[mb_active_graphs]).mean()
+                    clip_fraction = ((ratio[mb_active_graphs] - 1.0).abs() > cfg.clip_coef).float().mean()
+                else:
+                    approx_kl = ((ratio - 1.0) - log_ratio).mean()
+                    clip_fraction = ((ratio - 1.0).abs() > cfg.clip_coef).float().mean()
                 returns_mb = returns[mb]
                 value_error_var = torch.var(returns_mb - values)
                 returns_var = torch.var(returns_mb)
@@ -3978,14 +4018,20 @@ def update_policy(
                     [1.0 if group == NOMINAL_GROUP else weight_map[str(group)] for group in mb_groups],
                     dtype=np.float32,
                 )
-                policy_loss = (policy_per_graph * torch.as_tensor(graph_weights, device=device)).mean()
+                if relay_only_actor:
+                    policy_loss = (
+                        policy_per_graph[mb_active_graphs]
+                        * torch.as_tensor(graph_weights, device=device)[mb_active_graphs]
+                    ).mean()
+                else:
+                    policy_loss = (policy_per_graph * torch.as_tensor(graph_weights, device=device)).mean()
                 observed_weight_maps.append(weight_map)
             else:
-                policy_loss = policy_per_graph.mean()
+                policy_loss = policy_per_graph[mb_active_graphs].mean() if relay_only_actor else policy_per_graph.mean()
             value_loss = 0.5 * (returns[mb] - values).pow(2).mean()
             if relay_only_actor:
                 entropy_per_graph = (entropy * mb_action_mask).sum(dim=1) / mb_active_count
-                entropy_loss = entropy_per_graph.mean()
+                entropy_loss = entropy_per_graph[mb_active_graphs].mean()
             else:
                 entropy_loss = entropy.mean()
             if batch["has_intent_label"]:

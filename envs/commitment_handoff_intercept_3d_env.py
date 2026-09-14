@@ -40,6 +40,58 @@ class CommitmentHandoffIntercept3DEnv(TimedHandoffIntercept3DEnv):
         # actor-facing interface of this adapter is intentionally binary.
         self.action_dim = len(COMMITMENT_ACTIONS)
 
+    def reset(self):
+        obs, share, graph = super().reset()
+        # V7 has two one-shot, publicly scheduled decisions.  Values are
+        # deliberately reset per episode and never expose the envelope label.
+        self._authorization_commitment: int | None = None
+        self._branch_commitment: int | None = None
+        return obs, share, graph
+
+    @property
+    def _uses_staged_latched_commitments(self) -> bool:
+        return self.handoff_config.commitment_decision_mode == "staged_latched_v7"
+
+    def _decision_stage(self) -> str | None:
+        """Return the public decision stage available at this option boundary."""
+        if not self._uses_staged_latched_commitments:
+            return None
+        if (
+            self._authorization_commitment is None
+            and self.step_count == self.handoff_config.commitment_authorization_decision_step
+        ):
+            return "authorization"
+        if self._branch_commitment is None and self.step_count == self.handoff_config.branch_step:
+            return "branch"
+        return None
+
+    def _latch_relay_commitment(self, proposed_action: int) -> tuple[int, str | None]:
+        """Apply a relay macro only when the V7 public decision clock permits.
+
+        Before the authorization decision, the same deterministic controller
+        preserves the current service bridge.  A premature reconstruction is
+        therefore impossible only because it is not yet a legal commitment;
+        the actor receives no PPO credit for ignored placeholders.  At each
+        of the two public decision stages, the sampled binary action is latched
+        and drives the original closed-loop 3DOF service controller.
+        """
+        proposed_action = int(proposed_action)
+        if not self._uses_staged_latched_commitments:
+            return proposed_action, None
+        stage = self._decision_stage()
+        if stage == "authorization":
+            self._authorization_commitment = proposed_action
+        elif stage == "branch":
+            self._branch_commitment = proposed_action
+        if self.step_count < self.handoff_config.commitment_authorization_decision_step:
+            return RETAIN_CURRENT, stage
+        if self.step_count < self.handoff_config.branch_step:
+            return (
+                RETAIN_CURRENT if self._authorization_commitment is None else self._authorization_commitment,
+                stage,
+            )
+        return RETAIN_CURRENT if self._branch_commitment is None else self._branch_commitment, stage
+
     @staticmethod
     def _nearest_primitive(command: np.ndarray) -> int:
         return int(np.argmin(np.sum((ACTION3D_TABLE - command[None, :]) ** 2, axis=1)))
@@ -79,7 +131,7 @@ class CommitmentHandoffIntercept3DEnv(TimedHandoffIntercept3DEnv):
         climb = np.clip((target_gamma - gamma) / 0.22, -1.0, 1.0)
         return self._nearest_primitive(np.asarray((turn, climb, 0.0), dtype=np.float32))
 
-    def _macro_to_primitive(self, macro_actions: np.ndarray | list[int]) -> np.ndarray:
+    def _macro_to_primitive(self, macro_actions: np.ndarray | list[int], *, relay_action: int | None = None) -> np.ndarray:
         macro = np.asarray(macro_actions, dtype=np.int64).reshape(-1)
         if macro.size != self.num_agents:
             raise ValueError(f"expected {self.num_agents} commitment actions, got {macro.shape}")
@@ -87,11 +139,17 @@ class CommitmentHandoffIntercept3DEnv(TimedHandoffIntercept3DEnv):
             raise ValueError("commitment actions must be 0=retain_current or 1=reconstruct_future")
         raw_obs = self._get_obs()
         primitive = self._tracking_primitives(raw_obs)
-        primitive[1] = self._relay_service_primitive(future=bool(macro[1] == RECONSTRUCT_FUTURE))
+        effective_action = int(macro[1]) if relay_action is None else int(relay_action)
+        primitive[1] = self._relay_service_primitive(future=bool(effective_action == RECONSTRUCT_FUTURE))
         return primitive
 
     def step(self, actions: np.ndarray | list[int]):
         macro = np.asarray(actions, dtype=np.int64).reshape(-1)
+        if macro.size != self.num_agents:
+            raise ValueError(f"expected {self.num_agents} commitment actions, got {macro.shape}")
+        if np.any((macro < RETAIN_CURRENT) | (macro > RECONSTRUCT_FUTURE)):
+            raise ValueError("commitment actions must be 0=retain_current or 1=reconstruct_future")
+        effective_relay_action, decision_stage = self._latch_relay_commitment(int(macro[1]))
         # A high-level decision must not require eight consecutive random
         # re-selections of the identical command before it produces any
         # physically meaningful credit.  Holding the selected commitment for
@@ -102,7 +160,7 @@ class CommitmentHandoffIntercept3DEnv(TimedHandoffIntercept3DEnv):
         for _ in range(int(self.handoff_config.commitment_action_repeat)):
             # Recompute the primitive tracker within the option so the
             # low-level controller remains closed-loop to the evolving plant.
-            primitive = self._macro_to_primitive(macro)
+            primitive = self._macro_to_primitive(macro, relay_action=effective_relay_action)
             # ``UAVIntercept3DEnv.step`` clips its input using
             # ``self.action_dim``.  Expose two actions to the actor but
             # temporarily restore primitive-table cardinality while
@@ -121,8 +179,18 @@ class CommitmentHandoffIntercept3DEnv(TimedHandoffIntercept3DEnv):
         info.update(
             {
                 "commitment_relay_action": float(macro[1]),
+                "commitment_relay_effective_action": float(effective_relay_action),
                 "commitment_relay_retains_current": float(macro[1] == RETAIN_CURRENT),
                 "commitment_relay_reconstructs_future": float(macro[1] == RECONSTRUCT_FUTURE),
+                "commitment_relay_decision_active": float(decision_stage is not None),
+                "commitment_relay_authorization_decision": float(decision_stage == "authorization"),
+                "commitment_relay_branch_decision": float(decision_stage == "branch"),
+                "commitment_authorization_latched_action": float(
+                    RETAIN_CURRENT if self._authorization_commitment is None else self._authorization_commitment
+                ),
+                "commitment_branch_latched_action": float(
+                    RETAIN_CURRENT if self._branch_commitment is None else self._branch_commitment
+                ),
                 "commitment_relay_primitive_action": float(primitive[1]),
             }
         )

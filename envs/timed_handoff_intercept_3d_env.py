@@ -53,6 +53,19 @@ class TimedHandoffIntercept3DConfig(UAVIntercept3DConfig):
     # Consumed only by the commitment adapter.  One high-level service
     # commitment is held for this many physical 3DOF integration steps.
     commitment_action_repeat: int = 8
+    # ``continuous_v6`` exposes a relay macro at every option boundary.  The
+    # V7 development contract instead makes the two causally meaningful
+    # commitments explicit: one in the authorization window and one at the
+    # public mission branch.  This is an interface change, not an observation,
+    # reward, or low-level-controller change.
+    commitment_decision_mode: str = "continuous_v6"
+    commitment_authorization_decision_step: int = 16
+    # The staged service objective evaluates the cooperative blue-team service
+    # chain.  ``blue_team_only`` keeps formation collision and all boundary
+    # constraints terminal while reporting red-target contact separately; it
+    # prevents an auxiliary target tracker from terminating a relay-service
+    # decision task that has no high-level avoidance action.
+    handoff_safety_mode: str = "all_aircraft"
     # This derived task is about legal relay service, not legacy target
     # pursuit.  The legacy reward can be retained for a diagnostic comparison,
     # but is disabled in the canonical staged-task contract because it rewards
@@ -90,6 +103,22 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             raise ValueError("handoff corridor geometry must be positive")
         if staged.commitment_action_repeat <= 0:
             raise ValueError("commitment_action_repeat must be positive")
+        if staged.commitment_decision_mode not in {"continuous_v6", "staged_latched_v7"}:
+            raise ValueError("unsupported commitment decision mode")
+        if staged.handoff_safety_mode not in {"all_aircraft", "blue_team_only"}:
+            raise ValueError("unsupported staged-handoff safety mode")
+        if staged.commitment_decision_mode == "staged_latched_v7":
+            if not (
+                staged.authorization_start_step
+                <= staged.commitment_authorization_decision_step
+                <= staged.authorization_deadline
+            ):
+                raise ValueError("V7 authorization decision must occur inside the authorization window")
+            if (
+                staged.commitment_authorization_decision_step % staged.commitment_action_repeat != 0
+                or staged.branch_step % staged.commitment_action_repeat != 0
+            ):
+                raise ValueError("V7 decision steps must align with commitment_action_repeat")
         if staged.service_progress_reward_weight < 0.0:
             raise ValueError("service_progress_reward_weight must be non-negative")
         if staged.legacy_intercept_reward_weight < 0.0:
@@ -292,14 +321,35 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
                 self.handoff_config.authorization_start_step <= self.step_count <= self.handoff_config.authorization_deadline
             )
             current_corridor = self._relay_corridor_error(future=False) <= self.handoff_config.handoff_corridor_radius
-            self.authorization_handoff_streak = self.authorization_handoff_streak + 1 if (in_authorization_window and current_corridor) else 0
+            # V7's early macro is a service reservation, not merely a desired
+            # velocity.  The current route can legally authorize the attacker
+            # only while that reservation is retained; physical inertia must
+            # not let an already-abandoned route count as a valid handoff.
+            authorization_commitment_valid = (
+                not hasattr(self, "_uses_staged_latched_commitments")
+                or not self._uses_staged_latched_commitments
+                or getattr(self, "_authorization_commitment", None) == 0
+            )
+            self.authorization_handoff_streak = self.authorization_handoff_streak + 1 if (
+                in_authorization_window and current_corridor and authorization_commitment_valid
+            ) else 0
             if self.authorization_handoff_streak >= self.handoff_config.authorization_hold_steps:
                 self.authorization_handoff_observed = True
             future_corridor = self._relay_corridor_error(future=True) <= self.handoff_config.handoff_corridor_radius
             # A post-stage refresh is a new relay-mediated delivery to the
             # attacker.  Requiring a brand-new scout detection here would
             # confound the handoff choice with incidental sensing coverage.
-            if self.step_count >= self.handoff_config.branch_step and delivery_step >= self.handoff_config.branch_step and future_corridor:
+            branch_commitment_valid = (
+                not hasattr(self, "_uses_staged_latched_commitments")
+                or not self._uses_staged_latched_commitments
+                or getattr(self, "_branch_commitment", None) == 1
+            )
+            if (
+                self.step_count >= self.handoff_config.branch_step
+                and delivery_step >= self.handoff_config.branch_step
+                and future_corridor
+                and branch_commitment_valid
+            ):
                 self.postbranch_refresh_streak += 1
                 if self.postbranch_refresh_streak >= self.handoff_config.refresh_hold_steps:
                     self.postbranch_refresh_observed = True
@@ -343,8 +393,34 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
         # fresh delivery and the corridor hold in ``_update_handoff_milestones``.
         return float(0.5 * corridor_score * (1.0 + relay_track))
 
+    def _blue_team_collision(self) -> bool:
+        """Return the formation-safety event controlled by this task layer."""
+        for i in range(self.config.num_blue):
+            for j in range(i + 1, self.config.num_blue):
+                if np.linalg.norm(self.blue_pos[i] - self.blue_pos[j]) < self.config.collision_radius:
+                    return True
+        return False
+
     def step(self, actions: np.ndarray | list[int]):
         obs, share, graph, rewards, dones, info = super().step(actions)
+        target_contact = bool(info.get("collision", 0.0))
+        if self.handoff_config.handoff_safety_mode == "blue_team_only":
+            # The high-level action controls the relay's service commitment,
+            # not the fixed target-tracker's target-contact avoidance.  Keep
+            # blue-blue separation and all constraint violations terminal,
+            # while exposing target contact for diagnostic reporting.
+            self.collision = self._blue_team_collision()
+            timeout = bool(self.step_count >= self.config.max_steps)
+            self.done = bool(self.collision or self.constraint_violation or timeout)
+            dones = np.ones_like(dones, dtype=np.float32) if self.done else np.zeros_like(dones, dtype=np.float32)
+            info = dict(info)
+            info.update(
+                {
+                    "collision": float(self.collision),
+                    "timeout": float(timeout and not self.collision and not self.constraint_violation),
+                    "target_contact_observed": float(target_contact),
+                }
+            )
         self._update_handoff_milestones()
         service_progress = self._service_progress()
         active_streak = (
@@ -403,6 +479,7 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
                 "relay_in_future_corridor": float(self._relay_corridor_error(future=True) <= self.handoff_config.handoff_corridor_radius),
                 "handoff_success": float(self.handoff_success),
                 "handoff_terminal_attack_window": float(self.attack_window[2] > 0.5),
+                "handoff_target_contact_observed": float(target_contact),
                 "handoff_terminal_attacker_has_information": float(self._has_target_information(2)),
                 "handoff_service_progress": service_progress,
                 "handoff_service_progress_gain": progress_gain,

@@ -38,7 +38,10 @@ def training_protocol(
     service_envelope_mode: str,
     entropy_coef: float = 0.01,
     initial_retain_logit_bias: float = 0.0,
+    commitment_decision_mode: str = "continuous_v6",
 ) -> str:
+    if commitment_decision_mode == "staged_latched_v7":
+        return "COMMITMENT-HANDOFF-3D-V7-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
     if (
         service_envelope_mode == "compositional_v6_staged"
         and abs(float(entropy_coef) - 0.03) < 1e-12
@@ -54,7 +57,9 @@ def training_protocol(
     )
 
 
-def endpoint_protocol(service_envelope_mode: str) -> str:
+def endpoint_protocol(service_envelope_mode: str, commitment_decision_mode: str = "continuous_v6") -> str:
+    if commitment_decision_mode == "staged_latched_v7":
+        return "COMMITMENT-HANDOFF-3D-V7-PROFILE-STRATIFIED-ENDPOINT-V1"
     return (
         "COMMITMENT-HANDOFF-3D-V6-PROFILE-STRATIFIED-ENDPOINT-V1"
         if service_envelope_mode == "compositional_v6_staged"
@@ -82,6 +87,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--service-envelope-mode", choices=("compositional_v5", "compositional_v6_staged"), default="compositional_v5")
     parser.add_argument("--future-corridor-lateral-offset", type=float, default=1_500.0)
     parser.add_argument("--branch-step", type=int, default=40)
+    parser.add_argument("--authorization-start-step", type=int, default=12)
+    parser.add_argument("--authorization-deadline", type=int, default=28)
+    parser.add_argument("--commitment-decision-mode", choices=("continuous_v6", "staged_latched_v7"), default="continuous_v6")
+    parser.add_argument("--authorization-decision-step", type=int, default=16)
+    parser.add_argument("--handoff-safety-mode", choices=("all_aircraft", "blue_team_only"), default="all_aircraft")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
@@ -100,7 +110,7 @@ def build_config(args: argparse.Namespace, *, profile: str = "balanced_v5") -> R
         commitment_initial_retain_logit_bias=args.initial_retain_logit_bias,
         graph_encoder="no_graph",
         role_gate_mode="none",
-        actor_action_mask_mode="relay_only",
+        actor_action_mask_mode=("relay_decision_only" if args.commitment_decision_mode == "staged_latched_v7" else "relay_only"),
         intent_coef=0.0,
         chain_aux_coef=0.0,
         behavior_cloning_coef=0.0,
@@ -111,14 +121,17 @@ def build_config(args: argparse.Namespace, *, profile: str = "balanced_v5") -> R
         message_delay_steps=0,
         max_target_message_age_steps=10,
         timed_handoff_context_mode="balanced",
-        handoff_authorization_start_step=12,
-        handoff_authorization_deadline=28,
+        handoff_authorization_start_step=args.authorization_start_step,
+        handoff_authorization_deadline=args.authorization_deadline,
         handoff_branch_step=args.branch_step,
         handoff_authorization_hold_steps=8,
         handoff_refresh_hold_steps=16,
         handoff_corridor_radius=900.0,
         handoff_future_corridor_lateral_offset=args.future_corridor_lateral_offset,
         handoff_commitment_action_repeat=8,
+        handoff_commitment_decision_mode=args.commitment_decision_mode,
+        handoff_commitment_authorization_decision_step=args.authorization_decision_step,
+        handoff_safety_mode=args.handoff_safety_mode,
         handoff_legacy_intercept_reward_weight=0.0,
         handoff_prebranch_target_policy="weaving_mild",
         handoff_postbranch_target_policy="weaving_mild",
@@ -171,6 +184,8 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
                 relay_reconstruct: list[float] = []
                 prebranch_reconstruct: list[float] = []
                 postbranch_reconstruct: list[float] = []
+                authorization_decision_reconstruct: list[float] = []
+                branch_decision_reconstruct: list[float] = []
                 info: dict[str, object] = {}
                 while True:
                     packed = stack_graphs([graph])
@@ -189,6 +204,10 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
                     relay_reconstruct.append(reconstruct)
                     (postbranch_reconstruct if env.step_count >= env.handoff_config.branch_step else prebranch_reconstruct).append(reconstruct)
                     obs, share_obs, graph, _, dones, info = env.step(macro)
+                    if float(info.get("commitment_relay_authorization_decision", 0.0)) > 0.5:
+                        authorization_decision_reconstruct.append(reconstruct)
+                    if float(info.get("commitment_relay_branch_decision", 0.0)) > 0.5:
+                        branch_decision_reconstruct.append(reconstruct)
                     if bool(np.all(dones)):
                         rows.append({
                             "profile": profile,
@@ -201,11 +220,21 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
                             "relay_reconstruct_fraction": float(np.mean(relay_reconstruct)),
                             "prebranch_reconstruct_fraction": float(np.mean(prebranch_reconstruct)) if prebranch_reconstruct else 0.0,
                             "postbranch_reconstruct_fraction": float(np.mean(postbranch_reconstruct)) if postbranch_reconstruct else 0.0,
+                            "authorization_decision_reconstruct": (
+                                float(np.mean(authorization_decision_reconstruct))
+                                if authorization_decision_reconstruct else float("nan")
+                            ),
+                            "branch_decision_reconstruct": (
+                                float(np.mean(branch_decision_reconstruct))
+                                if branch_decision_reconstruct else float("nan")
+                            ),
                         })
                         break
     summary: dict[str, object] = {}
     for profile in SERVICE_ENVELOPE_PROFILES:
         cell = [row for row in rows if row["profile"] == profile]
+        authorization_values = np.asarray([row["authorization_decision_reconstruct"] for row in cell], dtype=float)
+        branch_values = np.asarray([row["branch_decision_reconstruct"] for row in cell], dtype=float)
         summary[profile] = {
             "n": len(cell),
             "future_service_required": int(cell[0]["future_service_required"]),
@@ -215,11 +244,18 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
             "mean_relay_reconstruct_fraction": float(np.mean([row["relay_reconstruct_fraction"] for row in cell])),
             "mean_prebranch_reconstruct_fraction": float(np.mean([row["prebranch_reconstruct_fraction"] for row in cell])),
             "mean_postbranch_reconstruct_fraction": float(np.mean([row["postbranch_reconstruct_fraction"] for row in cell])),
+            "mean_authorization_decision_reconstruct": (
+                float(np.nanmean(authorization_values)) if np.isfinite(authorization_values).any() else float("nan")
+            ),
+            "mean_branch_decision_reconstruct": (
+                float(np.nanmean(branch_values)) if np.isfinite(branch_values).any() else float("nan")
+            ),
         }
     report = {
-        "protocol": endpoint_protocol(args.service_envelope_mode),
+        "protocol": endpoint_protocol(args.service_envelope_mode, args.commitment_decision_mode),
         "env_name": "commitment_handoff_3d",
         "service_envelope_mode": args.service_envelope_mode,
+        "commitment_decision_mode": args.commitment_decision_mode,
         "checkpoint": str(checkpoint),
         "seed": args.seed,
         "summary": summary,
@@ -239,7 +275,7 @@ def main() -> None:
     macro_steps = args.updates * args.num_envs * args.rollout_steps
     manifest = {
         "protocol": training_protocol(
-            args.service_envelope_mode, args.entropy_coef, args.initial_retain_logit_bias
+            args.service_envelope_mode, args.entropy_coef, args.initial_retain_logit_bias, args.commitment_decision_mode
         ),
         "artifact_class": "DEVELOPMENT_ONLY_G2_LEARNABILITY_PILOT",
         "paper_evidence": False,
@@ -251,10 +287,20 @@ def main() -> None:
         "profiles": list(SERVICE_ENVELOPE_PROFILES),
         "fixed_task": {
             "commitment_action_repeat": 8, "service_envelope_mode": args.service_envelope_mode,
-            "branch_step": args.branch_step, "future_corridor_lateral_offset": args.future_corridor_lateral_offset,
+            "branch_step": args.branch_step,
+            "authorization_start_step": args.authorization_start_step,
+            "authorization_deadline": args.authorization_deadline,
+            "authorization_decision_step": args.authorization_decision_step,
+            "future_corridor_lateral_offset": args.future_corridor_lateral_offset,
+            "commitment_decision_mode": args.commitment_decision_mode,
+            "handoff_safety_mode": args.handoff_safety_mode,
         },
         "method": "plain capacity-controlled MLP MAPPO; no graph, relation-value head, sampler, or auxiliary loss",
-        "actor_action_contract": {"mode": "relay_only", "actor_active_agents": ["relay"], "critic_observes_all_agents": True},
+        "actor_action_contract": {
+            "mode": ("relay_decision_only" if args.commitment_decision_mode == "staged_latched_v7" else "relay_only"),
+            "actor_active_agents": ["relay"],
+            "critic_observes_all_agents": True,
+        },
         "status": "running",
     }
     (args.out_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
