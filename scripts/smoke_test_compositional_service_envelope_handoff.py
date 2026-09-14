@@ -65,9 +65,38 @@ def main() -> None:
     assert info["commitment_relay_decision_active"] == 1.0
     assert info["commitment_relay_authorization_decision"] == 1.0
     assert info["commitment_relay_effective_action"] == 1.0
+
     while env.step_count < env.handoff_config.branch_step:
         _, _, _, _, _, info = env.step([0, 1, 0])
     assert not env.authorization_handoff_observed
+    _, _, _, _, _, info = env.step([0, 1, 0])
+    assert info["commitment_relay_decision_active"] == 1.0
+    assert info["commitment_relay_branch_decision"] == 1.0
+    assert info["commitment_relay_effective_action"] == 1.0
+
+    # V8 retains the compulsory early authorisation reservation without actor
+    # credit and exposes exactly one public, causally discriminative branch
+    # choice.  This is the learnability repair following the V7 G2 collapse.
+    v8 = RIGMAPPOConfig(
+        env_name="commitment_handoff_3d",
+        seed=81_101,
+        target_init_range_scale=0.65,
+        handoff_service_envelope_mode="compositional_v6_staged",
+        handoff_service_envelope_profile="future_fresh",
+        handoff_authorization_start_step=0,
+        handoff_authorization_deadline=16,
+        handoff_branch_step=24,
+        handoff_commitment_decision_mode="branch_value_v8",
+        handoff_commitment_authorization_decision_step=0,
+        handoff_safety_mode="blue_team_only",
+    )
+    env = make_env(v8, v8.seed, training=False)
+    env.reset()
+    _, _, _, _, _, info = env.step([0, 1, 0])
+    assert info["commitment_relay_decision_active"] == 0.0
+    assert env._authorization_commitment == 0
+    while env.step_count < env.handoff_config.branch_step:
+        _, _, _, _, _, info = env.step([0, 1, 0])
     _, _, _, _, _, info = env.step([0, 1, 0])
     assert info["commitment_relay_decision_active"] == 1.0
     assert info["commitment_relay_branch_decision"] == 1.0

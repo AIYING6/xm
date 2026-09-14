@@ -42,21 +42,40 @@ class CommitmentHandoffIntercept3DEnv(TimedHandoffIntercept3DEnv):
 
     def reset(self):
         obs, share, graph = super().reset()
-        # V7 has two one-shot, publicly scheduled decisions.  Values are
-        # deliberately reset per episode and never expose the envelope label.
-        self._authorization_commitment: int | None = None
+        # V7 has two one-shot, publicly scheduled decisions.  V8 keeps the
+        # early authorisation reservation as a public mission prerequisite and
+        # leaves the causally discriminative retain/reconstruct choice to the
+        # public branch.  Neither mode exposes an envelope label.
+        self._authorization_commitment: int | None = (
+            RETAIN_CURRENT if self._uses_branch_value_commitment else None
+        )
         self._branch_commitment: int | None = None
         return obs, share, graph
 
     @property
     def _uses_staged_latched_commitments(self) -> bool:
-        return self.handoff_config.commitment_decision_mode == "staged_latched_v7"
+        return self.handoff_config.commitment_decision_mode in {"staged_latched_v7", "branch_value_v8"}
+
+    @property
+    def _uses_branch_value_commitment(self) -> bool:
+        """Whether V8 exposes only the branch-level value comparison.
+
+        The V7 G2 result established that early reservation is uniformly
+        optimal across every public profile, so learning it as a stochastic
+        binary action created a delayed-credit collapse rather than a choice.
+        V8 retains the same compulsory early service prerequisite and exposes
+        only the later choice whose optimal action reverses between current
+        and future service envelopes.
+        """
+        return self.handoff_config.commitment_decision_mode == "branch_value_v8"
 
     def _decision_stage(self) -> str | None:
         """Return the public decision stage available at this option boundary."""
         if not self._uses_staged_latched_commitments:
             return None
         if (
+            not self._uses_branch_value_commitment
+            and
             self._authorization_commitment is None
             and self.step_count == self.handoff_config.commitment_authorization_decision_step
         ):

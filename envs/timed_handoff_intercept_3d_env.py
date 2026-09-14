@@ -103,22 +103,22 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
             raise ValueError("handoff corridor geometry must be positive")
         if staged.commitment_action_repeat <= 0:
             raise ValueError("commitment_action_repeat must be positive")
-        if staged.commitment_decision_mode not in {"continuous_v6", "staged_latched_v7"}:
+        if staged.commitment_decision_mode not in {"continuous_v6", "staged_latched_v7", "branch_value_v8"}:
             raise ValueError("unsupported commitment decision mode")
         if staged.handoff_safety_mode not in {"all_aircraft", "blue_team_only"}:
             raise ValueError("unsupported staged-handoff safety mode")
-        if staged.commitment_decision_mode == "staged_latched_v7":
+        if staged.commitment_decision_mode in {"staged_latched_v7", "branch_value_v8"}:
             if not (
                 staged.authorization_start_step
                 <= staged.commitment_authorization_decision_step
                 <= staged.authorization_deadline
             ):
-                raise ValueError("V7 authorization decision must occur inside the authorization window")
+                raise ValueError("staged authorization decision must occur inside the authorization window")
             if (
                 staged.commitment_authorization_decision_step % staged.commitment_action_repeat != 0
                 or staged.branch_step % staged.commitment_action_repeat != 0
             ):
-                raise ValueError("V7 decision steps must align with commitment_action_repeat")
+                raise ValueError("staged decision steps must align with commitment_action_repeat")
         if staged.service_progress_reward_weight < 0.0:
             raise ValueError("service_progress_reward_weight must be non-negative")
         if staged.legacy_intercept_reward_weight < 0.0:
@@ -361,6 +361,18 @@ class TimedHandoffIntercept3DEnv(UAVIntercept3DEnv):
 
     def _mission_requirement_met(self) -> bool:
         if not self._future_service_required():
+            if self.handoff_config.commitment_decision_mode == "branch_value_v8":
+                # The early reservation establishes a legal service right; it
+                # does not terminate the mission before the public branch.
+                # At that branch, retaining preserves the authorised current
+                # route, whereas reconstructing releases it.  Consequently
+                # current- and future-value contexts both traverse the same
+                # causal decision point with opposite optimal actions.
+                return bool(
+                    self.authorization_handoff_observed
+                    and self.step_count >= self.handoff_config.branch_step
+                    and getattr(self, "_branch_commitment", None) == 0
+                )
             return self.authorization_handoff_observed
         if self.handoff_config.service_envelope_mode == "compositional_v6_staged":
             # A later refresh is valuable only after the early, legally

@@ -39,7 +39,12 @@ def training_protocol(
     entropy_coef: float = 0.01,
     initial_retain_logit_bias: float = 0.0,
     commitment_decision_mode: str = "continuous_v6",
+    relation_value_mode: str = "none",
 ) -> str:
+    if relation_value_mode != "none":
+        return f"COMMITMENT-HANDOFF-3D-V8-RELATION-VALUE-{relation_value_mode.upper()}-PILOT-V1"
+    if commitment_decision_mode == "branch_value_v8":
+        return "COMMITMENT-HANDOFF-3D-V8-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
     if commitment_decision_mode == "staged_latched_v7":
         return "COMMITMENT-HANDOFF-3D-V7-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
     if (
@@ -57,7 +62,15 @@ def training_protocol(
     )
 
 
-def endpoint_protocol(service_envelope_mode: str, commitment_decision_mode: str = "continuous_v6") -> str:
+def endpoint_protocol(
+    service_envelope_mode: str,
+    commitment_decision_mode: str = "continuous_v6",
+    relation_value_mode: str = "none",
+) -> str:
+    if relation_value_mode != "none":
+        return f"COMMITMENT-HANDOFF-3D-V8-RELATION-VALUE-{relation_value_mode.upper()}-ENDPOINT-V1"
+    if commitment_decision_mode == "branch_value_v8":
+        return "COMMITMENT-HANDOFF-3D-V8-PROFILE-STRATIFIED-ENDPOINT-V1"
     if commitment_decision_mode == "staged_latched_v7":
         return "COMMITMENT-HANDOFF-3D-V7-PROFILE-STRATIFIED-ENDPOINT-V1"
     return (
@@ -89,8 +102,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--branch-step", type=int, default=40)
     parser.add_argument("--authorization-start-step", type=int, default=12)
     parser.add_argument("--authorization-deadline", type=int, default=28)
-    parser.add_argument("--commitment-decision-mode", choices=("continuous_v6", "staged_latched_v7"), default="continuous_v6")
+    parser.add_argument(
+        "--commitment-decision-mode",
+        choices=("continuous_v6", "staged_latched_v7", "branch_value_v8"),
+        default="continuous_v6",
+    )
     parser.add_argument("--authorization-decision-step", type=int, default=16)
+    parser.add_argument(
+        "--relation-value-mode",
+        choices=("none", "aligned", "semantic_shuffle"),
+        default="none",
+        help="V8-only public service-envelope relation head; none preserves the plain MLP control.",
+    )
     parser.add_argument("--handoff-safety-mode", choices=("all_aircraft", "blue_team_only"), default="all_aircraft")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out-dir", type=Path, required=True)
@@ -110,7 +133,11 @@ def build_config(args: argparse.Namespace, *, profile: str = "balanced_v5") -> R
         commitment_initial_retain_logit_bias=args.initial_retain_logit_bias,
         graph_encoder="no_graph",
         role_gate_mode="none",
-        actor_action_mask_mode=("relay_decision_only" if args.commitment_decision_mode == "staged_latched_v7" else "relay_only"),
+        actor_action_mask_mode=(
+            "relay_decision_only"
+            if args.commitment_decision_mode in {"staged_latched_v7", "branch_value_v8"}
+            else "relay_only"
+        ),
         intent_coef=0.0,
         chain_aux_coef=0.0,
         behavior_cloning_coef=0.0,
@@ -130,6 +157,7 @@ def build_config(args: argparse.Namespace, *, profile: str = "balanced_v5") -> R
         handoff_future_corridor_lateral_offset=args.future_corridor_lateral_offset,
         handoff_commitment_action_repeat=8,
         handoff_commitment_decision_mode=args.commitment_decision_mode,
+        commitment_relation_value_mode=args.relation_value_mode,
         handoff_commitment_authorization_decision_step=args.authorization_decision_step,
         handoff_safety_mode=args.handoff_safety_mode,
         handoff_legacy_intercept_reward_weight=0.0,
@@ -166,6 +194,7 @@ def load_agent(cfg: RIGMAPPOConfig, checkpoint: Path) -> RIGMAPPOAgent:
         graph_encoder="no_graph",
         role_gate_mode="none",
         use_intent_context=False,
+        commitment_relation_value_mode=cfg.commitment_relation_value_mode,
     ).to(cfg.device)
     load_matching_state_dict(agent, str(checkpoint), torch.device(cfg.device))
     return agent.eval()
@@ -252,10 +281,13 @@ def evaluate_by_profile(args: argparse.Namespace, checkpoint: Path) -> tuple[lis
             ),
         }
     report = {
-        "protocol": endpoint_protocol(args.service_envelope_mode, args.commitment_decision_mode),
+        "protocol": endpoint_protocol(
+            args.service_envelope_mode, args.commitment_decision_mode, args.relation_value_mode
+        ),
         "env_name": "commitment_handoff_3d",
         "service_envelope_mode": args.service_envelope_mode,
         "commitment_decision_mode": args.commitment_decision_mode,
+        "relation_value_mode": args.relation_value_mode,
         "checkpoint": str(checkpoint),
         "seed": args.seed,
         "summary": summary,
@@ -275,7 +307,11 @@ def main() -> None:
     macro_steps = args.updates * args.num_envs * args.rollout_steps
     manifest = {
         "protocol": training_protocol(
-            args.service_envelope_mode, args.entropy_coef, args.initial_retain_logit_bias, args.commitment_decision_mode
+            args.service_envelope_mode,
+            args.entropy_coef,
+            args.initial_retain_logit_bias,
+            args.commitment_decision_mode,
+            args.relation_value_mode,
         ),
         "artifact_class": "DEVELOPMENT_ONLY_G2_LEARNABILITY_PILOT",
         "paper_evidence": False,
@@ -293,11 +329,20 @@ def main() -> None:
             "authorization_decision_step": args.authorization_decision_step,
             "future_corridor_lateral_offset": args.future_corridor_lateral_offset,
             "commitment_decision_mode": args.commitment_decision_mode,
+            "relation_value_mode": args.relation_value_mode,
             "handoff_safety_mode": args.handoff_safety_mode,
         },
-        "method": "plain capacity-controlled MLP MAPPO; no graph, relation-value head, sampler, or auxiliary loss",
+        "method": (
+            "plain capacity-controlled MLP MAPPO; no graph, relation-value head, sampler, or auxiliary loss"
+            if args.relation_value_mode == "none"
+            else "stage-conditioned public service-envelope relation-value actor; no graph, sampler, or auxiliary loss"
+        ),
         "actor_action_contract": {
-            "mode": ("relay_decision_only" if args.commitment_decision_mode == "staged_latched_v7" else "relay_only"),
+            "mode": (
+                "relay_decision_only"
+                if args.commitment_decision_mode in {"staged_latched_v7", "branch_value_v8"}
+                else "relay_only"
+            ),
             "actor_active_agents": ["relay"],
             "critic_observes_all_agents": True,
         },

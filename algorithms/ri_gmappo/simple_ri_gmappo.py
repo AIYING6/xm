@@ -200,6 +200,8 @@ class RIGMAPPOConfig:
     handoff_future_corridor_lateral_offset: float = 1_500.0
     handoff_commitment_action_repeat: int = 8
     handoff_commitment_decision_mode: str = "continuous_v6"
+    # Opt-in V8 public relation-value actor. Inert on every historical path.
+    commitment_relation_value_mode: str = "none"
     handoff_commitment_authorization_decision_step: int = 16
     handoff_safety_mode: str = "all_aircraft"
     handoff_legacy_intercept_reward_weight: float = 0.0
@@ -852,6 +854,7 @@ class RIActor(nn.Module):
         role_gate_prior_strength: float = 0.0,
         multi_relation_global_residual_weight: float = 1.0,
         role_gate_mode: str = "relation_conditioned",
+        commitment_relation_value_mode: str = "none",
     ):
         super().__init__()
         if graph_encoder not in {"no_graph", "single", "edr", "rsg_tc", "multi_relation", "local_relation"}:
@@ -860,11 +863,14 @@ class RIActor(nn.Module):
             raise ValueError(f"Unsupported graph_message_ablation: {graph_message_ablation}")
         if graph_input_ablation not in {"none", "no_edge_features", "no_role_identity"}:
             raise ValueError(f"Unsupported graph_input_ablation: {graph_input_ablation}")
+        if commitment_relation_value_mode not in {"none", "aligned", "semantic_shuffle"}:
+            raise ValueError("unsupported commitment_relation_value_mode")
         self.graph_encoder = graph_encoder
         self.graph_message_ablation = graph_message_ablation
         self.graph_input_ablation = graph_input_ablation
         self.num_intents = num_intents
         self.use_intent_context = use_intent_context
+        self.commitment_relation_value_mode = commitment_relation_value_mode
         self.role_emb = nn.Embedding(num_roles, role_dim)
         self.intent_emb = nn.Embedding(num_intents, intent_dim)
         self.obs_encoder = nn.Sequential(nn.Linear(obs_dim, hidden_dim), nn.Tanh())
@@ -923,6 +929,57 @@ class RIActor(nn.Module):
             nn.Tanh(),
             nn.Linear(hidden_dim, action_dim),
         )
+        if commitment_relation_value_mode != "none":
+            if action_dim != 2:
+                raise ValueError("the commitment relation-value actor requires two commitment actions")
+            relation_hidden = max(8, hidden_dim // 4)
+            self.commitment_envelope_encoder = nn.Sequential(
+                nn.Linear(3, relation_hidden), nn.Tanh(), nn.Linear(relation_hidden, relation_hidden), nn.Tanh()
+            )
+            self.commitment_relation_head = nn.Sequential(
+                nn.Linear(4 * relation_hidden + 7, relation_hidden), nn.Tanh(), nn.Linear(relation_hidden, action_dim)
+            )
+
+    def _inject_commitment_relation_logits(
+        self, logits: torch.Tensor, obs: torch.Tensor, num_agents: int
+    ) -> torch.Tensor:
+        """Use only public envelope relations for the V8 causal branch action."""
+        if self.commitment_relation_value_mode == "none":
+            return logits
+        # V8 suffix: current(3), future(3), branch phase, service beacons(6), peer beacons.
+        suffix_dim = 7 + 6 + 4 * (num_agents - 1)
+        context_start = obs.shape[-1] - suffix_dim
+        if context_start < 0:
+            raise ValueError("commitment relation actor received an incompatible observation layout")
+        context = obs[:, 0, context_start:context_start + 7]
+        if context.shape[-1] != 7:
+            raise ValueError("commitment relation actor could not recover the public service envelope")
+        current, future, phase = context[:, :3], context[:, 3:6], context[:, 6:7]
+        if self.commitment_relation_value_mode == "semantic_shuffle":
+            # Same dimensions and parameters as the aligned head, but the
+            # future field correspondence is deliberately corrupted.
+            future = future[:, (1, 2, 0)]
+        current_encoded = self.commitment_envelope_encoder(current)
+        future_encoded = self.commitment_envelope_encoder(future)
+        relation = torch.cat(
+            [
+                current_encoded,
+                future_encoded,
+                future_encoded - current_encoded,
+                future_encoded * current_encoded,
+                future - current,
+                current * future,
+                phase,
+            ],
+            dim=-1,
+        )
+        relation_logits = self.commitment_relation_head(relation)
+        branch_active = phase >= (1.0 - 1e-6)
+        patched = logits.clone()
+        patched[:, ROLE_RELAY_ID, :] = torch.where(
+            branch_active.unsqueeze(-1), relation_logits, patched[:, ROLE_RELAY_ID, :]
+        )
+        return patched
 
     def forward(
         self,
@@ -1012,6 +1069,7 @@ class RIActor(nn.Module):
             )
             obs_feat = self.obs_encoder(obs)
             logits = self.policy_head(torch.cat([obs_feat, graph_feat, intent_context], dim=-1))
+            logits = self._inject_commitment_relation_logits(logits, obs, num_agents)
             chain_aux_logits = self.chain_aux_head(graph_feat.mean(dim=1))
             if return_chain_aux:
                 return logits, attn, intent_logits, chain_aux_logits
@@ -1057,6 +1115,7 @@ class RIActor(nn.Module):
 
         obs_feat = self.obs_encoder(obs)
         logits = self.policy_head(torch.cat([obs_feat, graph_feat, intent_context], dim=-1))
+        logits = self._inject_commitment_relation_logits(logits, obs, num_agents)
         chain_aux_logits = self.chain_aux_head(graph_feat.mean(dim=1))
         if return_chain_aux:
             return logits, attn, intent_logits, chain_aux_logits
@@ -1084,6 +1143,7 @@ class RIGMAPPOAgent(nn.Module):
         multi_relation_global_residual_weight: float = 1.0,
         role_gate_mode: str = "relation_conditioned",
         counterfactual_critic_enabled: bool = False,
+        commitment_relation_value_mode: str = "none",
     ):
         super().__init__()
         self.num_agents = num_agents
@@ -1104,6 +1164,7 @@ class RIGMAPPOAgent(nn.Module):
             role_gate_prior_strength=role_gate_prior_strength,
             multi_relation_global_residual_weight=multi_relation_global_residual_weight,
             role_gate_mode=role_gate_mode,
+            commitment_relation_value_mode=commitment_relation_value_mode,
         )
         self.critic = MLP(share_obs_dim + num_roles, 1, hidden_dim)
         self.action_dim = int(action_dim)
@@ -2026,8 +2087,22 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         raise ValueError("actor_action_mask_mode must be all_agents, relay_only, or relay_decision_only")
     if actor_action_mask_mode in {"relay_only", "relay_decision_only"} and cfg.env_name != "commitment_handoff_3d":
         raise ValueError("relay actor-action masking is reserved for commitment_handoff_3d")
-    if actor_action_mask_mode == "relay_decision_only" and cfg.handoff_commitment_decision_mode != "staged_latched_v7":
-        raise ValueError("relay_decision_only requires the V7 staged-latched commitment interface")
+    if actor_action_mask_mode == "relay_decision_only" and cfg.handoff_commitment_decision_mode not in {
+        "staged_latched_v7", "branch_value_v8"
+    }:
+        raise ValueError("relay_decision_only requires a staged commitment interface")
+    relation_value_mode = str(cfg.commitment_relation_value_mode).lower()
+    if relation_value_mode not in {"none", "aligned", "semantic_shuffle"}:
+        raise ValueError("commitment_relation_value_mode must be none, aligned, or semantic_shuffle")
+    if relation_value_mode != "none" and not (
+        cfg.env_name == "commitment_handoff_3d"
+        and cfg.handoff_commitment_decision_mode == "branch_value_v8"
+        and actor_action_mask_mode == "relay_decision_only"
+        and cfg.graph_encoder == "no_graph"
+    ):
+        raise ValueError("commitment relation-value actor is reserved for V8 branch-only no-graph commitment runs")
+    if relation_value_mode != "none" and abs(float(cfg.commitment_initial_retain_logit_bias)) > 0.0:
+        raise ValueError("the relation-value actor forbids an initial retain bias at the causal branch")
     if cfg.runtime_state_resume and (cfg.resume or cfg.init_checkpoint):
         raise ValueError("runtime_state_resume is mutually exclusive with legacy resume/init_checkpoint")
     diagnostic_branch_mode = str(cfg.diagnostic_rng_branch_mode).lower()
@@ -2326,6 +2401,7 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         multi_relation_global_residual_weight=cfg.multi_relation_global_residual_weight,
         role_gate_mode=cfg.role_gate_mode,
         counterfactual_critic_enabled=cfg.counterfactual_critic_enabled,
+        commitment_relation_value_mode=relation_value_mode,
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
     if cfg.env_name == "commitment_handoff_3d" and abs(float(cfg.commitment_initial_retain_logit_bias)) > 0.0:

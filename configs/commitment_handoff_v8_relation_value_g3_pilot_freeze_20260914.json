@@ -1,0 +1,51 @@
+{
+  "protocol": "COMMITMENT-HANDOFF-3D-V8-RELATION-VALUE-G3-DEVELOPMENT-PILOT-V1",
+  "artifact_class": "DEVELOPMENT_ONLY_CANDIDATE_IDENTIFICATION_GATE",
+  "paper_evidence": false,
+  "purpose": "Test whether a public service-envelope relation-value actor resolves the V8 branch conflict beyond a capacity-matched ordinary MLP, and whether its field correspondence matters.",
+  "training_seeds": [84011, 84012, 84013],
+  "arms": {
+    "plain_mlp_capacity_matched": {"relation_value_mode": "none", "hidden_dim": 66},
+    "relation_value_aligned": {"relation_value_mode": "aligned", "hidden_dim": 64},
+    "relation_value_semantic_shuffle": {"relation_value_mode": "semantic_shuffle", "hidden_dim": 64}
+  },
+  "frozen_task": {
+    "service_envelope_mode": "compositional_v6_staged",
+    "commitment_decision_mode": "branch_value_v8",
+    "authorization_start_step": 0,
+    "authorization_deadline": 16,
+    "authorization_decision_step": 16,
+    "authorization_decision": "compulsory_retain",
+    "branch_step": 24,
+    "commitment_action_repeat": 8,
+    "future_corridor_lateral_offset": 900.0,
+    "handoff_safety_mode": "blue_team_only"
+  },
+  "fixed_training_budget": {
+    "updates": 64,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "entropy_coef": 0.01,
+    "initial_retain_logit_bias": 0.0,
+    "selection_eval_episodes": 16,
+    "endpoint_episodes_per_profile": 60
+  },
+  "fixed_algorithm": {
+    "algorithm": "MAPPO",
+    "graph_encoder": "no_graph",
+    "actor_action_mask_mode": "relay_decision_only",
+    "reward": "identical across all arms",
+    "observation": "identical legal V8 public observation across all arms",
+    "auxiliary_loss": "none",
+    "sampler": "none"
+  },
+  "predeclared_gate": {
+    "candidate_directional_branch_accuracy_minimum": 0.75,
+    "minimum_seeds_showing_candidate_control_reliability_signal": 2,
+    "candidate_control_signal": "balanced success improvement >= 0.10 OR balanced timeout reduction >= 0.10, while collision increase <= 0.05",
+    "minimum_seeds_showing_semantic_shuffle_degradation": 2,
+    "semantic_degradation_signal": "aligned minus shuffle branch accuracy >= 0.15 OR balanced success >= 0.10",
+    "ordinary_control_must_remain_intermediate": [0.10, 0.90]
+  },
+  "stop_rule": "If the predeclared G3 pilot gate fails, preserve the artifact and diagnose the structural failure. Do not tune thresholds, seeds, reward, or candidate fields after observing the pilot."
+}
