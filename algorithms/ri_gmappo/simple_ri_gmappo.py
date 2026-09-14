@@ -951,14 +951,18 @@ class RIActor(nn.Module):
         context_start = obs.shape[-1] - suffix_dim
         if context_start < 0:
             raise ValueError("commitment relation actor received an incompatible observation layout")
-        context = obs[:, 0, context_start:context_start + 7]
+        # The actor can receive either [batch, agent, feature] observations or
+        # [batch, time, agent, feature] sequences.  The commitment decision is
+        # made by the relay, so select the relay's public context along the
+        # agent axis while preserving any leading batch/sequence dimensions.
+        context = obs[..., ROLE_RELAY_ID, context_start:context_start + 7]
         if context.shape[-1] != 7:
             raise ValueError("commitment relation actor could not recover the public service envelope")
-        current, future, phase = context[:, :3], context[:, 3:6], context[:, 6:7]
+        current, future, phase = context[..., :3], context[..., 3:6], context[..., 6:7]
         if self.commitment_relation_value_mode == "semantic_shuffle":
             # Same dimensions and parameters as the aligned head, but the
             # future field correspondence is deliberately corrupted.
-            future = future[:, (1, 2, 0)]
+            future = future[..., (1, 2, 0)]
         current_encoded = self.commitment_envelope_encoder(current)
         future_encoded = self.commitment_envelope_encoder(future)
         relation = torch.cat(
@@ -974,10 +978,10 @@ class RIActor(nn.Module):
             dim=-1,
         )
         relation_logits = self.commitment_relation_head(relation)
-        branch_active = phase >= (1.0 - 1e-6)
+        branch_active = phase.squeeze(-1) >= (1.0 - 1e-6)
         patched = logits.clone()
-        patched[:, ROLE_RELAY_ID, :] = torch.where(
-            branch_active.unsqueeze(-1), relation_logits, patched[:, ROLE_RELAY_ID, :]
+        patched[..., ROLE_RELAY_ID, :] = torch.where(
+            branch_active.unsqueeze(-1), relation_logits, patched[..., ROLE_RELAY_ID, :]
         )
         return patched
 

@@ -65,20 +65,39 @@ def main() -> None:
     assert abs(plain_parameters - aligned_parameters) / aligned_parameters <= 0.02, "plain control is not capacity matched"
 
     observation = torch.as_tensor(obs[None, ...], dtype=torch.float32)
-    logits = torch.zeros((1, 3, 2), dtype=torch.float32)
-    prebranch = aligned.actor._inject_commitment_relation_logits(logits.clone(), observation, num_agents=3)
-    assert torch.equal(prebranch, logits), "relation head must be inactive before the causal branch"
-
-    branch_observation = observation.clone()
     suffix_dim = 7 + 6 + 4 * (3 - 1)
-    context_start = branch_observation.shape[-1] - suffix_dim
-    branch_observation[:, :, context_start + 6] = 1.0
-    branched = aligned.actor._inject_commitment_relation_logits(logits.clone(), branch_observation, num_agents=3)
-    assert torch.equal(branched[:, 0], logits[:, 0]) and torch.equal(branched[:, 2], logits[:, 2])
-    assert not torch.equal(branched[:, 1], logits[:, 1]), "only relay branch logits must be replaced"
+    context_start = observation.shape[-1] - suffix_dim
 
-    shuffled_branch = shuffled.actor._inject_commitment_relation_logits(logits.clone(), branch_observation, num_agents=3)
-    assert torch.equal(shuffled_branch[:, 0], logits[:, 0]) and torch.equal(shuffled_branch[:, 2], logits[:, 2])
+    # Both ordinary rollout batches [B,A,O] and recurrent/sequential batches
+    # [B,T,A,O] occur in training.  The relation head must preserve all leading
+    # dimensions and patch only the relay's action logits in either layout.
+    for sequence_length in (None, 4):
+        if sequence_length is None:
+            batch_obs = observation.clone()
+            logits = torch.zeros((1, 3, 2), dtype=torch.float32)
+        else:
+            batch_obs = observation[:, None].expand(-1, sequence_length, -1, -1).clone()
+            logits = torch.zeros((1, sequence_length, 3, 2), dtype=torch.float32)
+        prebranch = aligned.actor._inject_commitment_relation_logits(logits.clone(), batch_obs, num_agents=3)
+        assert torch.equal(prebranch, logits), "relation head must be inactive before the causal branch"
+
+        branch_observation = batch_obs.clone()
+        if sequence_length is None:
+            branch_observation[..., 1, context_start + 6] = 1.0
+        else:
+            branch_observation[..., 1, context_start + 6] = 1.0
+        branched = aligned.actor._inject_commitment_relation_logits(
+            logits.clone(), branch_observation, num_agents=3
+        )
+        assert torch.equal(branched[..., 0, :], logits[..., 0, :])
+        assert torch.equal(branched[..., 2, :], logits[..., 2, :])
+        assert not torch.equal(branched[..., 1, :], logits[..., 1, :]), "only relay branch logits must be replaced"
+
+        shuffled_branch = shuffled.actor._inject_commitment_relation_logits(
+            logits.clone(), branch_observation, num_agents=3
+        )
+        assert torch.equal(shuffled_branch[..., 0, :], logits[..., 0, :])
+        assert torch.equal(shuffled_branch[..., 2, :], logits[..., 2, :])
     print(
         "PASS: V8 relation-value actor is branch-only, relay-only, public-context-only, "
         f"and capacity-matched (aligned={aligned_parameters}, plain={plain_parameters})."

@@ -23,21 +23,40 @@ def main() -> None:
     parser.add_argument("--out-root", type=Path, required=True)
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--resume", action="store_true", help="resume an existing pilot root and skip verified completed runs")
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if not args.execute:
         raise SystemExit("pass --execute because this launches development training")
-    if args.out_root.exists():
-        raise FileExistsError(f"refusing to overwrite {args.out_root}")
     contract = json.loads(CONTRACT.read_text(encoding="utf-8"))
-    args.out_root.mkdir(parents=True)
-    (args.out_root / "pilot_freeze_contract.json").write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+    contract_copy = args.out_root / "pilot_freeze_contract.json"
+    if args.resume:
+        if not args.out_root.is_dir() or not contract_copy.is_file():
+            raise FileNotFoundError(f"cannot resume pilot without its frozen contract: {args.out_root}")
+        copied = json.loads(contract_copy.read_text(encoding="utf-8"))
+        if copied != contract:
+            raise ValueError("existing pilot root does not match the maintained frozen G3 contract")
+    else:
+        if args.out_root.exists():
+            raise FileExistsError(f"refusing to overwrite {args.out_root}")
+        args.out_root.mkdir(parents=True)
+        contract_copy.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
 
     task = contract["frozen_task"]
     budget = contract["fixed_training_budget"]
     for arm, arm_spec in contract["arms"].items():
         for seed in contract["training_seeds"]:
             out_dir = args.out_root / arm / f"seed{seed}"
+            if out_dir.exists():
+                manifest_path = out_dir / "run_manifest.json"
+                endpoint_path = out_dir / "profile_stratified_endpoint.json"
+                if not args.resume or not manifest_path.is_file():
+                    raise FileExistsError(f"refusing to overwrite existing run directory: {out_dir}")
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                if manifest.get("status") == "completed" and endpoint_path.is_file():
+                    print(f"SKIP verified completed run: {out_dir}", flush=True)
+                    continue
+                raise FileExistsError(f"incomplete existing run needs to be preserved before retry: {out_dir}")
             command = [
                 args.python, str(RUNNER), "--seed", str(seed), "--updates", str(budget["updates"]),
                 "--num-envs", str(budget["num_envs"]), "--rollout-steps", str(budget["rollout_steps"]),
@@ -56,7 +75,7 @@ def main() -> None:
                 "--relation-value-mode", arm_spec["relation_value_mode"], "--device", args.device,
                 "--out-dir", str(out_dir), "--execute",
             ]
-            print("LAUNCH", " ".join(command))
+            print("LAUNCH", " ".join(command), flush=True)
             subprocess.run(command, check=True, cwd=ROOT)
     print(f"COMPLETE: frozen G3 pilot at {args.out_root}")
 

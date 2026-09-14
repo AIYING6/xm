@@ -24,7 +24,8 @@ def load_arm(seed_dir: Path, arm: str, spec: dict[str, object], task: dict[str, 
     manifest = json.loads((seed_dir / "run_manifest.json").read_text(encoding="utf-8"))
     if int(manifest["seed"]) <= 0 or manifest.get("status") != "completed":
         raise ValueError(f"incomplete run: {seed_dir}")
-    if manifest.get("relation_value_mode") != spec["relation_value_mode"]:
+    relation_mode = manifest.get("relation_value_mode", manifest.get("fixed_task", {}).get("relation_value_mode"))
+    if relation_mode != spec["relation_value_mode"]:
         raise ValueError(f"wrong relation mode in {seed_dir}")
     if int(manifest.get("fixed_task", {}).get("branch_step", -1)) != int(task["branch_step"]):
         raise ValueError(f"wrong V8 branch task in {seed_dir}")
