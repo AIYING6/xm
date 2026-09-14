@@ -24,6 +24,7 @@ TRAINING_PROTOCOL = "COMMITMENT-HANDOFF-3D-V6-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
 ALLOWED_TRAINING_PROTOCOLS = {
     TRAINING_PROTOCOL,
     "COMMITMENT-HANDOFF-3D-V6.1-PLAIN-MAPPO-G2-DEVELOPMENT-V1",
+    "COMMITMENT-HANDOFF-3D-V6.2-PLAIN-MAPPO-G2-DEVELOPMENT-V1",
 }
 MIN_SUCCESS, MAX_SUCCESS, MIN_SEEDS = 0.10, 0.90, 2
 MIN_STAGE_ACTION_SEPARATION = 0.15
@@ -58,11 +59,11 @@ def read_seed(seed_dir: Path) -> tuple[dict[str, object], list[dict[str, str]]]:
         if len(matching) == 1:
             command = str(matching[0].get("command", ""))
             tokens = {
-                "entropy": bool(re.search(r"(?:^|\\s)--entropy-coef\\s+0\\.03(?:\\s|$)", command)),
-                "mode": bool(re.search(r"(?:^|\\s)--service-envelope-mode\\s+compositional_v6_staged(?:\\s|$)", command)),
-                "updates": bool(re.search(r"(?:^|\\s)--updates\\s+64(?:\\s|$)", command)),
-                "num_envs": bool(re.search(r"(?:^|\\s)--num-envs\\s+4(?:\\s|$)", command)),
-                "rollout": bool(re.search(r"(?:^|\\s)--rollout-steps\\s+64(?:\\s|$)", command)),
+                "entropy": bool(re.search(r"(?:^|\s)--entropy-coef\s+0\.03(?:\s|$)", command)),
+                "mode": bool(re.search(r"(?:^|\s)--service-envelope-mode\s+compositional_v6_staged(?:\s|$)", command)),
+                "updates": bool(re.search(r"(?:^|\s)--updates\s+64(?:\s|$)", command)),
+                "num_envs": bool(re.search(r"(?:^|\s)--num-envs\s+4(?:\s|$)", command)),
+                "rollout": bool(re.search(r"(?:^|\s)--rollout-steps\s+64(?:\s|$)", command)),
             }
             if all(tokens.values()):
                 registered_protocol = "COMMITMENT-HANDOFF-3D-V6.1-PLAIN-MAPPO-G2-DEVELOPMENT-V1"

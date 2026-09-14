@@ -1,0 +1,27 @@
+{
+  "protocol": "COMMITMENT-HANDOFF-3D-V6.2-PLAIN-MAPPO-G2-DEVELOPMENT-V1",
+  "artifact_class": "DEVELOPMENT_ONLY_TASK_LEARNABILITY_GATE",
+  "paper_evidence": false,
+  "inherits": "V6.1",
+  "only_change_from_v61": {
+    "commitment_initial_retain_logit_bias": 0.25,
+    "action_mapping": {"0": "retain_current", "1": "reconstruct_future"},
+    "rationale": "G0 proves retain is correct pre-branch in every public profile; V6.1 seed 83543 reconstructed in every profile and phase."
+  },
+  "fixed_task_and_algorithm": {
+    "service_envelope_mode": "compositional_v6_staged",
+    "branch_step": 40,
+    "future_corridor_lateral_offset": 900.0,
+    "entropy_coef": 0.03,
+    "updates": 64,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "hidden_dim": 64,
+    "actor_action_mask_mode": "relay_only",
+    "observation_reward_ppo_network_budget_endpoint": "unchanged"
+  },
+  "training_seeds": [83641, 83642, 83643],
+  "endpoint": {"profiles": ["current_compact", "current_delayed", "future_fresh", "future_durable"], "episodes_per_profile": 60},
+  "pass_conditions": "Identical to V6/V6.1 G2: each future profile has at least 2/3 seed successes in [0.10, 0.90], current profiles have nonzero mean success, and future postbranch-prebranch reconstruct difference is at least 0.15.",
+  "stop_rule": "No further prior magnitude or entropy sweep follows a V6.2 failure."
+}

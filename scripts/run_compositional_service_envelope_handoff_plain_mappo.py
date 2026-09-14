@@ -34,7 +34,17 @@ PROTOCOL = "COMMITMENT-HANDOFF-3D-V5-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
 ENDPOINT_PROTOCOL = "COMMITMENT-HANDOFF-3D-V5-PROFILE-STRATIFIED-ENDPOINT-V1"
 
 
-def training_protocol(service_envelope_mode: str, entropy_coef: float = 0.01) -> str:
+def training_protocol(
+    service_envelope_mode: str,
+    entropy_coef: float = 0.01,
+    initial_retain_logit_bias: float = 0.0,
+) -> str:
+    if (
+        service_envelope_mode == "compositional_v6_staged"
+        and abs(float(entropy_coef) - 0.03) < 1e-12
+        and abs(float(initial_retain_logit_bias) - 0.25) < 1e-12
+    ):
+        return "COMMITMENT-HANDOFF-3D-V6.2-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
     if service_envelope_mode == "compositional_v6_staged" and abs(float(entropy_coef) - 0.03) < 1e-12:
         return "COMMITMENT-HANDOFF-3D-V6.1-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
     return (
@@ -66,6 +76,7 @@ def parse_args() -> argparse.Namespace:
     # actor capacity, or PPO implementation.  The historical/default path is
     # deliberately retained at 0.01.
     parser.add_argument("--entropy-coef", type=float, default=0.01)
+    parser.add_argument("--initial-retain-logit-bias", type=float, default=0.0)
     parser.add_argument("--selection-eval-episodes", type=int, default=16)
     parser.add_argument("--endpoint-episodes-per-profile", type=int, default=60)
     parser.add_argument("--service-envelope-mode", choices=("compositional_v5", "compositional_v6_staged"), default="compositional_v5")
@@ -86,6 +97,7 @@ def build_config(args: argparse.Namespace, *, profile: str = "balanced_v5") -> R
         updates=args.updates,
         hidden_dim=args.hidden_dim,
         entropy_coef=args.entropy_coef,
+        commitment_initial_retain_logit_bias=args.initial_retain_logit_bias,
         graph_encoder="no_graph",
         role_gate_mode="none",
         actor_action_mask_mode="relay_only",
@@ -226,7 +238,9 @@ def main() -> None:
     args.out_dir.mkdir(parents=True)
     macro_steps = args.updates * args.num_envs * args.rollout_steps
     manifest = {
-        "protocol": training_protocol(args.service_envelope_mode, args.entropy_coef),
+        "protocol": training_protocol(
+            args.service_envelope_mode, args.entropy_coef, args.initial_retain_logit_bias
+        ),
         "artifact_class": "DEVELOPMENT_ONLY_G2_LEARNABILITY_PILOT",
         "paper_evidence": False,
         "purpose": "test whether plain MLP MAPPO learns mixed public service envelopes without task saturation",

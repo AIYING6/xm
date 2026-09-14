@@ -286,6 +286,10 @@ class RIGMAPPOConfig:
     # critic inputs, rewards, observations, action availability, or the
     # environment transition.  It is intentionally opt-in.
     actor_action_mask_mode: str = "all_agents"
+    # Opt-in development calibration for the binary commitment-handoff
+    # interface. A positive value favours retain-current at initialization;
+    # it is not an actor input, target label, reward term, or update rule.
+    commitment_initial_retain_logit_bias: float = 0.0
     # Zero-training failure-mechanism diagnosis.  The writer is a read-only
     # sink and never enters actor/critic inputs or reward/sampler decisions.
     failure_aware_telemetry: bool = False
@@ -2316,6 +2320,16 @@ def train_ri_gmappo(cfg: RIGMAPPOConfig) -> Path:
         counterfactual_critic_enabled=cfg.counterfactual_critic_enabled,
         num_roles=max(4, int(np.max(sample_graph["role"])) + 1),
     ).to(device)
+    if cfg.env_name == "commitment_handoff_3d" and abs(float(cfg.commitment_initial_retain_logit_bias)) > 0.0:
+        if agent.action_dim != 2:
+            raise ValueError("commitment initial retain bias requires the binary commitment interface")
+        with torch.no_grad():
+            # Action 0 is retain-current and action 1 is reconstruct-future.
+            # This is a symmetric initial preference, not a policy input; PPO
+            # remains free to reverse it after the public branch.
+            final_layer = agent.actor.policy_head[-1]
+            final_layer.bias[0] += float(cfg.commitment_initial_retain_logit_bias)
+            final_layer.bias[1] -= float(cfg.commitment_initial_retain_logit_bias)
     optimizer = make_optimizer(agent, cfg)
     if runtime_payload is not None:
         agent.load_state_dict(runtime_payload["model_state"], strict=True)
