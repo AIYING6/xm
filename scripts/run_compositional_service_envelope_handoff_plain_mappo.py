@@ -58,6 +58,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-envs", type=int, default=4)
     parser.add_argument("--rollout-steps", type=int, default=64)
     parser.add_argument("--hidden-dim", type=int, default=64)
+    # The handoff decision has exactly two legal relay macros.  Exposing the
+    # coefficient makes a later, explicitly registered baseline-stability
+    # calibration possible without changing the environment, observations,
+    # actor capacity, or PPO implementation.  The historical/default path is
+    # deliberately retained at 0.01.
+    parser.add_argument("--entropy-coef", type=float, default=0.01)
     parser.add_argument("--selection-eval-episodes", type=int, default=16)
     parser.add_argument("--endpoint-episodes-per-profile", type=int, default=60)
     parser.add_argument("--service-envelope-mode", choices=("compositional_v5", "compositional_v6_staged"), default="compositional_v5")
@@ -77,6 +83,7 @@ def build_config(args: argparse.Namespace, *, profile: str = "balanced_v5") -> R
         rollout_steps=args.rollout_steps,
         updates=args.updates,
         hidden_dim=args.hidden_dim,
+        entropy_coef=args.entropy_coef,
         graph_encoder="no_graph",
         role_gate_mode="none",
         actor_action_mask_mode="relay_only",

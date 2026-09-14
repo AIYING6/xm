@@ -1,0 +1,44 @@
+{
+  "protocol": "COMMITMENT-HANDOFF-3D-V6.1-PLAIN-MAPPO-G2-DEVELOPMENT-V1",
+  "artifact_class": "DEVELOPMENT_ONLY_TASK_LEARNABILITY_GATE",
+  "purpose": "Repair observed binary relay-action entropy collapse before any candidate-method implementation.",
+  "not_paper_evidence": true,
+  "inherits": "COMMITMENT-HANDOFF-3D-V6-PLAIN-MAPPO-G2-DEVELOPMENT-V1",
+  "only_change_from_v6": {
+    "entropy_coef": {
+      "v6": 0.01,
+      "v61": 0.03,
+      "rationale": "Two of three V6 training seeds collapsed to always reconstruct across every public profile, with concurrent collision/timeout failures."
+    }
+  },
+  "fixed_task": {
+    "service_envelope_mode": "compositional_v6_staged",
+    "branch_step": 40,
+    "future_corridor_lateral_offset": 900.0,
+    "public_branch_phase_visible": true,
+    "target_truth_or_profile_label_visible_to_actor": false
+  },
+  "fixed_training": {
+    "training_seeds": [83541, 83542, 83543],
+    "updates": 64,
+    "num_envs": 4,
+    "rollout_steps": 64,
+    "hidden_dim": 64,
+    "graph_encoder": "no_graph",
+    "actor_action_mask_mode": "relay_only",
+    "ppo_objective": "unchanged",
+    "reward": "unchanged",
+    "evaluation_protocol": "unchanged"
+  },
+  "fixed_endpoint": {
+    "episodes_per_profile": 60,
+    "profiles": ["current_compact", "current_delayed", "future_fresh", "future_durable"],
+    "evaluation_seed_band": "same fixed V6 endpoint band"
+  },
+  "frozen_pass_conditions": {
+    "future_profiles": "For each future-required profile, at least 2/3 training seeds have endpoint success in [0.10, 0.90].",
+    "current_profiles": "Both current-required profiles have non-zero mean success.",
+    "stage_behavior": "Future-profile mean postbranch reconstruct fraction minus prebranch fraction is at least 0.15."
+  },
+  "next_step_only_if_pass": "Implement the capacity-matched public stage-conditioned relation-value candidate and its semantic-shuffle ablation."
+}
