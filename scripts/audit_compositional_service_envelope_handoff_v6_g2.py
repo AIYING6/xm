@@ -15,6 +15,15 @@ from envs.timed_handoff_intercept_3d_env import SERVICE_ENVELOPE_PROFILES
 
 PROTOCOL = "COMMITMENT-HANDOFF-3D-V6-G2-LEARNABILITY-AUDIT-V1"
 TRAINING_PROTOCOL = "COMMITMENT-HANDOFF-3D-V6-PLAIN-MAPPO-G2-DEVELOPMENT-V1"
+# V6.1 is a pre-registered baseline-stability replication: it keeps the
+# V6 task, endpoint, and G2 rule fixed, and changes only PPO entropy from
+# 0.01 to 0.03 after V6 directly diagnosed deterministic relay-action
+# collapse.  It remains development-only and is deliberately reported as a
+# distinct source protocol rather than silently treated as V6.
+ALLOWED_TRAINING_PROTOCOLS = {
+    TRAINING_PROTOCOL,
+    "COMMITMENT-HANDOFF-3D-V6.1-PLAIN-MAPPO-G2-DEVELOPMENT-V1",
+}
 MIN_SUCCESS, MAX_SUCCESS, MIN_SEEDS = 0.10, 0.90, 2
 MIN_STAGE_ACTION_SEPARATION = 0.15
 
@@ -30,13 +39,17 @@ def parse_args() -> argparse.Namespace:
 def read_seed(seed_dir: Path) -> tuple[dict[str, object], list[dict[str, str]]]:
     manifest = json.loads((seed_dir / "run_manifest.json").read_text(encoding="utf-8"))
     endpoint = json.loads((seed_dir / "profile_stratified_endpoint.json").read_text(encoding="utf-8"))
-    if manifest.get("protocol") != TRAINING_PROTOCOL or manifest.get("status") != "completed":
-        raise ValueError(f"{seed_dir}: not a completed frozen V6 G2 run")
+    if manifest.get("protocol") not in ALLOWED_TRAINING_PROTOCOLS or manifest.get("status") != "completed":
+        raise ValueError(f"{seed_dir}: not a completed registered V6/V6.1 G2 run")
     if endpoint.get("service_envelope_mode") != "compositional_v6_staged" or set(endpoint.get("summary", {})) != set(SERVICE_ENVELOPE_PROFILES):
         raise ValueError(f"{seed_dir}: incomplete V6 profile endpoint")
     with (seed_dir / "profile_stratified_endpoint.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    return {"seed": int(manifest["seed"]), "summary": endpoint["summary"]}, rows
+    return {
+        "seed": int(manifest["seed"]),
+        "summary": endpoint["summary"],
+        "training_protocol": str(manifest["protocol"]),
+    }, rows
 
 
 def main() -> None:
@@ -50,6 +63,9 @@ def main() -> None:
         item, seed_rows = read_seed(directory); seeds.append(item); rows.extend([{**row, "train_seed": item["seed"]} for row in seed_rows])
     if len({item["seed"] for item in seeds}) != 3:
         raise ValueError("duplicate training seed supplied")
+    source_protocols = {str(item["training_protocol"]) for item in seeds}
+    if len(source_protocols) != 1:
+        raise ValueError("all three seeds must originate from one registered V6/V6.1 protocol")
     profiles: dict[str, dict[str, object]] = {}
     future_profiles = []
     for profile in SERVICE_ENVELOPE_PROFILES:
@@ -72,7 +88,8 @@ def main() -> None:
     passed = future_pass and current_pass and stage_separation >= MIN_STAGE_ACTION_SEPARATION
     report = {
         "protocol": PROTOCOL, "artifact_class": "DEVELOPMENT_ONLY_TASK_LEARNABILITY_GATE", "paper_evidence": False,
-        "training_seeds": [item["seed"] for item in seeds], "profiles": profiles,
+        "training_seeds": [item["seed"] for item in seeds],
+        "source_training_protocol": next(iter(source_protocols)), "profiles": profiles,
         "frozen_future_success_interval": [MIN_SUCCESS, MAX_SUCCESS],
         "frozen_future_requirement": "At least 2/3 seeds in the interval for each future-required profile.",
         "mean_future_prebranch_reconstruct_fraction": sum(pre) / len(pre),
